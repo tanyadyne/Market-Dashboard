@@ -1,56 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ETF Relative Strength Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080e1a;--bg2:#0a1020;--bg3:#0f172a;--bg4:#1e293b;--bdr:#111827;--bdr2:#1e293b;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--g:#4ade80;--g2:#86efac;--gbg:#14532d;--gbg2:#041a0e;--r:#f87171;--r2:#fca5a5;--rbg:#450a0a;--rbg2:#1f0808;--purple:#c084fc;--indigo:#818cf8;--mono:'JetBrains Mono','SF Mono','Consolas',monospace;--sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif}
-*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--t1);font-family:var(--sans);min-height:100vh}
-.hdr{padding:18px 20px 14px;border-bottom:1px solid #141c2e;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+/* ─── Theme Variables ─── */
+[data-theme="dark"]{--bg:#080e1a;--bg2:#0a1020;--bg3:#0f172a;--bg4:#1e293b;--bdr:#111827;--bdr2:#1e293b;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--g:#4ade80;--g2:#86efac;--gbg:#14532d;--gbg2:#041a0e;--r:#f87171;--r2:#fca5a5;--rbg:#450a0a;--rbg2:#1f0808;--purple:#c084fc;--indigo:#818cf8;--thbg:#0b1120;--hovbg:#111827;--spark-up:#4ade80;--spark-dn:#f87171;--spark-line:#60a5fa;--modal-bg:rgba(0,0,0,0.6);--card:#111827}
+[data-theme="light"]{--bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--bg4:#e2e8f0;--bdr:#e2e8f0;--bdr2:#cbd5e1;--t1:#0f172a;--t2:#475569;--t3:#64748b;--t4:#94a3b8;--g:#16a34a;--g2:#15803d;--gbg:#dcfce7;--gbg2:#f0fdf4;--r:#dc2626;--r2:#b91c1c;--rbg:#fee2e2;--rbg2:#fef2f2;--purple:#9333ea;--indigo:#4f46e5;--thbg:#ffffff;--hovbg:#f1f5f9;--spark-up:#16a34a;--spark-dn:#dc2626;--spark-line:#2563eb;--modal-bg:rgba(0,0,0,0.3);--card:#f1f5f9}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;transition:background .2s,color .2s}
+.mono{font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
+
+/* ─── Header ─── */
+.hdr{padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .hdr-l{display:flex;align-items:center;gap:10px}
 .logo{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3b82f6,#8b5cf6);font-size:14px;font-weight:800;letter-spacing:-1px;color:#fff}
 .hdr-t{font-size:16px;font-weight:700;letter-spacing:-.3px}.hdr-s{font-size:11px;color:var(--t4)}
 .hdr-r{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.btn{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:.15s}
-.btn-a{border-color:#1e3a1e;background:#0a1a0a;color:var(--g)}.btn-a.on{background:var(--gbg)}
-.btn-d{border-color:#3a1e1e;background:#1a0a0a;color:var(--r)}.btn-d.on{background:var(--rbg)}
-.srch{padding:6px 12px;border-radius:5px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:12px;width:220px;outline:none;font-family:var(--sans)}.srch:focus{border-color:#3b82f6}
-.spy{padding:8px 20px;background:#0a0f1a;border-bottom:1px solid var(--bdr);display:flex;gap:20px;font-size:11px;color:var(--t4);align-items:center;flex-wrap:wrap}
-.spy b{color:var(--t3);font-weight:700}.spy .sp{font-family:var(--mono);color:var(--t2)}.spy .sc{font-family:var(--mono);font-weight:600}
+.btn{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:.15s;font-family:inherit}
+.btn-a{border-color:#1e3a1e;background:transparent;color:var(--g)}.btn-a.on{background:var(--gbg)}
+.btn-d{border-color:#3a1e1e;background:transparent;color:var(--r)}.btn-d.on{background:var(--rbg)}
+.btn-t{border-color:var(--bdr2);background:var(--bg3);color:var(--t2)}.btn-t:hover{background:var(--bg4)}
+.srch{padding:6px 12px;border-radius:5px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:12px;width:200px;outline:none;font-family:inherit}.srch:focus{border-color:#3b82f6}
+
+/* ─── SPY Bar ─── */
+.spy{padding:8px 20px;background:var(--bg2);border-bottom:1px solid var(--bdr);display:flex;gap:20px;font-size:11px;color:var(--t4);align-items:center;flex-wrap:wrap}
+.spy b{color:var(--t3);font-weight:700}
+
+/* ─── Panels ─── */
 .pnl{padding:10px 20px;border-bottom:1px solid var(--bdr2);display:none;flex-wrap:wrap;gap:5px;align-items:center}.pnl.show{display:flex}
 .pnl.a{background:var(--gbg2)}.pnl.d{background:var(--rbg2)}
 .pnl-l{font-size:10px;font-weight:700;margin-right:6px;text-transform:uppercase;letter-spacing:.8px}
 .pnl.a .pnl-l{color:var(--g)}.pnl.d .pnl-l{color:var(--r)}
-.pnl-t{padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;font-family:var(--mono)}
+.pnl-t{padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace}
 .pnl.a .pnl-t{background:var(--gbg);color:var(--g2)}.pnl.d .pnl-t{background:var(--rbg);color:var(--r2)}
+
+/* ─── Status ─── */
 .status{padding:30px;text-align:center;color:var(--t3);font-size:13px}
-.status .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--bdr2);border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--bdr2);border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
-.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:900px}
-thead th{padding:10px;text-align:right;cursor:pointer;user-select:none;font-weight:600;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;border-bottom:2px solid var(--bdr2);position:sticky;top:0;background:#0b1120;z-index:2;white-space:nowrap;color:var(--t3);transition:.15s}
-thead th:hover{color:var(--t1)}thead th.on{color:#f0f9ff}thead th.l{text-align:left}thead th.c{text-align:center}
+
+/* ─── Table ─── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+thead th{padding:10px 8px;text-align:right;cursor:pointer;user-select:none;font-weight:600;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;border-bottom:2px solid var(--bdr2);position:sticky;top:0;background:var(--thbg);z-index:2;white-space:nowrap;color:var(--t3);transition:.15s;overflow:hidden;text-overflow:ellipsis;position:relative}
+thead th:hover{color:var(--t1)}thead th.on{color:var(--t1)}thead th.l{text-align:left}thead th.c{text-align:center}
+/* Resize handle */
+thead th .rh{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent;z-index:3}
+thead th .rh:hover,thead th .rh.dragging{background:#3b82f6;opacity:0.5}
 tbody tr{border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .1s}
 tbody tr:nth-child(odd){background:var(--bg)}tbody tr:nth-child(even){background:var(--bg2)}
-tbody tr:hover{background:var(--bdr)!important}tbody tr.exp{background:var(--bg3)!important}
-td{padding:7px 10px;font-size:12px}.c{text-align:center}.rt{text-align:right}.m{font-family:var(--mono)}
-.rk{text-align:center;color:var(--t4);font-family:var(--mono);font-size:11px}
-.tk{font-weight:700;font-size:13px;color:#f0f9ff;font-family:var(--mono);letter-spacing:.3px}
-.sc2{color:var(--t2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.au{color:var(--g);font-size:11px;margin-left:5px}.ad{color:var(--r);font-size:11px;margin-left:5px}
-.bc{display:flex;align-items:center;gap:6px}.bt{width:48px;height:5px;background:var(--bg4);border-radius:2px;overflow:hidden;flex-shrink:0}
+tbody tr:hover{background:var(--hovbg)!important}tbody tr.exp{background:var(--bg3)!important}
+td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c{text-align:center}.rt{text-align:right}.m{font-family:'JetBrains Mono',monospace}
+.rk{text-align:center;color:var(--t4);font-family:'JetBrains Mono',monospace;font-size:11px}
+.tk{font-weight:700;font-size:13px;color:var(--t1);font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+.sc2{color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.au{color:var(--g);font-size:11px;margin-left:4px}.ad{color:var(--r);font-size:11px;margin-left:4px}
+.bc{display:flex;align-items:center;gap:6px}.bt{width:40px;height:5px;background:var(--bg4);border-radius:2px;overflow:hidden;flex-shrink:0}
 .bf{height:100%;border-radius:2px}.bf.i{background:var(--indigo)}.bf.p{background:var(--purple)}
-.bv{font-size:12px;font-family:var(--mono);color:var(--t2)}
-.cp{color:var(--g);font-weight:600;background:rgba(74,222,128,.06)}
-.cn{color:var(--r);font-weight:600;background:rgba(248,113,113,.06)}.cz{color:var(--t3)}
-.rs{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;font-family:var(--mono);min-width:42px;text-align:center}
-.hr td{padding:10px 16px 14px 50px;background:#0c1525}
+.bv{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--t2)}
+.cp{color:var(--g);font-weight:600}.cn{color:var(--r);font-weight:600}.cz{color:var(--t3)}
+.rs{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;min-width:38px;text-align:center}
+.hr td{padding:10px 16px 14px 50px;background:var(--card)}
 .hl{font-size:10px;color:var(--t4);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
 .hc{font-size:10px;color:var(--t3);margin-bottom:6px}.hw{max-width:750px}
-.pill{display:inline-block;padding:2px 7px;margin:2px;border-radius:3px;background:var(--bg4);color:var(--t2);font-size:11px;font-family:var(--mono);border:1px solid #293548}
-.ft{padding:14px 20px;border-top:1px solid var(--bdr);text-align:center;font-size:10px;color:#334155}
-@media(max-width:768px){.hdr{padding:12px}.srch{width:160px}}
+.pill{display:inline-block;padding:2px 7px;margin:2px;border-radius:3px;font-size:11px;font-family:'JetBrains Mono',monospace;border:1px solid}
+.pill-g{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1c1917;border-color:#d97706;font-weight:600;text-shadow:0 0 2px rgba(255,255,255,0.7),0 0 4px rgba(255,255,255,0.4)}
+.pill-s{background:linear-gradient(135deg,#b0b7c0,#7d8590);color:#f9fafb;border-color:#4b5563;font-weight:600;text-shadow:0 0 2px rgba(0,0,0,0.6),0 0 4px rgba(0,0,0,0.3)}
+.pill-b{background:var(--bg4);color:var(--t2);border-color:var(--bdr2)}
+[data-theme="light"] .pill-g{background:linear-gradient(135deg,#fcd34d,#fbbf24);border-color:#d97706}
+[data-theme="light"] .pill-s{background:linear-gradient(135deg,#b0b7c0,#7d8590);color:#ffffff;border-color:#4b5563}
+[data-theme="light"] .pill-b{background:#f1f5f9;color:#475569;border-color:#cbd5e1}
+.ft{padding:14px 20px;border-top:1px solid var(--bdr);text-align:center;font-size:10px;color:var(--t4)}
+
+/* ─── Sparkline (VARS) ─── */
+.spark-wrap{display:flex;align-items:center;justify-content:center}
+.spark-wrap canvas{display:block}
+
+/* ─── Multi-Sort Modal ─── */
+.modal-overlay{display:none;position:fixed;inset:0;background:var(--modal-bg);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--bdr2);border-radius:10px;padding:20px;width:400px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.modal h3{font-size:14px;margin-bottom:14px;color:var(--t1)}
+.sort-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.sort-row select{flex:1;padding:6px 8px;border-radius:5px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:12px;font-family:inherit}
+.sort-row .remove-sort{background:none;border:none;color:var(--r);cursor:pointer;font-size:16px;padding:4px 8px}
+.modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.modal-actions .btn{padding:6px 16px;font-size:12px}
+.btn-primary{border-color:#3b82f6;background:#3b82f6;color:#fff}.btn-primary:hover{background:#2563eb}
+.btn-add{border:1px dashed var(--bdr2);background:transparent;color:var(--t3);width:100%;padding:6px;font-size:11px;border-radius:5px;cursor:pointer;margin-bottom:4px}
+.btn-add:hover{border-color:var(--t3);color:var(--t2)}
+
+@media(max-width:768px){.hdr{padding:12px}.srch{width:140px}}
+
+/* ─── Clipboard Panel ─── */
+.clip-panel{display:none;padding:12px 20px;border-bottom:1px solid var(--bdr2);background:var(--bg2)}
+.clip-panel.show{display:block}
+.clip-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.clip-title{font-size:12px;font-weight:700;color:var(--t1)}
+.clip-actions{display:flex;gap:6px}
+.clip-actions .btn{padding:4px 10px;font-size:10px}
+.btn-copy{border-color:#3b82f6;background:#3b82f6;color:#fff}.btn-copy:hover{background:#2563eb}
+.btn-clear{border-color:var(--r);background:transparent;color:var(--r)}.btn-clear:hover{background:var(--rbg)}
+.clip-body{display:flex;flex-wrap:wrap;gap:4px;min-height:28px;align-items:center}
+.clip-body .pill{cursor:pointer;position:relative}
+.clip-body .pill:hover{opacity:0.7}
+.clip-body .pill .x{margin-left:4px;font-size:9px;opacity:0.6}
+.clip-empty{font-size:11px;color:var(--t4);font-style:italic}
+.clip-copied{color:var(--g);font-size:11px;font-weight:600;margin-left:8px;opacity:0;transition:opacity .3s}
+.clip-copied.show{opacity:1}
 </style>
 </head>
 <body>
@@ -66,51 +127,250 @@ td{padding:7px 10px;font-size:12px}.c{text-align:center}.rt{text-align:right}.m{
   <div class="hdr-r">
     <button class="btn btn-a" id="bA" onclick="togPnl('a')">Advancing —%</button>
     <button class="btn btn-d" id="bD" onclick="togPnl('d')">Declining —%</button>
+    <button class="btn btn-t" id="bSort" onclick="openSortModal()" title="Multi-level sort">⇅ Sort</button>
+    <button class="btn btn-t" id="bClip" onclick="toggleClipboard()" title="Clipboard">📋 Clipboard <span id="clipCount"></span></button>
+    <button class="btn btn-t" id="bTheme" onclick="toggleTheme()">☀ Light</button>
     <input class="srch" id="si" placeholder="Search ticker, name, holding..." oninput="render()">
   </div>
 </div>
 
 <div class="spy" id="spyBar" style="display:none">
-  <span><b>SPY</b> <span class="sp" id="spyP"></span> <span class="sc" id="spyC"></span></span>
+  <span><b>SPY</b> <span class="m" id="spyP"></span> <span class="m" id="spyC" style="font-weight:600"></span></span>
   <span id="ut"></span>
 </div>
 
 <div class="pnl a" id="pA"></div>
 <div class="pnl d" id="pD"></div>
 
+<div class="clip-panel" id="clipPanel">
+  <div class="clip-header">
+    <span class="clip-title">📋 Clipboard</span>
+    <div class="clip-actions">
+      <button class="btn btn-copy" onclick="copyAll()">Copy All</button>
+      <span class="clip-copied" id="clipCopied">✓ Copied!</span>
+      <button class="btn btn-clear" onclick="clearClipboard()">Clear All</button>
+    </div>
+  </div>
+  <div class="clip-body" id="clipBody">
+    <span class="clip-empty">Click gold/silver/bronze pill labels in expanded rows to add stocks</span>
+  </div>
+</div>
+
 <div class="status" id="statusBar"><span class="spinner"></span> Loading data...</div>
 
 <div class="tw" id="tw" style="display:none">
-  <table>
-    <thead><tr>
-      <th class="c" style="width:40px" onclick="srt('rk')" id="th-rk">#</th>
-      <th class="l" style="width:70px" onclick="srt('t')" id="th-t">Ticker</th>
-      <th class="l" onclick="srt('n')" id="th-n">Sector</th>
-      <th class="l" onclick="srt('rv')" id="th-rv">R.Vol</th>
-      <th class="l" onclick="srt('am')" id="th-am">ATR Mult</th>
-      <th onclick="srt('ch')" id="th-ch">Change</th>
-      <th class="c" style="width:70px" onclick="srt('rs')" id="th-rs">RS</th>
-      <th onclick="srt('p')" id="th-p">Price</th>
+  <table id="mainTable">
+    <thead><tr id="headerRow">
+      <th class="c" data-key="rk" style="width:40px">#<div class="rh"></div></th>
+      <th class="l" data-key="t" style="width:68px">Ticker<div class="rh"></div></th>
+      <th class="l" data-key="n" style="width:160px">Sector<div class="rh"></div></th>
+      <th data-key="p" style="width:75px">Price<div class="rh"></div></th>
+      <th class="l" data-key="rv" style="width:105px">R.Vol<div class="rh"></div></th>
+      <th class="l" data-key="am" style="width:105px">ATR Mult<div class="rh"></div></th>
+      <th data-key="ch" style="width:82px">Change (1D)<div class="rh"></div></th>
+      <th data-key="c5" style="width:82px">Change (5D)<div class="rh"></div></th>
+      <th data-key="c20" style="width:85px">Change (20D)<div class="rh"></div></th>
+      <th class="c" data-key="rs" style="width:62px">RS<div class="rh"></div></th>
+      <th class="c" data-key="vs" style="width:275px">VARS<div class="rh"></div></th>
     </tr></thead>
     <tbody id="tb"></tbody>
   </table>
 </div>
 <div class="ft" id="ft"></div>
 
-<script>
-let DATA=null,sortKey='rk',sortDir=1,expandedTicker=null,activePanel=null;
-function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
-function getRSBg(rs){if(rs==null)return'#1e293b';if(rs>=96)return'#14532d';if(rs>=80)return'#1a3a2a';if(rs>=60)return'#1e293b';if(rs>=40)return'#292524';if(rs>=20)return'#2c1810';return'#450a0a';}
-function getRSCol(rs){if(rs==null)return'#64748b';if(rs>=96)return'#4ade80';if(rs>=80)return'#86efac';if(rs>=60)return'#94a3b8';if(rs>=40)return'#d4a373';if(rs>=20)return'#fb923c';return'#f87171';}
+<!-- Multi-Sort Modal -->
+<div class="modal-overlay" id="sortModal">
+  <div class="modal">
+    <h3>⇅ Multi-Level Sort</h3>
+    <div id="sortLevels"></div>
+    <button class="btn-add" onclick="addSortLevel()">+ Add sort level</button>
+    <div class="modal-actions">
+      <button class="btn btn-t" onclick="closeSortModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="applyMultiSort()">Apply Sort</button>
+    </div>
+  </div>
+</div>
 
+<script>
+// ─── State ────────────────────────────────────────────────
+let DATA=null, sortKey='rk', sortDir=1, expandedTicker=null, activePanel=null;
+let multiSort = []; // [{key, dir}]
+let useMultiSort = false;
+
+const COLUMNS = [
+  {key:'rk',label:'#'},{key:'t',label:'Ticker'},{key:'n',label:'Sector'},
+  {key:'p',label:'Price'},{key:'rv',label:'R.Vol'},{key:'am',label:'ATR Mult'},
+  {key:'ch',label:'Change (1D)'},{key:'c5',label:'Change (5D)'},{key:'c20',label:'Change (20D)'},
+  {key:'rs',label:'RS'},{key:'vs',label:'VARS'}
+];
+
+// ─── Theme ────────────────────────────────────────────────
+function toggleTheme(){
+  const html=document.documentElement;
+  const isDark=html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme',isDark?'light':'dark');
+  document.getElementById('bTheme').textContent=isDark?'🌙 Dark':'☀ Light';
+  requestAnimationFrame(()=>render());
+}
+
+// ─── Column Resize ────────────────────────────────────────
+(function initResize(){
+  let startX, startW, th;
+  document.addEventListener('mousedown',e=>{
+    if(!e.target.classList.contains('rh'))return;
+    th=e.target.parentElement;
+    startX=e.pageX;
+    startW=th.offsetWidth;
+    e.target.classList.add('dragging');
+    const onMove=ev=>{
+      const w=Math.max(30,startW+(ev.pageX-startX));
+      th.style.width=w+'px';
+    };
+    const onUp=()=>{
+      document.removeEventListener('mousemove',onMove);
+      document.removeEventListener('mouseup',onUp);
+      e.target.classList.remove('dragging');
+    };
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+})();
+
+// ─── Helpers ──────────────────────────────────────────────
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
+function getRSBg(rs){if(rs==null)return'var(--bg4)';if(rs>=96)return'var(--gbg)';if(rs>=80)return document.documentElement.getAttribute('data-theme')==='dark'?'#1a3a2a':'#dcfce7';if(rs>=60)return'var(--bg4)';if(rs>=40)return document.documentElement.getAttribute('data-theme')==='dark'?'#292524':'#fef3c7';if(rs>=20)return document.documentElement.getAttribute('data-theme')==='dark'?'#2c1810':'#ffedd5';return'var(--rbg)';}
+function getRSCol(rs){if(rs==null)return'var(--t3)';if(rs>=96)return'var(--g)';if(rs>=80)return'var(--g2)';if(rs>=60)return'var(--t2)';if(rs>=40)return document.documentElement.getAttribute('data-theme')==='dark'?'#d4a373':'#92400e';if(rs>=20)return document.documentElement.getAttribute('data-theme')==='dark'?'#fb923c':'#c2410c';return'var(--r)';}
+function chgClass(v){return v>0?'cp':v<0?'cn':'cz';}
+function chgText(v){return v!=null?(v>0?'+':'')+v.toFixed(2)+'%':'—';}
+
+// ─── Multi-Sort Modal ─────────────────────────────────────
+function openSortModal(){
+  if(multiSort.length===0) multiSort=[{key:'rs',dir:-1},{key:'ch',dir:-1}];
+  renderSortLevels();
+  document.getElementById('sortModal').classList.add('show');
+}
+function closeSortModal(){document.getElementById('sortModal').classList.remove('show');}
+
+function renderSortLevels(){
+  const el=document.getElementById('sortLevels');
+  el.innerHTML=multiSort.map((s,i)=>`
+    <div class="sort-row">
+      <select onchange="multiSort[${i}].key=this.value">
+        ${COLUMNS.filter(c=>c.key!=='vs').map(c=>`<option value="${c.key}"${c.key===s.key?' selected':''}>${c.label}</option>`).join('')}
+      </select>
+      <select onchange="multiSort[${i}].dir=+this.value">
+        <option value="-1"${s.dir===-1?' selected':''}>Descending</option>
+        <option value="1"${s.dir===1?' selected':''}>Ascending</option>
+      </select>
+      ${multiSort.length>1?`<button class="remove-sort" onclick="multiSort.splice(${i},1);renderSortLevels()">×</button>`:''}
+    </div>
+  `).join('');
+}
+
+function addSortLevel(){
+  if(multiSort.length<5)multiSort.push({key:'ch',dir:-1});
+  renderSortLevels();
+}
+
+function applyMultiSort(){
+  useMultiSort=true;
+  closeSortModal();
+  // Clear single-sort highlight
+  document.querySelectorAll('thead th').forEach(th=>th.classList.remove('on'));
+  render();
+}
+
+// ─── Single-column sort (clicking headers) ────────────────
+function srt(key){
+  if(key==='vs')return; // Can't sort by sparkline
+  useMultiSort=false;
+  if(sortKey===key)sortDir=-sortDir;
+  else{sortKey=key;sortDir=key==='rk'?1:-1;}
+  document.querySelectorAll('thead th').forEach(th=>th.classList.remove('on'));
+  document.querySelector(`thead th[data-key="${key}"]`)?.classList.add('on');
+  render();
+}
+
+// Attach click handlers to headers
+document.querySelectorAll('thead th[data-key]').forEach(th=>{
+  th.addEventListener('click',e=>{
+    if(e.target.classList.contains('rh'))return;
+    srt(th.dataset.key);
+  });
+});
+
+// ─── Clipboard ────────────────────────────────────────────
+let clipboardSet = new Set();
+let clipPanelOpen = false;
+
+function toggleClipboard(){
+  clipPanelOpen=!clipPanelOpen;
+  document.getElementById('clipPanel').classList.toggle('show',clipPanelOpen);
+  document.getElementById('bClip').classList.toggle('on',clipPanelOpen);
+}
+
+function updateClipCount(){
+  const el=document.getElementById('clipCount');
+  el.textContent=clipboardSet.size>0?`(${clipboardSet.size})`:'';
+}
+
+function addToClipboard(stocks, grade){
+  stocks.forEach(s=>clipboardSet.add(s));
+  updateClipCount();
+  renderClipboard();
+  // Auto-open panel if closed
+  if(!clipPanelOpen)toggleClipboard();
+}
+
+function removeFromClipboard(stock){
+  clipboardSet.delete(stock);
+  updateClipCount();
+  renderClipboard();
+}
+
+function clearClipboard(){
+  clipboardSet.clear();
+  updateClipCount();
+  renderClipboard();
+}
+
+function renderClipboard(){
+  const el=document.getElementById('clipBody');
+  if(clipboardSet.size===0){
+    el.innerHTML='<span class="clip-empty">Click gold/silver/bronze pill labels in expanded rows to add stocks</span>';
+    return;
+  }
+  const sorted=[...clipboardSet].sort();
+  el.innerHTML=sorted.map(s=>`<span class="pill pill-b" onclick="removeFromClipboard('${esc(s)}');event.stopPropagation()" style="cursor:pointer">${esc(s)}<span class="x">✕</span></span>`).join('');
+}
+
+async function copyAll(){
+  if(clipboardSet.size===0)return;
+  const text=[...clipboardSet].sort().join(', ');
+  try{
+    await navigator.clipboard.writeText(text);
+    const el=document.getElementById('clipCopied');
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'),2000);
+  }catch(e){
+    // Fallback
+    const ta=document.createElement('textarea');
+    ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    const el=document.getElementById('clipCopied');
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'),2000);
+  }
+}
+
+// ─── Data Loading ─────────────────────────────────────────
 async function loadData(){
   try{
     const res=await fetch('data.json');
-    if(!res.ok)throw new Error('data.json not found — run fetch_data.py first or trigger the GitHub Action');
+    if(!res.ok)throw new Error('data.json not found');
     DATA=await res.json();
     onDataLoaded();
   }catch(err){
-    document.getElementById('statusBar').innerHTML=`<span style="color:#f87171">Error: ${esc(err.message)}</span><br><br><span style="color:var(--t3);font-size:11px">Make sure data.json exists. Run the GitHub Action manually via Actions → Update ETF Data → Run workflow.</span>`;
+    document.getElementById('statusBar').innerHTML=`<span style="color:var(--r)">Error: ${esc(err.message)}</span>`;
   }
 }
 
@@ -125,12 +385,12 @@ function onDataLoaded(){
     document.getElementById('spyP').textContent='$'+DATA.meta.spy_price;
     const sc=document.getElementById('spyC');
     sc.textContent=(DATA.meta.spy_change>0?'+':'')+DATA.meta.spy_change.toFixed(2)+'%';
-    sc.style.color=DATA.meta.spy_change>0?'#4ade80':DATA.meta.spy_change<0?'#f87171':'#64748b';
+    sc.style.color=DATA.meta.spy_change>0?'var(--g)':DATA.meta.spy_change<0?'var(--r)':'var(--t3)';
     document.getElementById('ut').textContent='Updated: '+DATA.meta.updated;
   }
   const mk=(id,label,items)=>{document.getElementById(id).innerHTML=`<span class="pnl-l">${label}</span>`+items.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');};
-  mk('pA','▲ Strong RS (≥88%)',DATA.s.a);
-  mk('pD','▼ Declining RS (≤40%)',DATA.s.d);
+  mk('pA','▲ RS Advancing 4+ Days',DATA.s.a);
+  mk('pD','▼ RS Declining 4+ Days',DATA.s.d);
   render();
 }
 
@@ -142,52 +402,143 @@ function togPnl(type){
   document.getElementById('bD').classList.toggle('on',activePanel==='d');
 }
 
-function srt(key){
-  if(sortKey===key)sortDir=-sortDir;
-  else{sortKey=key;sortDir=key==='rk'?1:-1;}
-  document.querySelectorAll('thead th').forEach(th=>th.classList.remove('on'));
-  document.getElementById('th-'+key)?.classList.add('on');
-  render();
+// ─── Sparkline Drawing ────────────────────────────────────
+function drawSparkline(canvas, series){
+  if(!series||!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+
+  const vals=series.filter(v=>v!=null);
+  if(vals.length<2)return;
+  const min=Math.min(...vals), max=Math.max(...vals);
+  const range=max-min||1;
+  const pad=2;
+
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const lineColor=isDark?'#c084fc':'#9333ea'; // purple
+
+  // Find min/max indices
+  let minIdx=0,maxIdx=0;
+  for(let i=1;i<vals.length;i++){
+    if(vals[i]<vals[minIdx])minIdx=i;
+    if(vals[i]>vals[maxIdx])maxIdx=i;
+  }
+
+  // Helper to get x,y for index
+  const px=i=>pad+(i/(vals.length-1))*(W-2*pad);
+  const py=i=>H-pad-((vals[i]-min)/range)*(H-2*pad);
+
+  // Draw area fill (subtle purple)
+  ctx.beginPath();
+  for(let i=0;i<vals.length;i++){if(i===0)ctx.moveTo(px(i),py(i));else ctx.lineTo(px(i),py(i));}
+  ctx.lineTo(px(vals.length-1),H-pad);
+  ctx.lineTo(px(0),H-pad);
+  ctx.closePath();
+  ctx.fillStyle=isDark?'rgba(192,132,252,0.08)':'rgba(147,51,234,0.08)';
+  ctx.fill();
+
+  // Draw purple line
+  ctx.beginPath();
+  for(let i=0;i<vals.length;i++){if(i===0)ctx.moveTo(px(i),py(i));else ctx.lineTo(px(i),py(i));}
+  ctx.strokeStyle=lineColor;
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+
+  // Green dot for highest value
+  ctx.beginPath();
+  ctx.arc(px(maxIdx),py(maxIdx),2.5,0,Math.PI*2);
+  ctx.fillStyle=isDark?'#4ade80':'#16a34a';
+  ctx.fill();
+
+  // Red dot for lowest value
+  ctx.beginPath();
+  ctx.arc(px(minIdx),py(minIdx),2.5,0,Math.PI*2);
+  ctx.fillStyle=isDark?'#f87171':'#dc2626';
+  ctx.fill();
 }
 
+// ─── Render ───────────────────────────────────────────────
 function render(){
   if(!DATA)return;
   const f=document.getElementById('si').value.toLowerCase();
   let items=DATA.e;
   if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||e.n.toLowerCase().includes(f)||(e.h&&e.h.toLowerCase().includes(f)));
-  items=[...items].sort((a,b)=>{
-    if(sortKey==='rk')return sortDir*(a.rk-b.rk);
-    const av=a[sortKey]??(typeof a[sortKey]==='string'?'': -Infinity);
-    const bv=b[sortKey]??(typeof b[sortKey]==='string'?'':-Infinity);
-    if(typeof av==='string')return sortDir*av.localeCompare(bv);
-    return sortDir*(av>bv?1:av<bv?-1:0);
-  });
+
+  // Sort
+  if(useMultiSort&&multiSort.length>0){
+    items=[...items].sort((a,b)=>{
+      for(const {key,dir} of multiSort){
+        const av=a[key]??(typeof a[key]==='string'?'':-Infinity);
+        const bv=b[key]??(typeof b[key]==='string'?'':-Infinity);
+        let cmp=0;
+        if(typeof av==='string')cmp=av.localeCompare(bv);
+        else cmp=av>bv?1:av<bv?-1:0;
+        if(cmp!==0)return dir*cmp;
+      }
+      return 0;
+    });
+  }else{
+    items=[...items].sort((a,b)=>{
+      if(sortKey==='rk')return sortDir*(a.rk-b.rk);
+      const av=a[sortKey]??(typeof a[sortKey]==='string'?'':-Infinity);
+      const bv=b[sortKey]??(typeof b[sortKey]==='string'?'':-Infinity);
+      if(typeof av==='string')return sortDir*av.localeCompare(bv);
+      return sortDir*(av>bv?1:av<bv?-1:0);
+    });
+  }
+
   const mxRV=Math.max(...DATA.e.map(e=>e.rv||0));
   const mxAM=Math.max(...DATA.e.map(e=>e.am||0));
   let html='';
   for(const e of items){
     const exp=expandedTicker===e.t;
-    const cc=e.ch>0?'cp':e.ch<0?'cn':'cz';
-    const ct=e.ch!=null?(e.ch>0?'+':'')+e.ch.toFixed(2)+'%':'—';
-    const ar=e.rf===3?'<span class="ad">▼</span>':(e.rf===0&&e.ch>0?'<span class="au">▲</span>':'');
+    const ar=e.rf>=4?'<span class="ad">▼</span>':(e.ra>=4?'<span class="au">▲</span>':'');
     const rvP=e.rv!=null?Math.min(e.rv/mxRV*100,100):0;
     const amP=e.am!=null?Math.min(e.am/mxAM*100,100):0;
+
     html+=`<tr class="${exp?'exp':''}" onclick="togRow('${e.t}')">
-      <td class="rk">${e.rk}</td><td class="tk">${esc(e.t)}${ar}</td><td class="sc2">${esc(e.n)}</td>
+      <td class="rk">${e.rk}</td>
+      <td class="tk">${esc(e.t)}${ar}</td>
+      <td class="sc2">${esc(e.n)}</td>
+      <td class="rt m" style="color:var(--t1)">$${e.p?.toFixed(2)??'—'}</td>
       <td><div class="bc"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${e.rv!=null?e.rv+'%':'—'}</span></div></td>
       <td><div class="bc"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${e.am!=null?e.am+'%':'—'}</span></div></td>
-      <td class="rt m ${cc}">${ct}</td>
+      <td class="rt m ${chgClass(e.ch)}">${chgText(e.ch)}</td>
+      <td class="rt m ${chgClass(e.c5)}">${chgText(e.c5)}</td>
+      <td class="rt m ${chgClass(e.c20)}">${chgText(e.c20)}</td>
       <td class="c"><span class="rs" style="background:${getRSBg(e.rs)};color:${getRSCol(e.rs)}">${e.rs!=null?e.rs+'%':'—'}</span></td>
-      <td class="rt m" style="color:#cbd5e1">$${e.p?.toFixed(2)??'—'}</td></tr>`;
-    if(exp&&e.h){const hl=e.h.split(',').map(s=>s.trim()).filter(Boolean);
-      html+=`<tr><td colspan="8" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}):</div><div class="hw">${hl.map(h=>`<span class="pill">${esc(h)}</span>`).join('')}</div></td></tr>`;}
+      <td class="c"><div class="spark-wrap"><canvas data-ticker="${e.t}" width="250" height="28"></canvas></div></td>
+    </tr>`;
+    if(exp&&e.h){const hl=e.h.split(',').map(s=>s.trim()).filter(Boolean);const hg=e.hg||{};
+      const gc=h=>{const g=hg[h];return g==='g'?'pill-g':g==='s'?'pill-s':'pill-b';};
+      const goldStocks=hl.filter(h=>hg[h]==='g'),silverStocks=hl.filter(h=>hg[h]==='s'),bronzeStocks=hl.filter(h=>hg[h]==='b');
+      html+=`<tr><td colspan="11" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}): <span class="pill pill-g" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(goldStocks).replace(/"/g,'&quot;')},'g')" title="Click to add gold stocks to clipboard">● Gold ${goldStocks.length}</span> <span class="pill pill-s" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(silverStocks).replace(/"/g,'&quot;')},'s')" title="Click to add silver stocks to clipboard">● Silver ${silverStocks.length}</span> <span class="pill pill-b" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(bronzeStocks).replace(/"/g,'&quot;')},'b')" title="Click to add bronze stocks to clipboard">● Bronze ${bronzeStocks.length}</span></div><div class="hw">${hl.map(h=>`<span class="pill ${gc(h)}">${esc(h)}</span>`).join('')}</div></td></tr>`;}
   }
   document.getElementById('tb').innerHTML=html;
-  document.getElementById('ft').textContent=`${items.length} ETFs · Sorted: RS (PERCENTRANK) desc, then Change% desc`;
+  document.getElementById('ft').textContent=`${items.length} ETFs · ${useMultiSort?'Multi-level sort active':'Sorted by '+sortKey}`;
+
+  // Draw sparklines
+  requestAnimationFrame(()=>{
+    const canvases=document.querySelectorAll('canvas[data-ticker]');
+    const etfMap={};
+    DATA.e.forEach(e=>{etfMap[e.t]=e;});
+    canvases.forEach(c=>{
+      const etf=etfMap[c.dataset.ticker];
+      if(etf&&etf.vs)drawSparkline(c,etf.vs);
+    });
+  });
 }
 
 function togRow(t){expandedTicker=expandedTicker===t?null:t;render();}
+
+// ─── Init ─────────────────────────────────────────────────
 loadData();
 </script>
 </body>
 </html>
+
