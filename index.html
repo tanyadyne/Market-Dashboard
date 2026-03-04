@@ -360,7 +360,7 @@ async function copyAll(){
 // ─── Data Loading ─────────────────────────────────────────
 async function loadData(){
   try{
-    const res=await fetch('data.json');
+    const res=await fetch('data.json?_='+Date.now());
     if(!res.ok)throw new Error('data.json not found');
     DATA=await res.json();
     onDataLoaded();
@@ -532,6 +532,7 @@ function togRow(t){expandedTicker=expandedTicker===t?null:t;render();}
 
 // ─── Init ─────────────────────────────────────────────────
 loadData();
+setInterval(loadData,60000); // auto-refresh every 60 seconds
 </script>
 </body>
 </html>
