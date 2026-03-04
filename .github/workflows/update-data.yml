@@ -2,10 +2,9 @@ name: Update ETF Data
 
 on:
   schedule:
-    # Every 6 minutes during US market hours
+    # Every 30 minutes during US market hours
     # GitHub Actions uses UTC, US market hours = 9:30 AM - 4:00 PM EST = 14:30 - 21:00 UTC
-    # We use */6 for every 6 min, and run the job but skip execution outside market hours
-    - cron: '*/6 13-21 * * 1-5'
+    - cron: '*/30 13-21 * * 1-5'
   workflow_dispatch: # Allow manual trigger anytime
 
 jobs:
@@ -48,12 +47,10 @@ jobs:
 
       - name: Install dependencies
         if: steps.market_check.outputs.skip != 'true'
-        run: pip install yfinance numpy requests
+        run: pip install yfinance numpy
 
       - name: Fetch data and compute RS
         if: steps.market_check.outputs.skip != 'true'
-        env:
-          GURUFOCUS_API_KEY: ${{ secrets.GURUFOCUS_API_KEY }}
         run: python fetch_data.py
 
       - name: Commit and push data.json
