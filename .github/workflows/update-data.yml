@@ -48,10 +48,12 @@ jobs:
 
       - name: Install dependencies
         if: steps.market_check.outputs.skip != 'true'
-        run: pip install yfinance numpy
+        run: pip install yfinance numpy requests
 
       - name: Fetch data and compute RS
         if: steps.market_check.outputs.skip != 'true'
+        env:
+          GURUFOCUS_API_KEY: ${{ secrets.GURUFOCUS_API_KEY }}
         run: python fetch_data.py
 
       - name: Commit and push data.json
