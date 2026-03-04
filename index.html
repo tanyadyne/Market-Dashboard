@@ -389,6 +389,11 @@ function onDataLoaded(){
   const mk=(id,label,items)=>{document.getElementById(id).innerHTML=`<span class="pnl-l">${label}</span>`+items.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');};
   mk('pA','▲ RS Advancing 4+ Days',DATA.s.a);
   mk('pD','▼ RS Declining 4+ Days',DATA.s.d);
+  // Skip full re-render if TradingView charts are loaded (auto-refresh would destroy them)
+  if(expandedTicker && document.querySelector('.tv-chart[data-loaded="1"]')){
+    // Silently update non-table elements only — charts stay intact
+    return;
+  }
   render();
 }
 
@@ -540,53 +545,36 @@ function render(){
 
 function injectTVCharts(){
   const isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  const bgColor=isDark?'#0F0F0F':'#FFFFFF';
   const theme=isDark?'dark':'light';
+  const bgColor=isDark?'rgba(15, 15, 15, 1)':'rgba(255, 255, 255, 1)';
   const gridColor=isDark?'rgba(242, 242, 242, 0)':'rgba(0, 0, 0, 0)';
   document.querySelectorAll('.tv-chart').forEach(el=>{
-    if(el.dataset.loaded) return; // already injected
+    if(el.dataset.loaded) return;
     const tk=el.id.replace('tvc-','');
     if(!tk) return;
     el.dataset.loaded='1';
-    // Create widget container
-    const container=document.createElement('div');
-    container.className='tradingview-widget-container';
-    container.style.cssText='height:100%;width:100%';
-    const widgetDiv=document.createElement('div');
-    widgetDiv.className='tradingview-widget-container__widget';
-    widgetDiv.style.cssText='height:calc(100% - 32px);width:100%';
-    container.appendChild(widgetDiv);
-    // Create and inject script
+    const cfg=JSON.stringify({
+      allow_symbol_change:false,calendar:false,details:false,
+      hide_side_toolbar:true,hide_top_toolbar:true,hide_legend:true,
+      hide_volume:true,hotlist:false,interval:"D",locale:"en",
+      save_image:false,style:"1",symbol:tk,theme:theme,
+      timezone:"Etc/UTC",backgroundColor:bgColor,gridColor:gridColor,
+      watchlist:[],withdateranges:false,compareSymbols:[],studies:[],
+      autosize:true
+    });
+    // Build widget HTML
+    const wrapper=document.createElement('div');
+    wrapper.className='tradingview-widget-container';
+    wrapper.style.cssText='height:100%;width:100%';
+    wrapper.innerHTML=`<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>`;
+    el.appendChild(wrapper);
+    // Dynamically create and append script (must be done via DOM API for execution)
     const script=document.createElement('script');
     script.type='text/javascript';
     script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
     script.async=true;
-    script.textContent=JSON.stringify({
-      "allow_symbol_change":false,
-      "calendar":false,
-      "details":false,
-      "hide_side_toolbar":true,
-      "hide_top_toolbar":true,
-      "hide_legend":true,
-      "hide_volume":true,
-      "hotlist":false,
-      "interval":"D",
-      "locale":"en",
-      "save_image":false,
-      "style":"1",
-      "symbol":tk,
-      "theme":theme,
-      "timezone":"Etc/UTC",
-      "backgroundColor":bgColor,
-      "gridColor":gridColor,
-      "watchlist":[],
-      "withdateranges":false,
-      "compareSymbols":[],
-      "studies":[],
-      "autosize":true
-    });
-    container.appendChild(script);
-    el.appendChild(container);
+    script.innerHTML=cfg;
+    wrapper.appendChild(script);
   });
 }
 
