@@ -60,7 +60,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data.json
-          git add -f sma200_cache.json 2>/dev/null || true
           git diff --staged --quiet || git commit -m "Update ETF data $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
 
