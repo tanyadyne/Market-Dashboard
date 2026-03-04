@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """
-Fetch ETF data from Yahoo Finance, compute ATR-adjusted RS vs SPY,
-and write data.json. Reads pre-computed holding grades from grades.json
+Fetch ETF data from Yahoo Finance, compute standard VARS
+(Volatility-Adjusted Relative Strength) vs SPY, and write data.json.
+
+VARS method: For each day, normalize each instrument's daily return by
+its own ATR (as % of price), then cumulate the difference between the
+ETF's normalized return and SPY's normalized return over the lookback window.
+
+Reads pre-computed holding grades from grades.json
 (produced by grade_holdings.py which runs once daily after market close).
 
 Fast refresh (~30 seconds) — safe to run every 6 minutes during market hours.
@@ -141,6 +147,25 @@ def compute_atr(highs, lows, closes, period=14):
     return atr
 
 
+def compute_atr_series(highs, lows, closes, period=14):
+    """Return a list of rolling ATR values, one per bar (index 0 = bar 0).
+    The first `period` bars use expanding mean; after that Wilder smoothing."""
+    n = len(closes)
+    atr_out = [0.0] * n
+    trs = []
+    for i in range(1, n):
+        if closes[i] is None or closes[i-1] is None or highs[i] is None or lows[i] is None:
+            atr_out[i] = atr_out[i-1]
+            continue
+        tr = max(highs[i]-lows[i], abs(highs[i]-closes[i-1]), abs(lows[i]-closes[i-1]))
+        trs.append(tr)
+        if len(trs) <= period:
+            atr_out[i] = np.mean(trs)
+        else:
+            atr_out[i] = (atr_out[i-1] * (period - 1) + tr) / period
+    return atr_out
+
+
 def percentrank_inc(values, x):
     n = len(values)
     if n <= 1:
@@ -187,6 +212,7 @@ def main():
     spy_highs = spy_df["High"].values
     spy_lows = spy_df["Low"].values
     spy_atr = compute_atr(spy_highs, spy_lows, spy_closes, ATR_PERIOD)
+    spy_atr_series = compute_atr_series(spy_highs, spy_lows, spy_closes, ATR_PERIOD)
     spy_price = float(spy_closes[-1])
     spy_chg = (spy_closes[-1] / spy_closes[-2] - 1) * 100 if len(spy_closes) >= 2 else 0
     spy_ts_map = {ts: i for i, ts in enumerate(spy_df.index)}
@@ -243,23 +269,40 @@ def main():
             })
             continue
 
-        recent = common[-LOOKBACK:]
-        atr_ratio = atr / spy_atr if spy_atr > 0 else 1
-        rs_series = []
-        for etf_i, spy_i in recent:
-            ratio = c[etf_i] / spy_closes[spy_i]
-            rs_val = ratio / atr_ratio if atr_ratio > 0 else ratio
-            rs_series.append(float(rs_val))
+        # ─── Standard VARS: cumulative ATR-normalized returns ────
+        # For each day, compute:
+        #   ETF daily return / ETF ATR  vs  SPY daily return / SPY ATR
+        #   VARS = cumulative sum of (ETF_norm_return - SPY_norm_return)
+        etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
 
         extended = common[-(LOOKBACK + 1):]
-        vs_series = []
-        for etf_i, spy_i in extended:
-            ratio = c[etf_i] / spy_closes[spy_i]
-            rs_val = ratio / atr_ratio if atr_ratio > 0 else ratio
-            vs_series.append(round(float(rs_val), 4))
+        vars_series = []
+        cumulative = 0.0
+        for k in range(1, len(extended)):
+            etf_i_prev, spy_i_prev = extended[k - 1]
+            etf_i, spy_i = extended[k]
 
-        final_rs = rs_series[-1]
-        rs_pctrank = percentrank_inc(rs_series, final_rs)
+            # Daily returns
+            etf_ret = (c[etf_i] - c[etf_i_prev]) / c[etf_i_prev] if c[etf_i_prev] != 0 else 0
+            spy_ret = (spy_closes[spy_i] - spy_closes[spy_i_prev]) / spy_closes[spy_i_prev] if spy_closes[spy_i_prev] != 0 else 0
+
+            # ATR as % of price for normalization
+            etf_atr_pct = etf_atr_series[etf_i] / c[etf_i_prev] if c[etf_i_prev] != 0 and etf_atr_series[etf_i] > 0 else 1
+            spy_atr_pct = spy_atr_series[spy_i] / spy_closes[spy_i_prev] if spy_closes[spy_i_prev] != 0 and spy_atr_series[spy_i] > 0 else 1
+
+            # Normalize each return by its own ATR%
+            etf_norm = etf_ret / etf_atr_pct if etf_atr_pct > 0 else 0
+            spy_norm = spy_ret / spy_atr_pct if spy_atr_pct > 0 else 0
+
+            cumulative += (etf_norm - spy_norm)
+            vars_series.append(round(cumulative, 4))
+
+        # rs_series = the VARS values over the lookback window
+        rs_series = vars_series  # length = LOOKBACK
+        vs_series = [0.0] + vars_series  # prepend zero anchor for sparkline (LOOKBACK+1 points)
+
+        final_rs = rs_series[-1] if rs_series else 0
+        rs_pctrank = percentrank_inc(rs_series, final_rs) if len(rs_series) > 1 else None
 
         adv_streak = 0
         for j in range(len(rs_series) - 1, 0, -1):
