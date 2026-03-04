@@ -16,8 +16,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 /* ─── Header ─── */
 .hdr{padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .hdr-l{display:flex;align-items:center;gap:10px}
-.logo{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3b82f6,#8b5cf6);font-size:14px;font-weight:800;letter-spacing:-1px;color:#fff}
-.hdr-t{font-size:16px;font-weight:700;letter-spacing:-.3px}.hdr-s{font-size:11px;color:var(--t4)}
+.hdr-t{font-size:16px;font-weight:700;letter-spacing:-.3px}
 .hdr-r{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .btn{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:.15s;font-family:inherit}
 .btn-a{border-color:#1e3a1e;background:transparent;color:var(--g)}.btn-a.on{background:var(--gbg)}
@@ -118,11 +117,7 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 
 <div class="hdr">
   <div class="hdr-l">
-    <div class="logo">RS</div>
-    <div>
-      <div class="hdr-t">ETF Relative Strength Tracker</div>
-      <div class="hdr-s" id="sub">ATR-adjusted RS vs SPY · Loading...</div>
-    </div>
+    <div class="hdr-t" style="font-size:15px;letter-spacing:1.5px;text-transform:uppercase">ETF Relative Strength Tracker</div>
   </div>
   <div class="hdr-r">
     <button class="btn btn-a" id="bA" onclick="togPnl('a')">Advancing —%</button>
@@ -377,7 +372,6 @@ async function loadData(){
 function onDataLoaded(){
   document.getElementById('statusBar').style.display='none';
   document.getElementById('tw').style.display='block';
-  document.getElementById('sub').textContent=`ATR-adjusted RS vs SPY · PERCENTRANK sorted · ${DATA.e.length} ETFs`;
   document.getElementById('bA').textContent=`Advancing ${DATA.s.ap}%`;
   document.getElementById('bD').textContent=`Declining ${DATA.s.dp}%`;
   if(DATA.meta){
