@@ -180,8 +180,8 @@ def main():
     print(f"Fetching data for {len(TICKERS) + 1} ETF tickers...")
     all_tickers = ["SPY"] + TICKERS
 
-    end = datetime.now()
-    start = end - timedelta(days=90)
+    end = datetime.now() + timedelta(days=1)
+    start = end - timedelta(days=91)
 
     raw = yf.download(
         all_tickers,
@@ -408,4 +408,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
