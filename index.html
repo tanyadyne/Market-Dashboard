@@ -66,6 +66,10 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .hr td{padding:10px 16px 14px 50px;background:var(--card)}
 .hl{font-size:10px;color:var(--t4);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
 .hc{font-size:10px;color:var(--t3);margin-bottom:6px}.hw{max-width:750px}
+.tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;margin-top:10px}
+.tv-chart{height:300px;border-radius:6px;overflow:hidden;border:1px solid var(--bdr2);background:#0F0F0F}
+[data-theme="light"] .tv-chart{background:#fff}
+.tv-label{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1);padding:6px 8px 2px;background:var(--card);letter-spacing:.5px}
 .pill{display:inline-block;padding:2px 7px;margin:2px;border-radius:3px;font-size:11px;font-family:'JetBrains Mono',monospace;border:1px solid}
 .pill-g{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1c1917;border-color:#d97706;font-weight:600;text-shadow:0 0 2px rgba(255,255,255,0.7),0 0 4px rgba(255,255,255,0.4)}
 .pill-s{background:linear-gradient(135deg,#b0b7c0,#7d8590);color:#f9fafb;border-color:#4b5563;font-weight:600;text-shadow:0 0 2px rgba(0,0,0,0.6),0 0 4px rgba(0,0,0,0.3)}
@@ -511,7 +515,11 @@ function render(){
     if(exp&&e.h){const hl=e.h.split(',').map(s=>s.trim()).filter(Boolean);const hg=e.hg||{};
       const gc=h=>{const g=hg[h];return g==='g'?'pill-g':g==='s'?'pill-s':'pill-b';};
       const goldStocks=hl.filter(h=>hg[h]==='g'),silverStocks=hl.filter(h=>hg[h]==='s'),bronzeStocks=hl.filter(h=>hg[h]==='b');
-      html+=`<tr><td colspan="11" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}): <span class="pill pill-g" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(goldStocks).replace(/"/g,'&quot;')},'g')" title="Click to add gold stocks to clipboard">● Gold ${goldStocks.length}</span> <span class="pill pill-s" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(silverStocks).replace(/"/g,'&quot;')},'s')" title="Click to add silver stocks to clipboard">● Silver ${silverStocks.length}</span> <span class="pill pill-b" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(bronzeStocks).replace(/"/g,'&quot;')},'b')" title="Click to add bronze stocks to clipboard">● Bronze ${bronzeStocks.length}</span></div><div class="hw">${hl.map(h=>`<span class="pill ${gc(h)}">${esc(h)}</span>`).join('')}</div></td></tr>`;}
+      let chartHtml='';
+      if(goldStocks.length>0){
+        chartHtml=`<div class="tv-grid">${goldStocks.map(tk=>`<div class="tv-chart-wrap"><div class="tv-label">${esc(tk)}</div><div class="tv-chart" id="tvc-${esc(tk)}"></div></div>`).join('')}</div>`;
+      }
+      html+=`<tr><td colspan="11" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}): <span class="pill pill-g" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(goldStocks).replace(/"/g,'&quot;')},'g')" title="Click to add gold stocks to clipboard">● Gold ${goldStocks.length}</span> <span class="pill pill-s" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(silverStocks).replace(/"/g,'&quot;')},'s')" title="Click to add silver stocks to clipboard">● Silver ${silverStocks.length}</span> <span class="pill pill-b" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(bronzeStocks).replace(/"/g,'&quot;')},'b')" title="Click to add bronze stocks to clipboard">● Bronze ${bronzeStocks.length}</span></div><div class="hw">${hl.map(h=>`<span class="pill ${gc(h)}">${esc(h)}</span>`).join('')}</div>${chartHtml}</td></tr>`;}
   }
   document.getElementById('tb').innerHTML=html;
   document.getElementById('ft').textContent=`${items.length} ETFs · ${useMultiSort?'Multi-level sort active':'Sorted by '+sortKey}`;
@@ -525,6 +533,60 @@ function render(){
       const etf=etfMap[c.dataset.ticker];
       if(etf&&etf.vs)drawSparkline(c,etf.vs);
     });
+    // Inject TradingView charts for gold stocks in expanded row
+    injectTVCharts();
+  });
+}
+
+function injectTVCharts(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const bgColor=isDark?'#0F0F0F':'#FFFFFF';
+  const theme=isDark?'dark':'light';
+  const gridColor=isDark?'rgba(242, 242, 242, 0)':'rgba(0, 0, 0, 0)';
+  document.querySelectorAll('.tv-chart').forEach(el=>{
+    if(el.dataset.loaded) return; // already injected
+    const tk=el.id.replace('tvc-','');
+    if(!tk) return;
+    el.dataset.loaded='1';
+    // Create widget container
+    const container=document.createElement('div');
+    container.className='tradingview-widget-container';
+    container.style.cssText='height:100%;width:100%';
+    const widgetDiv=document.createElement('div');
+    widgetDiv.className='tradingview-widget-container__widget';
+    widgetDiv.style.cssText='height:calc(100% - 32px);width:100%';
+    container.appendChild(widgetDiv);
+    // Create and inject script
+    const script=document.createElement('script');
+    script.type='text/javascript';
+    script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.async=true;
+    script.textContent=JSON.stringify({
+      "allow_symbol_change":false,
+      "calendar":false,
+      "details":false,
+      "hide_side_toolbar":true,
+      "hide_top_toolbar":true,
+      "hide_legend":true,
+      "hide_volume":true,
+      "hotlist":false,
+      "interval":"D",
+      "locale":"en",
+      "save_image":false,
+      "style":"1",
+      "symbol":tk,
+      "theme":theme,
+      "timezone":"Etc/UTC",
+      "backgroundColor":bgColor,
+      "gridColor":gridColor,
+      "watchlist":[],
+      "withdateranges":false,
+      "compareSymbols":[],
+      "studies":[],
+      "autosize":true
+    });
+    container.appendChild(script);
+    el.appendChild(container);
   });
 }
 
