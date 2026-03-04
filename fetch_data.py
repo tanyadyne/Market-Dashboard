@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fetch ETF data from Yahoo Finance, compute ATR-adjusted RS vs SPY,
-and write data.json for the dashboard.
+grade individual holdings by moving average structure, and write data.json.
 
 Usage:
     pip install yfinance numpy
@@ -121,6 +121,8 @@ ETF_INFO = [
 TICKERS = [e["t"] for e in ETF_INFO]
 
 
+# ─── Math Helpers ───────────────────────────────────────────────────────────
+
 def compute_atr(highs, lows, closes, period=14):
     trs = []
     for i in range(1, len(closes)):
@@ -140,12 +142,65 @@ def percentrank_inc(values, x):
     n = len(values)
     if n <= 1:
         return None
-    count_less = sum(1 for v in values if v < x)
-    return count_less / (n - 1)
+    return sum(1 for v in values if v < x) / (n - 1)
 
+
+def compute_ema(closes, period):
+    """Compute EMA for the given period. Returns final EMA value."""
+    if len(closes) < period:
+        return None
+    mult = 2 / (period + 1)
+    ema = np.mean(closes[:period])
+    for c in closes[period:]:
+        ema = (c - ema) * mult + ema
+    return ema
+
+
+def compute_sma(closes, period):
+    """Compute SMA for the given period. Returns final SMA value."""
+    if len(closes) < period:
+        return None
+    return np.mean(closes[-period:])
+
+
+def grade_holding(closes):
+    """
+    Grade a holding based on moving average structure.
+    Gold:   price > SMA200, SMA50, EMA21 AND EMA9 > EMA21 > SMA50 > SMA200
+    Silver: price > SMA200, SMA50 AND SMA50 > SMA200 (but not gold)
+    Bronze: everything else
+    """
+    if closes is None or len(closes) < 200:
+        if closes is not None and len(closes) >= 50:
+            price = closes[-1]
+            sma50 = compute_sma(closes, 50)
+            if price > sma50:
+                return "s"
+        return "b"
+
+    price = closes[-1]
+    sma200 = compute_sma(closes, 200)
+    sma50 = compute_sma(closes, 50)
+    ema21 = compute_ema(closes, 21)
+    ema9 = compute_ema(closes, 9)
+
+    if sma200 is None or sma50 is None or ema21 is None or ema9 is None:
+        return "b"
+
+    if (price > sma200 and price > sma50 and price > ema21
+            and ema9 > ema21 > sma50 > sma200):
+        return "g"
+
+    if price > sma200 and price > sma50 and sma50 > sma200:
+        return "s"
+
+    return "b"
+
+
+# ─── Main ───────────────────────────────────────────────────────────────────
 
 def main():
-    print(f"Fetching data for {len(TICKERS) + 1} tickers...")
+    print(f"Fetching data for {len(TICKERS) + 1} ETF tickers...")
     all_tickers = ["SPY"] + TICKERS
 
     end = datetime.now()
@@ -182,16 +237,18 @@ def main():
     spy_atr = compute_atr(spy_highs, spy_lows, spy_closes, ATR_PERIOD)
     spy_price = float(spy_closes[-1])
     spy_chg = (spy_closes[-1] / spy_closes[-2] - 1) * 100 if len(spy_closes) >= 2 else 0
-
     spy_ts_map = {ts: i for i, ts in enumerate(spy_df.index)}
 
+    # ─── Process each ETF ───────────────────────────────────
     results = []
     for info in ETF_INFO:
         ticker = info["t"]
         df = get_df(ticker)
 
         if df is None or len(df) < 10:
-            results.append({**info, "rv": None, "am": None, "ch": None, "rs": None, "rf": 0, "p": None, "fr": None})
+            results.append({**info, "rv": None, "am": None, "ch": None, "c5": None,
+                            "c20": None, "rs": None, "rf": 0, "ra": 0, "p": None,
+                            "fr": None, "vs": None})
             continue
 
         c = df["Close"].values
@@ -202,6 +259,8 @@ def main():
 
         price = float(c[-1])
         change = (c[-1] / c[-2] - 1) * 100 if length >= 2 else 0
+        c5 = (c[-1] / c[-6] - 1) * 100 if length >= 6 else None
+        c20 = (c[-1] / c[-21] - 1) * 100 if length >= 21 else None
 
         atr = compute_atr(h, l, c, ATR_PERIOD)
         valid_c = [x for x in c if x is not None]
@@ -216,7 +275,6 @@ def main():
         else:
             rvol = None
 
-        # RS series
         common = []
         for idx, ts in enumerate(df.index):
             if ts in spy_ts_map and c[idx] is not None and spy_closes[spy_ts_map[ts]] is not None:
@@ -226,7 +284,10 @@ def main():
             results.append({
                 **info, "rv": round(rvol * 100) if rvol else None,
                 "am": round(atr_mult * 100), "ch": round(change, 2),
-                "rs": None, "rf": 0, "p": round(price, 2), "fr": None,
+                "c5": round(c5, 2) if c5 is not None else None,
+                "c20": round(c20, 2) if c20 is not None else None,
+                "rs": None, "rf": 0, "ra": 0, "p": round(price, 2),
+                "fr": None, "vs": None,
             })
             continue
 
@@ -238,44 +299,127 @@ def main():
             rs_val = ratio / atr_ratio if atr_ratio > 0 else ratio
             rs_series.append(float(rs_val))
 
+        # VARS sparkline: include one extra day for context (26 values)
+        extended = common[-(LOOKBACK + 1):]
+        vs_series = []
+        for etf_i, spy_i in extended:
+            ratio = c[etf_i] / spy_closes[spy_i]
+            rs_val = ratio / atr_ratio if atr_ratio > 0 else ratio
+            vs_series.append(round(float(rs_val), 4))
+
         final_rs = rs_series[-1]
         rs_pctrank = percentrank_inc(rs_series, final_rs)
 
-        streak = 0
+        # Consecutive streaks from RS series
+        adv_streak = 0
         for j in range(len(rs_series) - 1, 0, -1):
-            if rs_series[j] < rs_series[j - 1]:
-                streak += 1
+            if rs_series[j] > rs_series[j - 1]:
+                adv_streak += 1
             else:
                 break
-        rf = 3 if streak >= 3 else 0
+
+        dec_streak = 0
+        for j in range(len(rs_series) - 1, 0, -1):
+            if rs_series[j] < rs_series[j - 1]:
+                dec_streak += 1
+            else:
+                break
 
         results.append({
             **info,
             "rv": round(rvol * 100) if rvol else None,
             "am": round(atr_mult * 100),
             "ch": round(change, 2),
+            "c5": round(c5, 2) if c5 is not None else None,
+            "c20": round(c20, 2) if c20 is not None else None,
             "rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
-            "rf": rf,
+            "rf": dec_streak,
+            "ra": adv_streak,
             "p": round(price, 2),
             "fr": round(final_rs, 4),
+            "vs": vs_series,
         })
 
-    # Sort
-    results.sort(key=lambda x: (x["rs"] if x["rs"] is not None else -1, x["ch"] if x["ch"] is not None else -999), reverse=True)
+    # Sort: RS desc, then Change desc
+    results.sort(key=lambda x: (x["rs"] if x["rs"] is not None else -1,
+                                 x["ch"] if x["ch"] is not None else -999), reverse=True)
     for i, r in enumerate(results):
         r["rk"] = i + 1
 
-    total = len([r for r in results if r["rs"] is not None])
-    adv_count = sum(1 for r in results if r.get("rf") == 0 and r.get("ch") and r["ch"] > 0)
-    dec_count = sum(1 for r in results if r.get("rf") == 3)
+    # ─── Grade individual holdings ──────────────────────────
+    print("Grading individual holdings...")
+    all_holdings = set()
+    for e in results:
+        if e.get("h"):
+            for hh in e["h"].split(","):
+                hh = hh.strip()
+                if hh:
+                    all_holdings.add(hh)
+
+    print(f"  Fetching {len(all_holdings)} unique holdings for MA grading...")
+    holding_tickers = list(all_holdings)
+    holding_grades = {}
+
+    CHUNK = 200
+    for i in range(0, len(holding_tickers), CHUNK):
+        chunk = holding_tickers[i:i + CHUNK]
+        print(f"  Batch {i // CHUNK + 1}: fetching {len(chunk)} tickers...")
+        try:
+            h_start = end - timedelta(days=300)
+            h_raw = yf.download(
+                chunk,
+                start=h_start.strftime("%Y-%m-%d"),
+                end=end.strftime("%Y-%m-%d"),
+                group_by="ticker",
+                auto_adjust=True,
+                threads=True,
+            )
+            for tk in chunk:
+                try:
+                    if len(chunk) == 1:
+                        hdf = h_raw
+                    else:
+                        hdf = h_raw[tk]
+                    hdf = hdf.dropna(subset=["Close"])
+                    closes = hdf["Close"].values.tolist()
+                    holding_grades[tk] = grade_holding(closes)
+                except Exception:
+                    holding_grades[tk] = "b"
+        except Exception as ex:
+            print(f"  Warning: batch failed: {ex}")
+            for tk in chunk:
+                holding_grades[tk] = "b"
+
+    for e in results:
+        if e.get("h"):
+            hg = {}
+            for hh in e["h"].split(","):
+                hh = hh.strip()
+                if hh:
+                    hg[hh] = holding_grades.get(hh, "b")
+            e["hg"] = hg
+
+    # ─── Advancing / Declining stats ────────────────────────
+    total_with_rs = len([r for r in results if r.get("vs") and len(r["vs"]) >= 2])
+    adv_today = sum(1 for r in results if r.get("vs") and len(r["vs"]) >= 2
+                     and r["vs"][-1] > r["vs"][-2])
+    dec_today = sum(1 for r in results if r.get("vs") and len(r["vs"]) >= 2
+                     and r["vs"][-1] < r["vs"][-2])
+
+    adv_pct = round(adv_today / total_with_rs * 100, 1) if total_with_rs else 0
+    dec_pct = round(dec_today / total_with_rs * 100, 1) if total_with_rs else 0
+
+    # Panels: 4+ consecutive days of RS increase/decrease
+    adv_streak_list = [[r["t"], r["n"]] for r in results if r.get("ra", 0) >= 4]
+    dec_streak_list = [[r["t"], r["n"]] for r in results if r.get("rf", 0) >= 4]
 
     data = {
         "e": results,
         "s": {
-            "ap": round(adv_count / total * 100, 1) if total else 0,
-            "dp": round(dec_count / total * 100, 1) if total else 0,
-            "a": [[r["t"], r["n"]] for r in results if r.get("rf") == 0 and r.get("rs") is not None and r["rs"] >= 88][:20],
-            "d": [[r["t"], r["n"]] for r in results if r.get("rf") == 3 and r.get("rs") is not None and r["rs"] <= 40][:10],
+            "ap": adv_pct,
+            "dp": dec_pct,
+            "a": adv_streak_list[:30],
+            "d": dec_streak_list[:30],
         },
         "meta": {
             "updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
@@ -287,9 +431,18 @@ def main():
     with open("data.json", "w") as f:
         json.dump(data, f, separators=(",", ":"))
 
-    print(f"Written data.json — {len(results)} ETFs")
+    g_count = sum(1 for v in holding_grades.values() if v == "g")
+    s_count = sum(1 for v in holding_grades.values() if v == "s")
+    b_count = sum(1 for v in holding_grades.values() if v == "b")
+
+    print(f"\nWritten data.json — {len(results)} ETFs")
     print(f"Top 5: {[r['t'] for r in results[:5]]}")
+    print(f"Advancing: {adv_pct}% | Declining: {dec_pct}%")
+    print(f"4+ day advance streaks: {len(adv_streak_list)}")
+    print(f"4+ day decline streaks: {len(dec_streak_list)}")
+    print(f"Holdings graded: {g_count} gold, {s_count} silver, {b_count} bronze")
 
 
 if __name__ == "__main__":
     main()
+
