@@ -3,13 +3,22 @@
 Fetch ETF data from Yahoo Finance, compute ATR-adjusted RS vs SPY,
 grade individual holdings by moving average structure, and write data.json.
 
+SMA200 Strategy:
+  - SMA200 values are cached in sma200_cache.json
+  - Cache is refreshed once per day (first run)
+  - SMA200 is fetched separately with a long lookback (400 days)
+  - EMA9, EMA21, SMA50 are computed from short-term data (90 days)
+  - This ensures accurate grading without needing 200+ days every run
+
 Usage:
     pip install yfinance numpy
     python fetch_data.py
 """
 
 import json
+import os
 import sys
+import time
 from datetime import datetime, timedelta
 import numpy as np
 import yfinance as yf
@@ -17,6 +26,7 @@ import yfinance as yf
 BENCHMARK = "SPY"
 LOOKBACK = 25
 ATR_PERIOD = 14
+SMA200_CACHE_FILE = "sma200_cache.json"
 
 ETF_INFO = [
     {"t":"XTL","n":"Telecom","fn":"SS SPDR S&P Telecom","h":"LITE,CIEN,ASTS,ONDS,LUMN,VIAV,COMM,GSAT,VSAT,CSCO,TDS,FYBR,VZ,UI,IRDM,AAOI,T,CALX,TMUS,ANET,MSI,FFIV,EXTR,NTCT,CCOI"},
@@ -146,7 +156,6 @@ def percentrank_inc(values, x):
 
 
 def compute_ema(closes, period):
-    """Compute EMA for the given period. Returns final EMA value."""
     if len(closes) < period:
         return None
     mult = 2 / (period + 1)
@@ -157,13 +166,139 @@ def compute_ema(closes, period):
 
 
 def compute_sma(closes, period):
-    """Compute SMA for the given period. Returns final SMA value."""
     if len(closes) < period:
         return None
     return np.mean(closes[-period:])
 
 
-def grade_holding(closes):
+# ─── SMA200 Cache ──────────────────────────────────────────────────────────
+
+def load_sma200_cache():
+    """Load cached SMA200 values. Returns (dict, date_str) or ({}, None)."""
+    if not os.path.exists(SMA200_CACHE_FILE):
+        return {}, None
+    try:
+        with open(SMA200_CACHE_FILE) as f:
+            cache = json.load(f)
+        return cache.get("values", {}), cache.get("date")
+    except Exception:
+        return {}, None
+
+
+def save_sma200_cache(values):
+    """Save SMA200 values with today's date."""
+    cache = {
+        "date": datetime.now().strftime("%Y-%m-%d"),
+        "values": values,
+    }
+    with open(SMA200_CACHE_FILE, "w") as f:
+        json.dump(cache, f, separators=(",", ":"))
+
+
+def refresh_sma200_cache(tickers):
+    """
+    Fetch 400 calendar days of close data via yfinance and compute SMA200.
+    Uses batch download — one call for all tickers.
+    """
+    print(f"  Refreshing SMA200 cache for {len(tickers)} tickers...")
+    sma200_values = {}
+    end = datetime.now()
+    start = end - timedelta(days=400)
+
+    CHUNK = 200
+    for i in range(0, len(tickers), CHUNK):
+        chunk = tickers[i:i + CHUNK]
+        print(f"  SMA200 batch {i // CHUNK + 1}: {len(chunk)} tickers...")
+        try:
+            raw = yf.download(
+                chunk,
+                start=start.strftime("%Y-%m-%d"),
+                end=end.strftime("%Y-%m-%d"),
+                group_by="ticker",
+                auto_adjust=True,
+                threads=True,
+            )
+            for tk in chunk:
+                try:
+                    if len(chunk) == 1:
+                        df = raw
+                    else:
+                        df = raw[tk]
+                    df = df.dropna(subset=["Close"])
+                    closes = df["Close"].values.tolist()
+                    if len(closes) >= 200:
+                        sma200_values[tk] = round(float(np.mean(closes[-200:])), 4)
+                    else:
+                        print(f"    WARNING: {tk} only has {len(closes)} data points, need 200")
+                except Exception as ex:
+                    print(f"    WARNING: {tk} SMA200 failed: {ex}")
+        except Exception as ex:
+            print(f"  WARNING: SMA200 batch failed: {ex}")
+
+    save_sma200_cache(sma200_values)
+    print(f"  SMA200 cache saved: {len(sma200_values)} tickers")
+    return sma200_values
+
+
+def get_sma200_values(tickers):
+    """
+    Get SMA200 values, using cache if available and from today.
+    Otherwise refresh the cache from yfinance.
+    """
+    cached, cache_date = load_sma200_cache()
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    if cache_date == today and len(cached) > 0:
+        # Check if we have most tickers covered
+        missing = [t for t in tickers if t not in cached]
+        if len(missing) <= 10:
+            print(f"  Using SMA200 cache from {cache_date} ({len(cached)} tickers)")
+            if missing:
+                print(f"  Fetching {len(missing)} missing tickers...")
+                new_vals = refresh_sma200_for_subset(missing)
+                cached.update(new_vals)
+                save_sma200_cache(cached)
+            return cached
+        else:
+            print(f"  Cache has {len(cached)} tickers but {len(missing)} missing, refreshing...")
+
+    return refresh_sma200_cache(tickers)
+
+
+def refresh_sma200_for_subset(tickers):
+    """Fetch SMA200 for a small subset of tickers."""
+    values = {}
+    end = datetime.now()
+    start = end - timedelta(days=400)
+    try:
+        raw = yf.download(
+            tickers,
+            start=start.strftime("%Y-%m-%d"),
+            end=end.strftime("%Y-%m-%d"),
+            group_by="ticker",
+            auto_adjust=True,
+            threads=True,
+        )
+        for tk in tickers:
+            try:
+                if len(tickers) == 1:
+                    df = raw
+                else:
+                    df = raw[tk]
+                df = df.dropna(subset=["Close"])
+                closes = df["Close"].values.tolist()
+                if len(closes) >= 200:
+                    values[tk] = round(float(np.mean(closes[-200:])), 4)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return values
+
+
+# ─── Grading ────────────────────────────────────────────────────────────────
+
+def grade_holding(price, ema9, ema21, sma50, sma200):
     """
     Grade a holding based on moving average structure.
     Gold:   price > EMA21 AND EMA9 > EMA21 > SMA50 > SMA200
@@ -171,19 +306,10 @@ def grade_holding(closes):
             OR (ii) SMA50 > SMA200, but EMA9 < EMA21 and/or EMA21 < SMA50
     Bronze: everything else
     """
-    if closes is None or len(closes) < 200:
+    if any(v is None for v in [price, ema9, ema21, sma50, sma200]):
         return "b"
 
-    price = closes[-1]
-    sma200 = compute_sma(closes, 200)
-    sma50 = compute_sma(closes, 50)
-    ema21 = compute_ema(closes, 21)
-    ema9 = compute_ema(closes, 9)
-
-    if sma200 is None or sma50 is None or ema21 is None or ema9 is None:
-        return "b"
-
-    # Gold: price > EMA21 AND perfectly stacked EMA9 > EMA21 > SMA50 > SMA200
+    # Gold: price > EMA21 AND perfectly stacked
     if price > ema21 and ema9 > ema21 > sma50 > sma200:
         return "g"
 
@@ -300,7 +426,6 @@ def main():
             rs_val = ratio / atr_ratio if atr_ratio > 0 else ratio
             rs_series.append(float(rs_val))
 
-        # VARS sparkline: include one extra day for context (26 values)
         extended = common[-(LOOKBACK + 1):]
         vs_series = []
         for etf_i, spy_i in extended:
@@ -311,7 +436,6 @@ def main():
         final_rs = rs_series[-1]
         rs_pctrank = percentrank_inc(rs_series, final_rs)
 
-        # Consecutive streaks from RS series
         adv_streak = 0
         for j in range(len(rs_series) - 1, 0, -1):
             if rs_series[j] > rs_series[j - 1]:
@@ -348,7 +472,7 @@ def main():
         r["rk"] = i + 1
 
     # ─── Grade individual holdings ──────────────────────────
-    print("Grading individual holdings...")
+    print("\nGrading individual holdings...")
     all_holdings = set()
     for e in results:
         if e.get("h"):
@@ -357,19 +481,25 @@ def main():
                 if hh:
                     all_holdings.add(hh)
 
-    print(f"  Fetching {len(all_holdings)} unique holdings for MA grading...")
-    holding_tickers = list(all_holdings)
+    holding_tickers = sorted(list(all_holdings))
+    print(f"  {len(holding_tickers)} unique holdings to grade")
+
+    # Step 1: Get SMA200 from cache (refreshed once per day)
+    sma200_map = get_sma200_values(holding_tickers)
+
+    # Step 2: Fetch short-term data (90 days) for EMA9, EMA21, SMA50
+    print(f"  Fetching short-term data for EMA9/EMA21/SMA50...")
     holding_grades = {}
+    short_start = end - timedelta(days=120)  # 120 cal days ≈ 85 trading days, plenty for SMA50
 
     CHUNK = 200
     for i in range(0, len(holding_tickers), CHUNK):
         chunk = holding_tickers[i:i + CHUNK]
-        print(f"  Batch {i // CHUNK + 1}: fetching {len(chunk)} tickers...")
+        print(f"  Short-term batch {i // CHUNK + 1}: {len(chunk)} tickers...")
         try:
-            h_start = end - timedelta(days=400)  # ~276 trading days for reliable SMA200
             h_raw = yf.download(
                 chunk,
-                start=h_start.strftime("%Y-%m-%d"),
+                start=short_start.strftime("%Y-%m-%d"),
                 end=end.strftime("%Y-%m-%d"),
                 group_by="ticker",
                 auto_adjust=True,
@@ -383,26 +513,34 @@ def main():
                         hdf = h_raw[tk]
                     hdf = hdf.dropna(subset=["Close"])
                     closes = hdf["Close"].values.tolist()
-                    grade = grade_holding(closes)
+
+                    if len(closes) < 21:
+                        holding_grades[tk] = "b"
+                        continue
+
+                    price = closes[-1]
+                    ema9 = compute_ema(closes, 9)
+                    ema21 = compute_ema(closes, 21)
+                    sma50 = compute_sma(closes, 50) if len(closes) >= 50 else None
+                    sma200 = sma200_map.get(tk)
+
+                    grade = grade_holding(price, ema9, ema21, sma50, sma200)
                     holding_grades[tk] = grade
-                    # Debug: log MA values for verification
+
+                    # Debug: log MA values for select tickers
                     if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                        _p = closes[-1] if closes else 0
-                        _s200 = compute_sma(closes, 200) if len(closes) >= 200 else None
-                        _s50 = compute_sma(closes, 50) if len(closes) >= 50 else None
-                        _e21 = compute_ema(closes, 21) if len(closes) >= 21 else None
-                        _e9 = compute_ema(closes, 9) if len(closes) >= 9 else None
-                        print(f"    DEBUG {tk}: price={_p:.2f} EMA9={_e9:.2f if _e9 else 'N/A'} "
-                              f"EMA21={_e21:.2f if _e21 else 'N/A'} SMA50={_s50:.2f if _s50 else 'N/A'} "
-                              f"SMA200={_s200:.2f if _s200 else 'N/A'} → {grade} "
-                              f"(data_points={len(closes)})")
-                except Exception:
+                        print(f"    DEBUG {tk}: price={price:.2f} EMA9={ema9:.2f if ema9 else 'N/A'} "
+                              f"EMA21={ema21:.2f if ema21 else 'N/A'} SMA50={sma50:.2f if sma50 else 'N/A'} "
+                              f"SMA200={sma200 if sma200 else 'N/A'} pts={len(closes)} -> {grade}")
+                except Exception as ex:
                     holding_grades[tk] = "b"
+                    print(f"    WARNING: {tk} grading failed: {ex}")
         except Exception as ex:
-            print(f"  Warning: batch failed: {ex}")
+            print(f"  WARNING: short-term batch failed: {ex}")
             for tk in chunk:
                 holding_grades[tk] = "b"
 
+    # Attach grades to ETFs
     for e in results:
         if e.get("h"):
             hg = {}
@@ -422,7 +560,6 @@ def main():
     adv_pct = round(adv_today / total_with_rs * 100, 1) if total_with_rs else 0
     dec_pct = round(dec_today / total_with_rs * 100, 1) if total_with_rs else 0
 
-    # Panels: 4+ consecutive days of RS increase/decrease
     adv_streak_list = [[r["t"], r["n"]] for r in results if r.get("ra", 0) >= 4]
     dec_streak_list = [[r["t"], r["n"]] for r in results if r.get("rf", 0) >= 4]
 
@@ -448,12 +585,13 @@ def main():
     s_count = sum(1 for v in holding_grades.values() if v == "s")
     b_count = sum(1 for v in holding_grades.values() if v == "b")
 
-    print(f"\nWritten data.json — {len(results)} ETFs")
+    print(f"\nWritten data.json - {len(results)} ETFs")
     print(f"Top 5: {[r['t'] for r in results[:5]]}")
     print(f"Advancing: {adv_pct}% | Declining: {dec_pct}%")
     print(f"4+ day advance streaks: {len(adv_streak_list)}")
     print(f"4+ day decline streaks: {len(dec_streak_list)}")
     print(f"Holdings graded: {g_count} gold, {s_count} silver, {b_count} bronze")
+    print(f"SMA200 cache: {len(sma200_map)} tickers cached")
 
 
 if __name__ == "__main__":
