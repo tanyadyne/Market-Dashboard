@@ -2,10 +2,9 @@ name: Update ETF Data
 
 on:
   schedule:
-    # Every 30 minutes during US market hours
-    # GitHub Actions uses UTC, US market hours = 9:30 AM - 4:00 PM EST = 14:30 - 21:00 UTC
-    - cron: '*/30 13-21 * * 1-5'
-  workflow_dispatch: # Allow manual trigger anytime
+    # Every 6 minutes during US market hours (UTC)
+    - cron: '*/6 13-21 * * 1-5'
+  workflow_dispatch:
 
 jobs:
   update-data:
@@ -18,12 +17,11 @@ jobs:
       - name: Check if within market hours
         id: market_check
         run: |
-          # Get current time in EST
           export TZ="America/New_York"
           HOUR=$(date +%H)
           MIN=$(date +%M)
           TIME_MIN=$((HOUR * 60 + MIN))
-          # Market: 9:30 AM (570) to 4:05 PM (965) — 5 min buffer after close
+          # Market: 9:30 AM (570) to 4:05 PM (965)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "skip=false" >> $GITHUB_OUTPUT
             echo "Manual trigger — running regardless of market hours"
@@ -49,7 +47,7 @@ jobs:
         if: steps.market_check.outputs.skip != 'true'
         run: pip install yfinance numpy
 
-      - name: Fetch data and compute RS
+      - name: Fetch ETF data (fast refresh)
         if: steps.market_check.outputs.skip != 'true'
         run: python fetch_data.py
 
