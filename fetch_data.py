@@ -349,7 +349,20 @@ def main():
     holding_grades = {}
     h_start = end - timedelta(days=100)  # ~70 trading days, plenty for SMA50
 
-    CHUNK = 200
+    def grade_from_closes(closes):
+        """Compute grade from a list of close prices."""
+        if len(closes) < 50:
+            return None, len(closes)
+        price = closes[-1]
+        ema9 = compute_ema(closes, 9)
+        ema21 = compute_ema(closes, 21)
+        sma50 = compute_sma(closes, 50)
+        grade = grade_holding(price, ema9, ema21, sma50)
+        return grade, len(closes)
+
+    # Phase 1: Batch download in smaller chunks (50 at a time)
+    failed_tickers = []
+    CHUNK = 50
     for i in range(0, len(holding_tickers), CHUNK):
         chunk = holding_tickers[i:i + CHUNK]
         print(f"  Batch {i // CHUNK + 1}: {len(chunk)} tickers...")
@@ -370,32 +383,57 @@ def main():
                         hdf = h_raw[tk]
                     hdf = hdf.dropna(subset=["Close"])
                     closes = hdf["Close"].values.tolist()
+                    grade, pts = grade_from_closes(closes)
 
-                    if len(closes) < 50:
-                        holding_grades[tk] = "b"
+                    if grade is None:
+                        failed_tickers.append(tk)
                         if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                            print(f"    DEBUG {tk}: only {len(closes)} data points (need 50) -> b")
-                        continue
-
-                    price = closes[-1]
-                    ema9 = compute_ema(closes, 9)
-                    ema21 = compute_ema(closes, 21)
-                    sma50 = compute_sma(closes, 50)
-
-                    grade = grade_holding(price, ema9, ema21, sma50)
-                    holding_grades[tk] = grade
-
-                    if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                        print(f"    DEBUG {tk}: price={price:.2f} EMA9={ema9:.2f if ema9 else 'N/A'} "
-                              f"EMA21={ema21:.2f if ema21 else 'N/A'} SMA50={sma50:.2f if sma50 else 'N/A'} "
-                              f"pts={len(closes)} -> {grade}")
+                            print(f"    DEBUG {tk}: batch returned {pts} pts, queuing for individual fetch")
+                    else:
+                        holding_grades[tk] = grade
+                        if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
+                            ema9 = compute_ema(closes, 9)
+                            ema21 = compute_ema(closes, 21)
+                            sma50 = compute_sma(closes, 50)
+                            print(f"    DEBUG {tk}: price={closes[-1]:.2f} EMA9={ema9:.2f} "
+                                  f"EMA21={ema21:.2f} SMA50={sma50:.2f} pts={pts} -> {grade}")
                 except Exception as ex:
-                    holding_grades[tk] = "b"
-                    print(f"    WARNING: {tk} grading failed: {ex}")
+                    failed_tickers.append(tk)
+                    if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
+                        print(f"    DEBUG {tk}: batch access failed ({ex}), queuing for individual fetch")
         except Exception as ex:
             print(f"  WARNING: batch failed: {ex}")
-            for tk in chunk:
+            failed_tickers.extend(chunk)
+
+    # Phase 2: Individual fallback for any tickers that failed in batch
+    if failed_tickers:
+        print(f"  Fetching {len(failed_tickers)} tickers individually (batch fallback)...")
+        for tk in failed_tickers:
+            try:
+                ticker_obj = yf.Ticker(tk)
+                hist = ticker_obj.history(start=h_start.strftime("%Y-%m-%d"),
+                                          end=end.strftime("%Y-%m-%d"))
+                if hist.empty:
+                    holding_grades[tk] = "b"
+                    continue
+                closes = hist["Close"].dropna().values.tolist()
+                grade, pts = grade_from_closes(closes)
+                if grade is None:
+                    holding_grades[tk] = "b"
+                    if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
+                        print(f"    DEBUG {tk}: individual fetch got {pts} pts -> b")
+                else:
+                    holding_grades[tk] = grade
+                    if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
+                        ema9 = compute_ema(closes, 9)
+                        ema21 = compute_ema(closes, 21)
+                        sma50 = compute_sma(closes, 50)
+                        print(f"    DEBUG {tk}: individual fetch price={closes[-1]:.2f} EMA9={ema9:.2f} "
+                              f"EMA21={ema21:.2f} SMA50={sma50:.2f} pts={pts} -> {grade}")
+            except Exception as ex:
                 holding_grades[tk] = "b"
+                print(f"    WARNING: {tk} individual fetch failed: {ex}")
+        print(f"  Individual fallback complete")
 
     # Attach grades to ETFs
     for e in results:
@@ -448,6 +486,7 @@ def main():
     print(f"4+ day advance streaks: {len(adv_streak_list)}")
     print(f"4+ day decline streaks: {len(dec_streak_list)}")
     print(f"Holdings graded: {g_count} gold, {s_count} silver, {b_count} bronze")
+    print(f"Individual fallbacks needed: {len(failed_tickers)}")
 
 
 if __name__ == "__main__":
