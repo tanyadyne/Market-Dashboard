@@ -3,11 +3,10 @@
 Fetch ETF data from Yahoo Finance, compute ATR-adjusted RS vs SPY,
 grade individual holdings by moving average structure, and write data.json.
 
-Grading criteria (using SMA100 instead of SMA200):
-  Gold:   price > EMA21 AND EMA9 > EMA21 > SMA50 > SMA100
-  Silver: (i) price > EMA21 AND EMA9 > EMA21, but SMA50 < SMA100
-          (ii) SMA50 > SMA100, but EMA9 < EMA21 and/or EMA21 < SMA50
-  Bronze: everything else
+Grading criteria:
+  Gold:   EMA9 > EMA21 > SMA50 (perfect uptrend stack)
+  Silver: EMA21 > EMA9 > SMA50 (uptrend but short-term pullback)
+  Bronze: SMA50 > EMA21 and/or SMA50 > EMA9
 
 Usage:
     pip install yfinance numpy
@@ -167,24 +166,20 @@ def compute_sma(closes, period):
     return np.mean(closes[-period:])
 
 
-def grade_holding(price, ema9, ema21, sma50, sma100):
+def grade_holding(price, ema9, ema21, sma50):
     """
     Grade a holding based on moving average structure.
-    Gold:   price > EMA21 AND EMA9 > EMA21 > SMA50 > SMA100
-    Silver: (i) price > EMA21 AND EMA9 > EMA21, but SMA50 < SMA100
-            (ii) SMA50 > SMA100, but EMA9 < EMA21 and/or EMA21 < SMA50
-    Bronze: everything else
+    Gold:   EMA9 > EMA21 > SMA50 (perfect uptrend stack)
+    Silver: EMA21 > EMA9 > SMA50 (uptrend but short-term pullback)
+    Bronze: SMA50 > EMA21 and/or SMA50 > EMA9
     """
-    if any(v is None for v in [price, ema9, ema21, sma50, sma100]):
+    if any(v is None for v in [ema9, ema21, sma50]):
         return "b"
 
-    if price > ema21 and ema9 > ema21 > sma50 > sma100:
+    if ema9 > ema21 > sma50:
         return "g"
 
-    if price > ema21 and ema9 > ema21 and sma50 < sma100:
-        return "s"
-
-    if sma50 > sma100 and (ema9 < ema21 or ema21 < sma50):
+    if ema21 > ema9 > sma50:
         return "s"
 
     return "b"
@@ -352,12 +347,12 @@ def main():
     print(f"  {len(holding_tickers)} unique holdings to grade")
 
     holding_grades = {}
-    h_start = end - timedelta(days=180)
+    h_start = end - timedelta(days=100)  # ~70 trading days, plenty for SMA50
 
     CHUNK = 200
     for i in range(0, len(holding_tickers), CHUNK):
         chunk = holding_tickers[i:i + CHUNK]
-        print(f"  Batch {i // CHUNK + 1}: {len(chunk)} tickers (180-day download)...")
+        print(f"  Batch {i // CHUNK + 1}: {len(chunk)} tickers...")
         try:
             h_raw = yf.download(
                 chunk,
@@ -376,25 +371,24 @@ def main():
                     hdf = hdf.dropna(subset=["Close"])
                     closes = hdf["Close"].values.tolist()
 
-                    if len(closes) < 100:
+                    if len(closes) < 50:
                         holding_grades[tk] = "b"
                         if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                            print(f"    DEBUG {tk}: only {len(closes)} data points (need 100) -> b")
+                            print(f"    DEBUG {tk}: only {len(closes)} data points (need 50) -> b")
                         continue
 
                     price = closes[-1]
                     ema9 = compute_ema(closes, 9)
                     ema21 = compute_ema(closes, 21)
                     sma50 = compute_sma(closes, 50)
-                    sma100 = compute_sma(closes, 100)
 
-                    grade = grade_holding(price, ema9, ema21, sma50, sma100)
+                    grade = grade_holding(price, ema9, ema21, sma50)
                     holding_grades[tk] = grade
 
                     if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
                         print(f"    DEBUG {tk}: price={price:.2f} EMA9={ema9:.2f if ema9 else 'N/A'} "
                               f"EMA21={ema21:.2f if ema21 else 'N/A'} SMA50={sma50:.2f if sma50 else 'N/A'} "
-                              f"SMA100={sma100:.2f if sma100 else 'N/A'} pts={len(closes)} -> {grade}")
+                              f"pts={len(closes)} -> {grade}")
                 except Exception as ex:
                     holding_grades[tk] = "b"
                     print(f"    WARNING: {tk} grading failed: {ex}")
