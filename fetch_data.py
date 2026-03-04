@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 """
 Fetch ETF data from Yahoo Finance, compute ATR-adjusted RS vs SPY,
-grade individual holdings by moving average structure, and write data.json.
+and write data.json. Reads pre-computed holding grades from grades.json
+(produced by grade_holdings.py which runs once daily after market close).
 
-Grading criteria:
-  Gold:   EMA20 > SMA50 > SMA200
-  Silver: EMA20 < SMA50 but SMA50 > SMA200
-  Bronze: matches neither criteria
-
-Holdings are fetched individually via yf.Ticker().history() to avoid
-silent data loss from batch yf.download().
+Fast refresh (~30 seconds) — safe to run every 6 minutes during market hours.
 
 Usage:
     pip install yfinance numpy
@@ -18,7 +13,6 @@ Usage:
 
 import json
 import sys
-import time
 from datetime import datetime, timedelta
 import numpy as np
 import yfinance as yf
@@ -153,40 +147,6 @@ def percentrank_inc(values, x):
         return None
     return sum(1 for v in values if v < x) / (n - 1)
 
-
-def compute_ema(closes, period):
-    if len(closes) < period:
-        return None
-    mult = 2 / (period + 1)
-    ema = np.mean(closes[:period])
-    for c in closes[period:]:
-        ema = (c - ema) * mult + ema
-    return ema
-
-
-def compute_sma(closes, period):
-    if len(closes) < period:
-        return None
-    return np.mean(closes[-period:])
-
-
-def grade_holding(ema20, sma50, sma200):
-    """
-    Grade a holding based on moving average structure.
-    Gold:   EMA20 > SMA50 > SMA200
-    Silver: EMA20 < SMA50 but SMA50 > SMA200
-    Bronze: matches neither criteria
-    """
-    if any(v is None for v in [ema20, sma50, sma200]):
-        return "b"
-
-    if ema20 > sma50 > sma200:
-        return "g"
-
-    if ema20 < sma50 and sma50 > sma200:
-        return "s"
-
-    return "b"
 
 
 # ─── Main ───────────────────────────────────────────────────────────────────
@@ -336,73 +296,16 @@ def main():
     for i, r in enumerate(results):
         r["rk"] = i + 1
 
-    # ─── Grade individual holdings ──────────────────────────
-    # Single download: 180 calendar days (~128 trading days) — enough for SMA100
-    print("\nGrading individual holdings...")
-    all_holdings = set()
-    for e in results:
-        if e.get("h"):
-            for hh in e["h"].split(","):
-                hh = hh.strip()
-                if hh:
-                    all_holdings.add(hh)
-
-    holding_tickers = sorted(list(all_holdings))
-    print(f"  {len(holding_tickers)} unique holdings to grade")
-
+    # ─── Load cached holding grades from grades.json ────────
+    # grades.json is produced by grade_holdings.py (runs once daily)
+    import os
     holding_grades = {}
-    h_start = end - timedelta(days=365)  # ~252 trading days, enough for SMA200
-
-    # Fetch each holding individually — slower but 100% reliable
-    graded = 0
-    failed = 0
-    for i, tk in enumerate(holding_tickers):
-        if (i + 1) % 50 == 0 or i == 0:
-            print(f"  Grading {i+1}/{len(holding_tickers)}...")
-        try:
-            ticker_obj = yf.Ticker(tk)
-            hist = ticker_obj.history(
-                start=h_start.strftime("%Y-%m-%d"),
-                end=end.strftime("%Y-%m-%d"),
-            )
-            if hist.empty or "Close" not in hist.columns:
-                holding_grades[tk] = "b"
-                failed += 1
-                continue
-
-            closes = hist["Close"].dropna().values.tolist()
-
-            if len(closes) < 200:
-                # Not enough data for SMA200 — grade bronze
-                holding_grades[tk] = "b"
-                failed += 1
-                if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                    print(f"    DEBUG {tk}: only {len(closes)} pts (need 200) -> b")
-                continue
-
-            ema20 = compute_ema(closes, 20)
-            sma50 = compute_sma(closes, 50)
-            sma200 = compute_sma(closes, 200)
-
-            grade = grade_holding(ema20, sma50, sma200)
-            holding_grades[tk] = grade
-            graded += 1
-
-            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                print(f"    DEBUG {tk}: EMA20={ema20:.2f} SMA50={sma50:.2f} "
-                      f"SMA200={sma200:.2f} pts={len(closes)} -> {grade}")
-
-        except Exception as ex:
-            holding_grades[tk] = "b"
-            failed += 1
-            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                print(f"    DEBUG {tk}: FAILED ({ex}) -> b")
-
-        # Small delay every 10 tickers to avoid rate limiting
-        if (i + 1) % 10 == 0:
-            time.sleep(0.5)
-
-    print(f"  Graded {graded} holdings, {failed} failed/insufficient data")
+    if os.path.exists("grades.json"):
+        with open("grades.json") as gf:
+            holding_grades = json.load(gf)
+        print(f"Loaded {len(holding_grades)} cached holding grades from grades.json")
+    else:
+        print("WARNING: grades.json not found — all holdings will show bronze")
 
     # Attach grades to ETFs
     for e in results:
@@ -454,7 +357,10 @@ def main():
     print(f"Advancing: {adv_pct}% | Declining: {dec_pct}%")
     print(f"4+ day advance streaks: {len(adv_streak_list)}")
     print(f"4+ day decline streaks: {len(dec_streak_list)}")
-    print(f"Holdings graded: {g_count} gold, {s_count} silver, {b_count} bronze")
+    if holding_grades:
+        print(f"Cached grades: {g_count} gold, {s_count} silver, {b_count} bronze")
+    else:
+        print("No cached grades loaded — run grade_holdings.py first")
 
 
 if __name__ == "__main__":
