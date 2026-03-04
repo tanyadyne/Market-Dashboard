@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
 """
 Fetch ETF data from Yahoo Finance, compute ATR-adjusted RS vs SPY,
-grade individual holdings by moving average structure, and write data.json.
+grade individual holdings using Gurufocus API moving averages, and write data.json.
 
-Grading criteria:
-  Gold:   EMA9 > EMA21 > SMA50 (perfect uptrend stack)
-  Silver: EMA21 > EMA9 > SMA50 (uptrend but short-term pullback)
-  Bronze: SMA50 > EMA21 and/or SMA50 > EMA9
+Grading criteria (using Gurufocus pre-computed MAs):
+  Gold:   EMA20 > SMA50 > SMA200
+  Silver: EMA20 < SMA50 but SMA50 > SMA200
+  Bronze: matches neither criteria
 
 Usage:
-    pip install yfinance numpy
-    python fetch_data.py
+    pip install yfinance numpy requests
+    GURUFOCUS_API_KEY=your_key python fetch_data.py
 """
 
 import json
+import os
 import sys
+import io
+import zipfile
+import csv
+import time
 from datetime import datetime, timedelta
 import numpy as np
 import yfinance as yf
+import requests
 
 BENCHMARK = "SPY"
 LOOKBACK = 25
@@ -166,20 +172,20 @@ def compute_sma(closes, period):
     return np.mean(closes[-period:])
 
 
-def grade_holding(price, ema9, ema21, sma50):
+def grade_holding(ema20, sma50, sma200):
     """
-    Grade a holding based on moving average structure.
-    Gold:   EMA9 > EMA21 > SMA50 (perfect uptrend stack)
-    Silver: EMA21 > EMA9 > SMA50 (uptrend but short-term pullback)
-    Bronze: SMA50 > EMA21 and/or SMA50 > EMA9
+    Grade a holding based on Gurufocus moving average values.
+    Gold:   EMA20 > SMA50 > SMA200
+    Silver: EMA20 < SMA50 but SMA50 > SMA200
+    Bronze: matches neither criteria
     """
-    if any(v is None for v in [ema9, ema21, sma50]):
+    if any(v is None for v in [ema20, sma50, sma200]):
         return "b"
 
-    if ema9 > ema21 > sma50:
+    if ema20 > sma50 > sma200:
         return "g"
 
-    if ema21 > ema9 > sma50:
+    if ema20 < sma50 and sma50 > sma200:
         return "s"
 
     return "b"
@@ -347,93 +353,164 @@ def main():
     print(f"  {len(holding_tickers)} unique holdings to grade")
 
     holding_grades = {}
-    h_start = end - timedelta(days=100)  # ~70 trading days, plenty for SMA50
 
-    def grade_from_closes(closes):
-        """Compute grade from a list of close prices."""
-        if len(closes) < 50:
-            return None, len(closes)
-        price = closes[-1]
-        ema9 = compute_ema(closes, 9)
-        ema21 = compute_ema(closes, 21)
-        sma50 = compute_sma(closes, 50)
-        grade = grade_holding(price, ema9, ema21, sma50)
-        return grade, len(closes)
+    # ── Fetch MA data from Gurufocus API ──
+    gf_key = os.environ.get("GURUFOCUS_API_KEY", "")
+    gf_data = {}  # ticker -> {ema_20, sma_50, sma_200}
 
-    # Phase 1: Batch download in smaller chunks (50 at a time)
-    failed_tickers = []
-    CHUNK = 50
-    for i in range(0, len(holding_tickers), CHUNK):
-        chunk = holding_tickers[i:i + CHUNK]
-        print(f"  Batch {i // CHUNK + 1}: {len(chunk)} tickers...")
+    if gf_key:
+        print("  Fetching moving averages from Gurufocus API...")
+        headers = {"Authorization": gf_key}
+
         try:
-            h_raw = yf.download(
-                chunk,
-                start=h_start.strftime("%Y-%m-%d"),
-                end=end.strftime("%Y-%m-%d"),
-                group_by="ticker",
-                auto_adjust=True,
-                threads=True,
-            )
-            for tk in chunk:
-                try:
-                    if len(chunk) == 1:
-                        hdf = h_raw
-                    else:
-                        hdf = h_raw[tk]
-                    hdf = hdf.dropna(subset=["Close"])
-                    closes = hdf["Close"].values.tolist()
-                    grade, pts = grade_from_closes(closes)
+            # Step 1: List data packages and find "price"
+            pkg_list = requests.get(
+                "https://api.gurufocus.com/data/download/list",
+                headers=headers, timeout=30
+            ).json()
 
-                    if grade is None:
-                        failed_tickers.append(tk)
-                        if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                            print(f"    DEBUG {tk}: batch returned {pts} pts, queuing for individual fetch")
-                    else:
-                        holding_grades[tk] = grade
-                        if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                            ema9 = compute_ema(closes, 9)
-                            ema21 = compute_ema(closes, 21)
-                            sma50 = compute_sma(closes, 50)
-                            print(f"    DEBUG {tk}: price={closes[-1]:.2f} EMA9={ema9:.2f} "
-                                  f"EMA21={ema21:.2f} SMA50={sma50:.2f} pts={pts} -> {grade}")
-                except Exception as ex:
-                    failed_tickers.append(tk)
-                    if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                        print(f"    DEBUG {tk}: batch access failed ({ex}), queuing for individual fetch")
-        except Exception as ex:
-            print(f"  WARNING: batch failed: {ex}")
-            failed_tickers.extend(chunk)
+            price_pkg = None
+            for pkg in pkg_list:
+                if pkg.get("name") == "price" and pkg.get("category") == "stock":
+                    price_pkg = pkg
+                    break
 
-    # Phase 2: Individual fallback for any tickers that failed in batch
-    if failed_tickers:
-        print(f"  Fetching {len(failed_tickers)} tickers individually (batch fallback)...")
-        for tk in failed_tickers:
-            try:
-                ticker_obj = yf.Ticker(tk)
-                hist = ticker_obj.history(start=h_start.strftime("%Y-%m-%d"),
-                                          end=end.strftime("%Y-%m-%d"))
-                if hist.empty:
-                    holding_grades[tk] = "b"
-                    continue
-                closes = hist["Close"].dropna().values.tolist()
-                grade, pts = grade_from_closes(closes)
-                if grade is None:
-                    holding_grades[tk] = "b"
-                    if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                        print(f"    DEBUG {tk}: individual fetch got {pts} pts -> b")
+            if not price_pkg:
+                # Try broader match
+                for pkg in pkg_list:
+                    if "price" in pkg.get("name", "").lower():
+                        price_pkg = pkg
+                        break
+
+            if price_pkg:
+                pkg_id = price_pkg["id"]
+                print(f"  Found price package: {pkg_id} (updated: {price_pkg.get('updated_at', '?')})")
+
+                # Step 2: Get download URL
+                url_resp = requests.get(
+                    f"https://api.gurufocus.com/data/download/url/{pkg_id}",
+                    headers=headers, timeout=30
+                ).json()
+                download_url = url_resp.get("url", "")
+
+                if download_url:
+                    print(f"  Downloading price data package...")
+                    dl = requests.get(download_url, timeout=120)
+
+                    if dl.status_code == 200:
+                        # Step 3: Extract and parse
+                        content = dl.content
+                        need_tickers = set(holding_tickers)
+
+                        if download_url.endswith(".zip") or content[:4] == b'PK\x03\x04':
+                            # It's a zip file
+                            with zipfile.ZipFile(io.BytesIO(content)) as zf:
+                                for fname in zf.namelist():
+                                    print(f"    Zip contains: {fname}")
+                                    with zf.open(fname) as f:
+                                        raw_bytes = f.read()
+                                        text = raw_bytes.decode("utf-8", errors="replace")
+
+                                        if fname.endswith(".json"):
+                                            rows = json.loads(text)
+                                            if isinstance(rows, dict):
+                                                # Might be {ticker: {fields...}} format
+                                                for tk, fields in rows.items():
+                                                    tk_upper = tk.upper().replace(".", "")
+                                                    if tk_upper in need_tickers or tk.upper() in need_tickers:
+                                                        gf_data[tk.upper()] = fields
+                                            elif isinstance(rows, list):
+                                                for row in rows:
+                                                    sym = (row.get("symbol") or row.get("ticker") or row.get("Symbol") or row.get("Ticker") or "").upper()
+                                                    if sym in need_tickers:
+                                                        gf_data[sym] = row
+
+                                        elif fname.endswith(".csv") or fname.endswith(".tsv"):
+                                            delimiter = "\t" if fname.endswith(".tsv") else ","
+                                            reader = csv.DictReader(text.splitlines(), delimiter=delimiter)
+                                            for row in reader:
+                                                sym = (row.get("symbol") or row.get("ticker") or row.get("Symbol") or row.get("Ticker") or "").upper()
+                                                if sym in need_tickers:
+                                                    gf_data[sym] = row
+                        else:
+                            # Not a zip — try JSON or CSV directly
+                            text = content.decode("utf-8", errors="replace")
+                            try:
+                                rows = json.loads(text)
+                                if isinstance(rows, list):
+                                    for row in rows:
+                                        sym = (row.get("symbol") or row.get("ticker") or row.get("Symbol") or row.get("Ticker") or "").upper()
+                                        if sym in need_tickers:
+                                            gf_data[sym] = row
+                                elif isinstance(rows, dict):
+                                    for tk, fields in rows.items():
+                                        if tk.upper() in need_tickers:
+                                            gf_data[tk.upper()] = fields
+                            except json.JSONDecodeError:
+                                reader = csv.DictReader(text.splitlines())
+                                for row in reader:
+                                    sym = (row.get("symbol") or row.get("ticker") or row.get("Symbol") or row.get("Ticker") or "").upper()
+                                    if sym in need_tickers:
+                                        gf_data[sym] = row
+
+                        print(f"  Gurufocus: found data for {len(gf_data)} of {len(need_tickers)} holdings")
+
+                        # Debug: show sample field names from first entry
+                        if gf_data:
+                            sample_tk = next(iter(gf_data))
+                            sample_fields = list(gf_data[sample_tk].keys())[:20]
+                            print(f"  Sample fields ({sample_tk}): {sample_fields}")
+                    else:
+                        print(f"  WARNING: Download failed with status {dl.status_code}")
                 else:
-                    holding_grades[tk] = grade
-                    if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                        ema9 = compute_ema(closes, 9)
-                        ema21 = compute_ema(closes, 21)
-                        sma50 = compute_sma(closes, 50)
-                        print(f"    DEBUG {tk}: individual fetch price={closes[-1]:.2f} EMA9={ema9:.2f} "
-                              f"EMA21={ema21:.2f} SMA50={sma50:.2f} pts={pts} -> {grade}")
-            except Exception as ex:
-                holding_grades[tk] = "b"
-                print(f"    WARNING: {tk} individual fetch failed: {ex}")
-        print(f"  Individual fallback complete")
+                    print("  WARNING: No download URL returned")
+            else:
+                print(f"  WARNING: 'price' package not found. Available: {[p.get('name') for p in pkg_list]}")
+        except Exception as ex:
+            print(f"  WARNING: Gurufocus API error: {ex}")
+
+    # ── Grade holdings using Gurufocus data ──
+    def safe_float(val):
+        """Convert a value to float, returning None for missing/invalid."""
+        if val is None or val == "" or val == "None" or val == "N/A":
+            return None
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return None
+
+    # Try multiple possible field name variants
+    EMA20_KEYS = ["ema_20", "ema20", "EMA_20", "EMA20", "ema_20_day", "20d_ema"]
+    SMA50_KEYS = ["sma_50", "sma50", "SMA_50", "SMA50", "sma_50_day", "50d_sma"]
+    SMA200_KEYS = ["sma_200", "sma200", "SMA_200", "SMA200", "sma_200_day", "200d_sma"]
+
+    def find_field(row, key_variants):
+        for k in key_variants:
+            if k in row:
+                return safe_float(row[k])
+        return None
+
+    graded_from_gf = 0
+    for tk in holding_tickers:
+        if tk in gf_data:
+            row = gf_data[tk]
+            ema20 = find_field(row, EMA20_KEYS)
+            sma50 = find_field(row, SMA50_KEYS)
+            sma200 = find_field(row, SMA200_KEYS)
+
+            grade = grade_holding(ema20, sma50, sma200)
+            holding_grades[tk] = grade
+            graded_from_gf += 1
+
+            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
+                print(f"    DEBUG {tk}: EMA20={ema20} SMA50={sma50} SMA200={sma200} -> {grade}")
+        else:
+            holding_grades[tk] = "b"
+
+    print(f"  Graded {graded_from_gf} holdings from Gurufocus, {len(holding_tickers) - graded_from_gf} defaulted to bronze")
+
+    if not gf_key:
+        print("  WARNING: GURUFOCUS_API_KEY not set — all holdings graded bronze")
 
     # Attach grades to ETFs
     for e in results:
@@ -486,7 +563,6 @@ def main():
     print(f"4+ day advance streaks: {len(adv_streak_list)}")
     print(f"4+ day decline streaks: {len(dec_streak_list)}")
     print(f"Holdings graded: {g_count} gold, {s_count} silver, {b_count} bronze")
-    print(f"Individual fallbacks needed: {len(failed_tickers)}")
 
 
 if __name__ == "__main__":
