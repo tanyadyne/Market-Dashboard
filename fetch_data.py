@@ -166,16 +166,12 @@ def compute_sma(closes, period):
 def grade_holding(closes):
     """
     Grade a holding based on moving average structure.
-    Gold:   price > SMA200, SMA50, EMA21 AND EMA9 > EMA21 > SMA50 > SMA200
-    Silver: price > SMA200, SMA50 AND SMA50 > SMA200 (but not gold)
+    Gold:   price > EMA21 AND EMA9 > EMA21 > SMA50 > SMA200
+    Silver: (i) price > EMA21 AND EMA9 > EMA21, but SMA50 < SMA200
+            OR (ii) SMA50 > SMA200, but EMA9 < EMA21 and/or EMA21 < SMA50
     Bronze: everything else
     """
     if closes is None or len(closes) < 200:
-        if closes is not None and len(closes) >= 50:
-            price = closes[-1]
-            sma50 = compute_sma(closes, 50)
-            if price > sma50:
-                return "s"
         return "b"
 
     price = closes[-1]
@@ -187,11 +183,16 @@ def grade_holding(closes):
     if sma200 is None or sma50 is None or ema21 is None or ema9 is None:
         return "b"
 
-    if (price > sma200 and price > sma50 and price > ema21
-            and ema9 > ema21 > sma50 > sma200):
+    # Gold: price > EMA21 AND perfectly stacked EMA9 > EMA21 > SMA50 > SMA200
+    if price > ema21 and ema9 > ema21 > sma50 > sma200:
         return "g"
 
-    if price > sma200 and price > sma50 and sma50 > sma200:
+    # Silver case (i): price > EMA21 AND EMA9 > EMA21, but SMA50 < SMA200
+    if price > ema21 and ema9 > ema21 and sma50 < sma200:
+        return "s"
+
+    # Silver case (ii): SMA50 > SMA200, but EMA9 < EMA21 and/or EMA21 < SMA50
+    if sma50 > sma200 and (ema9 < ema21 or ema21 < sma50):
         return "s"
 
     return "b"
