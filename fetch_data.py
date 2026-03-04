@@ -366,7 +366,7 @@ def main():
         chunk = holding_tickers[i:i + CHUNK]
         print(f"  Batch {i // CHUNK + 1}: fetching {len(chunk)} tickers...")
         try:
-            h_start = end - timedelta(days=300)
+            h_start = end - timedelta(days=400)  # ~276 trading days for reliable SMA200
             h_raw = yf.download(
                 chunk,
                 start=h_start.strftime("%Y-%m-%d"),
@@ -383,7 +383,19 @@ def main():
                         hdf = h_raw[tk]
                     hdf = hdf.dropna(subset=["Close"])
                     closes = hdf["Close"].values.tolist()
-                    holding_grades[tk] = grade_holding(closes)
+                    grade = grade_holding(closes)
+                    holding_grades[tk] = grade
+                    # Debug: log MA values for verification
+                    if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
+                        _p = closes[-1] if closes else 0
+                        _s200 = compute_sma(closes, 200) if len(closes) >= 200 else None
+                        _s50 = compute_sma(closes, 50) if len(closes) >= 50 else None
+                        _e21 = compute_ema(closes, 21) if len(closes) >= 21 else None
+                        _e9 = compute_ema(closes, 9) if len(closes) >= 9 else None
+                        print(f"    DEBUG {tk}: price={_p:.2f} EMA9={_e9:.2f if _e9 else 'N/A'} "
+                              f"EMA21={_e21:.2f if _e21 else 'N/A'} SMA50={_s50:.2f if _s50 else 'N/A'} "
+                              f"SMA200={_s200:.2f if _s200 else 'N/A'} → {grade} "
+                              f"(data_points={len(closes)})")
                 except Exception:
                     holding_grades[tk] = "b"
         except Exception as ex:
