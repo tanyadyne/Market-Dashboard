@@ -4,9 +4,9 @@ Grade individual holdings by moving average structure and write grades.json.
 Runs once daily after market close — results cached for the fast ETF refresh.
 
 Grading criteria:
-  Gold:   EMA20 > SMA50 > SMA200
-  Silver: EMA20 < SMA50 but SMA50 > SMA200
-  Bronze: matches neither criteria
+  Gold:   EMA9 > EMA21 > SMA50 AND Price > EMA21 AND Price > SMA200
+  Silver: EMA9 > EMA21 but does not meet all gold criteria
+  Bronze: EMA9 < EMA21 and/or does not meet gold or silver
 
 Usage:
     pip install yfinance numpy
@@ -140,17 +140,17 @@ def compute_sma(closes, period):
     return np.mean(closes[-period:])
 
 
-def grade_holding(ema20, sma50, sma200):
+def grade_holding(price, ema9, ema21, sma50, sma200):
     """
-    Gold:   EMA20 > SMA50 > SMA200
-    Silver: EMA20 < SMA50 but SMA50 > SMA200
-    Bronze: matches neither criteria
+    Gold:   EMA9 > EMA21 > SMA50 AND Price > EMA21 AND Price > SMA200
+    Silver: EMA9 > EMA21 but does not meet all gold criteria
+    Bronze: EMA9 < EMA21 and/or does not meet gold or silver
     """
-    if any(v is None for v in [ema20, sma50, sma200]):
+    if any(v is None for v in [price, ema9, ema21, sma50, sma200]):
         return "b"
-    if ema20 > sma50 > sma200:
-        return "g"
-    if ema20 < sma50 and sma50 > sma200:
+    if ema9 > ema21:
+        if ema21 > sma50 and price > ema21 and price > sma200:
+            return "g"
         return "s"
     return "b"
 
@@ -200,17 +200,19 @@ def main():
                     print(f"    DEBUG {tk}: only {len(closes)} pts (need 200) -> b")
                 continue
 
-            ema20 = compute_ema(closes, 20)
+            ema9 = compute_ema(closes, 9)
+            ema21 = compute_ema(closes, 21)
             sma50 = compute_sma(closes, 50)
             sma200 = compute_sma(closes, 200)
+            price = closes[-1]
 
-            grade = grade_holding(ema20, sma50, sma200)
+            grade = grade_holding(price, ema9, ema21, sma50, sma200)
             holding_grades[tk] = grade
             graded += 1
 
             if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                print(f"    DEBUG {tk}: EMA20={ema20:.2f} SMA50={sma50:.2f} "
-                      f"SMA200={sma200:.2f} pts={len(closes)} -> {grade}")
+                print(f"    DEBUG {tk}: Price={price:.2f} EMA9={ema9:.2f} EMA21={ema21:.2f} "
+                      f"SMA50={sma50:.2f} SMA200={sma200:.2f} pts={len(closes)} -> {grade}")
 
         except Exception as ex:
             holding_grades[tk] = "b"
@@ -235,3 +237,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
