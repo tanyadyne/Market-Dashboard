@@ -1,0 +1,65 @@
+name: Update ETF Data
+
+on:
+  schedule:
+    # Every 6 minutes during US market hours
+    # GitHub Actions uses UTC, US market hours = 9:30 AM - 4:00 PM EST = 14:30 - 21:00 UTC
+    # We use */6 for every 6 min, and run the job but skip execution outside market hours
+    - cron: '*/6 13-21 * * 1-5'
+  workflow_dispatch: # Allow manual trigger anytime
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check if within market hours
+        id: market_check
+        run: |
+          # Get current time in EST
+          export TZ="America/New_York"
+          HOUR=$(date +%H)
+          MIN=$(date +%M)
+          TIME_MIN=$((HOUR * 60 + MIN))
+          # Market: 9:30 AM (570) to 4:05 PM (965) — 5 min buffer after close
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Manual trigger — running regardless of market hours"
+          elif [ $TIME_MIN -ge 570 ] && [ $TIME_MIN -le 965 ]; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Within market hours ($(date '+%H:%M %Z'))"
+          else
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Outside market hours ($(date '+%H:%M %Z')) — skipping"
+          fi
+
+      - name: Checkout repo
+        if: steps.market_check.outputs.skip != 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: steps.market_check.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        if: steps.market_check.outputs.skip != 'true'
+        run: pip install yfinance numpy
+
+      - name: Fetch data and compute RS
+        if: steps.market_check.outputs.skip != 'true'
+        run: python fetch_data.py
+
+      - name: Commit and push data.json
+        if: steps.market_check.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git diff --staged --quiet || git commit -m "Update ETF data $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
+
