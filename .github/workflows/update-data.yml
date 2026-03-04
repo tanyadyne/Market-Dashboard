@@ -2,8 +2,8 @@ name: Update ETF Data
 
 on:
   schedule:
-    # Every 6 minutes during US market hours (UTC)
-    - cron: '*/6 13-21 * * 1-5'
+    # Every 15 minutes during US market hours (UTC)
+    - cron: '*/15 13-21 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -59,4 +59,3 @@ jobs:
           git add data.json
           git diff --staged --quiet || git commit -m "Update ETF data $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
-
