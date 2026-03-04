@@ -1,0 +1,38 @@
+name: Grade Holdings (Daily)
+
+on:
+  schedule:
+    # Once daily at 4:30 PM EST = 21:30 UTC (after market close)
+    - cron: '30 21 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  grade-holdings:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance numpy
+
+      - name: Grade all holdings
+        run: python grade_holdings.py
+
+      - name: Commit and push grades.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add grades.json
+          git diff --staged --quiet || git commit -m "Update holding grades $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
+
