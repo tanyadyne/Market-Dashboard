@@ -185,6 +185,7 @@ def main():
             hist = ticker_obj.history(
                 start=h_start.strftime("%Y-%m-%d"),
                 end=end.strftime("%Y-%m-%d"),
+                auto_adjust=False,
             )
             if hist.empty or "Close" not in hist.columns:
                 holding_grades[tk] = "b"
@@ -210,14 +211,14 @@ def main():
             holding_grades[tk] = grade
             graded += 1
 
-            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
+            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM", "WES"):
                 print(f"    DEBUG {tk}: Price={price:.2f} EMA9={ema9:.2f} EMA21={ema21:.2f} "
                       f"SMA50={sma50:.2f} SMA200={sma200:.2f} pts={len(closes)} -> {grade}")
 
         except Exception as ex:
             holding_grades[tk] = "b"
             failed += 1
-            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
+            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM", "WES"):
                 print(f"    DEBUG {tk}: FAILED ({ex}) -> b")
 
         if (i + 1) % 10 == 0:
