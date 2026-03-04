@@ -616,7 +616,7 @@ async function triggerRefresh(){
     const res=await fetch('https://api.github.com/repos/tanyadyne/Market-Dashboard/actions/workflows/update-data.yml/dispatches',{
       method:'POST',
       headers:{
-        'Authorization':'token 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',
+        'Authorization':'Bearer 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',
         'Accept':'application/vnd.github.v3+json',
         'Content-Type':'application/json'
       },
