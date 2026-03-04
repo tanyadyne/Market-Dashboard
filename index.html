@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ETF Relative Strength Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080e1a;--bg2:#0a1020;--bg3:#0f172a;--bg4:#1e293b;--bdr:#111827;--bdr2:#1e293b;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--g:#4ade80;--g2:#86efac;--gbg:#14532d;--gbg2:#041a0e;--r:#f87171;--r2:#fca5a5;--rbg:#450a0a;--rbg2:#1f0808;--purple:#c084fc;--indigo:#818cf8;--mono:'JetBrains Mono','SF Mono','Consolas',monospace;--sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--t1);font-family:var(--sans);min-height:100vh}
+.hdr{padding:18px 20px 14px;border-bottom:1px solid #141c2e;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.logo{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3b82f6,#8b5cf6);font-size:14px;font-weight:800;letter-spacing:-1px;color:#fff}
+.hdr-t{font-size:16px;font-weight:700;letter-spacing:-.3px}.hdr-s{font-size:11px;color:var(--t4)}
+.hdr-r{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:.15s}
+.btn-a{border-color:#1e3a1e;background:#0a1a0a;color:var(--g)}.btn-a.on{background:var(--gbg)}
+.btn-d{border-color:#3a1e1e;background:#1a0a0a;color:var(--r)}.btn-d.on{background:var(--rbg)}
+.srch{padding:6px 12px;border-radius:5px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:12px;width:220px;outline:none;font-family:var(--sans)}.srch:focus{border-color:#3b82f6}
+.spy{padding:8px 20px;background:#0a0f1a;border-bottom:1px solid var(--bdr);display:flex;gap:20px;font-size:11px;color:var(--t4);align-items:center;flex-wrap:wrap}
+.spy b{color:var(--t3);font-weight:700}.spy .sp{font-family:var(--mono);color:var(--t2)}.spy .sc{font-family:var(--mono);font-weight:600}
+.pnl{padding:10px 20px;border-bottom:1px solid var(--bdr2);display:none;flex-wrap:wrap;gap:5px;align-items:center}.pnl.show{display:flex}
+.pnl.a{background:var(--gbg2)}.pnl.d{background:var(--rbg2)}
+.pnl-l{font-size:10px;font-weight:700;margin-right:6px;text-transform:uppercase;letter-spacing:.8px}
+.pnl.a .pnl-l{color:var(--g)}.pnl.d .pnl-l{color:var(--r)}
+.pnl-t{padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;font-family:var(--mono)}
+.pnl.a .pnl-t{background:var(--gbg);color:var(--g2)}.pnl.d .pnl-t{background:var(--rbg);color:var(--r2)}
+.status{padding:30px;text-align:center;color:var(--t3);font-size:13px}
+.status .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--bdr2);border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:900px}
+thead th{padding:10px;text-align:right;cursor:pointer;user-select:none;font-weight:600;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;border-bottom:2px solid var(--bdr2);position:sticky;top:0;background:#0b1120;z-index:2;white-space:nowrap;color:var(--t3);transition:.15s}
+thead th:hover{color:var(--t1)}thead th.on{color:#f0f9ff}thead th.l{text-align:left}thead th.c{text-align:center}
+tbody tr{border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .1s}
+tbody tr:nth-child(odd){background:var(--bg)}tbody tr:nth-child(even){background:var(--bg2)}
+tbody tr:hover{background:var(--bdr)!important}tbody tr.exp{background:var(--bg3)!important}
+td{padding:7px 10px;font-size:12px}.c{text-align:center}.rt{text-align:right}.m{font-family:var(--mono)}
+.rk{text-align:center;color:var(--t4);font-family:var(--mono);font-size:11px}
+.tk{font-weight:700;font-size:13px;color:#f0f9ff;font-family:var(--mono);letter-spacing:.3px}
+.sc2{color:var(--t2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.au{color:var(--g);font-size:11px;margin-left:5px}.ad{color:var(--r);font-size:11px;margin-left:5px}
+.bc{display:flex;align-items:center;gap:6px}.bt{width:48px;height:5px;background:var(--bg4);border-radius:2px;overflow:hidden;flex-shrink:0}
+.bf{height:100%;border-radius:2px}.bf.i{background:var(--indigo)}.bf.p{background:var(--purple)}
+.bv{font-size:12px;font-family:var(--mono);color:var(--t2)}
+.cp{color:var(--g);font-weight:600;background:rgba(74,222,128,.06)}
+.cn{color:var(--r);font-weight:600;background:rgba(248,113,113,.06)}.cz{color:var(--t3)}
+.rs{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;font-family:var(--mono);min-width:42px;text-align:center}
+.hr td{padding:10px 16px 14px 50px;background:#0c1525}
+.hl{font-size:10px;color:var(--t4);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.hc{font-size:10px;color:var(--t3);margin-bottom:6px}.hw{max-width:750px}
+.pill{display:inline-block;padding:2px 7px;margin:2px;border-radius:3px;background:var(--bg4);color:var(--t2);font-size:11px;font-family:var(--mono);border:1px solid #293548}
+.ft{padding:14px 20px;border-top:1px solid var(--bdr);text-align:center;font-size:10px;color:#334155}
+@media(max-width:768px){.hdr{padding:12px}.srch{width:160px}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo">RS</div>
+    <div>
+      <div class="hdr-t">ETF Relative Strength Tracker</div>
+      <div class="hdr-s" id="sub">ATR-adjusted RS vs SPY · Loading...</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <button class="btn btn-a" id="bA" onclick="togPnl('a')">Advancing —%</button>
+    <button class="btn btn-d" id="bD" onclick="togPnl('d')">Declining —%</button>
+    <input class="srch" id="si" placeholder="Search ticker, name, holding..." oninput="render()">
+  </div>
+</div>
+
+<div class="spy" id="spyBar" style="display:none">
+  <span><b>SPY</b> <span class="sp" id="spyP"></span> <span class="sc" id="spyC"></span></span>
+  <span id="ut"></span>
+</div>
+
+<div class="pnl a" id="pA"></div>
+<div class="pnl d" id="pD"></div>
+
+<div class="status" id="statusBar"><span class="spinner"></span> Loading data...</div>
+
+<div class="tw" id="tw" style="display:none">
+  <table>
+    <thead><tr>
+      <th class="c" style="width:40px" onclick="srt('rk')" id="th-rk">#</th>
+      <th class="l" style="width:70px" onclick="srt('t')" id="th-t">Ticker</th>
+      <th class="l" onclick="srt('n')" id="th-n">Sector</th>
+      <th class="l" onclick="srt('rv')" id="th-rv">R.Vol</th>
+      <th class="l" onclick="srt('am')" id="th-am">ATR Mult</th>
+      <th onclick="srt('ch')" id="th-ch">Change</th>
+      <th class="c" style="width:70px" onclick="srt('rs')" id="th-rs">RS</th>
+      <th onclick="srt('p')" id="th-p">Price</th>
+    </tr></thead>
+    <tbody id="tb"></tbody>
+  </table>
+</div>
+<div class="ft" id="ft"></div>
+
+<script>
+let DATA=null,sortKey='rk',sortDir=1,expandedTicker=null,activePanel=null;
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
+function getRSBg(rs){if(rs==null)return'#1e293b';if(rs>=96)return'#14532d';if(rs>=80)return'#1a3a2a';if(rs>=60)return'#1e293b';if(rs>=40)return'#292524';if(rs>=20)return'#2c1810';return'#450a0a';}
+function getRSCol(rs){if(rs==null)return'#64748b';if(rs>=96)return'#4ade80';if(rs>=80)return'#86efac';if(rs>=60)return'#94a3b8';if(rs>=40)return'#d4a373';if(rs>=20)return'#fb923c';return'#f87171';}
+
+async function loadData(){
+  try{
+    const res=await fetch('data.json');
+    if(!res.ok)throw new Error('data.json not found — run fetch_data.py first or trigger the GitHub Action');
+    DATA=await res.json();
+    onDataLoaded();
+  }catch(err){
+    document.getElementById('statusBar').innerHTML=`<span style="color:#f87171">Error: ${esc(err.message)}</span><br><br><span style="color:var(--t3);font-size:11px">Make sure data.json exists. Run the GitHub Action manually via Actions → Update ETF Data → Run workflow.</span>`;
+  }
+}
+
+function onDataLoaded(){
+  document.getElementById('statusBar').style.display='none';
+  document.getElementById('tw').style.display='block';
+  document.getElementById('sub').textContent=`ATR-adjusted RS vs SPY · PERCENTRANK sorted · ${DATA.e.length} ETFs`;
+  document.getElementById('bA').textContent=`Advancing ${DATA.s.ap}%`;
+  document.getElementById('bD').textContent=`Declining ${DATA.s.dp}%`;
+  if(DATA.meta){
+    document.getElementById('spyBar').style.display='flex';
+    document.getElementById('spyP').textContent='$'+DATA.meta.spy_price;
+    const sc=document.getElementById('spyC');
+    sc.textContent=(DATA.meta.spy_change>0?'+':'')+DATA.meta.spy_change.toFixed(2)+'%';
+    sc.style.color=DATA.meta.spy_change>0?'#4ade80':DATA.meta.spy_change<0?'#f87171':'#64748b';
+    document.getElementById('ut').textContent='Updated: '+DATA.meta.updated;
+  }
+  const mk=(id,label,items)=>{document.getElementById(id).innerHTML=`<span class="pnl-l">${label}</span>`+items.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');};
+  mk('pA','▲ Strong RS (≥88%)',DATA.s.a);
+  mk('pD','▼ Declining RS (≤40%)',DATA.s.d);
+  render();
+}
+
+function togPnl(type){
+  activePanel=activePanel===type?null:type;
+  document.getElementById('pA').classList.toggle('show',activePanel==='a');
+  document.getElementById('pD').classList.toggle('show',activePanel==='d');
+  document.getElementById('bA').classList.toggle('on',activePanel==='a');
+  document.getElementById('bD').classList.toggle('on',activePanel==='d');
+}
+
+function srt(key){
+  if(sortKey===key)sortDir=-sortDir;
+  else{sortKey=key;sortDir=key==='rk'?1:-1;}
+  document.querySelectorAll('thead th').forEach(th=>th.classList.remove('on'));
+  document.getElementById('th-'+key)?.classList.add('on');
+  render();
+}
+
+function render(){
+  if(!DATA)return;
+  const f=document.getElementById('si').value.toLowerCase();
+  let items=DATA.e;
+  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||e.n.toLowerCase().includes(f)||(e.h&&e.h.toLowerCase().includes(f)));
+  items=[...items].sort((a,b)=>{
+    if(sortKey==='rk')return sortDir*(a.rk-b.rk);
+    const av=a[sortKey]??(typeof a[sortKey]==='string'?'': -Infinity);
+    const bv=b[sortKey]??(typeof b[sortKey]==='string'?'':-Infinity);
+    if(typeof av==='string')return sortDir*av.localeCompare(bv);
+    return sortDir*(av>bv?1:av<bv?-1:0);
+  });
+  const mxRV=Math.max(...DATA.e.map(e=>e.rv||0));
+  const mxAM=Math.max(...DATA.e.map(e=>e.am||0));
+  let html='';
+  for(const e of items){
+    const exp=expandedTicker===e.t;
+    const cc=e.ch>0?'cp':e.ch<0?'cn':'cz';
+    const ct=e.ch!=null?(e.ch>0?'+':'')+e.ch.toFixed(2)+'%':'—';
+    const ar=e.rf===3?'<span class="ad">▼</span>':(e.rf===0&&e.ch>0?'<span class="au">▲</span>':'');
+    const rvP=e.rv!=null?Math.min(e.rv/mxRV*100,100):0;
+    const amP=e.am!=null?Math.min(e.am/mxAM*100,100):0;
+    html+=`<tr class="${exp?'exp':''}" onclick="togRow('${e.t}')">
+      <td class="rk">${e.rk}</td><td class="tk">${esc(e.t)}${ar}</td><td class="sc2">${esc(e.n)}</td>
+      <td><div class="bc"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${e.rv!=null?e.rv+'%':'—'}</span></div></td>
+      <td><div class="bc"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${e.am!=null?e.am+'%':'—'}</span></div></td>
+      <td class="rt m ${cc}">${ct}</td>
+      <td class="c"><span class="rs" style="background:${getRSBg(e.rs)};color:${getRSCol(e.rs)}">${e.rs!=null?e.rs+'%':'—'}</span></td>
+      <td class="rt m" style="color:#cbd5e1">$${e.p?.toFixed(2)??'—'}</td></tr>`;
+    if(exp&&e.h){const hl=e.h.split(',').map(s=>s.trim()).filter(Boolean);
+      html+=`<tr><td colspan="8" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}):</div><div class="hw">${hl.map(h=>`<span class="pill">${esc(h)}</span>`).join('')}</div></td></tr>`;}
+  }
+  document.getElementById('tb').innerHTML=html;
+  document.getElementById('ft').textContent=`${items.length} ETFs · Sorted: RS (PERCENTRANK) desc, then Change% desc`;
+}
+
+function togRow(t){expandedTicker=expandedTicker===t?null:t;render();}
+loadData();
+</script>
+</body>
+</html>
