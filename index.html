@@ -1,25 +1,23 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" data-view="desktop">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google-site-verification" content="LbVttXAPUx-YQY3bLS6HI0AAT1cbwkWnc3Q8SJW52f8" />
-<title>ETF Relative Strength Tracker</title>
+<title>Relative Strength Tracker</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ─── Theme Variables ─── */
 [data-theme="dark"]{--bg:#080e1a;--bg2:#0a1020;--bg3:#0f172a;--bg4:#1e293b;--bdr:#111827;--bdr2:#1e293b;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--g:#4ade80;--g2:#86efac;--gbg:#14532d;--gbg2:#041a0e;--r:#f87171;--r2:#fca5a5;--rbg:#450a0a;--rbg2:#1f0808;--purple:#c084fc;--indigo:#818cf8;--thbg:#0b1120;--hovbg:#111827;--spark-up:#4ade80;--spark-dn:#f87171;--spark-line:#60a5fa;--modal-bg:rgba(0,0,0,0.6);--card:#111827}
 [data-theme="light"]{--bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--bg4:#e2e8f0;--bdr:#e2e8f0;--bdr2:#cbd5e1;--t1:#0f172a;--t2:#475569;--t3:#64748b;--t4:#94a3b8;--g:#16a34a;--g2:#15803d;--gbg:#dcfce7;--gbg2:#f0fdf4;--r:#dc2626;--r2:#b91c1c;--rbg:#fee2e2;--rbg2:#fef2f2;--purple:#9333ea;--indigo:#4f46e5;--thbg:#ffffff;--hovbg:#f1f5f9;--spark-up:#16a34a;--spark-dn:#dc2626;--spark-line:#2563eb;--modal-bg:rgba(0,0,0,0.3);--card:#f1f5f9}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;transition:background .2s,color .2s}
 .mono{font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
-
-/* ─── Header ─── */
 .hdr{padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .hdr-l{display:flex;align-items:center;gap:10px}
+.hdr-logo{width:28px;height:28px;border-radius:4px}
 .hdr-t{font-size:16px;font-weight:700;letter-spacing:-.3px}
 .hdr-r{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .btn{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:.15s;font-family:inherit}
@@ -27,30 +25,29 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .btn-d{border-color:#3a1e1e;background:transparent;color:var(--r)}.btn-d.on{background:var(--rbg)}
 .btn-t{border-color:var(--bdr2);background:var(--bg3);color:var(--t2)}.btn-t:hover{background:var(--bg4)}
 .srch{padding:6px 12px;border-radius:5px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:12px;width:200px;outline:none;font-family:inherit}.srch:focus{border-color:#3b82f6}
-
-/* ─── SPY Bar ─── */
+.toggle-wrap{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.toggle{position:relative;width:36px;height:20px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;background:var(--bg4);border-radius:10px;transition:.2s}
+.toggle .slider:before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:var(--t1);border-radius:50%;transition:.2s}
+.toggle input:checked+.slider{background:#3b82f6}
+.toggle input:checked+.slider:before{transform:translateX(16px)}
 .spy{padding:8px 20px;background:var(--bg2);border-bottom:1px solid var(--bdr);display:flex;gap:20px;font-size:11px;color:var(--t4);align-items:center;flex-wrap:wrap}
 .spy b{color:var(--t3);font-weight:700}
-
-/* ─── Panels ─── */
-.pnl{padding:10px 20px;border-bottom:1px solid var(--bdr2);display:none;flex-wrap:wrap;gap:5px;align-items:center}.pnl.show{display:flex}
+.pnl{padding:10px 20px;border-bottom:1px solid var(--bdr2);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .pnl.a{background:var(--gbg2)}.pnl.d{background:var(--rbg2)}
 .pnl-l{font-size:10px;font-weight:700;margin-right:6px;text-transform:uppercase;letter-spacing:.8px}
 .pnl.a .pnl-l{color:var(--g)}.pnl.d .pnl-l{color:var(--r)}
 .pnl-t{padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace}
 .pnl.a .pnl-t{background:var(--gbg);color:var(--g2)}.pnl.d .pnl-t{background:var(--rbg);color:var(--r2)}
-
-/* ─── Status ─── */
+.pnl-empty{font-size:10px;color:var(--t4);font-style:italic}
 .status{padding:30px;text-align:center;color:var(--t3);font-size:13px}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--bdr2);border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ─── Table ─── */
 .tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;table-layout:fixed}
 thead th{padding:10px 8px;text-align:right;cursor:pointer;user-select:none;font-weight:600;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;border-bottom:2px solid var(--bdr2);position:sticky;top:0;background:var(--thbg);z-index:2;white-space:nowrap;color:var(--t3);transition:.15s;overflow:hidden;text-overflow:ellipsis;position:relative}
 thead th:hover{color:var(--t1)}thead th.on{color:var(--t1)}thead th.l{text-align:left}thead th.c{text-align:center}
-/* Resize handle */
 thead th .rh{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent;z-index:3}
 thead th .rh:hover,thead th .rh.dragging{background:#3b82f6;opacity:0.5}
 tbody tr{border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .1s}
@@ -85,12 +82,8 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-theme="light"] .pill-s{background:linear-gradient(135deg,#b0b7c0,#7d8590);color:#ffffff;border-color:#4b5563}
 [data-theme="light"] .pill-b{background:#f1f5f9;color:#475569;border-color:#cbd5e1}
 .ft{padding:14px 20px;border-top:1px solid var(--bdr);text-align:center;font-size:10px;color:var(--t4)}
-
-/* ─── Sparkline (VARS) ─── */
 .spark-wrap{display:flex;align-items:center;justify-content:center}
 .spark-wrap canvas{display:block}
-
-/* ─── Multi-Sort Modal ─── */
 .modal-overlay{display:none;position:fixed;inset:0;background:var(--modal-bg);z-index:100;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
 .modal{background:var(--bg2);border:1px solid var(--bdr2);border-radius:10px;padding:20px;width:400px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
@@ -103,10 +96,11 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .btn-primary{border-color:#3b82f6;background:#3b82f6;color:#fff}.btn-primary:hover{background:#2563eb}
 .btn-add{border:1px dashed var(--bdr2);background:transparent;color:var(--t3);width:100%;padding:6px;font-size:11px;border-radius:5px;cursor:pointer;margin-bottom:4px}
 .btn-add:hover{border-color:var(--t3);color:var(--t2)}
-
+.col-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.col-opt{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;padding:4px 6px;border-radius:4px;transition:.1s}
+.col-opt:hover{background:var(--bg3)}
+.col-opt input{accent-color:#3b82f6;cursor:pointer}
 @media(max-width:768px){.hdr{padding:12px}.srch{width:140px}}
-
-/* ─── Clipboard Panel ─── */
 .clip-panel{display:none;padding:12px 20px;border-bottom:1px solid var(--bdr2);background:var(--bg2)}
 .clip-panel.show{display:block}
 .clip-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -127,33 +121,45 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .btn-refresh.loading{opacity:0.5;pointer-events:none}
 .btn-refresh.done{border-color:var(--g);color:var(--g)}
 .btn-refresh.fail{border-color:var(--r);color:var(--r)}
+[data-view="mobile"] .hdr{padding:10px 12px}
+[data-view="mobile"] .hdr-r{gap:4px}
+[data-view="mobile"] .srch{width:120px;font-size:11px;padding:5px 8px}
+[data-view="mobile"] .btn{padding:4px 8px;font-size:10px}
+[data-view="mobile"] table{table-layout:auto}
+[data-view="mobile"] td{padding:6px 4px;font-size:11px}
+[data-view="mobile"] thead th{padding:8px 4px;font-size:9.5px;letter-spacing:.4px}
+[data-view="mobile"] .tk{font-size:11px}
+[data-view="mobile"] .tw{overflow-x:hidden}
 </style>
 </head>
 <body>
-
 <div class="hdr">
   <div class="hdr-l">
-    <div class="hdr-t" style="font-size:15px;letter-spacing:1.5px;text-transform:uppercase">ETF Relative Strength Tracker</div>
+    <img class="hdr-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAFIElEQVR4nL2WW2xUVRSGv73PzJlOpzPTTi9AWwQKKKCVYPAGJo3YqMR4fzAEUn3gYlSCt8QoCWqCGo0kxigQoqgYL4lCwKAmAk0IEMBowAuJKNAWB2mZtjO0PdOZOWfv7cOAoJwp6IPr7eScs/7977X+9S+RyWSM1pr/I4QQSKUUQoj/BVBrTUBKiTHmX/xU/FYIwT/Pefa5VDopJYFLBdPKEAhKotEgQsBw1iNX0FjyHKpSYABL+ucwxlDi1YVg0bhNPqf4auvvbNz0Oz2pPIl4EK1BawiXSVZt6OHeJzs5kXIJBQXah4scqX5CgFKGeCLEji87WTRvO5s3drF9RzeLHz/Img1J4rFAsSQGWmZGOHHKo1AAIS/MK4QgoLUu2TTKM8QqQ+z8uov1bxzghVUtNE9PIAQkkw7PvnqMvGd4tK0Bo2HvDw5kXIJBQXah4scqX5CgFKGeCLEji87WTRvO5s3drF9RzeLHz/Img1J4rFAsSQGWmZGOHHKo1AAIS/MK4QgoLUu2TTKM8QqQ+z8uov1bxzghVUtNE9PIAQkkw7PvnqMvGd4tK0Bo2HvDw5kXIJBQUmpGR7lpbhOjGirQyoAQaG3I53XR3S3JsWSenl6PGdPCOMO6lObPMSzl+EJAPu9xx4JmPl59EOVpbFvieRqtDVobYrEA73zazewZESrKLZSf454XIzq+kILskEvztaOZPquR55a0Iy1JbW2Y6kSImmqbl948ypCjuO+2GjKD6m/rRsm86XTajLTXGAORaJA3V37Lnt0pZrWOI1pVxs79GaKJMK+vmAJolGZEwcN5fnixNdEYiFXa7Nt1km3fnCSnJTfMqmNuax2FgsFT5oIN7j8zPBtaGSqiQUIhCzB4rmZg0Dtz8ksEu1SGZ8No0ObsXlocf/8mjDEELMviUld9IcG6aKVKh5SSPwEEYFlXJ/MltgAAAABJRU5ErkJggg==" alt="logo">
+    <div class="hdr-t" style="font-size:15px;letter-spacing:1.5px;text-transform:uppercase">Relative Strength Tracker</div>
   </div>
   <div class="hdr-r">
-    <button class="btn btn-a" id="bA" onclick="togPnl('a')">Advancing —%</button>
-    <button class="btn btn-d" id="bD" onclick="togPnl('d')">Declining —%</button>
-    <button class="btn btn-t" id="bSort" onclick="openSortModal()" title="Multi-level sort">⇅ Sort</button>
+    <button class="btn btn-a" id="bA" title="RS Advancing: ETFs whose relative strength today is higher than yesterday, sustained 4+ consecutive days">Advancing —%</button>
+    <button class="btn btn-d" id="bD" title="RS Declining: ETFs whose relative strength today is lower than yesterday, sustained 4+ consecutive days">Declining —%</button>
+    <button class="btn btn-t" onclick="openSortModal()" title="Multi-level sort">⇅ Sort</button>
+    <button class="btn btn-t" onclick="openColModal()" title="Show/hide columns">⊞ Columns</button>
     <button class="btn btn-t" id="bClip" onclick="toggleClipboard()" title="Clipboard">📋 Clipboard <span id="clipCount"></span></button>
     <button class="btn btn-refresh" id="bRefresh" onclick="triggerRefresh()" title="Trigger data refresh">⟳ Refresh</button>
     <button class="btn btn-t" id="bTheme" onclick="toggleTheme()">☀ Light</button>
+    <div class="toggle-wrap">
+      <span>Desktop</span>
+      <label class="toggle"><input type="checkbox" id="viewToggle" onchange="toggleView()"><span class="slider"></span></label>
+      <span>Mobile</span>
+    </div>
     <input class="srch" id="si" placeholder="Search ticker, name, holding..." oninput="render()">
   </div>
 </div>
-
 <div class="spy" id="spyBar" style="display:none">
   <span><b>SPY</b> <span class="m" id="spyP"></span> <span class="m" id="spyC" style="font-weight:600"></span></span>
   <span id="ut"></span>
 </div>
-
-<div class="pnl a" id="pA"></div>
-<div class="pnl d" id="pD"></div>
-
+<div class="pnl a" id="pA"><span class="pnl-l">▲ RS Advancing 4+ Days</span><span class="pnl-empty">Loading...</span></div>
+<div class="pnl d" id="pD"><span class="pnl-l">▼ RS Declining 4+ Days</span><span class="pnl-empty">Loading...</span></div>
 <div class="clip-panel" id="clipPanel">
   <div class="clip-header">
     <span class="clip-title">📋 Clipboard</span>
@@ -167,30 +173,14 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
     <span class="clip-empty">Click gold/silver/bronze pill labels in expanded rows to add stocks</span>
   </div>
 </div>
-
 <div class="status" id="statusBar"><span class="spinner"></span> Loading data...</div>
-
 <div class="tw" id="tw" style="display:none">
   <table id="mainTable">
-    <thead><tr id="headerRow">
-      <th class="c" data-key="rk" style="width:40px">#<div class="rh"></div></th>
-      <th class="l" data-key="t" style="width:68px">Ticker<div class="rh"></div></th>
-      <th class="l" data-key="n" style="width:160px">Sector<div class="rh"></div></th>
-      <th data-key="p" style="width:75px">Price<div class="rh"></div></th>
-      <th class="l" data-key="rv" style="width:105px">R.Vol<div class="rh"></div></th>
-      <th class="l" data-key="am" style="width:105px">ATR Mult<div class="rh"></div></th>
-      <th data-key="ch" style="width:82px">Change (1D)<div class="rh"></div></th>
-      <th data-key="c5" style="width:82px">Change (5D)<div class="rh"></div></th>
-      <th data-key="c20" style="width:85px">Change (20D)<div class="rh"></div></th>
-      <th class="c" data-key="rs" style="width:62px">RS<div class="rh"></div></th>
-      <th class="c" data-key="vs" style="width:275px">VARS<div class="rh"></div></th>
-    </tr></thead>
+    <thead><tr id="headerRow"></tr></thead>
     <tbody id="tb"></tbody>
   </table>
 </div>
 <div class="ft" id="ft"></div>
-
-<!-- Multi-Sort Modal -->
 <div class="modal-overlay" id="sortModal">
   <div class="modal">
     <h3>⇅ Multi-Level Sort</h3>
@@ -202,188 +192,127 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
     </div>
   </div>
 </div>
-
+<div class="modal-overlay" id="colModal">
+  <div class="modal">
+    <h3>⊞ Toggle Columns</h3>
+    <div class="col-grid" id="colGrid"></div>
+    <div class="modal-actions">
+      <button class="btn btn-t" onclick="closeColModal()">Close</button>
+    </div>
+  </div>
+</div>
 <script>
-// ─── State ────────────────────────────────────────────────
-let DATA=null, sortKey='rk', sortDir=1, expandedTicker=null, activePanel=null;
-let multiSort = []; // [{key, dir}]
-let useMultiSort = false;
+let DATA=null,sortKey='rk',sortDir=1,expandedTicker=null;
+let multiSort=[],useMultiSort=false,isMobile=false;
 
-const COLUMNS = [
-  {key:'rk',label:'#'},{key:'t',label:'Ticker'},{key:'n',label:'Sector'},
-  {key:'p',label:'Price'},{key:'rv',label:'R.Vol'},{key:'am',label:'ATR Mult'},
-  {key:'ch',label:'Change (1D)'},{key:'c5',label:'Change (5D)'},{key:'c20',label:'Change (20D)'},
-  {key:'rs',label:'RS'},{key:'vs',label:'VARS'}
+const ALL_COLUMNS=[
+  {key:'rk',label:'#',align:'c',width:'40px',mob:true},
+  {key:'t',label:'Ticker',align:'l',width:'68px',mob:true},
+  {key:'n',label:'Sector',align:'l',width:'160px',mob:true},
+  {key:'p',label:'Price',align:'c',width:'75px',mob:true},
+  {key:'rv',label:'R.Vol',align:'c',width:'80px',mob:false},
+  {key:'am',label:'ATR Mult',align:'c',width:'80px',mob:false},
+  {key:'ch',label:'1D',align:'c',width:'72px',mob:true},
+  {key:'c5',label:'1W',align:'c',width:'72px',mob:false},
+  {key:'c20',label:'1M',align:'c',width:'72px',mob:false},
+  {key:'rs',label:'RS',align:'c',width:'62px',mob:false},
+  {key:'vs',label:'VARS',align:'c',width:'200px',mob:true}
 ];
 
-// ─── Theme ────────────────────────────────────────────────
+let colVisible={};
+ALL_COLUMNS.forEach(c=>{colVisible[c.key]=true;});
+
+function toggleView(){
+  isMobile=document.getElementById('viewToggle').checked;
+  document.documentElement.setAttribute('data-view',isMobile?'mobile':'desktop');
+  if(isMobile){ALL_COLUMNS.forEach(c=>{colVisible[c.key]=c.mob;});}
+  else{ALL_COLUMNS.forEach(c=>{colVisible[c.key]=true;});}
+  buildHeader();render();
+}
+
 function toggleTheme(){
-  const html=document.documentElement;
-  const isDark=html.getAttribute('data-theme')==='dark';
-  html.setAttribute('data-theme',isDark?'light':'dark');
-  document.getElementById('bTheme').textContent=isDark?'🌙 Dark':'☀ Light';
+  const h=document.documentElement,d=h.getAttribute('data-theme')==='dark';
+  h.setAttribute('data-theme',d?'light':'dark');
+  document.getElementById('bTheme').textContent=d?'🌙 Dark':'☀ Light';
   requestAnimationFrame(()=>render());
 }
 
-// ─── Column Resize ────────────────────────────────────────
 (function initResize(){
-  let startX, startW, th;
   document.addEventListener('mousedown',e=>{
     if(!e.target.classList.contains('rh'))return;
-    th=e.target.parentElement;
-    startX=e.pageX;
-    startW=th.offsetWidth;
+    const th=e.target.parentElement;let startX=e.pageX,startW=th.offsetWidth;
     e.target.classList.add('dragging');
-    const onMove=ev=>{
-      const w=Math.max(30,startW+(ev.pageX-startX));
-      th.style.width=w+'px';
-    };
-    const onUp=()=>{
-      document.removeEventListener('mousemove',onMove);
-      document.removeEventListener('mouseup',onUp);
-      e.target.classList.remove('dragging');
-    };
-    document.addEventListener('mousemove',onMove);
-    document.addEventListener('mouseup',onUp);
+    const onMove=ev=>{th.style.width=Math.max(30,startW+(ev.pageX-startX))+'px';};
+    const onUp=()=>{document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);e.target.classList.remove('dragging');};
+    document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
   });
 })();
 
-// ─── Helpers ──────────────────────────────────────────────
+function buildHeader(){
+  const tr=document.getElementById('headerRow');tr.innerHTML='';
+  ALL_COLUMNS.filter(c=>colVisible[c.key]).forEach(col=>{
+    const th=document.createElement('th');
+    th.className=col.align==='l'?'l':col.align==='c'?'c':'';
+    th.dataset.key=col.key;
+    if(!isMobile)th.style.width=col.width;
+    th.innerHTML=col.label+(isMobile?'':'<div class="rh"></div>');
+    th.addEventListener('click',e=>{if(!e.target.classList.contains('rh'))srt(col.key);});
+    tr.appendChild(th);
+  });
+}
+
 function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
-function getRSBg(rs){if(rs==null)return'var(--bg4)';if(rs>=96)return'var(--gbg)';if(rs>=80)return document.documentElement.getAttribute('data-theme')==='dark'?'#1a3a2a':'#dcfce7';if(rs>=60)return'var(--bg4)';if(rs>=40)return document.documentElement.getAttribute('data-theme')==='dark'?'#292524':'#fef3c7';if(rs>=20)return document.documentElement.getAttribute('data-theme')==='dark'?'#2c1810':'#ffedd5';return'var(--rbg)';}
-function getRSCol(rs){if(rs==null)return'var(--t3)';if(rs>=96)return'var(--g)';if(rs>=80)return'var(--g2)';if(rs>=60)return'var(--t2)';if(rs>=40)return document.documentElement.getAttribute('data-theme')==='dark'?'#d4a373':'#92400e';if(rs>=20)return document.documentElement.getAttribute('data-theme')==='dark'?'#fb923c':'#c2410c';return'var(--r)';}
+function getRSBg(rs){if(rs==null)return'var(--bg4)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--gbg)';if(rs>=80)return d?'#1a3a2a':'#dcfce7';if(rs>=60)return'var(--bg4)';if(rs>=40)return d?'#292524':'#fef3c7';if(rs>=20)return d?'#2c1810':'#ffedd5';return'var(--rbg)';}
+function getRSCol(rs){if(rs==null)return'var(--t3)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--g)';if(rs>=80)return'var(--g2)';if(rs>=60)return'var(--t2)';if(rs>=40)return d?'#d4a373':'#92400e';if(rs>=20)return d?'#fb923c':'#c2410c';return'var(--r)';}
 function chgClass(v){return v>0?'cp':v<0?'cn':'cz';}
 function chgText(v){return v!=null?(v>0?'+':'')+v.toFixed(2)+'%':'—';}
+function multText(v){return v!=null?(v/100).toFixed(2)+'x':'—';}
 
-// ─── Multi-Sort Modal ─────────────────────────────────────
+function openColModal(){
+  document.getElementById('colGrid').innerHTML=ALL_COLUMNS.map(c=>`<label class="col-opt"><input type="checkbox" ${colVisible[c.key]?'checked':''} onchange="colVisible['${c.key}']=this.checked;buildHeader();render();"> ${c.label}</label>`).join('');
+  document.getElementById('colModal').classList.add('show');
+}
+function closeColModal(){document.getElementById('colModal').classList.remove('show');}
+
 function openSortModal(){
-  if(multiSort.length===0) multiSort=[{key:'rs',dir:-1},{key:'ch',dir:-1}];
-  renderSortLevels();
-  document.getElementById('sortModal').classList.add('show');
+  if(multiSort.length===0)multiSort=[{key:'rs',dir:-1},{key:'ch',dir:-1}];
+  renderSortLevels();document.getElementById('sortModal').classList.add('show');
 }
 function closeSortModal(){document.getElementById('sortModal').classList.remove('show');}
-
 function renderSortLevels(){
-  const el=document.getElementById('sortLevels');
-  el.innerHTML=multiSort.map((s,i)=>`
-    <div class="sort-row">
-      <select onchange="multiSort[${i}].key=this.value">
-        ${COLUMNS.filter(c=>c.key!=='vs').map(c=>`<option value="${c.key}"${c.key===s.key?' selected':''}>${c.label}</option>`).join('')}
-      </select>
-      <select onchange="multiSort[${i}].dir=+this.value">
-        <option value="-1"${s.dir===-1?' selected':''}>Descending</option>
-        <option value="1"${s.dir===1?' selected':''}>Ascending</option>
-      </select>
-      ${multiSort.length>1?`<button class="remove-sort" onclick="multiSort.splice(${i},1);renderSortLevels()">×</button>`:''}
-    </div>
-  `).join('');
+  const sortable=ALL_COLUMNS.filter(c=>c.key!=='vs');
+  document.getElementById('sortLevels').innerHTML=multiSort.map((s,i)=>`<div class="sort-row"><select onchange="multiSort[${i}].key=this.value">${sortable.map(c=>`<option value="${c.key}"${c.key===s.key?' selected':''}>${c.label}</option>`).join('')}</select><select onchange="multiSort[${i}].dir=+this.value"><option value="-1"${s.dir===-1?' selected':''}>Desc</option><option value="1"${s.dir===1?' selected':''}>Asc</option></select>${multiSort.length>1?`<button class="remove-sort" onclick="multiSort.splice(${i},1);renderSortLevels()">×</button>`:''}</div>`).join('');
 }
+function addSortLevel(){if(multiSort.length<5)multiSort.push({key:'ch',dir:-1});renderSortLevels();}
+function applyMultiSort(){useMultiSort=true;closeSortModal();document.querySelectorAll('thead th').forEach(th=>th.classList.remove('on'));render();}
 
-function addSortLevel(){
-  if(multiSort.length<5)multiSort.push({key:'ch',dir:-1});
-  renderSortLevels();
-}
-
-function applyMultiSort(){
-  useMultiSort=true;
-  closeSortModal();
-  // Clear single-sort highlight
-  document.querySelectorAll('thead th').forEach(th=>th.classList.remove('on'));
-  render();
-}
-
-// ─── Single-column sort (clicking headers) ────────────────
 function srt(key){
-  if(key==='vs')return; // Can't sort by sparkline
-  useMultiSort=false;
-  if(sortKey===key)sortDir=-sortDir;
-  else{sortKey=key;sortDir=key==='rk'?1:-1;}
+  if(key==='vs')return;useMultiSort=false;
+  if(sortKey===key)sortDir=-sortDir;else{sortKey=key;sortDir=key==='rk'?1:-1;}
   document.querySelectorAll('thead th').forEach(th=>th.classList.remove('on'));
-  document.querySelector(`thead th[data-key="${key}"]`)?.classList.add('on');
-  render();
+  document.querySelector(`thead th[data-key="${key}"]`)?.classList.add('on');render();
 }
 
-// Attach click handlers to headers
-document.querySelectorAll('thead th[data-key]').forEach(th=>{
-  th.addEventListener('click',e=>{
-    if(e.target.classList.contains('rh'))return;
-    srt(th.dataset.key);
-  });
-});
-
-// ─── Clipboard ────────────────────────────────────────────
-let clipboardSet = new Set();
-let clipPanelOpen = false;
-
-function toggleClipboard(){
-  clipPanelOpen=!clipPanelOpen;
-  document.getElementById('clipPanel').classList.toggle('show',clipPanelOpen);
-  document.getElementById('bClip').classList.toggle('on',clipPanelOpen);
-}
-
-function updateClipCount(){
-  const el=document.getElementById('clipCount');
-  el.textContent=clipboardSet.size>0?`(${clipboardSet.size})`:'';
-}
-
-function addToClipboard(stocks, grade){
-  stocks.forEach(s=>clipboardSet.add(s));
-  updateClipCount();
-  renderClipboard();
-  // Auto-open panel if closed
-  if(!clipPanelOpen)toggleClipboard();
-}
-
-function removeFromClipboard(stock){
-  clipboardSet.delete(stock);
-  updateClipCount();
-  renderClipboard();
-}
-
-function clearClipboard(){
-  clipboardSet.clear();
-  updateClipCount();
-  renderClipboard();
-}
-
+let clipboardSet=new Set(),clipPanelOpen=false;
+function toggleClipboard(){clipPanelOpen=!clipPanelOpen;document.getElementById('clipPanel').classList.toggle('show',clipPanelOpen);document.getElementById('bClip').classList.toggle('on',clipPanelOpen);}
+function updateClipCount(){document.getElementById('clipCount').textContent=clipboardSet.size>0?`(${clipboardSet.size})`:'';}
+function addToClipboard(stocks){stocks.forEach(s=>clipboardSet.add(s));updateClipCount();renderClipboard();if(!clipPanelOpen)toggleClipboard();}
+function removeFromClipboard(stock){clipboardSet.delete(stock);updateClipCount();renderClipboard();}
+function clearClipboard(){clipboardSet.clear();updateClipCount();renderClipboard();}
 function renderClipboard(){
   const el=document.getElementById('clipBody');
-  if(clipboardSet.size===0){
-    el.innerHTML='<span class="clip-empty">Click gold/silver/bronze pill labels in expanded rows to add stocks</span>';
-    return;
-  }
-  const sorted=[...clipboardSet].sort();
-  el.innerHTML=sorted.map(s=>`<span class="pill pill-b" onclick="removeFromClipboard('${esc(s)}');event.stopPropagation()" style="cursor:pointer">${esc(s)}<span class="x">✕</span></span>`).join('');
+  if(clipboardSet.size===0){el.innerHTML='<span class="clip-empty">Click gold/silver/bronze pill labels in expanded rows to add stocks</span>';return;}
+  el.innerHTML=[...clipboardSet].sort().map(s=>`<span class="pill pill-b" onclick="removeFromClipboard('${esc(s)}');event.stopPropagation()" style="cursor:pointer">${esc(s)}<span class="x">✕</span></span>`).join('');
 }
-
 async function copyAll(){
-  if(clipboardSet.size===0)return;
-  const text=[...clipboardSet].sort().join(', ');
-  try{
-    await navigator.clipboard.writeText(text);
-    const el=document.getElementById('clipCopied');
-    el.classList.add('show');
-    setTimeout(()=>el.classList.remove('show'),2000);
-  }catch(e){
-    // Fallback
-    const ta=document.createElement('textarea');
-    ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-    const el=document.getElementById('clipCopied');
-    el.classList.add('show');
-    setTimeout(()=>el.classList.remove('show'),2000);
-  }
+  if(clipboardSet.size===0)return;const text=[...clipboardSet].sort().join(', ');
+  try{await navigator.clipboard.writeText(text);}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
+  const el=document.getElementById('clipCopied');el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2000);
 }
 
-// ─── Data Loading ─────────────────────────────────────────
 async function loadData(){
-  try{
-    const res=await fetch('data.json?_='+Date.now());
-    if(!res.ok)throw new Error('data.json not found');
-    DATA=await res.json();
-    onDataLoaded();
-  }catch(err){
-    document.getElementById('statusBar').innerHTML=`<span style="color:var(--r)">Error: ${esc(err.message)}</span>`;
-  }
+  try{const res=await fetch('data.json?_='+Date.now());if(!res.ok)throw new Error('data.json not found');DATA=await res.json();onDataLoaded();}
+  catch(err){document.getElementById('statusBar').innerHTML=`<span style="color:var(--r)">Error: ${esc(err.message)}</span>`;}
 }
 
 function onDataLoaded(){
@@ -399,262 +328,119 @@ function onDataLoaded(){
     sc.style.color=DATA.meta.spy_change>0?'var(--g)':DATA.meta.spy_change<0?'var(--r)':'var(--t3)';
     document.getElementById('ut').textContent='Updated: '+DATA.meta.updated;
   }
-  const mk=(id,label,items)=>{document.getElementById(id).innerHTML=`<span class="pnl-l">${label}</span>`+items.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');};
+  const mk=(id,label,items)=>{
+    const el=document.getElementById(id);
+    if(items.length===0){el.innerHTML=`<span class="pnl-l">${label}</span><span class="pnl-empty">None</span>`;return;}
+    el.innerHTML=`<span class="pnl-l">${label}</span>`+items.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');
+  };
   mk('pA','▲ RS Advancing 4+ Days',DATA.s.a);
   mk('pD','▼ RS Declining 4+ Days',DATA.s.d);
-  // Skip full re-render if TradingView charts are loaded (auto-refresh would destroy them)
-  if(expandedTicker && document.querySelector('.tv-chart[data-loaded="1"]')){
-    // Silently update non-table elements only — charts stay intact
-    return;
-  }
+  if(expandedTicker&&document.querySelector('.tv-chart[data-loaded="1"]'))return;
   render();
 }
 
-function togPnl(type){
-  activePanel=activePanel===type?null:type;
-  document.getElementById('pA').classList.toggle('show',activePanel==='a');
-  document.getElementById('pD').classList.toggle('show',activePanel==='d');
-  document.getElementById('bA').classList.toggle('on',activePanel==='a');
-  document.getElementById('bD').classList.toggle('on',activePanel==='d');
-}
-
-// ─── Sparkline Drawing ────────────────────────────────────
-function drawSparkline(canvas, series){
+function drawSparkline(canvas,series){
   if(!series||!canvas)return;
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width, H=canvas.height;
-  const dpr=window.devicePixelRatio||1;
-  canvas.width=W*dpr; canvas.height=H*dpr;
-  canvas.style.width=W+'px'; canvas.style.height=H+'px';
-  ctx.scale(dpr,dpr);
-  ctx.clearRect(0,0,W,H);
-
-  const vals=series.filter(v=>v!=null);
-  if(vals.length<2)return;
-  const min=Math.min(...vals), max=Math.max(...vals);
-  const range=max-min||1;
-  const pad=2;
-
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,dpr=window.devicePixelRatio||1;
+  canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
+  ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  const vals=series.filter(v=>v!=null);if(vals.length<2)return;
+  const min=Math.min(...vals),max=Math.max(...vals),range=max-min||1,pad=2;
   const isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  const lineColor=isDark?'#c084fc':'#9333ea'; // purple
-
-  // Find min/max indices
   let minIdx=0,maxIdx=0;
-  for(let i=1;i<vals.length;i++){
-    if(vals[i]<vals[minIdx])minIdx=i;
-    if(vals[i]>vals[maxIdx])maxIdx=i;
-  }
-
-  // Helper to get x,y for index
+  for(let i=1;i<vals.length;i++){if(vals[i]<vals[minIdx])minIdx=i;if(vals[i]>vals[maxIdx])maxIdx=i;}
   const px=i=>pad+(i/(vals.length-1))*(W-2*pad);
   const py=i=>H-pad-((vals[i]-min)/range)*(H-2*pad);
-
-  // Draw area fill (subtle purple)
-  ctx.beginPath();
-  for(let i=0;i<vals.length;i++){if(i===0)ctx.moveTo(px(i),py(i));else ctx.lineTo(px(i),py(i));}
-  ctx.lineTo(px(vals.length-1),H-pad);
-  ctx.lineTo(px(0),H-pad);
-  ctx.closePath();
-  ctx.fillStyle=isDark?'rgba(192,132,252,0.08)':'rgba(147,51,234,0.08)';
-  ctx.fill();
-
-  // Draw purple line
-  ctx.beginPath();
-  for(let i=0;i<vals.length;i++){if(i===0)ctx.moveTo(px(i),py(i));else ctx.lineTo(px(i),py(i));}
-  ctx.strokeStyle=lineColor;
-  ctx.lineWidth=1.5;
-  ctx.stroke();
-
-  // Green dot for highest value
-  ctx.beginPath();
-  ctx.arc(px(maxIdx),py(maxIdx),2.5,0,Math.PI*2);
-  ctx.fillStyle=isDark?'#4ade80':'#16a34a';
-  ctx.fill();
-
-  // Red dot for lowest value
-  ctx.beginPath();
-  ctx.arc(px(minIdx),py(minIdx),2.5,0,Math.PI*2);
-  ctx.fillStyle=isDark?'#f87171':'#dc2626';
-  ctx.fill();
+  ctx.beginPath();for(let i=0;i<vals.length;i++){if(i===0)ctx.moveTo(px(i),py(i));else ctx.lineTo(px(i),py(i));}
+  ctx.lineTo(px(vals.length-1),H-pad);ctx.lineTo(px(0),H-pad);ctx.closePath();
+  ctx.fillStyle=isDark?'rgba(192,132,252,0.08)':'rgba(147,51,234,0.08)';ctx.fill();
+  ctx.beginPath();for(let i=0;i<vals.length;i++){if(i===0)ctx.moveTo(px(i),py(i));else ctx.lineTo(px(i),py(i));}
+  ctx.strokeStyle=isDark?'#c084fc':'#9333ea';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.beginPath();ctx.arc(px(maxIdx),py(maxIdx),2.5,0,Math.PI*2);ctx.fillStyle=isDark?'#4ade80':'#16a34a';ctx.fill();
+  ctx.beginPath();ctx.arc(px(minIdx),py(minIdx),2.5,0,Math.PI*2);ctx.fillStyle=isDark?'#f87171':'#dc2626';ctx.fill();
 }
 
-// ─── Render ───────────────────────────────────────────────
 function render(){
   if(!DATA)return;
   const f=document.getElementById('si').value.toLowerCase();
   let items=DATA.e;
   if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||e.n.toLowerCase().includes(f)||(e.h&&e.h.toLowerCase().includes(f)));
-
-  // Sort
   if(useMultiSort&&multiSort.length>0){
-    items=[...items].sort((a,b)=>{
-      for(const {key,dir} of multiSort){
-        const av=a[key]??(typeof a[key]==='string'?'':-Infinity);
-        const bv=b[key]??(typeof b[key]==='string'?'':-Infinity);
-        let cmp=0;
-        if(typeof av==='string')cmp=av.localeCompare(bv);
-        else cmp=av>bv?1:av<bv?-1:0;
-        if(cmp!==0)return dir*cmp;
-      }
-      return 0;
-    });
+    items=[...items].sort((a,b)=>{for(const{key,dir}of multiSort){const av=a[key]??(typeof a[key]==='string'?'':-Infinity),bv=b[key]??(typeof b[key]==='string'?'':-Infinity);let cmp=typeof av==='string'?av.localeCompare(bv):av>bv?1:av<bv?-1:0;if(cmp!==0)return dir*cmp;}return 0;});
   }else{
-    items=[...items].sort((a,b)=>{
-      if(sortKey==='rk')return sortDir*(a.rk-b.rk);
-      const av=a[sortKey]??(typeof a[sortKey]==='string'?'':-Infinity);
-      const bv=b[sortKey]??(typeof b[sortKey]==='string'?'':-Infinity);
-      if(typeof av==='string')return sortDir*av.localeCompare(bv);
-      return sortDir*(av>bv?1:av<bv?-1:0);
-    });
+    items=[...items].sort((a,b)=>{if(sortKey==='rk')return sortDir*(a.rk-b.rk);const av=a[sortKey]??(typeof a[sortKey]==='string'?'':-Infinity),bv=b[sortKey]??(typeof b[sortKey]==='string'?'':-Infinity);return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av>bv?1:av<bv?-1:0);});
   }
-
-  const mxRV=Math.max(...DATA.e.map(e=>e.rv||0));
-  const mxAM=Math.max(...DATA.e.map(e=>e.am||0));
+  const visCols=ALL_COLUMNS.filter(c=>colVisible[c.key]),colSpan=visCols.length;
+  const mxRV=Math.max(...DATA.e.map(e=>e.rv||0)),mxAM=Math.max(...DATA.e.map(e=>e.am||0));
+  const sparkW=isMobile?120:250;
   let html='';
   for(const e of items){
     const exp=expandedTicker===e.t;
     const ar=e.rf>=4?'<span class="ad">▼</span>':(e.ra>=4?'<span class="au">▲</span>':'');
     const rvP=e.rv!=null?Math.min(e.rv/mxRV*100,100):0;
     const amP=e.am!=null?Math.min(e.am/mxAM*100,100):0;
-
-    html+=`<tr class="${exp?'exp':''}" onclick="togRow('${e.t}')">
-      <td class="rk">${e.rk}</td>
-      <td class="tk">${esc(e.t)}${ar}</td>
-      <td class="sc2">${esc(e.n)}</td>
-      <td class="rt m" style="color:var(--t1)">$${e.p?.toFixed(2)??'—'}</td>
-      <td><div class="bc"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${e.rv!=null?e.rv+'%':'—'}</span></div></td>
-      <td><div class="bc"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${e.am!=null?e.am+'%':'—'}</span></div></td>
-      <td class="rt m ${chgClass(e.ch)}">${chgText(e.ch)}</td>
-      <td class="rt m ${chgClass(e.c5)}">${chgText(e.c5)}</td>
-      <td class="rt m ${chgClass(e.c20)}">${chgText(e.c20)}</td>
-      <td class="c"><span class="rs" style="background:${getRSBg(e.rs)};color:${getRSCol(e.rs)}">${e.rs!=null?e.rs+'%':'—'}</span></td>
-      <td class="c"><div class="spark-wrap"><canvas data-ticker="${e.t}" width="250" height="28"></canvas></div></td>
-    </tr>`;
-    if(exp&&e.h){const hl=e.h.split(',').map(s=>s.trim()).filter(Boolean);const hg=e.hg||{};
+    const cellMap={
+      rk:`<td class="rk">${e.rk}</td>`,
+      t:`<td class="tk">${esc(e.t)}${ar}</td>`,
+      n:`<td class="sc2">${esc(e.n)}</td>`,
+      p:`<td class="c m" style="color:var(--t1)">$${e.p?.toFixed(2)??'—'}</td>`,
+      rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(e.rv)}</span></div></td>`,
+      am:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(e.am)}</span></div></td>`,
+      ch:`<td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>`,
+      c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
+      c20:`<td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>`,
+      rs:`<td class="c"><span class="rs" style="background:${getRSBg(e.rs)};color:${getRSCol(e.rs)}">${e.rs!=null?e.rs+'%':'—'}</span></td>`,
+      vs:`<td class="c"><div class="spark-wrap"><canvas data-ticker="${e.t}" width="${sparkW}" height="28"></canvas></div></td>`
+    };
+    html+=`<tr class="${exp?'exp':''}" onclick="togRow('${e.t}')">`;
+    visCols.forEach(c=>{html+=cellMap[c.key]||'';});
+    html+=`</tr>`;
+    if(exp&&e.h){
+      const hl=e.h.split(',').map(s=>s.trim()).filter(Boolean),hg=e.hg||{};
       const gc=h=>{const g=hg[h];return g==='g'?'pill-g':g==='s'?'pill-s':'pill-b';};
-      const goldStocks=hl.filter(h=>hg[h]==='g'),silverStocks=hl.filter(h=>hg[h]==='s'),bronzeStocks=hl.filter(h=>hg[h]==='b');
+      const gs=hl.filter(h=>hg[h]==='g'),ss=hl.filter(h=>hg[h]==='s'),bs=hl.filter(h=>hg[h]==='b');
       let chartHtml='';
-      if(goldStocks.length>0){
-        chartHtml=`<div class="tv-grid">${goldStocks.map(tk=>`<div class="tv-chart-wrap"><div class="tv-label">${esc(tk)}</div><div class="tv-chart" id="tvc-${esc(tk)}"></div></div>`).join('')}</div>`;
-      }
-      html+=`<tr><td colspan="11" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}): <span class="pill pill-g" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(goldStocks).replace(/"/g,'&quot;')},'g')" title="Click to add gold stocks to clipboard">● Gold ${goldStocks.length}</span> <span class="pill pill-s" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(silverStocks).replace(/"/g,'&quot;')},'s')" title="Click to add silver stocks to clipboard">● Silver ${silverStocks.length}</span> <span class="pill pill-b" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(bronzeStocks).replace(/"/g,'&quot;')},'b')" title="Click to add bronze stocks to clipboard">● Bronze ${bronzeStocks.length}</span></div><div class="hw">${hl.map(h=>`<span class="pill ${gc(h)}">${esc(h)}</span>`).join('')}</div>${chartHtml}</td></tr>`;}
+      if(!isMobile&&gs.length>0){chartHtml=`<div class="tv-grid">${gs.map(tk=>`<div class="tv-chart-wrap"><div class="tv-label">${esc(tk)}</div><div class="tv-chart" id="tvc-${esc(tk)}"></div></div>`).join('')}</div>`;}
+      html+=`<tr><td colspan="${colSpan}" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}): <span class="pill pill-g" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(gs).replace(/"/g,'&quot;')})" title="Click to add gold stocks to clipboard">● Gold ${gs.length}</span> <span class="pill pill-s" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(ss).replace(/"/g,'&quot;')})" title="Click to add silver stocks to clipboard">● Silver ${ss.length}</span> <span class="pill pill-b" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(bs).replace(/"/g,'&quot;')})" title="Click to add bronze stocks to clipboard">● Bronze ${bs.length}</span></div><div class="hw">${hl.map(h=>`<span class="pill ${gc(h)}">${esc(h)}</span>`).join('')}</div>${chartHtml}</td></tr>`;
+    }
   }
   document.getElementById('tb').innerHTML=html;
   document.getElementById('ft').textContent=`${items.length} ETFs · ${useMultiSort?'Multi-level sort active':'Sorted by '+sortKey}`;
-
-  // Draw sparklines
   requestAnimationFrame(()=>{
-    const canvases=document.querySelectorAll('canvas[data-ticker]');
-    const etfMap={};
-    DATA.e.forEach(e=>{etfMap[e.t]=e;});
-    canvases.forEach(c=>{
-      const etf=etfMap[c.dataset.ticker];
-      if(etf&&etf.vs)drawSparkline(c,etf.vs);
-    });
-    // Inject TradingView charts for gold stocks in expanded row
-    injectTVCharts();
+    const etfMap={};DATA.e.forEach(e=>{etfMap[e.t]=e;});
+    document.querySelectorAll('canvas[data-ticker]').forEach(c=>{const etf=etfMap[c.dataset.ticker];if(etf&&etf.vs)drawSparkline(c,etf.vs);});
+    if(!isMobile)injectTVCharts();
   });
 }
 
 function injectTVCharts(){
-  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  const theme=isDark?'dark':'light';
-  const bgColor=isDark?'#0F0F0F':'#FFFFFF';
-  const gridColor=isDark?'rgba(242, 242, 242, 0)':'rgba(0, 0, 0, 0)';
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark',theme=isDark?'dark':'light',bgColor=isDark?'#0F0F0F':'#FFFFFF',gridColor=isDark?'rgba(242, 242, 242, 0)':'rgba(0, 0, 0, 0)';
   document.querySelectorAll('.tv-chart').forEach(el=>{
-    if(el.dataset.loaded) return;
-    const tk=el.id.replace('tvc-','');
-    if(!tk) return;
-    el.dataset.loaded='1';
-    // Create container matching TradingView's expected structure
-    const wrapper=document.createElement('div');
-    wrapper.className='tradingview-widget-container';
-    wrapper.style.cssText='height:300px;width:100%';
-    const widgetDiv=document.createElement('div');
-    widgetDiv.className='tradingview-widget-container__widget';
-    widgetDiv.style.cssText='height:268px;width:100%';
-    wrapper.appendChild(widgetDiv);
-    el.appendChild(wrapper);
-    // Append script exactly like the React useEffect pattern
-    const script=document.createElement('script');
-    script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.type='text/javascript';
-    script.async=true;
-    script.innerHTML=`
-        {
-          "allow_symbol_change": false,
-          "calendar": false,
-          "details": false,
-          "hide_side_toolbar": true,
-          "hide_top_toolbar": true,
-          "hide_legend": true,
-          "hide_volume": true,
-          "hotlist": false,
-          "interval": "D",
-          "locale": "en",
-          "save_image": false,
-          "style": "1",
-          "symbol": "${tk}",
-          "theme": "${theme}",
-          "timezone": "Etc/UTC",
-          "backgroundColor": "${bgColor}",
-          "gridColor": "${gridColor}",
-          "watchlist": [],
-          "withdateranges": false,
-          "compareSymbols": [],
-          "studies": [],
-          "autosize": true
-        }`;
+    if(el.dataset.loaded)return;const tk=el.id.replace('tvc-','');if(!tk)return;el.dataset.loaded='1';
+    const wrapper=document.createElement('div');wrapper.className='tradingview-widget-container';wrapper.style.cssText='height:300px;width:100%';
+    const widgetDiv=document.createElement('div');widgetDiv.className='tradingview-widget-container__widget';widgetDiv.style.cssText='height:268px;width:100%';
+    wrapper.appendChild(widgetDiv);el.appendChild(wrapper);
+    const script=document.createElement('script');script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';script.type='text/javascript';script.async=true;
+    script.innerHTML=`{"allow_symbol_change":false,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":true,"hide_legend":true,"hide_volume":true,"hotlist":false,"interval":"D","locale":"en","save_image":false,"style":"1","symbol":"${tk}","theme":"${theme}","timezone":"Etc/UTC","backgroundColor":"${bgColor}","gridColor":"${gridColor}","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}`;
     wrapper.appendChild(script);
   });
 }
 
 function togRow(t){expandedTicker=expandedTicker===t?null:t;render();}
 
-// ─── Manual Refresh via GitHub API ────────────────────────
 let ghToken=null;
-
-function getToken(){
-  if(ghToken) return ghToken;
-  const t=prompt('Enter your GitHub Personal Access Token to trigger a refresh:');
-  if(t&&t.trim()){ghToken=t.trim();return ghToken;}
-  return null;
-}
-
+function getToken(){if(ghToken)return ghToken;const t=prompt('Enter your GitHub Personal Access Token to trigger a refresh:');if(t&&t.trim()){ghToken=t.trim();return ghToken;}return null;}
 async function triggerRefresh(){
-  const token=getToken();
-  if(!token){return;}
-  const btn=document.getElementById('bRefresh');
-  btn.className='btn btn-refresh loading';
-  btn.textContent='⟳ Triggering...';
+  const token=getToken();if(!token)return;
+  const btn=document.getElementById('bRefresh');btn.className='btn btn-refresh loading';btn.textContent='⟳ Triggering...';
   try{
-    const res=await fetch('https://api.github.com/repos/tanyadyne/Market-Dashboard/actions/workflows/update-data.yml/dispatches',{
-      method:'POST',
-      headers:{
-        'Authorization':'token '+token,
-        'Accept':'application/vnd.github.v3+json',
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({ref:'main'})
-    });
-    if(res.status===204){
-      btn.className='btn btn-refresh done';
-      btn.textContent='⟳ Triggered!';
-      setTimeout(()=>{loadData();btn.className='btn btn-refresh';btn.textContent='⟳ Refresh';},45000);
-    }else{
-      if(res.status===401){ghToken=null;} // Clear bad token
-      throw new Error('Status '+res.status);
-    }
-  }catch(err){
-    btn.className='btn btn-refresh fail';
-    btn.textContent='⟳ Failed';
-    setTimeout(()=>{btn.className='btn btn-refresh';btn.textContent='⟳ Refresh';},3000);
-  }
+    const res=await fetch('https://api.github.com/repos/tanyadyne/Market-Dashboard/actions/workflows/update-data.yml/dispatches',{method:'POST',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({ref:'main'})});
+    if(res.status===204){btn.className='btn btn-refresh done';btn.textContent='⟳ Triggered!';setTimeout(()=>{loadData();btn.className='btn btn-refresh';btn.textContent='⟳ Refresh';},45000);}
+    else{if(res.status===401)ghToken=null;throw new Error('Status '+res.status);}
+  }catch(err){btn.className='btn btn-refresh fail';btn.textContent='⟳ Failed';setTimeout(()=>{btn.className='btn btn-refresh';btn.textContent='⟳ Refresh';},3000);}
 }
 
-// ─── Init ─────────────────────────────────────────────────
-loadData();
-setInterval(loadData,60000); // auto-refresh every 60 seconds
+buildHeader();loadData();setInterval(loadData,60000);
 </script>
 </body>
 </html>
