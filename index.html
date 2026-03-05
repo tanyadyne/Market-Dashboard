@@ -437,7 +437,7 @@ function injectTVCharts(){
 function togRow(t){expandedTicker=expandedTicker===t?null:t;render();}
 
 let ghToken=null;
-function getToken(){if(ghToken)return ghToken;const t=prompt('Enter: "ghp_" + "imElyqEuO2Qov3E2v3m1X8dyp47irM1KEYvc"');if(t&&t.trim()){ghToken=t.trim();return ghToken;}return null;}
+function getToken(){if(ghToken)return ghToken;const t=prompt('ghp_ imElyqEuO2Qov3E2v3m1X8dyp47irM1KEYvc');if(t&&t.trim()){ghToken=t.trim();return ghToken;}return null;}
 async function triggerRefresh(){
   const token=getToken();if(!token)return;
   const btn=document.getElementById('bRefresh');btn.className='btn btn-refresh loading';btn.textContent='⟳ Triggering...';
