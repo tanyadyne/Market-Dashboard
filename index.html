@@ -269,7 +269,9 @@ function chgText(v){return v!=null?(v>0?'+':'')+v.toFixed(2)+'%':'—';}
 function multText(v){return v!=null?(v/100).toFixed(2)+'x':'—';}
 function toSGT(utcStr){
   try{
-    const d=new Date(utcStr.replace(' ','T')+'Z');
+    const clean=utcStr.replace(' UTC','').replace(' ','T')+'Z';
+    const d=new Date(clean);
+    if(isNaN(d))return utcStr;
     return d.toLocaleString('en-SG',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' SGT';
   }catch(e){return utcStr;}
 }
