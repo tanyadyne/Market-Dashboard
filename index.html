@@ -17,7 +17,6 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .mono{font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
 .hdr{padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .hdr-l{display:flex;align-items:center;gap:10px}
-.hdr-logo{width:28px;height:28px;border-radius:4px}
 .hdr-t{font-size:16px;font-weight:700;letter-spacing:-.3px}
 .hdr-r{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .btn{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:.15s;font-family:inherit}
@@ -46,7 +45,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 @keyframes spin{to{transform:rotate(360deg)}}
 .tw{overflow-x:auto;overflow-y:auto;flex:1;min-height:0}
 table{width:100%;border-collapse:collapse;table-layout:fixed}
-thead th{padding:10px 8px;text-align:right;cursor:pointer;user-select:none;font-weight:600;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;border-bottom:2px solid var(--bdr2);position:sticky;top:0;background:var(--thbg);z-index:2;white-space:nowrap;color:var(--t3);transition:.15s;overflow:hidden;text-overflow:ellipsis;position:relative}
+thead th{padding:10px 8px;text-align:right;cursor:pointer;user-select:none;font-weight:600;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;border-bottom:2px solid var(--bdr2);position:sticky;top:0;background:var(--thbg);z-index:2;white-space:nowrap;color:var(--t3);transition:.15s;overflow:hidden;text-overflow:ellipsis}
 thead th:hover{color:var(--t1)}thead th.on{color:var(--t1)}thead th.l{text-align:left}thead th.c{text-align:center}
 thead th .rh{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent;z-index:3}
 thead th .rh:hover,thead th .rh.dragging{background:#3b82f6;opacity:0.5}
@@ -135,7 +134,6 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 <body>
 <div class="hdr">
   <div class="hdr-l">
-    <img class="hdr-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAFIElEQVR4nL2WW2xUVRSGv73PzJlOpzPTTi9AWwQKKKCVYPAGJo3YqMR4fzAEUn3gYlSCt8QoCWqCGo0kxigQoqgYL4lCwKAmAk0IEMBowAuJKNAWB2mZtjO0PdOZOWfv7cOAoJwp6IPr7eScs/7977X+9S+RyWSM1pr/I4QQSKUUQoj/BVBrTUBKiTHmX/xU/FYIwT/Pefa5VDopJYFLBdPKEAhKotEgQsBw1iNX0FjyHKpSYABL+ucwxlDi1YVg0bhNPqf4auvvbNz0Oz2pPIl4EK1BawiXSVZt6OHeJzs5kXIJBQXah4scqX5CgFKGeCLEji87WTRvO5s3drF9RzeLHz/Img1J4rFAsSQGWmZGOHHKo1AAIS/MK4QgoLUu2TTKM8QqQ+z8uov1bxzghVUtNE9PIAQkkw7PvnqMvGd4tK0Bo2HvDw5kXIJBQXah4scqX5CgFKGeCLEji87WTRvO5s3drF9RzeLHz/Img1J4rFAsSQGWmZGOHHKo1AAIS/MK4QgoLUu2TTKM8QqQ+z8uov1bxzghVUtNE9PIAQkkw7PvnqMvGd4tK0Bo2HvDw5kXIJBQUmpGR7lpbhOjGirQyoAQaG3I53XR3S3JsWSenl6PGdPCOMO6lObPMSzl+EJAPu9xx4JmPl59EOVpbFvieRqtDVobYrEA73zazewZESrKLZSf454XIzq+kILskEvztaOZPquR55a0Iy1JbW2Y6kSImmqbl948ypCjuO+2GjKD6m/rRsm86XTajLTXGAORaJA3V37Lnt0pZrWOI1pVxs79GaKJMK+vmAJolGZEwcN5fnixNdEYiFXa7Nt1km3fnCSnJTfMqmNuax2FgsFT5oIN7j8zPBtaGSqiQUIhCzB4rmZg0Dtz8ksEu1SGZ8No0ObsXlocf/8mjDEELMviUld9IcG6aKVKh5SSPwEEYFlXJ/MltgAAAABJRU5ErkJggg==" alt="logo">
     <div class="hdr-t" style="font-size:15px;letter-spacing:1.5px;text-transform:uppercase">Relative Strength Tracker</div>
   </div>
   <div class="hdr-r">
