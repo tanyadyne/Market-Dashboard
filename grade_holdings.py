@@ -125,13 +125,13 @@ ETF_INFO = [
     {"t":"XLY","h":"AMZN,TSLA,HD,MCD,TJX,BKNG,LOW,SBUX,ORLY,NKE,DASH,GM,MAR,RCL,HLT,AZO,ROST,F,ABNB,CMG,DHI,YUM,EBAY,GRMN,EXPE"},
     {"t":"MSOS","h":"VFF,MNMD,TLRY,MO,CRON,GTBIF,TCNNF"},
     # Custom baskets
-    {"t":"_MNS","h":""},
-    {"t":"_CAG","h":""},
-    {"t":"_CAS","h":""},
-    {"t":"_CMD","h":""},
-    {"t":"_QTM","h":""},
-    {"t":"_HVC","h":""},
-    {"t":"_AAI","h":""},
+    {"t":"_MNS","h":"LH,FMS,ENSG,SOLV,GH,EHC,DVA,BTSG,RDNT,OPCH,HIMS,BLLN,CON,LFST,WGS"},
+    {"t":"_CAG","h":"NTR,CF,MOS,ICL,SMG,FMC,UAN,LXU"},
+    {"t":"_CAS","h":"LVS,FLUT,WYNN,MGM,BYD,SGHC,CZR,RSI,BRSL,PENN"},
+    {"t":"_CMD","h":"CRWV,CORZ,NBIS,CIFR,HIVE,IREN,APLD,BITF,WULF,MARA,HUT,RIOT,BTDR,CLSK"},
+    {"t":"_QTM","h":"SKYT,ARQQ,QSI,QUBT,QBTS,RGTI,IONQ"},
+    {"t":"_HVC","h":"FIX,EME,JCI,TT,WSO,VRT,CARR,LII,SPXC,AAON"},
+    {"t":"_AAI","h":"GTLB,ASAN,PATH,BRZE,VERI,AI,SOUN,BBAI,LAW,CRNC"},
     {"t":"_PHO","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM"},
 ]
 
