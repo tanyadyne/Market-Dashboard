@@ -3,14 +3,11 @@
 Fetch ETF data from Yahoo Finance, compute standard VARS
 (Volatility-Adjusted Relative Strength) vs SPY, and write data.json.
 
-VARS method: For each day, normalize each instrument's daily return by
-its own ATR (as % of price), then cumulate the difference between the
-ETF's normalized return and SPY's normalized return over the lookback window.
+Supports both real ETFs (price from Yahoo) and custom baskets
+(equal-weighted synthetic metrics from component stocks).
 
-Reads pre-computed holding grades from grades.json
-(produced by grade_holdings.py which runs once daily after market close).
-
-Fast refresh (~30 seconds) — safe to run every 6 minutes during market hours.
+Reads pre-computed holding grades from grades.json and dynamic
+holdings for FFTY/BUZZ from dynamic_holdings.json.
 
 Usage:
     pip install yfinance numpy
@@ -18,6 +15,7 @@ Usage:
 """
 
 import json
+import os
 import sys
 from datetime import datetime, timedelta
 import numpy as np
@@ -28,26 +26,24 @@ LOOKBACK = 25
 ATR_PERIOD = 14
 
 ETF_INFO = [
-    {"t":"XTL","n":"Telecom","fn":"SS SPDR S&P Telecom","h":"LITE,CIEN,ASTS,ONDS,LUMN,VIAV,COMM,GSAT,VSAT,CSCO,TDS,FYBR,VZ,UI,IRDM,AAOI,T,CALX,TMUS,ANET,MSI,FFIV,EXTR,NTCT,CCOI"},
     {"t":"XOP","n":"Oil & Gas Exploration","fn":"SS SPDR S&P Oil&Gas Exp","h":"CNX,EXE,MUR,GPOR,EQT,VLO,RRC,FANG,CTRA,AR,APA,MPC,DVN,PSX,XOM,DINO,PR,OVV,VNOM,MGY,CVX,COP,PBF,OXY,EOG,SHEL"},
     {"t":"REMX","n":"Rare Earth Metals","fn":"VanEck:RE & Str Metals","h":"ALB,SQM,LAC,MP,UUUU,USAR,SGML,DNN,UEC,CCJ,LAR,IDR,IPX,TROX"},
     {"t":"CRAK","n":"Oil Refining","fn":"VanEck:Oil Refiners","h":"MPC,PSX,VLO,DINO,PBF,DK,PARR,CLMT"},
-    {"t":"ITA","n":"Aerospace & Defense","fn":"iShares:US Aer&Def ETF","h":"GE,RTX,BA,HWM,TDG,GD,LHX,LMT,NOC,AXON,CW,WWD,RKLB,BWXT,CRS,TXT,ATI,HEI,KTOS,HII,AVAV,HXL,KRMN"},
+    {"t":"ITA","n":"Aerospace & Defense","fn":"iShares:US Aer&Def ETF","h":"ACHR,ATI,AVAV,AXON,BA,BWXT,CRS,CW,GD,GE,HEI,HII,HWM,HXL,KRMN,KTOS,LHX,LMT,NOC,RKLB,RTX,SARO,TDG,TXT,WWD"},
     {"t":"FCG","n":"Natural Gas","fn":"FT:Natural Gas","h":"AR,EXE,DVN,EQT,FANG,CTRA,APA,EOG,OXY,SM,COP,HESM"},
-    {"t":"XAR","n":"Aerospace & Defense","fn":"SS SPDR S&P Aero&Def","h":"ATI,CRS,WWD,HII,KTOS,CW,RTX,HWM,HXL,BWXT,TDG,AVAV,GD,GE,TXT,LHX,HEI,LMT,NOC,ACHR,RKLB,BA,KRMN,AXON,SARO"},
     {"t":"BOAT","n":"Maritime & Shipping","fn":"Tidal:SS Glb Ship","h":"FRO,MATX,STNG,INSW,ZIM,SBLK,CMDB,DHT,CMRE,DAC,TNK,NAT"},
     {"t":"RSPG","n":"Energy (EW)","fn":"Invesco S&P500 EW En","h":"KMI,OXY,APA,WMB,EQT,CTRA,OKE,FANG,BKR,TRGP,XOM,COP,TPL,EOG,CVX,HAL,HES,SLB,PSX,DVN,VLO,MPC,SHEL"},
     {"t":"XLE","n":"Energy","fn":"Sel Sector:Enrgy SS SPDR","h":"XOM,CVX,COP,WMB,MPC,EOG,PSX,VLO,SLB,KMI,BKR,OKE,TRGP,EQT,OXY,FANG,EXE,DVN,HAL,CTRA,TPL,APA"},
     {"t":"FFTY","n":"IBD 50","fn":"Innovator IBD 50","h":"ANAB,CLS,ARQT,STOK,FIX,MU,AU,TARS,APH,TVTX,AGI,KGC,GH,VRT,AEM,LLY,HWM,ARGX,ONC,WGS,ZYME,FN,TMDX"},
     {"t":"AMLP","n":"Energy Infrastructure","fn":"Alerian MLP","h":"MPLX,WES,EPD,SUN,PAA,ET,HESM,CQP,USAC,GEL,SPH,GLP,DKL"},
-    {"t":"IYZ","n":"Telecom","fn":"iShares:US Telecom ETF","h":"CSCO,T,VZ,LITE,ASTS,CIEN,ANET,TMUS,TIGO,CMCSA,FYBR,ROKU,IRDM,MSI,UI,CHTR,GLIBK"},
+    {"t":"IYZ","n":"Telecom","fn":"iShares:US Telecom ETF","h":"AAOI,ANET,ASTS,CALX,CCOI,CHTR,CIEN,CMCSA,COMM,CSCO,EXTR,FFIV,FYBR,GLIBK,GSAT,IRDM,LITE,LUMN,MSI,NTCT,ONDS,ROKU,T,TDS,TIGO,TMUS,UI,VIAV,VSAT,VZ"},
     {"t":"XLI","n":"Industrials","fn":"Sel Sector:Ind SS SPDR","h":"GE,CAT,RTX,UBER,GEV,BA,UNP,ETN,HON,DE,PH,ADP,TT,MMM,LMT,GD,HWM,WM,TDG,JCI,EMR,NOC,UPS,CMI,PWR"},
     {"t":"RSPN","n":"Industrials (EW)","fn":"Invesco S&P500 EW In","h":"BA,TDG,LUV,GE,UAL,MMM,GD,HON,PAYX,J,UBER,RTX,FDX,HII,NOC,ADP,UNP,VLTO,ROK,UPS,EFX,VRSK,GEV,LMT,AME"},
     {"t":"GNR","n":"Natural Resources","fn":"SS SPDR S&P Glbl Nat Res","h":"XOM,NEM,CVX,CTVA,FCX,ADM,VALE,AEM"},
     {"t":"FAN","n":"Wind Energy","fn":"FT II:Global Wind Energy","h":"CWEN,NEE,ACA,LNT,TKR"},
     {"t":"RSPC","n":"Comm Services (EW)","fn":"Invesco S&P 500 EW CS","h":"MTCH,TKO,FYBR,WBD,LYV,TTWO,T,DIS,NFLX,NYT,CMCSA,TMUS,VZ,META,OMC,IPG,PARA,CHTR,EA,NWSA,FOXA,GOOGL,FOX,NWS"},
     {"t":"IYT","n":"Transportation","fn":"iShares:US Transportatn","h":"UBER,UNP,UPS,FDX,CSX,NSC,DAL,UAL,ODFL,EXPD,CHRW,LUV,XPO,JBHT,AAL,LYFT,SAIA,KNX,JOBY,R,KEX,GXO,ALK,LSTR"},
-    {"t":"XES","n":"Oil & Gas E&S","fn":"SS SPDR S&P Oil&Gas E&S","h":"LBRT,HP,RIG,WFRD,SEI,NOV,HAL,FTI,VAL,PTEN,BKR,KGS,NE,SLB,WHD,AROC,TDW,SDRL,OII,XPRO,PUMP,AESI,NBR,HLX,WTTR"},
+    {"t":"XES","n":"Oil & Gas Equipment","fn":"SS SPDR S&P Oil&Gas E&S","h":"LBRT,HP,RIG,WFRD,SEI,NOV,HAL,FTI,VAL,PTEN,BKR,KGS,NE,SLB,WHD,AROC,TDW,SDRL,OII,XPRO,PUMP,AESI,NBR,HLX,WTTR"},
     {"t":"RSP","n":"S&P 500 Equal Weight","fn":"Invesco S&P500 EWght","h":"WBD,ALB,WDC,MU,INTC,TER,AMAT,LRCX,STX,LLY,CAH,REGN,WAT,AMD,CAT,FSLR,UHS,HCA,GM,BIIB,ISRG,JBHT,TECH,RVTY,STLD"},
     {"t":"GDX","n":"Gold Miners","fn":"VanEck:Gold Miners","h":"PAAS,WPM,KGC,AGI,FNV,AEM,B,GFI,NEM"},
     {"t":"GDXJ","n":"Jr Gold Miners","fn":"VanEck:Jr Gold Miners","h":"PAAS,KGC,EQX,AGI,HMY,IAG,RGLD,USAU,GORO,CDE,GLDG"},
@@ -63,9 +59,9 @@ ETF_INFO = [
     {"t":"XHE","n":"Healthcare Equipment","fn":"SS SPDR S&P Hlth Care Eq","h":"TNDM,AXGN,INSP,GMED,HAE,ATEC,TMDX,ISRG,GKOS,SOLV,COO,IDXX,HOLX,OMCL,LNTH,MDT,LIVN,ALGN,UFPT,ICUI,EW,STE,PEN,NEOG,GEHC"},
     {"t":"XLV","n":"Healthcare","fn":"Sel Sector:HC SS SPDR","h":"LLY,JNJ,ABBV,UNH,MRK,ABT,TMO,ISRG,AMGN,GILD,BSX,PFE,DHR,MDT,SYK,VRTX,MCK,CVS,BMY,HCA,REGN,ELV,CI,COR,IDXX"},
     {"t":"COPX","n":"Copper Miners","fn":"Glbl X Copper Miners ETF","h":"ERO,TGB,FCX,HBM,IE,TECK,SCCO"},
-    {"t":"DRNZ","n":"Drones","fn":"REX Drone ETF","h":"ONDS,AVAV,ELS,DRSHF,EH,RCAT,UMAC,PLTR,DPRO,KTOS"},
-    {"t":"URA","n":"Uranium / Nuclear","fn":"Glbl X Uranium ETF","h":"CCJ,OKLO,UEC,URNM,NXE,LEU,LTBR,UUUU,SMR,SBSW,DNN,URNJ,SRUUF,NNE,EU,ASPI,UROY,BWXT,MIR,CEG"},
-    {"t":"UFO","n":"Space","fn":"Procure Space","h":"ASTS,GSAT,PL,VSAT,TRMB,SATS,SIRI,RKLB,GRMN,IRDM,RTX,GE,LHX,VOYG,NOC,LMT,HON,LUNR,BA,FLY,CMCSA"},
+    {"t":"DRNZ","n":"Drones","fn":"REX Drone ETF","h":"ACHR,AVAV,DPRO,DRSHF,EH,ELS,JOBY,KTOS,ONDS,PLTR,RCAT,UMAC"},
+    {"t":"URA","n":"Uranium / Nuclear","fn":"Glbl X Uranium ETF","h":"ASPI,BWXT,CCJ,CEG,DNN,EU,LEU,LTBR,MIR,NNE,NXE,OKLO,SBSW,SMR,SRUUF,TLN,UEC,URNJ,URNM,UROY,UUUU"},
+    {"t":"UFO","n":"Space","fn":"Procure Space","h":"ASTS,BA,BKSY,CMCSA,FLY,GE,GEMI,GRMN,GSAT,HON,IRDM,LHX,LMT,LUNR,NOC,PL,RDW,RKLB,RTX,SATS,SIRI,TRMB,VOYG,VSAT"},
     {"t":"PAVE","n":"Infrastructure Dev","fn":"Glbl X US Infra Dev","h":"HWM,PWR,PH,CRH,SRE,NSC,FAST,TT,CSX,ROK,URI,EMR,DE,ETN,UNP,VMC,MLM,NUE,EME,STLD,HUBB,TRMB,FTV,WWD,PNR"},
     {"t":"LIT","n":"Lithium & Battery","fn":"Glbl X Lith & Bat Tech","h":"RIO,ALB,LAR,SEI,MVST,ENS,EOSE,SQM,AMPX,TSLA,BLDP,SLDP,ABAT,SGML,SLI,LAC"},
     {"t":"XLB","n":"Basic Materials","fn":"Sel Sector:Mat SS SPDR","h":"LIN,NEM,SHW,ECL,NUE,FCX,MLM,VMC,APD,CTVA,STLD,PPG,IP,AMCR,PKG,IFF,DOW,DD,ALB,AVY,BALL,CF,LYB,MOS"},
@@ -73,8 +69,8 @@ ETF_INFO = [
     {"t":"PBJ","n":"Food & Beverage","fn":"Invesco Food & Beverage","h":"MNST,HSY,KR,SYY,MDLZ,KHC,CTVA,DASH,HLF,UNFI,SEB,IMKTA,TSN,USFD,FDP,CART,CHEF,ADM,AGRO,TR,ACI,DPZ,POST,JBS,WMK"},
     {"t":"RSPS","n":"Consumer Staples (EW)","fn":"Invesco S&P500 EW CS","h":"DLTR,KR,KMB,MNST,K,CHD,CAG,KO,TGT,PG,CLX,CL,KHC,SJM,GIS,PEP,CPB,HSY,KDP,KVUE,WMT,HRL,MO,SYY"},
     {"t":"XLP","n":"Consumer Staples","fn":"Sel Sector:C SSS SPDR I","h":"WMT,COST,PG,KO,PM,PEP,CL,MDLZ,MO,MNST,TGT,KR,KDP,SYY,KMB,KVUE,ADM,HSY,GIS,DG,EL,K,KHC,DLTR,CHD"},
-    {"t":"QQQE","n":"Nasdaq-100 (EW)","fn":"Direxion:NASDAQ-100 EWI","h":"MU,AMD,REGN,AMAT,ISRG,BIIB,INTC,WBD,AZN,LRCX,ROST,AMGN,MRVL,MNST,EA,AVGO,IDXX,CTSH,AEP,DDOG,MAR,AAPL,VRTX,XEL,GILD"},
-    {"t":"ROBO","n":"Robotics & Automation","fn":"Robo Glbl Robots & Auto","h":"SYM,TER,ISRG,SERV,IRBT,COHR,ROK,ILMN,RR,ARBE,AUR,GMED,ROK,PRCT,NOVT,PDYN,IPGP,NDSN,EMR"},
+    {"t":"QQQE","n":"Nasdaq-100 (EW)","fn":"Direxion:NASDAQ-100 EWI","h":"AAPL,ADI,AEP,AMAT,AMD,AMGN,ANET,ANSS,AVGO,AZN,BIIB,CDNS,CDW,CSCO,CTSH,DDOG,DELL,EA,FFIV,GILD,GLW,HPE,IDXX,INTC,ISRG,JBL,JNPR,KLAC,LRCX,MAR,MNST,MPWR,MRVL,MU,NVDA,PLTR,QCOM,REGN,ROST,SWKS,TDY,TER,TXN,VRSN,VRTX,WBD,XEL"},
+    {"t":"ROBO","n":"Robotics & Automation","fn":"Robo Glbl Robots & Auto","h":"SYM,TER,ISRG,SERV,IRBT,COHR,ROK,ILMN,RR,ARBE,AUR,GMED,PRCT,NOVT,PDYN,IPGP,NDSN,EMR"},
     {"t":"ARKK","n":"Innovation / Growth","fn":"ARK Innovation","h":"TSLA,ROKU,COIN,TEM,CRSP,SHOP,HOOD,RBLX,AMD,PLTR,BEAM,TER,CRCL,BMNR,ACHR,TXG,TWST,ILMN,AMZN,VCYT,BLSH,NVDA,NTRA,META,DKNG"},
     {"t":"IWM","n":"Russell 2000","fn":"iShares:Russ 2000 ETF","h":"CRDO,BE,FN,IONQ,NXT,GH,TSLA,KTOS,BBIO,CDE,MDGL,ENSG,HL,RMBS,SPXC,SATS,DY,STRL,OKLO,GTLS,IDCC,HQY,MOD,UMBF,AVAV"},
     {"t":"HYDR","n":"Hydrogen","fn":"Glbl X Hydrogen ETF","h":"BE,PLUG,BLDP,SLDP,FCEL,CMI,APD"},
@@ -86,23 +82,21 @@ ETF_INFO = [
     {"t":"ARKF","n":"Fintech Innovation","fn":"ARK BC & Fintech Innov","h":"SHOP,COIN,HOOD,PLTR,TOST,SOFI,XYZ,RBLX,ROKU,CRCL,MELI,AMD,DKNG,META,AMZN,BMNR,PINS,NU,KLAR,SE,BLSH,FUTU,Z"},
     {"t":"EWZ","n":"Brazil","fn":"iShares:MSCI Brazil","h":"NU,MELI,DLO"},
     {"t":"RSPM","n":"Materials (EW)","fn":"Invesco S&P500 EW Mt","h":"CE,IP,PPG,BALL,LYB,ECL,DOW,IFF,LIN,CTVA,AVY,PKG,MLM,CF,AMCR,VMC,APD,DD,EMN,SHW,FCX,NEM,MOS,FMC"},
-    {"t":"RSPT","n":"Technology (EW)","fn":"Invesco S&P500 EW Tc","h":"AVGO,JBL,PLTR,TER,ANET,AAPL,VRSN,CSCO,INTC,SWKS,JNPR,GLW,ADI,TXN,KLAC,TDY,DELL,HPE,CDNS,ANSS,CDW,QCOM,NVDA,FFIV,MPWR"},
     {"t":"XBI","n":"Biotechnology","fn":"SS SPDR S&P Biotech","h":"EXAS,RVMD,RNA,INSM,NTRA,BBIO,REGN,MDGL,IONS,BIIB,AMGN,UTHR,INCY,ROIV,EXEL,VRTX,GILD,NBIX,ABBV,BMRN,CRSP,MRNA,PTCT,ALNY,KRYS"},
     {"t":"VERS","n":"Metaverse ETF","fn":"ProShares:Metaverse ETF","h":"GOOGL,AAPL,QCOM,EXPI,U,AMZN,NVDA,MU,MSFT,META,KOPN,RBLX,HIMX,SNAP,STGW,VUZI,EA,ARM,AMBA,ADSK,PTC,AMKR,TTWO,WSM,NOK"},
     {"t":"XSD","n":"Semiconductors (EW)","fn":"SS SPDR S&P Semiconductr","h":"MU,INTC,RGTI,AMD,MRVL,MTSI,FSLR,RMBS,SITM,SMTC,MPWR,ADI,QCOM,CRUS,ON,AVGO,CRDO,LSCC,NVDA,QRVO,SLAB,TXN,NXPI,SWKS,OLED,TSEM"},
     {"t":"ARKG","n":"Genomics","fn":"ARK Genomic Revolution","h":"TEM,CRSP,PSNL,GH,TWST,TXG,NTRA,BEAM,ILMN,VCYT,RXRX,ADPT,IONS,ABSI,CDNA,SDGR,NTLA,NRIX,PACB,WGS,BFLY,PRME,ARCT,AMGN"},
     {"t":"GBTC","n":"Bitcoin","fn":"GRAYSCALE BITCOIN TRUST","h":"IBIT,ETHA,MSTR,BMNR,SBET,COIN"},
-    {"t":"IGV","n":"Software","fn":"iShares:Expand Tch-Sftwr","h":"PLTR,MSFT,CRM,INTU,NOW,ORCL,APP,ADBE,CRWD,PANW,CDNS,SNPS,ADSK,FTNT,DDOG,ROP,WDAY,EA,MSTR,TTWO,FICO,TEAM,ZS,ZM,PTC"},
+    {"t":"IGV","n":"Software","fn":"iShares:Expand Tch-Sftwr","h":"ADBE,ADSK,AGYS,APP,APPN,BBAI,CDNS,CIFR,CLSK,CRM,CRNC,CRWD,CTSH,DDOG,EA,EPAM,FICO,FTNT,GDYN,HUT,IBM,IDCC,INTU,JAMF,MSFT,MSTR,NOW,ORCL,PANW,PATH,PLTR,PRO,PTC,QBTS,ROP,SEMR,SNPS,TDC,TEAM,TTWO,WDAY,WK,WULF,ZM,ZS"},
     {"t":"XTN","n":"Transport & Logistics","fn":"SPDR S&P Trans","h":"JBHT,KEX,CHRW,FDX,EXPD,KNX,UPS,LYFT,LUV,XPO,AAL,CSX,MATX,UNP,NSC,DAL,HUBG,LSTR,JOBY,GXO,SNDR,ODFL,SAIA,UAL,WERN"},
     {"t":"PHO","n":"Water Infrastructure","fn":"Invesco Water Res","h":"WAT,FERG,ECL,ROP,AWK,MLI,IEX,WMS,XYL,PNR,VLTO,AOS,ACM,CNM,VMI,WTRG,BMI,TTEK,ITRI,WTS,ZWS,MWA,SBS,FELE,HWKN"},
     {"t":"LABU","n":"Biotech (3x)","fn":"Direxion:S&P Btech Bl 3X","h":"EXAS,RVMD,RNA,INSM,REGN,NTRA,MDGL,BBIO,BIIB,IONS,UTHR,AMGN,INCY,ROIV,EXEL"},
-    {"t":"BLOK","n":"Blockchain","fn":"Amplify Blockchain Tech","h":"HOOD,CIFR,HUT,GLXY,CLSK,WULF,COIN,IBM,NU,BBBY,PYPL,CMPO,CORZ,FBTC,OPRA,RBLX,BLK,FIGR,XYZ,CME,IBIT,BITB,MELI,CAN,BKKT"},
+    {"t":"BLOK","n":"Blockchain","fn":"Amplify Blockchain Tech","h":"BBBY,BITB,BKKT,BLK,CAN,CIFR,CLSK,CME,CMPO,COIN,CORZ,CRCL,FBTC,FIGR,GLXY,HOOD,HUT,IBIT,IBM,MELI,NU,OPRA,PYPL,RBLX,WULF,XYZ"},
     {"t":"BUZZ","n":"Social Sentiment","fn":"VanEck:Social Sentiment","h":"APLD,INTC,GME,NBIS,TSLA,META,SOFI,RGTI,IREN,AMZN,PLTR,NVDA,HOOD,ASTS,OPEN,AMD,MSTR,HIMS,GOOGL,AAPL,UNH,SOUN,SMCI,DKNG,PYPL"},
-    {"t":"XSW","n":"Software & Services","fn":"SS SPDR S&P Sftwre & Svc","h":"CIFR,SEMR,PRO,WULF,HUT,CLSK,TDC,QBTS,JAMF,APPN,BBAI,EPAM,PATH,WK,EA,IBM,CRWD,IDCC,GDYN,FICO,CRNC,DDOG,SNPS,CTSH,AGYS"},
     {"t":"SMH","n":"Semiconductors","fn":"VanEck:Semiconductor","h":"NVDA,TSM,AVGO,MU,INTC,AMAT,AMD,ASML,LRCX,KLAC,ADI,QCOM,TXN,CDNS,SNPS,MRVL,NXPI,MPWR,TER,MCHP,STM,ON,SWKS,QRVO,OLED,TSEM"},
     {"t":"WCLD","n":"Cloud Computing","fn":"WisdomTree:Cloud Cmptng","h":"FSLY,SEMR,MDB,DOCN,FROG,PATH,SNOW,BILL,DDOG,CFLT,WK,TWLO,CRWD,PCOR,AGYS,IOT,BRZE,QLYS,CWAN,BL,CLBT,PANW,SHOP,INTA,NET"},
     {"t":"DRIV","n":"EV & Mobility","fn":"Glbl X Auto & Elct Vhcls","h":"GOOGL,BE,TSLA,INTC,NVDA,MSFT,RIO,QCOM,GM,ALB,NBIS,COHR,HON,SQM,ENS,F,BIDU,AMPX,SITM"},
-    {"t":"WGMI","n":"Crypto Miners","fn":"CoinShares Btc Mining","h":"CIFR,IREN,BITF,WULF,RIOT,HUT,CORZ,APLD,CLSK,HIVE,BTDR,MARA,NVDA,CANG,GLXY,XYZ,BTBT,TSM,CAN"},
+    {"t":"WGMI","n":"Crypto Miners / Data Centers","fn":"CoinShares Btc Mining","h":"APLD,BITF,BTBT,BTDR,CAN,CANG,CIFR,CLSK,CORZ,CRWV,GLXY,HIVE,HUT,IREN,MARA,NBIS,NVDA,RIOT,TSM,WULF,XYZ"},
     {"t":"IBUY","n":"Online Retail","fn":"Amplify Online Retail","h":"FIGS,LQDT,CVNA,UPWK,EXPE,CART,W,RVLV,CHWY,LYFT,MSM,EBAY,BKNG,AFRM,SPOT,TRIP,ABNB,PTON,UBER,AMZN,CPRT,PYPL,HIMS,SSTK,ETSY"},
     {"t":"XHB","n":"Homebuilders","fn":"SS SPDR S&P Homebuilders","h":"SKY,SGI,WMS,CVCO,BLD,JCI,IBP,TT,KBH,TOL,ALLE,LEN,PHM,MTH,LOW,TMHC,NVR,WSM,DHI,MAS,LII,CARR,HD,CSL,BLDR"},
     {"t":"TAN","n":"Solar Energy","fn":"Invesco Solar","h":"NXT,FSLR,RUN,ENPH,SEDG,HASI,CSIQ,CWEN,DQ,SHLS,ARRY,JKS"},
@@ -123,11 +117,18 @@ ETF_INFO = [
     {"t":"JETS","n":"Airlines & Travel","fn":"US Global Jets","h":"LUV,AAL,DAL,UAL,ALGT,SNCY,SKYW,ULCC,JBLU,EXPE,GD,ALK,TXT,SABR,BKNG,TRIP,BA,RYAAY"},
     {"t":"KBE","n":"Banks","fn":"SS SPDR S&P Bank ETF","h":"CMA,BKU,BANC,EBC,PFSI,CADE,BK,VLY,COLB,WFC,BAC,INDB,C,FBK,CFG,TCBI,BOKF,SBCF,TFC,PB,NTRS,ABCB,FIBK,JPM,WSBC"},
     {"t":"FXI","n":"China Large-Cap","fn":"iShares:China Large Cp","h":"BABA,TCEHY,NTES,BYDDF,TCOM,JD,BIDU,PTR,SNP,FUTU,KWEB"},
-    {"t":"XLY","n":"Consumer Disc","fn":"Sel Sctr:C D SS SPDR In","h":"AMZN,TSLA,HD,MCD,TJX,BKNG,LOW,SBUX,ORLY,NKE,DASH,GM,MAR,RCL,HLT,AZO,ROST,F,ABNB,CMG,DHI,YUM,EBAY,GRMN,EXPE"},
+    {"t":"XLY","n":"Consumer Discretionary","fn":"Sel Sctr:C D SS SPDR In","h":"AMZN,TSLA,HD,MCD,TJX,BKNG,LOW,SBUX,ORLY,NKE,DASH,GM,MAR,RCL,HLT,AZO,ROST,F,ABNB,CMG,DHI,YUM,EBAY,GRMN,EXPE"},
     {"t":"MSOS","n":"Cannabis","fn":"AdvsrShs Pure USCannabis","h":"VFF,MNMD,TLRY,MO,CRON,GTBIF,TCNNF"},
+    # ─── Custom Baskets (no ETF ticker — synthetic metrics from components) ──
+    {"t":"_MNS","n":"Medical/Nursing Services","fn":"Custom Basket","h":"","basket":True},
+    {"t":"_CAG","n":"Chemicals (Agricultural)","fn":"Custom Basket","h":"","basket":True},
+    {"t":"_CAS","n":"Casinos","fn":"Custom Basket","h":"","basket":True},
+    {"t":"_CMD","n":"Crypto Miners / Data Centers","fn":"Custom Basket","h":"","basket":True},
+    {"t":"_QTM","n":"Quantum","fn":"Custom Basket","h":"","basket":True},
+    {"t":"_HVC","n":"HVAC / Cooling","fn":"Custom Basket","h":"","basket":True},
+    {"t":"_AAI","n":"Agentic AI","fn":"Custom Basket","h":"","basket":True},
+    {"t":"_PHO","n":"Photonics","fn":"Custom Basket","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM","basket":True},
 ]
-
-TICKERS = [e["t"] for e in ETF_INFO]
 
 
 # ─── Math Helpers ───────────────────────────────────────────────────────────
@@ -148,8 +149,6 @@ def compute_atr(highs, lows, closes, period=14):
 
 
 def compute_atr_series(highs, lows, closes, period=14):
-    """Return a list of rolling ATR values, one per bar (index 0 = bar 0).
-    The first `period` bars use expanding mean; after that Wilder smoothing."""
     n = len(closes)
     atr_out = [0.0] * n
     trs = []
@@ -173,18 +172,46 @@ def percentrank_inc(values, x):
     return sum(1 for v in values if v < x) / (n - 1)
 
 
+def load_dynamic_holdings():
+    """Load dynamic holdings for FFTY/BUZZ from dynamic_holdings.json."""
+    if os.path.exists("dynamic_holdings.json"):
+        with open("dynamic_holdings.json") as f:
+            return json.load(f)
+    return {}
+
 
 # ─── Main ───────────────────────────────────────────────────────────────────
 
 def main():
-    print(f"Fetching data for {len(TICKERS) + 1} ETF tickers...")
-    all_tickers = ["SPY"] + TICKERS
+    # Override FFTY/BUZZ holdings from dynamic file
+    dyn = load_dynamic_holdings()
+    for info in ETF_INFO:
+        if info["t"] in dyn and dyn[info["t"]]:
+            info["h"] = dyn[info["t"]]
+            print(f"  Loaded dynamic holdings for {info['t']}: {len(info['h'].split(','))} stocks")
+
+    # Separate regular ETFs and baskets
+    regular_etfs = [e for e in ETF_INFO if not e.get("basket")]
+    basket_etfs = [e for e in ETF_INFO if e.get("basket") and e.get("h")]
+
+    # Collect basket component tickers for download
+    basket_components = set()
+    for b in basket_etfs:
+        for h in b["h"].split(","):
+            h = h.strip()
+            if h:
+                basket_components.add(h)
+
+    regular_tickers = [e["t"] for e in regular_etfs]
+    all_download = list(set(["SPY"] + regular_tickers + sorted(basket_components)))
+
+    print(f"Fetching data for {len(all_download)} tickers ({len(regular_tickers)} ETFs + {len(basket_components)} basket components)...")
 
     end = datetime.now() + timedelta(days=1)
     start = end - timedelta(days=91)
 
     raw = yf.download(
-        all_tickers,
+        all_download,
         start=start.strftime("%Y-%m-%d"),
         end=end.strftime("%Y-%m-%d"),
         group_by="ticker",
@@ -198,7 +225,10 @@ def main():
 
     def get_df(ticker):
         try:
-            df = raw[ticker].dropna(subset=["Close"])
+            if len(all_download) == 1:
+                df = raw.dropna(subset=["Close"])
+            else:
+                df = raw[ticker].dropna(subset=["Close"])
             return df
         except Exception:
             return None
@@ -217,17 +247,10 @@ def main():
     spy_chg = (spy_closes[-1] / spy_closes[-2] - 1) * 100 if len(spy_closes) >= 2 else 0
     spy_ts_map = {ts: i for i, ts in enumerate(spy_df.index)}
 
-    # ─── Process each ETF ───────────────────────────────────
-    results = []
-    for info in ETF_INFO:
-        ticker = info["t"]
-        df = get_df(ticker)
-
+    def process_ticker(ticker, df):
+        """Process a single ticker (ETF or component) and return metrics dict."""
         if df is None or len(df) < 10:
-            results.append({**info, "rv": None, "am": None, "ch": None, "c5": None,
-                            "c20": None, "rs": None, "rf": 0, "ra": 0, "p": None,
-                            "fr": None, "vs": None})
-            continue
+            return None
 
         c = df["Close"].values
         h = df["High"].values
@@ -259,48 +282,33 @@ def main():
                 common.append((idx, spy_ts_map[ts]))
 
         if len(common) < LOOKBACK:
-            results.append({
-                **info, "rv": round(rvol * 100) if rvol else None,
+            return {
+                "rv": round(rvol * 100) if rvol else None,
                 "am": round(atr_mult * 100), "ch": round(change, 2),
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2),
                 "fr": None, "vs": None,
-            })
-            continue
+            }
 
-        # ─── Standard VARS: cumulative ATR-normalized returns ────
-        # For each day, compute:
-        #   ETF daily return / ETF ATR  vs  SPY daily return / SPY ATR
-        #   VARS = cumulative sum of (ETF_norm_return - SPY_norm_return)
         etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
-
         extended = common[-(LOOKBACK + 1):]
         vars_series = []
         cumulative = 0.0
         for k in range(1, len(extended)):
             etf_i_prev, spy_i_prev = extended[k - 1]
             etf_i, spy_i = extended[k]
-
-            # Daily returns
             etf_ret = (c[etf_i] - c[etf_i_prev]) / c[etf_i_prev] if c[etf_i_prev] != 0 else 0
             spy_ret = (spy_closes[spy_i] - spy_closes[spy_i_prev]) / spy_closes[spy_i_prev] if spy_closes[spy_i_prev] != 0 else 0
-
-            # ATR as % of price for normalization
             etf_atr_pct = etf_atr_series[etf_i] / c[etf_i_prev] if c[etf_i_prev] != 0 and etf_atr_series[etf_i] > 0 else 1
             spy_atr_pct = spy_atr_series[spy_i] / spy_closes[spy_i_prev] if spy_closes[spy_i_prev] != 0 and spy_atr_series[spy_i] > 0 else 1
-
-            # Normalize each return by its own ATR%
             etf_norm = etf_ret / etf_atr_pct if etf_atr_pct > 0 else 0
             spy_norm = spy_ret / spy_atr_pct if spy_atr_pct > 0 else 0
-
             cumulative += (etf_norm - spy_norm)
             vars_series.append(round(cumulative, 4))
 
-        # rs_series = the VARS values over the lookback window
-        rs_series = vars_series  # length = LOOKBACK
-        vs_series = [0.0] + vars_series  # prepend zero anchor for sparkline (LOOKBACK+1 points)
-
+        rs_series = vars_series
+        vs_series = [0.0] + vars_series
         final_rs = rs_series[-1] if rs_series else 0
         rs_pctrank = percentrank_inc(rs_series, final_rs) if len(rs_series) > 1 else None
 
@@ -318,8 +326,7 @@ def main():
             else:
                 break
 
-        results.append({
-            **info,
+        return {
             "rv": round(rvol * 100) if rvol else None,
             "am": round(atr_mult * 100),
             "ch": round(change, 2),
@@ -331,6 +338,89 @@ def main():
             "p": round(price, 2),
             "fr": round(final_rs, 4),
             "vs": vs_series,
+        }
+
+    # ─── Process regular ETFs ──────────────────────────────
+    results = []
+    for info in regular_etfs:
+        ticker = info["t"]
+        df = get_df(ticker)
+        metrics = process_ticker(ticker, df)
+        if metrics is None:
+            results.append({**info, "rv": None, "am": None, "ch": None, "c5": None,
+                            "c20": None, "rs": None, "rf": 0, "ra": 0, "p": None,
+                            "fr": None, "vs": None})
+        else:
+            results.append({**info, **metrics})
+
+    # ─── Process custom baskets (averaged component metrics) ──
+    # Pre-compute metrics for all basket components
+    component_metrics = {}
+    for tk in sorted(basket_components):
+        df = get_df(tk)
+        m = process_ticker(tk, df)
+        if m:
+            component_metrics[tk] = m
+
+    for info in basket_etfs:
+        holdings = [h.strip() for h in info["h"].split(",") if h.strip()]
+        valid = [h for h in holdings if h in component_metrics]
+
+        if not valid:
+            results.append({**info, "rv": None, "am": None, "ch": None, "c5": None,
+                            "c20": None, "rs": None, "rf": 0, "ra": 0, "p": None,
+                            "fr": None, "vs": None})
+            continue
+
+        # Average VARS series (equal-weighted)
+        vs_lists = [component_metrics[h]["vs"] for h in valid if component_metrics[h].get("vs")]
+        if vs_lists:
+            min_len = min(len(vs) for vs in vs_lists)
+            avg_vs = []
+            for i in range(min_len):
+                avg_vs.append(round(np.mean([vs[i] for vs in vs_lists]), 4))
+
+            # Derive RS from averaged VARS
+            rs_series = avg_vs[1:] if len(avg_vs) > 1 else []
+            final_rs = rs_series[-1] if rs_series else 0
+            rs_pctrank = percentrank_inc(rs_series, final_rs) if len(rs_series) > 1 else None
+
+            adv_streak = 0
+            for j in range(len(rs_series) - 1, 0, -1):
+                if rs_series[j] > rs_series[j - 1]:
+                    adv_streak += 1
+                else:
+                    break
+            dec_streak = 0
+            for j in range(len(rs_series) - 1, 0, -1):
+                if rs_series[j] < rs_series[j - 1]:
+                    dec_streak += 1
+                else:
+                    break
+        else:
+            avg_vs = None
+            rs_pctrank = None
+            adv_streak = 0
+            dec_streak = 0
+
+        # Average scalar metrics
+        def avg_metric(key):
+            vals = [component_metrics[h][key] for h in valid if component_metrics[h].get(key) is not None]
+            return round(np.mean(vals), 2) if vals else None
+
+        results.append({
+            **info,
+            "rv": round(avg_metric("rv")) if avg_metric("rv") is not None else None,
+            "am": round(avg_metric("am")) if avg_metric("am") is not None else None,
+            "ch": avg_metric("ch"),
+            "c5": avg_metric("c5"),
+            "c20": avg_metric("c20"),
+            "rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
+            "rf": dec_streak,
+            "ra": adv_streak,
+            "p": None,  # No single price for baskets
+            "fr": round(final_rs, 4) if rs_series else None,
+            "vs": avg_vs,
         })
 
     # Sort: RS desc, then Change desc
@@ -340,8 +430,6 @@ def main():
         r["rk"] = i + 1
 
     # ─── Load cached holding grades from grades.json ────────
-    # grades.json is produced by grade_holdings.py (runs once daily)
-    import os
     holding_grades = {}
     if os.path.exists("grades.json"):
         with open("grades.json") as gf:
@@ -350,7 +438,6 @@ def main():
     else:
         print("WARNING: grades.json not found — all holdings will show bronze")
 
-    # Attach grades to ETFs
     for e in results:
         if e.get("h"):
             hg = {}
@@ -395,16 +482,13 @@ def main():
     s_count = sum(1 for v in holding_grades.values() if v == "s")
     b_count = sum(1 for v in holding_grades.values() if v == "b")
 
-    print(f"\nWritten data.json - {len(results)} ETFs")
+    print(f"\nWritten data.json - {len(results)} entries ({len(regular_etfs)} ETFs + {len(basket_etfs)} baskets)")
     print(f"Top 5: {[r['t'] for r in results[:5]]}")
     print(f"Advancing: {adv_pct}% | Declining: {dec_pct}%")
-    print(f"4+ day advance streaks: {len(adv_streak_list)}")
-    print(f"4+ day decline streaks: {len(dec_streak_list)}")
     if holding_grades:
         print(f"Cached grades: {g_count} gold, {s_count} silver, {b_count} bronze")
-    else:
-        print("No cached grades loaded — run grade_holdings.py first")
 
 
 if __name__ == "__main__":
     main()
+
