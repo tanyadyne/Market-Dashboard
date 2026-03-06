@@ -120,13 +120,13 @@ ETF_INFO = [
     {"t":"XLY","n":"Consumer Discretionary","fn":"Sel Sctr:C D SS SPDR In","h":"AMZN,TSLA,HD,MCD,TJX,BKNG,LOW,SBUX,ORLY,NKE,DASH,GM,MAR,RCL,HLT,AZO,ROST,F,ABNB,CMG,DHI,YUM,EBAY,GRMN,EXPE"},
     {"t":"MSOS","n":"Cannabis","fn":"AdvsrShs Pure USCannabis","h":"VFF,MNMD,TLRY,MO,CRON,GTBIF,TCNNF"},
     # ─── Custom Baskets (no ETF ticker — synthetic metrics from components) ──
-    {"t":"_MNS","n":"Medical/Nursing Services","fn":"Custom Basket","h":"","basket":True},
-    {"t":"_CAG","n":"Chemicals (Agricultural)","fn":"Custom Basket","h":"","basket":True},
-    {"t":"_CAS","n":"Casinos","fn":"Custom Basket","h":"","basket":True},
-    {"t":"_CMD","n":"Crypto Miners / Data Centers","fn":"Custom Basket","h":"","basket":True},
-    {"t":"_QTM","n":"Quantum","fn":"Custom Basket","h":"","basket":True},
-    {"t":"_HVC","n":"HVAC / Cooling","fn":"Custom Basket","h":"","basket":True},
-    {"t":"_AAI","n":"Agentic AI","fn":"Custom Basket","h":"","basket":True},
+    {"t":"_MNS","n":"Medical/Nursing Services","fn":"Custom Basket","h":"LH,FMS,ENSG,SOLV,GH,EHC,DVA,BTSG,RDNT,OPCH,HIMS,BLLN,CON,LFST,WGS","basket":True},
+    {"t":"_CAG","n":"Chemicals (Agricultural)","fn":"Custom Basket","h":"NTR,CF,MOS,ICL,SMG,FMC,UAN,LXU","basket":True},
+    {"t":"_CAS","n":"Casinos","fn":"Custom Basket","h":"LVS,FLUT,WYNN,MGM,BYD,SGHC,CZR,RSI,BRSL,PENN","basket":True},
+    {"t":"_CMD","n":"Crypto Miners / Data Centers","fn":"Custom Basket","h":"CRWV,CORZ,NBIS,CIFR,HIVE,IREN,APLD,BITF,WULF,MARA,HUT,RIOT,BTDR,CLSK","basket":True},
+    {"t":"_QTM","n":"Quantum","fn":"Custom Basket","h":"SKYT,ARQQ,QSI,QUBT,QBTS,RGTI,IONQ","basket":True},
+    {"t":"_HVC","n":"HVAC / Cooling","fn":"Custom Basket","h":"FIX,EME,JCI,TT,WSO,VRT,CARR,LII,SPXC,AAON","basket":True},
+    {"t":"_AAI","n":"Agentic AI","fn":"Custom Basket","h":"GTLB,ASAN,PATH,BRZE,VERI,AI,SOUN,BBAI,LAW,CRNC","basket":True},
     {"t":"_PHO","n":"Photonics","fn":"Custom Basket","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM","basket":True},
 ]
 
