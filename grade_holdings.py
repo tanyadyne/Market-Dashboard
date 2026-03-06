@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Grade individual holdings by moving average structure and write grades.json.
-Runs once daily after market close — results cached for the fast ETF refresh.
+Also fetches dynamic holdings for FFTY and BUZZ from web sources and writes
+dynamic_holdings.json for use by fetch_data.py.
 
 Grading criteria:
   Gold:   EMA9 > EMA21 > SMA50 AND Price > EMA21 AND Price > SMA200
@@ -9,32 +10,38 @@ Grading criteria:
   Bronze: EMA9 < EMA21 and/or does not meet gold or silver
 
 Usage:
-    pip install yfinance numpy
+    pip install yfinance numpy requests beautifulsoup4
     python grade_holdings.py
 """
 
 import json
 import time
+import re
 from datetime import datetime, timedelta
 import numpy as np
 import yfinance as yf
 
-# ─── All ETF holdings (same list as fetch_data.py) ─────────────────────────
+try:
+    import requests
+    from bs4 import BeautifulSoup
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+
+# ─── All ETF holdings (must match fetch_data.py) ─────────────────────────
 
 ETF_INFO = [
-    {"t":"XTL","h":"LITE,CIEN,ASTS,ONDS,LUMN,VIAV,COMM,GSAT,VSAT,CSCO,TDS,FYBR,VZ,UI,IRDM,AAOI,T,CALX,TMUS,ANET,MSI,FFIV,EXTR,NTCT,CCOI"},
     {"t":"XOP","h":"CNX,EXE,MUR,GPOR,EQT,VLO,RRC,FANG,CTRA,AR,APA,MPC,DVN,PSX,XOM,DINO,PR,OVV,VNOM,MGY,CVX,COP,PBF,OXY,EOG,SHEL"},
     {"t":"REMX","h":"ALB,SQM,LAC,MP,UUUU,USAR,SGML,DNN,UEC,CCJ,LAR,IDR,IPX,TROX"},
     {"t":"CRAK","h":"MPC,PSX,VLO,DINO,PBF,DK,PARR,CLMT"},
-    {"t":"ITA","h":"GE,RTX,BA,HWM,TDG,GD,LHX,LMT,NOC,AXON,CW,WWD,RKLB,BWXT,CRS,TXT,ATI,HEI,KTOS,HII,AVAV,HXL,KRMN"},
+    {"t":"ITA","h":"ACHR,ATI,AVAV,AXON,BA,BWXT,CRS,CW,GD,GE,HEI,HII,HWM,HXL,KRMN,KTOS,LHX,LMT,NOC,RKLB,RTX,SARO,TDG,TXT,WWD"},
     {"t":"FCG","h":"AR,EXE,DVN,EQT,FANG,CTRA,APA,EOG,OXY,SM,COP,HESM"},
-    {"t":"XAR","h":"ATI,CRS,WWD,HII,KTOS,CW,RTX,HWM,HXL,BWXT,TDG,AVAV,GD,GE,TXT,LHX,HEI,LMT,NOC,ACHR,RKLB,BA,KRMN,AXON,SARO"},
     {"t":"BOAT","h":"FRO,MATX,STNG,INSW,ZIM,SBLK,CMDB,DHT,CMRE,DAC,TNK,NAT"},
     {"t":"RSPG","h":"KMI,OXY,APA,WMB,EQT,CTRA,OKE,FANG,BKR,TRGP,XOM,COP,TPL,EOG,CVX,HAL,HES,SLB,PSX,DVN,VLO,MPC,SHEL"},
     {"t":"XLE","h":"XOM,CVX,COP,WMB,MPC,EOG,PSX,VLO,SLB,KMI,BKR,OKE,TRGP,EQT,OXY,FANG,EXE,DVN,HAL,CTRA,TPL,APA"},
     {"t":"FFTY","h":"ANAB,CLS,ARQT,STOK,FIX,MU,AU,TARS,APH,TVTX,AGI,KGC,GH,VRT,AEM,LLY,HWM,ARGX,ONC,WGS,ZYME,FN,TMDX"},
     {"t":"AMLP","h":"MPLX,WES,EPD,SUN,PAA,ET,HESM,CQP,USAC,GEL,SPH,GLP,DKL"},
-    {"t":"IYZ","h":"CSCO,T,VZ,LITE,ASTS,CIEN,ANET,TMUS,TIGO,CMCSA,FYBR,ROKU,IRDM,MSI,UI,CHTR,GLIBK"},
+    {"t":"IYZ","h":"AAOI,ANET,ASTS,CALX,CCOI,CHTR,CIEN,CMCSA,COMM,CSCO,EXTR,FFIV,FYBR,GLIBK,GSAT,IRDM,LITE,LUMN,MSI,NTCT,ONDS,ROKU,T,TDS,TIGO,TMUS,UI,VIAV,VSAT,VZ"},
     {"t":"XLI","h":"GE,CAT,RTX,UBER,GEV,BA,UNP,ETN,HON,DE,PH,ADP,TT,MMM,LMT,GD,HWM,WM,TDG,JCI,EMR,NOC,UPS,CMI,PWR"},
     {"t":"RSPN","h":"BA,TDG,LUV,GE,UAL,MMM,GD,HON,PAYX,J,UBER,RTX,FDX,HII,NOC,ADP,UNP,VLTO,ROK,UPS,EFX,VRSK,GEV,LMT,AME"},
     {"t":"GNR","h":"XOM,NEM,CVX,CTVA,FCX,ADM,VALE,AEM"},
@@ -57,9 +64,9 @@ ETF_INFO = [
     {"t":"XHE","h":"TNDM,AXGN,INSP,GMED,HAE,ATEC,TMDX,ISRG,GKOS,SOLV,COO,IDXX,HOLX,OMCL,LNTH,MDT,LIVN,ALGN,UFPT,ICUI,EW,STE,PEN,NEOG,GEHC"},
     {"t":"XLV","h":"LLY,JNJ,ABBV,UNH,MRK,ABT,TMO,ISRG,AMGN,GILD,BSX,PFE,DHR,MDT,SYK,VRTX,MCK,CVS,BMY,HCA,REGN,ELV,CI,COR,IDXX"},
     {"t":"COPX","h":"ERO,TGB,FCX,HBM,IE,TECK,SCCO"},
-    {"t":"DRNZ","h":"ONDS,AVAV,ELS,DRSHF,EH,RCAT,UMAC,PLTR,DPRO,KTOS"},
-    {"t":"URA","h":"CCJ,OKLO,UEC,URNM,NXE,LEU,LTBR,UUUU,SMR,SBSW,DNN,URNJ,SRUUF,NNE,EU,ASPI,UROY,BWXT,MIR,CEG"},
-    {"t":"UFO","h":"ASTS,GSAT,PL,VSAT,TRMB,SATS,SIRI,RKLB,GRMN,IRDM,RTX,GE,LHX,VOYG,NOC,LMT,HON,LUNR,BA,FLY,CMCSA"},
+    {"t":"DRNZ","h":"ACHR,AVAV,DPRO,DRSHF,EH,ELS,JOBY,KTOS,ONDS,PLTR,RCAT,UMAC"},
+    {"t":"URA","h":"ASPI,BWXT,CCJ,CEG,DNN,EU,LEU,LTBR,MIR,NNE,NXE,OKLO,SBSW,SMR,SRUUF,TLN,UEC,URNJ,URNM,UROY,UUUU"},
+    {"t":"UFO","h":"ASTS,BA,BKSY,CMCSA,FLY,GE,GEMI,GRMN,GSAT,HON,IRDM,LHX,LMT,LUNR,NOC,PL,RDW,RKLB,RTX,SATS,SIRI,TRMB,VOYG,VSAT"},
     {"t":"PAVE","h":"HWM,PWR,PH,CRH,SRE,NSC,FAST,TT,CSX,ROK,URI,EMR,DE,ETN,UNP,VMC,MLM,NUE,EME,STLD,HUBB,TRMB,FTV,WWD,PNR"},
     {"t":"LIT","h":"RIO,ALB,LAR,SEI,MVST,ENS,EOSE,SQM,AMPX,TSLA,BLDP,SLDP,ABAT,SGML,SLI,LAC"},
     {"t":"XLB","h":"LIN,NEM,SHW,ECL,NUE,FCX,MLM,VMC,APD,CTVA,STLD,PPG,IP,AMCR,PKG,IFF,DOW,DD,ALB,AVY,BALL,CF,LYB,MOS"},
@@ -67,8 +74,8 @@ ETF_INFO = [
     {"t":"PBJ","h":"MNST,HSY,KR,SYY,MDLZ,KHC,CTVA,DASH,HLF,UNFI,SEB,IMKTA,TSN,USFD,FDP,CART,CHEF,ADM,AGRO,TR,ACI,DPZ,POST,JBS,WMK"},
     {"t":"RSPS","h":"DLTR,KR,KMB,MNST,K,CHD,CAG,KO,TGT,PG,CLX,CL,KHC,SJM,GIS,PEP,CPB,HSY,KDP,KVUE,WMT,HRL,MO,SYY"},
     {"t":"XLP","h":"WMT,COST,PG,KO,PM,PEP,CL,MDLZ,MO,MNST,TGT,KR,KDP,SYY,KMB,KVUE,ADM,HSY,GIS,DG,EL,K,KHC,DLTR,CHD"},
-    {"t":"QQQE","h":"MU,AMD,REGN,AMAT,ISRG,BIIB,INTC,WBD,AZN,LRCX,ROST,AMGN,MRVL,MNST,EA,AVGO,IDXX,CTSH,AEP,DDOG,MAR,AAPL,VRTX,XEL,GILD"},
-    {"t":"ROBO","h":"SYM,TER,ISRG,SERV,IRBT,COHR,ROK,ILMN,RR,ARBE,AUR,GMED,ROK,PRCT,NOVT,PDYN,IPGP,NDSN,EMR"},
+    {"t":"QQQE","h":"AAPL,ADI,AEP,AMAT,AMD,AMGN,ANET,ANSS,AVGO,AZN,BIIB,CDNS,CDW,CSCO,CTSH,DDOG,DELL,EA,FFIV,GILD,GLW,HPE,IDXX,INTC,ISRG,JBL,JNPR,KLAC,LRCX,MAR,MNST,MPWR,MRVL,MU,NVDA,PLTR,QCOM,REGN,ROST,SWKS,TDY,TER,TXN,VRSN,VRTX,WBD,XEL"},
+    {"t":"ROBO","h":"SYM,TER,ISRG,SERV,IRBT,COHR,ROK,ILMN,RR,ARBE,AUR,GMED,PRCT,NOVT,PDYN,IPGP,NDSN,EMR"},
     {"t":"ARKK","h":"TSLA,ROKU,COIN,TEM,CRSP,SHOP,HOOD,RBLX,AMD,PLTR,BEAM,TER,CRCL,BMNR,ACHR,TXG,TWST,ILMN,AMZN,VCYT,BLSH,NVDA,NTRA,META,DKNG"},
     {"t":"IWM","h":"CRDO,BE,FN,IONQ,NXT,GH,TSLA,KTOS,BBIO,CDE,MDGL,ENSG,HL,RMBS,SPXC,SATS,DY,STRL,OKLO,GTLS,IDCC,HQY,MOD,UMBF,AVAV"},
     {"t":"HYDR","h":"BE,PLUG,BLDP,SLDP,FCEL,CMI,APD"},
@@ -80,23 +87,21 @@ ETF_INFO = [
     {"t":"ARKF","h":"SHOP,COIN,HOOD,PLTR,TOST,SOFI,XYZ,RBLX,ROKU,CRCL,MELI,AMD,DKNG,META,AMZN,BMNR,PINS,NU,KLAR,SE,BLSH,FUTU,Z"},
     {"t":"EWZ","h":"NU,MELI,DLO"},
     {"t":"RSPM","h":"CE,IP,PPG,BALL,LYB,ECL,DOW,IFF,LIN,CTVA,AVY,PKG,MLM,CF,AMCR,VMC,APD,DD,EMN,SHW,FCX,NEM,MOS,FMC"},
-    {"t":"RSPT","h":"AVGO,JBL,PLTR,TER,ANET,AAPL,VRSN,CSCO,INTC,SWKS,JNPR,GLW,ADI,TXN,KLAC,TDY,DELL,HPE,CDNS,ANSS,CDW,QCOM,NVDA,FFIV,MPWR"},
     {"t":"XBI","h":"EXAS,RVMD,RNA,INSM,NTRA,BBIO,REGN,MDGL,IONS,BIIB,AMGN,UTHR,INCY,ROIV,EXEL,VRTX,GILD,NBIX,ABBV,BMRN,CRSP,MRNA,PTCT,ALNY,KRYS"},
     {"t":"VERS","h":"GOOGL,AAPL,QCOM,EXPI,U,AMZN,NVDA,MU,MSFT,META,KOPN,RBLX,HIMX,SNAP,STGW,VUZI,EA,ARM,AMBA,ADSK,PTC,AMKR,TTWO,WSM,NOK"},
     {"t":"XSD","h":"MU,INTC,RGTI,AMD,MRVL,MTSI,FSLR,RMBS,SITM,SMTC,MPWR,ADI,QCOM,CRUS,ON,AVGO,CRDO,LSCC,NVDA,QRVO,SLAB,TXN,NXPI,SWKS,OLED,TSEM"},
     {"t":"ARKG","h":"TEM,CRSP,PSNL,GH,TWST,TXG,NTRA,BEAM,ILMN,VCYT,RXRX,ADPT,IONS,ABSI,CDNA,SDGR,NTLA,NRIX,PACB,WGS,BFLY,PRME,ARCT,AMGN"},
     {"t":"GBTC","h":"IBIT,ETHA,MSTR,BMNR,SBET,COIN"},
-    {"t":"IGV","h":"PLTR,MSFT,CRM,INTU,NOW,ORCL,APP,ADBE,CRWD,PANW,CDNS,SNPS,ADSK,FTNT,DDOG,ROP,WDAY,EA,MSTR,TTWO,FICO,TEAM,ZS,ZM,PTC"},
+    {"t":"IGV","h":"ADBE,ADSK,AGYS,APP,APPN,BBAI,CDNS,CIFR,CLSK,CRM,CRNC,CRWD,CTSH,DDOG,EA,EPAM,FICO,FTNT,GDYN,HUT,IBM,IDCC,INTU,JAMF,MSFT,MSTR,NOW,ORCL,PANW,PATH,PLTR,PRO,PTC,QBTS,ROP,SEMR,SNPS,TDC,TEAM,TTWO,WDAY,WK,WULF,ZM,ZS"},
     {"t":"XTN","h":"JBHT,KEX,CHRW,FDX,EXPD,KNX,UPS,LYFT,LUV,XPO,AAL,CSX,MATX,UNP,NSC,DAL,HUBG,LSTR,JOBY,GXO,SNDR,ODFL,SAIA,UAL,WERN"},
     {"t":"PHO","h":"WAT,FERG,ECL,ROP,AWK,MLI,IEX,WMS,XYL,PNR,VLTO,AOS,ACM,CNM,VMI,WTRG,BMI,TTEK,ITRI,WTS,ZWS,MWA,SBS,FELE,HWKN"},
     {"t":"LABU","h":"EXAS,RVMD,RNA,INSM,REGN,NTRA,MDGL,BBIO,BIIB,IONS,UTHR,AMGN,INCY,ROIV,EXEL"},
-    {"t":"BLOK","h":"HOOD,CIFR,HUT,GLXY,CLSK,WULF,COIN,IBM,NU,BBBY,PYPL,CMPO,CORZ,FBTC,OPRA,RBLX,BLK,FIGR,XYZ,CME,IBIT,BITB,MELI,CAN,BKKT"},
+    {"t":"BLOK","h":"BBBY,BITB,BKKT,BLK,CAN,CIFR,CLSK,CME,CMPO,COIN,CORZ,CRCL,FBTC,FIGR,GLXY,HOOD,HUT,IBIT,IBM,MELI,NU,OPRA,PYPL,RBLX,WULF,XYZ"},
     {"t":"BUZZ","h":"APLD,INTC,GME,NBIS,TSLA,META,SOFI,RGTI,IREN,AMZN,PLTR,NVDA,HOOD,ASTS,OPEN,AMD,MSTR,HIMS,GOOGL,AAPL,UNH,SOUN,SMCI,DKNG,PYPL"},
-    {"t":"XSW","h":"CIFR,SEMR,PRO,WULF,HUT,CLSK,TDC,QBTS,JAMF,APPN,BBAI,EPAM,PATH,WK,EA,IBM,CRWD,IDCC,GDYN,FICO,CRNC,DDOG,SNPS,CTSH,AGYS"},
     {"t":"SMH","h":"NVDA,TSM,AVGO,MU,INTC,AMAT,AMD,ASML,LRCX,KLAC,ADI,QCOM,TXN,CDNS,SNPS,MRVL,NXPI,MPWR,TER,MCHP,STM,ON,SWKS,QRVO,OLED,TSEM"},
     {"t":"WCLD","h":"FSLY,SEMR,MDB,DOCN,FROG,PATH,SNOW,BILL,DDOG,CFLT,WK,TWLO,CRWD,PCOR,AGYS,IOT,BRZE,QLYS,CWAN,BL,CLBT,PANW,SHOP,INTA,NET"},
     {"t":"DRIV","h":"GOOGL,BE,TSLA,INTC,NVDA,MSFT,RIO,QCOM,GM,ALB,NBIS,COHR,HON,SQM,ENS,F,BIDU,AMPX,SITM"},
-    {"t":"WGMI","h":"CIFR,IREN,BITF,WULF,RIOT,HUT,CORZ,APLD,CLSK,HIVE,BTDR,MARA,NVDA,CANG,GLXY,XYZ,BTBT,TSM,CAN"},
+    {"t":"WGMI","h":"APLD,BITF,BTBT,BTDR,CAN,CANG,CIFR,CLSK,CORZ,CRWV,GLXY,HIVE,HUT,IREN,MARA,NBIS,NVDA,RIOT,TSM,WULF,XYZ"},
     {"t":"IBUY","h":"FIGS,LQDT,CVNA,UPWK,EXPE,CART,W,RVLV,CHWY,LYFT,MSM,EBAY,BKNG,AFRM,SPOT,TRIP,ABNB,PTON,UBER,AMZN,CPRT,PYPL,HIMS,SSTK,ETSY"},
     {"t":"XHB","h":"SKY,SGI,WMS,CVCO,BLD,JCI,IBP,TT,KBH,TOL,ALLE,LEN,PHM,MTH,LOW,TMHC,NVR,WSM,DHI,MAS,LII,CARR,HD,CSL,BLDR"},
     {"t":"TAN","h":"NXT,FSLR,RUN,ENPH,SEDG,HASI,CSIQ,CWEN,DQ,SHLS,ARRY,JKS"},
@@ -119,10 +124,122 @@ ETF_INFO = [
     {"t":"FXI","h":"BABA,TCEHY,NTES,BYDDF,TCOM,JD,BIDU,PTR,SNP,FUTU,KWEB"},
     {"t":"XLY","h":"AMZN,TSLA,HD,MCD,TJX,BKNG,LOW,SBUX,ORLY,NKE,DASH,GM,MAR,RCL,HLT,AZO,ROST,F,ABNB,CMG,DHI,YUM,EBAY,GRMN,EXPE"},
     {"t":"MSOS","h":"VFF,MNMD,TLRY,MO,CRON,GTBIF,TCNNF"},
+    # Custom baskets
+    {"t":"_MNS","h":""},
+    {"t":"_CAG","h":""},
+    {"t":"_CAS","h":""},
+    {"t":"_CMD","h":""},
+    {"t":"_QTM","h":""},
+    {"t":"_HVC","h":""},
+    {"t":"_AAI","h":""},
+    {"t":"_PHO","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM"},
 ]
 
 
-# ─── Math Helpers ───────────────────────────────────────────────────────────
+# ─── Dynamic Holdings Scraper ──────────────────────────────────────────────
+
+def fetch_holdings_from_perplexity(ticker):
+    """Try to fetch holdings from Perplexity Finance. Returns list of tickers or None."""
+    if not HAS_REQUESTS:
+        print(f"  requests/beautifulsoup4 not available, skipping {ticker} scrape")
+        return None
+    url = f"https://www.perplexity.ai/finance/{ticker.lower()}/holdings"
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
+        resp = requests.get(url, headers=headers, timeout=15)
+        if resp.status_code != 200:
+            print(f"  Perplexity returned {resp.status_code} for {ticker}")
+            return None
+        # Try to extract holdings from HTML
+        soup = BeautifulSoup(resp.text, "html.parser")
+        text = soup.get_text()
+        # Also try JSON in script tags
+        for script in soup.find_all("script"):
+            if script.string and "holdings" in script.string.lower():
+                # Try to parse embedded JSON
+                try:
+                    data = json.loads(script.string)
+                    # Look for holdings array
+                    if isinstance(data, dict):
+                        for key in data:
+                            if "holding" in key.lower():
+                                return _extract_tickers_from_data(data[key])
+                except (json.JSONDecodeError, TypeError):
+                    pass
+        print(f"  Could not parse holdings from Perplexity for {ticker}")
+        return None
+    except Exception as e:
+        print(f"  Error fetching {ticker} from Perplexity: {e}")
+        return None
+
+
+def fetch_holdings_from_yfinance(ticker, min_weight=1.0):
+    """Fallback: try yfinance to get ETF holdings."""
+    try:
+        etf = yf.Ticker(ticker)
+        # Try the holdings property (available in newer yfinance)
+        try:
+            holdings = etf.get_institutional_holders()
+        except Exception:
+            holdings = None
+
+        if holdings is not None and not holdings.empty:
+            tickers = []
+            for _, row in holdings.iterrows():
+                if hasattr(row, "Symbol") and row.get("% Out", 0) > min_weight:
+                    tickers.append(row["Symbol"])
+            if tickers:
+                return tickers
+
+        # Try fund_holding_info
+        try:
+            info = etf.get_fund_holding_info()
+            if info and "holdings" in info:
+                return [h["symbol"] for h in info["holdings"]
+                        if h.get("holdingPercent", 0) > min_weight / 100]
+        except Exception:
+            pass
+
+        return None
+    except Exception as e:
+        print(f"  yfinance fallback failed for {ticker}: {e}")
+        return None
+
+
+def update_dynamic_holdings():
+    """Fetch current FFTY and BUZZ holdings and write dynamic_holdings.json."""
+    dynamic = {}
+    for ticker in ["FFTY", "BUZZ"]:
+        print(f"\nFetching dynamic holdings for {ticker}...")
+
+        # Try Perplexity first
+        holdings = fetch_holdings_from_perplexity(ticker)
+
+        # Fallback to yfinance
+        if not holdings:
+            print(f"  Trying yfinance fallback for {ticker}...")
+            holdings = fetch_holdings_from_yfinance(ticker, min_weight=1.0)
+
+        if holdings:
+            # Filter: keep only valid-looking tickers (1-5 uppercase letters)
+            clean = [h.upper().strip() for h in holdings
+                     if re.match(r'^[A-Z]{1,5}$', h.strip().upper())]
+            if clean:
+                dynamic[ticker] = ",".join(sorted(set(clean)))
+                print(f"  Got {len(clean)} holdings for {ticker}: {dynamic[ticker][:80]}...")
+            else:
+                print(f"  No valid tickers found for {ticker}")
+        else:
+            print(f"  Could not fetch holdings for {ticker} - keeping existing")
+
+    # Write dynamic_holdings.json
+    with open("dynamic_holdings.json", "w") as f:
+        json.dump(dynamic, f, indent=2)
+    print(f"\nWritten dynamic_holdings.json with {len(dynamic)} entries")
+    return dynamic
+
+
+# ─── MA Helpers ────────────────────────────────────────────────────────────
 
 def compute_ema(closes, period):
     if len(closes) < period:
@@ -141,11 +258,6 @@ def compute_sma(closes, period):
 
 
 def grade_holding(price, ema9, ema21, sma50, sma200):
-    """
-    Gold:   EMA9 > EMA21 > SMA50 AND Price > EMA21 AND Price > SMA200
-    Silver: EMA9 > EMA21 but does not meet all gold criteria
-    Bronze: EMA9 < EMA21 and/or does not meet gold or silver
-    """
     if any(v is None for v in [price, ema9, ema21, sma50, sma200]):
         return "b"
     if ema9 > ema21:
@@ -158,11 +270,33 @@ def grade_holding(price, ema9, ema21, sma50, sma200):
 # ─── Main ───────────────────────────────────────────────────────────────────
 
 def main():
-    # Collect all unique holdings
+    # Step 1: Update FFTY/BUZZ holdings
+    print("=" * 60)
+    print("Step 1: Fetching dynamic holdings for FFTY/BUZZ")
+    print("=" * 60)
+    update_dynamic_holdings()
+
+    # Step 2: Collect all unique holdings (including from dynamic file)
+    print("\n" + "=" * 60)
+    print("Step 2: Grading all holdings")
+    print("=" * 60)
+
+    # Load dynamic holdings to include in grading
+    dyn = {}
+    try:
+        with open("dynamic_holdings.json") as f:
+            dyn = json.load(f)
+    except Exception:
+        pass
+
     all_holdings = set()
     for e in ETF_INFO:
-        if e.get("h"):
-            for hh in e["h"].split(","):
+        h_str = e.get("h", "")
+        # Override with dynamic if available
+        if e["t"] in dyn and dyn[e["t"]]:
+            h_str = dyn[e["t"]]
+        if h_str:
+            for hh in h_str.split(","):
                 hh = hh.strip()
                 if hh:
                     all_holdings.add(hh)
@@ -197,8 +331,6 @@ def main():
             if len(closes) < 200:
                 holding_grades[tk] = "b"
                 failed += 1
-                if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM"):
-                    print(f"    DEBUG {tk}: only {len(closes)} pts (need 200) -> b")
                 continue
 
             ema9 = compute_ema(closes, 9)
@@ -224,7 +356,6 @@ def main():
         if (i + 1) % 10 == 0:
             time.sleep(0.5)
 
-    # Write grades.json
     with open("grades.json", "w") as f:
         json.dump(holding_grades, f, separators=(",", ":"))
 
