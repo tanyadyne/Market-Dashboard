@@ -457,8 +457,8 @@ def main():
     adv_pct = round(adv_today / total_with_rs * 100, 1) if total_with_rs else 0
     dec_pct = round(dec_today / total_with_rs * 100, 1) if total_with_rs else 0
 
-    adv_streak_list = [[r["t"], r["n"]] for r in results if r.get("ra", 0) >= 4]
-    dec_streak_list = [[r["t"], r["n"]] for r in results if r.get("rf", 0) >= 4]
+    adv_streak_list = [[r["n"] if r["t"].startswith("_") else r["t"], r["n"]] for r in results if r.get("ra", 0) >= 4]
+    dec_streak_list = [[r["n"] if r["t"].startswith("_") else r["t"], r["n"]] for r in results if r.get("rf", 0) >= 4]
 
     data = {
         "e": results,
