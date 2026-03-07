@@ -119,15 +119,15 @@ ETF_INFO = [
     {"t":"FXI","n":"China Large-Cap","fn":"iShares:China Large Cp","h":"BABA,TCEHY,NTES,BYDDF,TCOM,JD,BIDU,PTR,SNP,FUTU,KWEB"},
     {"t":"XLY","n":"Consumer Discretionary","fn":"Sel Sctr:C D SS SPDR In","h":"AMZN,TSLA,HD,MCD,TJX,BKNG,LOW,SBUX,ORLY,NKE,DASH,GM,MAR,RCL,HLT,AZO,ROST,F,ABNB,CMG,DHI,YUM,EBAY,GRMN,EXPE"},
     {"t":"MSOS","n":"Cannabis","fn":"AdvsrShs Pure USCannabis","h":"VFF,MNMD,TLRY,MO,CRON,GTBIF,TCNNF"},
+    {"t":"BJK","n":"Casinos & Gaming","fn":"VanEck Gaming ETF","h":"LVS,FLUT,VICI,DKNG,WYNN,CHDN,GLPI,MGM,BYD"},
     # ─── Custom Baskets (no ETF ticker — synthetic metrics from components) ──
-    {"t":"_MNS","n":"Medical/Nursing Services","fn":"Custom Basket","h":"LH,FMS,ENSG,SOLV,GH,EHC,DVA,BTSG,RDNT,OPCH,HIMS,BLLN,CON,LFST,WGS","basket":True},
-    {"t":"_CAG","n":"Chemicals (Agricultural)","fn":"Custom Basket","h":"NTR,CF,MOS,ICL,SMG,FMC,UAN,LXU","basket":True},
-    {"t":"_CAS","n":"Casinos","fn":"Custom Basket","h":"LVS,FLUT,WYNN,MGM,BYD,SGHC,CZR,RSI,BRSL,PENN","basket":True},
-    {"t":"_CMD","n":"Crypto Miners / Data Centers","fn":"Custom Basket","h":"CRWV,CORZ,NBIS,CIFR,HIVE,IREN,APLD,BITF,WULF,MARA,HUT,RIOT,BTDR,CLSK","basket":True},
-    {"t":"_QTM","n":"Quantum","fn":"Custom Basket","h":"SKYT,ARQQ,QSI,QUBT,QBTS,RGTI,IONQ","basket":True},
-    {"t":"_HVC","n":"HVAC / Cooling","fn":"Custom Basket","h":"FIX,EME,JCI,TT,WSO,VRT,CARR,LII,SPXC,AAON","basket":True},
-    {"t":"_AAI","n":"Agentic AI","fn":"Custom Basket","h":"GTLB,ASAN,PATH,BRZE,VERI,AI,SOUN,BBAI,LAW,CRNC","basket":True},
-    {"t":"_PHO","n":"Photonics","fn":"Custom Basket","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM","basket":True},
+    {"t":"NURS","n":"Medical/Nursing Services","fn":"Custom Basket","h":"LH,FMS,ENSG,SOLV,GH,EHC,DVA,BTSG,RDNT,OPCH,HIMS,BLLN,CON,LFST,WGS","basket":True},
+    {"t":"CHEMG","n":"Chemicals (Agricultural)","fn":"Custom Basket","h":"NTR,CF,MOS,ICL,SMG,FMC,UAN,LXU","basket":True},
+    {"t":"CHEMS","n":"Chemicals (Specialty)","fn":"Custom Basket","h":"LIN,ECL,APD,DOW,LYB,ALB,SQM,WLK,EMN,NEU,CE,MEOH,CBT,HWKN,CC,KWR,GEL,MTX,ROG,SHW,DD,SOLS,OLN,AXTA","basket":True},
+    {"t":"QNTM","n":"Quantum","fn":"Custom Basket","h":"SKYT,ARQQ,QSI,QUBT,QBTS,RGTI,IONQ","basket":True},
+    {"t":"COOL","n":"HVAC / Cooling","fn":"Custom Basket","h":"FIX,EME,JCI,TT,WSO,VRT,CARR,LII,SPXC,AAON","basket":True},
+    {"t":"AGENT","n":"Agentic AI","fn":"Custom Basket","h":"GTLB,ASAN,PATH,BRZE,VERI,AI,SOUN,BBAI,LAW,CRNC","basket":True},
+    {"t":"OPTIC","n":"Photonics","fn":"Custom Basket","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM","basket":True},
 ]
 
 
@@ -457,8 +457,8 @@ def main():
     adv_pct = round(adv_today / total_with_rs * 100, 1) if total_with_rs else 0
     dec_pct = round(dec_today / total_with_rs * 100, 1) if total_with_rs else 0
 
-    adv_streak_list = [[r["n"] if r["t"].startswith("_") else r["t"], r["n"]] for r in results if r.get("ra", 0) >= 4]
-    dec_streak_list = [[r["n"] if r["t"].startswith("_") else r["t"], r["n"]] for r in results if r.get("rf", 0) >= 4]
+    adv_streak_list = [[r["t"], r["n"]] for r in results if r.get("ra", 0) >= 4]
+    dec_streak_list = [[r["t"], r["n"]] for r in results if r.get("rf", 0) >= 4]
 
     data = {
         "e": results,
@@ -491,4 +491,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
