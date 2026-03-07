@@ -384,10 +384,9 @@ function render(){
     const ar=e.rf>=4?'<span class="ad">▼</span>':(e.ra>=4?'<span class="au">▲</span>':'');
     const rvP=e.rv!=null?Math.min(e.rv/mxRV*100,100):0;
     const amP=e.am!=null?Math.min(e.am/mxAM*100,100):0;
-    const isBasket=e.t.startsWith('_');
     const cellMap={
       rk:`<td class="rk">${e.rk}</td>`,
-      t:`<td class="tk">${isBasket?' - ':esc(e.t)}${ar}</td>`,
+      t:`<td class="tk">${esc(e.t)}${ar}</td>`,
       n:`<td class="sc2">${esc(e.n)}</td>`,
       rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(e.rv)}</span></div></td>`,
       am:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(e.am)}</span></div></td>`,
@@ -449,4 +448,3 @@ buildHeader();loadData();setInterval(loadData,60000);
 </script>
 </body>
 </html>
-
