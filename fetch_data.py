@@ -37,34 +37,32 @@ ETF_INFO = [
     {"t":"FFTY","n":"IBD 50","fn":"Innovator IBD 50","h":"ANAB,CLS,ARQT,STOK,FIX,MU,AU,TARS,APH,TVTX,AGI,KGC,GH,VRT,AEM,LLY,HWM,ARGX,ONC,WGS,ZYME,FN,TMDX"},
     {"t":"AMLP","n":"Energy Infrastructure","fn":"Alerian MLP","h":"MPLX,WES,EPD,SUN,PAA,ET,HESM,CQP,USAC,GEL,SPH,GLP,DKL"},
     {"t":"IYZ","n":"Telecom","fn":"iShares:US Telecom ETF","h":"AAOI,ANET,ASTS,CALX,CCOI,CHTR,CIEN,CMCSA,COMM,CSCO,EXTR,FFIV,FYBR,GLIBK,GSAT,IRDM,LITE,LUMN,MSI,NTCT,ONDS,ROKU,T,TDS,TIGO,TMUS,UI,VIAV,VSAT,VZ"},
-    {"t":"XLI","n":"Industrials","fn":"Sel Sector:Ind SS SPDR","h":"GE,CAT,RTX,UBER,GEV,BA,UNP,ETN,HON,DE,PH,ADP,TT,MMM,LMT,GD,HWM,WM,TDG,JCI,EMR,NOC,UPS,CMI,PWR"},
-    {"t":"RSPN","n":"Industrials (EW)","fn":"Invesco S&P500 EW In","h":"BA,TDG,LUV,GE,UAL,MMM,GD,HON,PAYX,J,UBER,RTX,FDX,HII,NOC,ADP,UNP,VLTO,ROK,UPS,EFX,VRSK,GEV,LMT,AME"},
+    {"t":"XLI","n":"Industrials","fn":"Sel Sector:Ind SS SPDR","h":"GE,CAT,RTX,UBER,GEV,BA,UNP,ETN,HON,DE,PH,ADP,TT,MMM,LMT,GD,HWM,WM,TDG,JCI,EMR,NOC,UPS,CMI,PWR,LUV,UAL,PAYX,J,FDX,HII,VLTO,ROK,EFX,VRSK,AME"},
     {"t":"GNR","n":"Natural Resources","fn":"SS SPDR S&P Glbl Nat Res","h":"XOM,NEM,CVX,CTVA,FCX,ADM,VALE,AEM"},
     {"t":"FAN","n":"Wind Energy","fn":"FT II:Global Wind Energy","h":"CWEN,NEE,ACA,LNT,TKR"},
     {"t":"RSPC","n":"Comm Services (EW)","fn":"Invesco S&P 500 EW CS","h":"MTCH,TKO,FYBR,WBD,LYV,TTWO,T,DIS,NFLX,NYT,CMCSA,TMUS,VZ,META,OMC,IPG,PARA,CHTR,EA,NWSA,FOXA,GOOGL,FOX,NWS"},
-    {"t":"IYT","n":"Transportation","fn":"iShares:US Transportatn","h":"UBER,UNP,UPS,FDX,CSX,NSC,DAL,UAL,ODFL,EXPD,CHRW,LUV,XPO,JBHT,AAL,LYFT,SAIA,KNX,JOBY,R,KEX,GXO,ALK,LSTR"},
+    {"t":"IYT","n":"Transportation","fn":"iShares:US Transportatn","h":"UBER,UNP,UPS,FDX,CSX,NSC,DAL,UAL,ODFL,EXPD,CHRW,LUV,XPO,JBHT,AAL,LYFT,SAIA,KNX,JOBY,R,KEX,GXO,ALK,LSTR,MATX,HUBG,SNDR,WERN"},
     {"t":"XES","n":"Oil & Gas Equipment","fn":"SS SPDR S&P Oil&Gas E&S","h":"LBRT,HP,RIG,WFRD,SEI,NOV,HAL,FTI,VAL,PTEN,BKR,KGS,NE,SLB,WHD,AROC,TDW,SDRL,OII,XPRO,PUMP,AESI,NBR,HLX,WTTR"},
     {"t":"RSP","n":"S&P 500 Equal Weight","fn":"Invesco S&P500 EWght","h":"WBD,ALB,WDC,MU,INTC,TER,AMAT,LRCX,STX,LLY,CAH,REGN,WAT,AMD,CAT,FSLR,UHS,HCA,GM,BIIB,ISRG,JBHT,TECH,RVTY,STLD"},
     {"t":"GDX","n":"Gold Miners","fn":"VanEck:Gold Miners","h":"PAAS,WPM,KGC,AGI,FNV,AEM,B,GFI,NEM"},
     {"t":"GDXJ","n":"Jr Gold Miners","fn":"VanEck:Jr Gold Miners","h":"PAAS,KGC,EQX,AGI,HMY,IAG,RGLD,USAU,GORO,CDE,GLDG"},
     {"t":"SIL","n":"Silver Miners","fn":"Glbl X Silver Miners ETF","h":"EXK,AG,PAAS,HL,FSM,WPM,HCHDF,OR,SVM,SSRM,CDE"},
     {"t":"SILJ","n":"Jr Silver Miners","fn":"Amplify Jr Slvr Miners","h":"AG,HYMC,HL,PAAS,OR,FSM,EXK,GORO,SSRM,CDE"},
-    {"t":"RSPU","n":"Utilities (EW)","fn":"Invesco S&P500 EW Ut","h":"CNP,ETR,EXC,PCG,SRE,CMS,AEE,DTE,NI,SO,XEL,ATO,D,PPL,PEG,WEC,EVRG,FE,DUK,AEP,LNT,EIX,NEE,ED,NRG"},
+    {"t":"XLU","n":"Utilities","fn":"Sel Sector:Utl SS SPDR","h":"NEE,SO,CEG,DUK,AEP,SRE,D,VST,EXC,XEL,ETR,PEG,ED,PCG,WEC,NRG,DTE,AEE,ATO"},
     {"t":"AIPO","n":"AI & Power Infra","fn":"Defiance AI & Pow Infra","h":"PWR,VRT,GEV,ETN,CCJ,AVGO,NVDA,CEG,BE,HUBB,FLNC,AMD,OKLO,MTZ,VST,NVT,EOSE,BWXT"},
     {"t":"XHS","n":"Healthcare Services","fn":"SS SPDR S&P Hlth Cr Svc","h":"GH,PACS,BKD,NEO,CAH,WGS,UHS,BTSG,HCA,SEM,COR,MCK,CNC,ALHC,RDNT,THC,HQY,PGNY,ENSG,ADUS,HSIC,OPCH,ELV,CVS,PRVA"},
     {"t":"OIH","n":"Oil Services","fn":"VanEck:Oil Services","h":"RIG,WFRD,FTI,NE,BKR,NOV,VAL,TS,SLB,PUMP,HAL"},
-    {"t":"RSPH","n":"Healthcare (EW)","fn":"Invesco S&P500 EW HC","h":"CNC,PFE,WST,BDX,EW,ABBV,GILD,BMY,CAH,ABT,LH,BSX,MCK,MRK,ZBH,DXCM,DVA,STE,IQV,JNJ,TMO,LLY,ISRG,DHR,DGX"},
     {"t":"KIE","n":"Insurance","fn":"SS SPDR S&P Insurance","h":"LMND,BHF,MCY,WTM,RYAN,ORI,L,RNR,AGO,CINF,MKL,AIZ,TRV,CB,PFG,AXS,ALL,THG,CNO,HIG,PLMR,ACGL,PRU,AFL,UNM"},
     {"t":"SLX","n":"Steel","fn":"VanEck:Steel","h":"VALE,STLD,NUE,MT,CLF,ATI,RIO,HCC,CRS,PKX"},
     {"t":"XHE","n":"Healthcare Equipment","fn":"SS SPDR S&P Hlth Care Eq","h":"TNDM,AXGN,INSP,GMED,HAE,ATEC,TMDX,ISRG,GKOS,SOLV,COO,IDXX,HOLX,OMCL,LNTH,MDT,LIVN,ALGN,UFPT,ICUI,EW,STE,PEN,NEOG,GEHC"},
-    {"t":"XLV","n":"Healthcare","fn":"Sel Sector:HC SS SPDR","h":"LLY,JNJ,ABBV,UNH,MRK,ABT,TMO,ISRG,AMGN,GILD,BSX,PFE,DHR,MDT,SYK,VRTX,MCK,CVS,BMY,HCA,REGN,ELV,CI,COR,IDXX"},
+    {"t":"XLV","n":"Healthcare","fn":"Sel Sector:HC SS SPDR","h":"LLY,JNJ,ABBV,UNH,MRK,ABT,TMO,ISRG,AMGN,GILD,BSX,PFE,DHR,MDT,SYK,VRTX,MCK,CVS,BMY,HCA,REGN,ELV,CI,COR,IDXX,CNC,WST,BDX,EW,CAH,LH,ZBH,DXCM,DVA,STE,IQV,DGX"},
     {"t":"COPX","n":"Copper Miners","fn":"Glbl X Copper Miners ETF","h":"ERO,TGB,FCX,HBM,IE,TECK,SCCO"},
     {"t":"DRNZ","n":"Drones","fn":"REX Drone ETF","h":"ACHR,AVAV,DPRO,DRSHF,EH,ELS,JOBY,KTOS,ONDS,PLTR,RCAT,UMAC"},
     {"t":"URA","n":"Uranium / Nuclear","fn":"Glbl X Uranium ETF","h":"ASPI,BWXT,CCJ,CEG,DNN,EU,LEU,LTBR,MIR,NNE,NXE,OKLO,SBSW,SMR,SRUUF,TLN,UEC,URNJ,URNM,UROY,UUUU"},
     {"t":"UFO","n":"Space","fn":"Procure Space","h":"ASTS,BA,BKSY,CMCSA,FLY,GE,GEMI,GRMN,GSAT,HON,IRDM,LHX,LMT,LUNR,NOC,PL,RDW,RKLB,RTX,SATS,SIRI,TRMB,VOYG,VSAT"},
     {"t":"PAVE","n":"Infrastructure Dev","fn":"Glbl X US Infra Dev","h":"HWM,PWR,PH,CRH,SRE,NSC,FAST,TT,CSX,ROK,URI,EMR,DE,ETN,UNP,VMC,MLM,NUE,EME,STLD,HUBB,TRMB,FTV,WWD,PNR"},
     {"t":"LIT","n":"Lithium & Battery","fn":"Glbl X Lith & Bat Tech","h":"RIO,ALB,LAR,SEI,MVST,ENS,EOSE,SQM,AMPX,TSLA,BLDP,SLDP,ABAT,SGML,SLI,LAC"},
-    {"t":"XLB","n":"Basic Materials","fn":"Sel Sector:Mat SS SPDR","h":"LIN,NEM,SHW,ECL,NUE,FCX,MLM,VMC,APD,CTVA,STLD,PPG,IP,AMCR,PKG,IFF,DOW,DD,ALB,AVY,BALL,CF,LYB,MOS"},
+    {"t":"XLB","n":"Basic Materials","fn":"Sel Sector:Mat SS SPDR","h":"LIN,NEM,SHW,ECL,NUE,FCX,MLM,VMC,APD,CTVA,STLD,PPG,IP,AMCR,PKG,IFF,DOW,DD,ALB,AVY,BALL,CF,LYB,MOS,CE,EMN,FMC"},
     {"t":"XPH","n":"Pharmaceuticals","fn":"SS SPDR S&P Pharm","h":"LQDA,MBX,OGN,AXSM,EWTX,ELAN,VTRS,AMLX,AMRX,MRK,CRNX,XERS,LGND,JNJ,LLY,PBH,BMY,PRGO,SUPN,RPRX,ZTS,JAZZ,AVDL,PFE"},
     {"t":"PBJ","n":"Food & Beverage","fn":"Invesco Food & Beverage","h":"MNST,HSY,KR,SYY,MDLZ,KHC,CTVA,DASH,HLF,UNFI,SEB,IMKTA,TSN,USFD,FDP,CART,CHEF,ADM,AGRO,TR,ACI,DPZ,POST,JBS,WMK"},
     {"t":"RSPS","n":"Consumer Staples (EW)","fn":"Invesco S&P500 EW CS","h":"DLTR,KR,KMB,MNST,K,CHD,CAG,KO,TGT,PG,CLX,CL,KHC,SJM,GIS,PEP,CPB,HSY,KDP,KVUE,WMT,HRL,MO,SYY"},
@@ -81,28 +79,23 @@ ETF_INFO = [
     {"t":"XME","n":"Metals & Mining","fn":"SS SPDR S&P Metals&Mng","h":"HL,AA,HCC,STLD,NEM,LEU,CDE,NUE,CLF,CMC,RGLD,BTU,CNR,RS,FCX,UEC,MP,AMR,MTRN,CENX,IE,KALU,USAR,WS,MUX"},
     {"t":"ARKF","n":"Fintech Innovation","fn":"ARK BC & Fintech Innov","h":"SHOP,COIN,HOOD,PLTR,TOST,SOFI,XYZ,RBLX,ROKU,CRCL,MELI,AMD,DKNG,META,AMZN,BMNR,PINS,NU,KLAR,SE,BLSH,FUTU,Z"},
     {"t":"EWZ","n":"Brazil","fn":"iShares:MSCI Brazil","h":"NU,MELI,DLO"},
-    {"t":"RSPM","n":"Materials (EW)","fn":"Invesco S&P500 EW Mt","h":"CE,IP,PPG,BALL,LYB,ECL,DOW,IFF,LIN,CTVA,AVY,PKG,MLM,CF,AMCR,VMC,APD,DD,EMN,SHW,FCX,NEM,MOS,FMC"},
     {"t":"XBI","n":"Biotechnology","fn":"SS SPDR S&P Biotech","h":"EXAS,RVMD,RNA,INSM,NTRA,BBIO,REGN,MDGL,IONS,BIIB,AMGN,UTHR,INCY,ROIV,EXEL,VRTX,GILD,NBIX,ABBV,BMRN,CRSP,MRNA,PTCT,ALNY,KRYS"},
     {"t":"VERS","n":"Metaverse ETF","fn":"ProShares:Metaverse ETF","h":"GOOGL,AAPL,QCOM,EXPI,U,AMZN,NVDA,MU,MSFT,META,KOPN,RBLX,HIMX,SNAP,STGW,VUZI,EA,ARM,AMBA,ADSK,PTC,AMKR,TTWO,WSM,NOK"},
-    {"t":"XSD","n":"Semiconductors (EW)","fn":"SS SPDR S&P Semiconductr","h":"MU,INTC,RGTI,AMD,MRVL,MTSI,FSLR,RMBS,SITM,SMTC,MPWR,ADI,QCOM,CRUS,ON,AVGO,CRDO,LSCC,NVDA,QRVO,SLAB,TXN,NXPI,SWKS,OLED,TSEM"},
+    {"t":"SMH","n":"Semiconductors","fn":"SS SPDR S&P Semiconductr","h":"MU,INTC,RGTI,AMD,MRVL,MTSI,FSLR,RMBS,SITM,SMTC,MPWR,ADI,QCOM,CRUS,ON,AVGO,CRDO,LSCC,NVDA,QRVO,SLAB,TXN,NXPI,SWKS,OLED,TSEM,TSM,AMAT,ASML,LRCX,KLAC,CDNS,SNPS,TER,MCHP,STM","yt":"XSD"},
     {"t":"ARKG","n":"Genomics","fn":"ARK Genomic Revolution","h":"TEM,CRSP,PSNL,GH,TWST,TXG,NTRA,BEAM,ILMN,VCYT,RXRX,ADPT,IONS,ABSI,CDNA,SDGR,NTLA,NRIX,PACB,WGS,BFLY,PRME,ARCT,AMGN"},
     {"t":"GBTC","n":"Bitcoin","fn":"GRAYSCALE BITCOIN TRUST","h":"IBIT,ETHA,MSTR,BMNR,SBET,COIN"},
     {"t":"IGV","n":"Software","fn":"iShares:Expand Tch-Sftwr","h":"ADBE,ADSK,AGYS,APP,APPN,BBAI,CDNS,CIFR,CLSK,CRM,CRNC,CRWD,CTSH,DDOG,EA,EPAM,FICO,FTNT,GDYN,HUT,IBM,IDCC,INTU,JAMF,MSFT,MSTR,NOW,ORCL,PANW,PATH,PLTR,PRO,PTC,QBTS,ROP,SEMR,SNPS,TDC,TEAM,TTWO,WDAY,WK,WULF,ZM,ZS"},
-    {"t":"XTN","n":"Transport & Logistics","fn":"SPDR S&P Trans","h":"JBHT,KEX,CHRW,FDX,EXPD,KNX,UPS,LYFT,LUV,XPO,AAL,CSX,MATX,UNP,NSC,DAL,HUBG,LSTR,JOBY,GXO,SNDR,ODFL,SAIA,UAL,WERN"},
     {"t":"PHO","n":"Water Infrastructure","fn":"Invesco Water Res","h":"WAT,FERG,ECL,ROP,AWK,MLI,IEX,WMS,XYL,PNR,VLTO,AOS,ACM,CNM,VMI,WTRG,BMI,TTEK,ITRI,WTS,ZWS,MWA,SBS,FELE,HWKN"},
-    {"t":"LABU","n":"Biotech (3x)","fn":"Direxion:S&P Btech Bl 3X","h":"EXAS,RVMD,RNA,INSM,REGN,NTRA,MDGL,BBIO,BIIB,IONS,UTHR,AMGN,INCY,ROIV,EXEL"},
     {"t":"BLOK","n":"Blockchain","fn":"Amplify Blockchain Tech","h":"BBBY,BITB,BKKT,BLK,CAN,CIFR,CLSK,CME,CMPO,COIN,CORZ,CRCL,FBTC,FIGR,GLXY,HOOD,HUT,IBIT,IBM,MELI,NU,OPRA,PYPL,RBLX,WULF,XYZ"},
     {"t":"BUZZ","n":"Social Sentiment","fn":"VanEck:Social Sentiment","h":"APLD,INTC,GME,NBIS,TSLA,META,SOFI,RGTI,IREN,AMZN,PLTR,NVDA,HOOD,ASTS,OPEN,AMD,MSTR,HIMS,GOOGL,AAPL,UNH,SOUN,SMCI,DKNG,PYPL"},
-    {"t":"SMH","n":"Semiconductors","fn":"VanEck:Semiconductor","h":"NVDA,TSM,AVGO,MU,INTC,AMAT,AMD,ASML,LRCX,KLAC,ADI,QCOM,TXN,CDNS,SNPS,MRVL,NXPI,MPWR,TER,MCHP,STM,ON,SWKS,QRVO,OLED,TSEM"},
     {"t":"WCLD","n":"Cloud Computing","fn":"WisdomTree:Cloud Cmptng","h":"FSLY,SEMR,MDB,DOCN,FROG,PATH,SNOW,BILL,DDOG,CFLT,WK,TWLO,CRWD,PCOR,AGYS,IOT,BRZE,QLYS,CWAN,BL,CLBT,PANW,SHOP,INTA,NET"},
     {"t":"DRIV","n":"EV & Mobility","fn":"Glbl X Auto & Elct Vhcls","h":"GOOGL,BE,TSLA,INTC,NVDA,MSFT,RIO,QCOM,GM,ALB,NBIS,COHR,HON,SQM,ENS,F,BIDU,AMPX,SITM"},
     {"t":"WGMI","n":"Crypto Miners / Data Centers","fn":"CoinShares Btc Mining","h":"APLD,BITF,BTBT,BTDR,CAN,CANG,CIFR,CLSK,CORZ,CRWV,GLXY,HIVE,HUT,IREN,MARA,NBIS,NVDA,RIOT,TSM,WULF,XYZ"},
     {"t":"IBUY","n":"Online Retail","fn":"Amplify Online Retail","h":"FIGS,LQDT,CVNA,UPWK,EXPE,CART,W,RVLV,CHWY,LYFT,MSM,EBAY,BKNG,AFRM,SPOT,TRIP,ABNB,PTON,UBER,AMZN,CPRT,PYPL,HIMS,SSTK,ETSY"},
-    {"t":"XHB","n":"Homebuilders","fn":"SS SPDR S&P Homebuilders","h":"SKY,SGI,WMS,CVCO,BLD,JCI,IBP,TT,KBH,TOL,ALLE,LEN,PHM,MTH,LOW,TMHC,NVR,WSM,DHI,MAS,LII,CARR,HD,CSL,BLDR"},
     {"t":"TAN","n":"Solar Energy","fn":"Invesco Solar","h":"NXT,FSLR,RUN,ENPH,SEDG,HASI,CSIQ,CWEN,DQ,SHLS,ARRY,JKS"},
     {"t":"KCE","n":"Capital Markets","fn":"SS SPDR S&P Cap Mkts","h":"AMG,IVZ,MS,CBOE,BK,SF,CME,STT,HOOD,LPLA,GS,NTRS,IBKR,STEP,SCHW,MSCI,PIPR,JHG,TPG,MCO,EVR,TROW,GLXY,FHI,NDAQ"},
     {"t":"IPAY","n":"Digital Payments","fn":"Amplify Digital Payments","h":"AXP,V,MA,PYPL,CPAY,FIS,AFRM,XYZ,GPN,COIN,TOST,FISV,FOUR,WEX,QTWO,STNE,ACIW,EEFT,WU,RELY"},
-    {"t":"ITB","n":"Home Construction","fn":"iShares:US Home Cons ETF","h":"DHI,LEN,PHM,NVR,TOL,SHW,LOW,BLD,HD,LII,MAS,BLDR,TMHC,IBP,MTH,OC,SKY,CVCO,KBH,EXP,SSD,FND,MHO,FBIN,MHK"},
+    {"t":"ITB","n":"Home Construction","fn":"iShares:US Home Cons ETF","h":"DHI,LEN,PHM,NVR,TOL,SHW,LOW,BLD,HD,LII,MAS,BLDR,TMHC,IBP,MTH,OC,SKY,CVCO,KBH,EXP,SSD,FND,MHO,FBIN,MHK,SGI,WMS,JCI,TT,ALLE,WSM,CARR,CSL"},
     {"t":"RSPF","n":"Financials (EW)","fn":"Invesco S&P500 EW Fn","h":"GL,ERIE,MET,WTW,FI,V,AJG,CB,ALL,L,CME,MMC,MA,AXP,AON,MS,EG,WFC,STT,FDS,AFL,PRU,AIZ,AIG,JPM,FICO"},
     {"t":"WOOD","n":"Timber & Forestry","fn":"iShares:Gl Timber","h":"PCH,RYN,SLVM,WY,SW,IP,CLW"},
     {"t":"COAL","n":"Coal","fn":"Range Glbl Coal Index","h":"HCC,AMR,BTU,NRP,ARLP,METC,BHP,AREC,NC"},
@@ -128,6 +121,7 @@ ETF_INFO = [
     {"t":"COOL","n":"HVAC / Cooling","fn":"Custom Basket","h":"FIX,EME,JCI,TT,WSO,VRT,CARR,LII,SPXC,AAON","basket":True},
     {"t":"AGENT","n":"Agentic AI","fn":"Custom Basket","h":"GTLB,ASAN,PATH,BRZE,VERI,AI,SOUN,BBAI,LAW,CRNC","basket":True},
     {"t":"OPTIC","n":"Photonics","fn":"Custom Basket","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM","basket":True},
+    {"t":"IYR","n":"US Real Estate","fn":"iShares:US Real Estate","h":"WELL,PLD,EQIX,O,AMT,SPG,DLR,PSA,CBRE,VTR,CCI,VICI,EXR,IRM"},
 ]
 
 
@@ -202,7 +196,7 @@ def main():
             if h:
                 basket_components.add(h)
 
-    regular_tickers = [e["t"] for e in regular_etfs]
+    regular_tickers = [e.get("yt", e["t"]) for e in regular_etfs]
     all_download = list(set(["SPY"] + regular_tickers + sorted(basket_components)))
 
     print(f"Fetching data for {len(all_download)} tickers ({len(regular_tickers)} ETFs + {len(basket_components)} basket components)...")
@@ -343,7 +337,7 @@ def main():
     # ─── Process regular ETFs ──────────────────────────────
     results = []
     for info in regular_etfs:
-        ticker = info["t"]
+        ticker = info.get("yt", info["t"])
         df = get_df(ticker)
         metrics = process_ticker(ticker, df)
         if metrics is None:
@@ -491,3 +485,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
