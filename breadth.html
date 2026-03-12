@@ -17,32 +17,26 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
 
 /* MA Status Cards */
 .ma-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
-.ma-card{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px 20px;display:flex;flex-direction:column}
-.ma-section-top{text-align:center;padding-bottom:14px}
+.ma-card{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:14px 0;display:flex;flex-direction:column}
+.ma-top{text-align:center;padding:0 16px 12px;border-bottom:1px solid #1e293b}
 .ma-ticker{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#e2e8f0;margin-bottom:2px}
 .ma-price{font-size:12px;color:#64748b;font-family:'JetBrains Mono',monospace}
-
-.ma-divider{height:1px;background:#1e293b;margin:0 -20px}
-
-.ma-section-mid{padding:14px 0;display:flex;flex-direction:column;gap:6px}
-.ma-row-inner{display:flex;align-items:center;gap:12px}
-.ma-label{color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px;width:42px;flex-shrink:0}
-.ma-dots-col{display:flex;gap:10px}
+.ma-body{display:flex;align-items:center;padding:12px 16px;flex:1}
+.ma-sec{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ma-vdiv{width:1px;background:#1e293b;align-self:stretch}
+.ma-label{color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:9px;margin-bottom:6px}
+.ma-dots-col{display:flex;gap:8px}
 .ma-dot-group{display:flex;flex-direction:column;align-items:center;gap:3px}
-.ma-dot{width:14px;height:14px;border-radius:50%;display:block}
+.ma-dot{width:13px;height:13px;border-radius:50%;display:block}
 .ma-dot.green{background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,0.4)}
 .ma-dot.red{background:#f87171;box-shadow:0 0 6px rgba(248,113,113,0.4)}
 .ma-dot.grey{background:#475569}
 .ma-sublabel{font-size:7px;color:#475569;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
-
-.ma-section-regime{padding:14px 0;text-align:center}
-.regime-text{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase}
+.regime-text{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase}
 .regime-text.bull{color:#4ade80}
 .regime-text.bear{color:#f87171}
-.regime-text.neutral{color:#fbbf24}
-
-.ma-section-dot{padding:10px 0 4px;display:flex;justify-content:center}
-.big-dot{width:28px;height:28px;border-radius:50%}
+.regime-text.choppy{color:#fbbf24}
+.big-dot{width:26px;height:26px;border-radius:50%}
 .big-dot.green{background:#4ade80;box-shadow:0 0 12px rgba(74,222,128,0.5)}
 .big-dot.red{background:#f87171;box-shadow:0 0 12px rgba(248,113,113,0.5)}
 .big-dot.yellow{background:#fbbf24;box-shadow:0 0 12px rgba(251,191,36,0.5)}
@@ -78,9 +72,9 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
 </div>
 <div class="content">
   <div class="ma-row" id="maCards">
-    <div class="ma-card"><div class="ma-section-top"><div class="ma-ticker">SPY</div><div class="ma-price">Loading...</div></div></div>
-    <div class="ma-card"><div class="ma-section-top"><div class="ma-ticker">QQQ</div><div class="ma-price">Loading...</div></div></div>
-    <div class="ma-card"><div class="ma-section-top"><div class="ma-ticker">IWM</div><div class="ma-price">Loading...</div></div></div>
+    <div class="ma-card"><div class="ma-top"><div class="ma-ticker">SPY</div><div class="ma-price">Loading...</div></div></div>
+    <div class="ma-card"><div class="ma-top"><div class="ma-ticker">QQQ</div><div class="ma-price">Loading...</div></div></div>
+    <div class="ma-card"><div class="ma-top"><div class="ma-ticker">IWM</div><div class="ma-price">Loading...</div></div></div>
   </div>
   <div class="chart-row">
     <div class="chart-box">
@@ -121,35 +115,33 @@ function renderMACards(breadth){
 
   container.innerHTML=order.map(tk=>{
     const d=breadth[tk];
-    if(!d) return `<div class="ma-card"><div class="ma-section-top"><div class="ma-ticker">${tk}</div><div class="ma-price">No data</div></div></div>`;
+    if(!d) return `<div class="ma-card"><div class="ma-top"><div class="ma-ticker">${tk}</div><div class="ma-price">No data</div></div></div>`;
     const pos=d.pos||[null,null,null];
     const slope=d.slope||[null,null,null];
-    const regime=d.regime||'Neutral';
-    const regimeClass=regime==='Bullish'?'bull':regime==='Bearish'?'bear':'neutral';
+    const regime=d.regime||'Choppy';
+    const regimeClass=regime==='Bullish'?'bull':regime==='Bearish'?'bear':'choppy';
     const bigDotClass=regime==='Bullish'?'green':regime==='Bearish'?'red':'yellow';
     return `<div class="ma-card">
-      <div class="ma-section-top">
+      <div class="ma-top">
         <div class="ma-ticker">${tk}</div>
         <div class="ma-price">$${d.price}</div>
       </div>
-      <div class="ma-divider"></div>
-      <div class="ma-section-mid">
-        <div class="ma-row-inner">
+      <div class="ma-body">
+        <div class="ma-sec">
           <div class="ma-label">Price</div>
           <div class="ma-dots-col">${dotGroup(pos[0],'9')}${dotGroup(pos[1],'21')}${dotGroup(pos[2],'50')}</div>
-        </div>
-        <div class="ma-row-inner">
+          <div style="height:8px"></div>
           <div class="ma-label">Slope</div>
           <div class="ma-dots-col">${dotGroup(slope[0],'9')}${dotGroup(slope[1],'21')}${dotGroup(slope[2],'50')}</div>
         </div>
-      </div>
-      <div class="ma-divider"></div>
-      <div class="ma-section-regime">
-        <div class="regime-text ${regimeClass}">${regime.toUpperCase()}</div>
-      </div>
-      <div class="ma-divider"></div>
-      <div class="ma-section-dot">
-        <div class="big-dot ${bigDotClass}"></div>
+        <div class="ma-vdiv"></div>
+        <div class="ma-sec">
+          <div class="regime-text ${regimeClass}">${regime.toUpperCase()}</div>
+        </div>
+        <div class="ma-vdiv"></div>
+        <div class="ma-sec">
+          <div class="big-dot ${bigDotClass}"></div>
+        </div>
       </div>
     </div>`;
   }).join('');
