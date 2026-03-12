@@ -195,13 +195,13 @@ def compute_ma_status(closes):
     ema21 = compute_ema_series(closes, 21)
     sma50 = compute_sma_series(closes, 50)
     price = closes[-1]
-    p_ema9 = price > ema9[-1] if ema9[-1] is not None else None
-    p_ema21 = price > ema21[-1] if ema21[-1] is not None else None
-    p_sma50 = price > sma50[-1] if sma50[-1] is not None else None
+    p_ema9 = bool(price > ema9[-1]) if ema9[-1] is not None else None
+    p_ema21 = bool(price > ema21[-1]) if ema21[-1] is not None else None
+    p_sma50 = bool(price > sma50[-1]) if sma50[-1] is not None else None
     lookback = 5
     def slope(series):
         if series[-1] is not None and len(series) > lookback and series[-1 - lookback] is not None:
-            return series[-1] > series[-1 - lookback]
+            return bool(series[-1] > series[-1 - lookback])
         return None
     s_ema9 = slope(ema9)
     s_ema21 = slope(ema21)
