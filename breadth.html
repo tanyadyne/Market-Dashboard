@@ -14,6 +14,22 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
 .btn-back:hover{background:#1e293b;color:#e2e8f0}
 .hdr-t{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
 .content{padding:20px;max-width:1400px;margin:0 auto}
+
+/* MA Status Cards */
+.ma-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+.ma-card{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px 20px;text-align:center}
+.ma-ticker{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#e2e8f0;margin-bottom:2px}
+.ma-price{font-size:12px;color:#64748b;font-family:'JetBrains Mono',monospace;margin-bottom:12px}
+.ma-grid{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;font-size:11px}
+.ma-label{color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px;padding:4px 0}
+.ma-dots{display:flex;gap:6px;align-items:center;padding:4px 0}
+.ma-dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.ma-dot.green{background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,0.4)}
+.ma-dot.red{background:#f87171;box-shadow:0 0 6px rgba(248,113,113,0.4)}
+.ma-dot.grey{background:#475569}
+.ma-sublabels{display:flex;gap:6px;font-size:8px;color:#475569;font-family:'JetBrains Mono',monospace;margin-top:2px;justify-content:center}
+.ma-sublabels span{width:12px;text-align:center}
+
 .chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .chart-full{display:grid;grid-template-columns:1fr;gap:16px}
 .chart-box{background:#0f172a;border:1px solid #1e293b;border-radius:10px;overflow:hidden}
@@ -29,6 +45,7 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
 .chart-body-tall .tradingview-widget-container__widget{height:calc(100% - 32px)!important;width:100%!important}
 @media(max-width:768px){
   .chart-row{grid-template-columns:1fr}
+  .ma-row{grid-template-columns:1fr}
   .chart-body{height:300px}
   .chart-body-tall{height:340px}
   .content{padding:12px}
@@ -43,6 +60,11 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
   <div class="hdr-t">Market Breadth Tracker</div>
 </div>
 <div class="content">
+  <div class="ma-row" id="maCards">
+    <div class="ma-card"><div class="ma-ticker">SPY</div><div class="ma-price">Loading...</div></div>
+    <div class="ma-card"><div class="ma-ticker">QQQ</div><div class="ma-price">Loading...</div></div>
+    <div class="ma-card"><div class="ma-ticker">IWM</div><div class="ma-price">Loading...</div></div>
+  </div>
   <div class="chart-row">
     <div class="chart-box">
       <div class="chart-header">Stocks above 5 SMA<span>Overbought: 90 · Oversold: 10</span></div>
@@ -65,6 +87,44 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
   </div>
 </div>
 <script>
+// ─── MA Status Cards ──────────────────────────────────────
+function dot(val){
+  if(val===true) return '<span class="ma-dot green"></span>';
+  if(val===false) return '<span class="ma-dot red"></span>';
+  return '<span class="ma-dot grey"></span>';
+}
+
+function renderMACards(breadth){
+  const order=['SPY','QQQ','IWM'];
+  const container=document.getElementById('maCards');
+  container.innerHTML=order.map(tk=>{
+    const d=breadth[tk];
+    if(!d) return `<div class="ma-card"><div class="ma-ticker">${tk}</div><div class="ma-price">No data</div></div>`;
+    const pos=d.pos||[null,null,null];
+    const slope=d.slope||[null,null,null];
+    return `<div class="ma-card">
+      <div class="ma-ticker">${tk}</div>
+      <div class="ma-price">$${d.price}</div>
+      <div class="ma-grid">
+        <div class="ma-label">Price</div>
+        <div class="ma-dots">${dot(pos[0])}${dot(pos[1])}${dot(pos[2])}</div>
+        <div class="ma-label">Slope</div>
+        <div class="ma-dots">${dot(slope[0])}${dot(slope[1])}${dot(slope[2])}</div>
+      </div>
+      <div class="ma-sublabels"><span>9</span><span>21</span><span>50</span></div>
+    </div>`;
+  }).join('');
+}
+
+// Load data.json and render cards
+fetch('data.json?_='+Date.now())
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.breadth) renderMACards(data.breadth);
+  })
+  .catch(()=>{});
+
+// ─── Chart Injection ──────────────────────────────────────
 function injectChart(containerId, symbol, interval){
   const el=document.getElementById(containerId);
 
