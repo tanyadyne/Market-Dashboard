@@ -18,18 +18,24 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
 .chart-full{display:grid;grid-template-columns:1fr;gap:16px}
 .chart-box{background:#0f172a;border:1px solid #1e293b;border-radius:10px;overflow:hidden}
 .chart-header{padding:10px 16px 6px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#94a3b8;font-family:'JetBrains Mono',monospace}
-.chart-header span{font-size:10px;color:#475569;font-weight:500;letter-spacing:0;text-transform:none;margin-left:8px}
-.chart-body{height:380px;position:relative}
-.chart-body-tall{height:420px;position:relative}
-.chart-body .tradingview-widget-container,
-.chart-body-tall .tradingview-widget-container{height:100%!important;width:100%!important}
-.chart-body .tradingview-widget-container__widget,
-.chart-body-tall .tradingview-widget-container__widget{height:100%!important;width:100%!important}
+.chart-wrap{height:380px;position:relative;overflow:hidden}
+.chart-wrap-tall{height:420px;position:relative;overflow:hidden}
+.chart-wrap .tradingview-widget-container,
+.chart-wrap-tall .tradingview-widget-container{height:100%!important;width:100%!important}
+.chart-wrap .tradingview-widget-container__widget,
+.chart-wrap-tall .tradingview-widget-container__widget{height:100%!important;width:100%!important}
+
+.hline{position:absolute;left:0;right:55px;height:0;border-top:1px dashed;z-index:5;pointer-events:none}
+.hline-label{position:absolute;right:56px;font-size:8px;font-family:'JetBrains Mono',monospace;font-weight:700;padding:1px 4px;border-radius:2px;z-index:5;pointer-events:none;transform:translateY(-50%);letter-spacing:.5px}
+.hline.hi{border-color:rgba(248,113,113,0.6)}
+.hline.lo{border-color:rgba(74,222,128,0.6)}
+.hline-label.hi{color:#fca5a5;background:rgba(127,29,29,0.8)}
+.hline-label.lo{color:#86efac;background:rgba(20,83,45,0.8)}
 
 @media(max-width:768px){
   .chart-row{grid-template-columns:1fr}
-  .chart-body{height:300px}
-  .chart-body-tall{height:340px}
+  .chart-wrap{height:300px}
+  .chart-wrap-tall{height:340px}
   .content{padding:12px}
   .hdr{padding:12px}
   .hdr-t{font-size:12px}
@@ -46,25 +52,61 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
 <div class="content">
   <div class="chart-row">
     <div class="chart-box">
-      <div class="chart-header">Stocks above 5 SMA<span>Overbought: 90 · Oversold: 10</span></div>
-      <div class="chart-body" id="chart-s5fd"></div>
+      <div class="chart-header">Stocks above 5 SMA</div>
+      <div class="chart-wrap" id="chart-s5fd"></div>
     </div>
     <div class="chart-box">
-      <div class="chart-header">Stocks above 50 SMA<span>Overbought: 70 · Oversold: 20</span></div>
-      <div class="chart-body" id="chart-mmfi"></div>
+      <div class="chart-header">Stocks above 50 SMA</div>
+      <div class="chart-wrap" id="chart-mmfi"></div>
     </div>
   </div>
   <div class="chart-full">
     <div class="chart-box">
-      <div class="chart-header">Stocks above 200 SMA<span>Overbought: 70 · Oversold: 20</span></div>
-      <div class="chart-body-tall" id="chart-mmth"></div>
+      <div class="chart-header">Stocks above 200 SMA</div>
+      <div class="chart-wrap-tall" id="chart-mmth"></div>
     </div>
   </div>
 </div>
 
 <script>
-function injectChart(containerId, symbol, interval){
+/*
+  Each chart has a visible Y-axis range that TradingView auto-scales.
+  From the screenshot analysis:
+    S5FD: Y-axis ~120 (top) to ~-20 (bottom), range=140
+    MMFI: Y-axis ~80 (top) to ~0 (bottom), range=80
+    MMTH: Y-axis ~100 (top) to ~0 (bottom), range=100
+
+  The chart drawing area starts below the toolbar (~13% from top)
+  and ends above the time axis + date range bar (~88% from top).
+*/
+const CHART_AREA_TOP = 0.13;  // 13% from container top (below toolbar)
+const CHART_AREA_BOT = 0.88;  // 88% from container top (above time axis)
+
+function addLine(container, value, type, yAxisTop, yAxisBot){
+  const h = container.offsetHeight;
+  const chartTop = h * CHART_AREA_TOP;
+  const chartBot = h * CHART_AREA_BOT;
+  const chartH = chartBot - chartTop;
+
+  // Map value to pixel position (yAxisTop is the max value at chartTop, yAxisBot is min at chartBot)
+  const pct = (yAxisTop - value) / (yAxisTop - yAxisBot);
+  const y = chartTop + pct * chartH;
+
+  const line = document.createElement('div');
+  line.className = 'hline ' + type;
+  line.style.top = Math.round(y) + 'px';
+  container.appendChild(line);
+
+  const label = document.createElement('div');
+  label.className = 'hline-label ' + type;
+  label.style.top = Math.round(y) + 'px';
+  label.textContent = value;
+  container.appendChild(label);
+}
+
+function injectChart(containerId, symbol, interval, lines, yAxisTop, yAxisBot){
   const el = document.getElementById(containerId);
+
   const wrapper = document.createElement('div');
   wrapper.className = 'tradingview-widget-container';
   wrapper.style.cssText = 'height:100%;width:100%';
@@ -103,11 +145,19 @@ function injectChart(containerId, symbol, interval){
     "autosize": true
   });
   wrapper.appendChild(script);
+
+  // Draw overlay lines after chart container settles
+  setTimeout(() => {
+    lines.forEach(([val, type]) => addLine(el, val, type, yAxisTop, yAxisBot));
+  }, 800);
 }
 
-injectChart('chart-s5fd', 'S5FD', 'W');
-injectChart('chart-mmfi', 'MMFI', 'W');
-injectChart('chart-mmth', 'MMTH', 'M');
+// S5FD: Y-axis ranges roughly 120 to -20
+injectChart('chart-s5fd', 'S5FD', 'W', [[90,'hi'], [10,'lo']], 120, -20);
+// MMFI: Y-axis ranges roughly 80 to 0
+injectChart('chart-mmfi', 'MMFI', 'W', [[70,'hi'], [20,'lo']], 80, 0);
+// MMTH: Y-axis ranges roughly 100 to 0
+injectChart('chart-mmth', 'MMTH', 'M', [[70,'hi'], [20,'lo']], 100, 0);
 </script>
 
 </body>
