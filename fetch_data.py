@@ -189,17 +189,15 @@ def compute_sma_series(closes, period):
 
 def compute_ma_status(closes):
     """Compute MA status: price vs MAs and MA slopes for breadth panel."""
-    if len(closes) < 200:
+    if len(closes) < 50:
         return None
     ema9 = compute_ema_series(closes, 9)
     ema21 = compute_ema_series(closes, 21)
     sma50 = compute_sma_series(closes, 50)
-    sma200 = compute_sma_series(closes, 200)
     price = closes[-1]
     p_ema9 = price > ema9[-1] if ema9[-1] is not None else None
     p_ema21 = price > ema21[-1] if ema21[-1] is not None else None
     p_sma50 = price > sma50[-1] if sma50[-1] is not None else None
-    p_sma200 = price > sma200[-1] if sma200[-1] is not None else None
     lookback = 5
     def slope(series):
         if series[-1] is not None and len(series) > lookback and series[-1 - lookback] is not None:
@@ -208,11 +206,10 @@ def compute_ma_status(closes):
     s_ema9 = slope(ema9)
     s_ema21 = slope(ema21)
     s_sma50 = slope(sma50)
-    s_sma200 = slope(sma200)
     return {
         "price": round(price, 2),
-        "pos": [p_ema9, p_ema21, p_sma50, p_sma200],
-        "slope": [s_ema9, s_ema21, s_sma50, s_sma200],
+        "pos": [p_ema9, p_ema21, p_sma50],
+        "slope": [s_ema9, s_ema21, s_sma50],
     }
 
 
@@ -507,23 +504,13 @@ def main():
     # ─── Breadth MA Status for IWM, QQQ, SPY ────────────────
     breadth_tickers = ["IWM", "QQQ", "SPY"]
     breadth_status = {}
-    # Need 200+ trading days (~400 calendar days) for 200 SMA
-    b_start = (datetime.now() - timedelta(days=400)).strftime("%Y-%m-%d")
-    b_end = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-    try:
-        b_raw = yf.download(breadth_tickers, start=b_start, end=b_end, group_by="ticker", auto_adjust=True, threads=True)
-        for bt in breadth_tickers:
-            try:
-                bdf = b_raw[bt].dropna(subset=["Close"]) if len(breadth_tickers) > 1 else b_raw.dropna(subset=["Close"])
-                if bdf is not None and len(bdf) >= 200:
-                    c = bdf["Close"].values.tolist()
-                    status = compute_ma_status(c)
-                    if status:
-                        breadth_status[bt] = status
-            except Exception as e:
-                print(f"  Breadth {bt} error: {e}")
-    except Exception as e:
-        print(f"  Breadth download error: {e}")
+    for bt in breadth_tickers:
+        df = get_df(bt) if bt != "SPY" else spy_df
+        if df is not None and len(df) >= 50:
+            c = df["Close"].values.tolist()
+            status = compute_ma_status(c)
+            if status:
+                breadth_status[bt] = status
     print(f"Breadth MA status: {list(breadth_status.keys())}")
 
     data = {
