@@ -213,6 +213,95 @@ def compute_ma_status(closes):
     }
 
 
+def compute_market_regime(closes):
+    """
+    Compute market regime (Bullish/Bearish/Neutral) using a composite trend score
+    similar to the Pine Script MMTS indicator's smooth_trend logic.
+
+    Components (weighted):
+      - RSI(14) score: (RSI - 50) * 2, weight 0.25
+      - MA crossover score: EMA(10) vs EMA(21) divergence, weight 0.35
+      - Bollinger Band position: where price sits in BB(20,2), weight 0.20
+      - Price momentum: 5-day change vs benchmark, weight 0.20
+
+    smooth_trend > 20 = Bullish, < -20 = Bearish, else Neutral
+    """
+    n = len(closes)
+    if n < 50:
+        return None
+
+    # RSI(14)
+    period = 14
+    gains = []
+    losses = []
+    for i in range(1, n):
+        delta = closes[i] - closes[i-1]
+        gains.append(max(delta, 0))
+        losses.append(max(-delta, 0))
+
+    if len(gains) < period:
+        return None
+
+    avg_gain = np.mean(gains[:period])
+    avg_loss = np.mean(losses[:period])
+    for i in range(period, len(gains)):
+        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
+
+    rs = avg_gain / avg_loss if avg_loss > 0 else 100
+    rsi = 100 - (100 / (1 + rs))
+    rsi_score = (rsi - 50) * 2  # -100 to +100
+
+    # MA crossover score: EMA(10) vs EMA(21)
+    ema10 = compute_ema_series(closes, 10)
+    ema21 = compute_ema_series(closes, 21)
+    if ema10[-1] is not None and ema21[-1] is not None and ema21[-1] != 0:
+        md = (ema10[-1] - ema21[-1]) / ema21[-1] * 100
+        ma_score = max(-100, min(100, md * 5))
+    else:
+        ma_score = 0
+
+    # Bollinger Band position: BB(20, 2)
+    bb_period = 20
+    if n >= bb_period:
+        bb_slice = closes[-bb_period:]
+        bb_basis = np.mean(bb_slice)
+        bb_std = np.std(bb_slice)
+        bb_upper = bb_basis + 2 * bb_std
+        bb_lower = bb_basis - 2 * bb_std
+        bb_range = bb_upper - bb_lower
+        if bb_range > 0:
+            bb_position = (closes[-1] - bb_lower) / bb_range * 100
+            bb_score = (bb_position - 50) * 2
+        else:
+            bb_score = 0
+    else:
+        bb_score = 0
+
+    # Price momentum (5-day change, simple)
+    if n >= 6:
+        mom = (closes[-1] / closes[-6] - 1) * 100
+        mom_score = max(-100, min(100, mom * 10))
+    else:
+        mom_score = 0
+
+    # Composite trend score (same weights as Pine Script)
+    trend_score = (rsi_score * 0.25) + (ma_score * 0.35) + (bb_score * 0.20) + (mom_score * 0.20)
+
+    # Classify regime
+    if trend_score > 20:
+        regime = "Bullish"
+    elif trend_score < -20:
+        regime = "Bearish"
+    else:
+        regime = "Neutral"
+
+    return {
+        "regime": regime,
+        "score": round(float(trend_score), 1),
+    }
+
+
 def load_dynamic_holdings():
     """Load dynamic holdings for FFTY/BUZZ from dynamic_holdings.json."""
     if os.path.exists("dynamic_holdings.json"):
@@ -510,8 +599,15 @@ def main():
             c = df["Close"].values.tolist()
             status = compute_ma_status(c)
             if status:
+                regime = compute_market_regime(c)
+                if regime:
+                    status["regime"] = regime["regime"]
+                    status["regime_score"] = regime["score"]
                 breadth_status[bt] = status
     print(f"Breadth MA status: {list(breadth_status.keys())}")
+    for bt in breadth_tickers:
+        if bt in breadth_status and "regime" in breadth_status[bt]:
+            print(f"  {bt} regime: {breadth_status[bt]['regime']} (score: {breadth_status[bt].get('regime_score')})")
 
     data = {
         "e": results,
