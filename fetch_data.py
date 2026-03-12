@@ -294,7 +294,7 @@ def compute_market_regime(closes):
     elif trend_score < -20:
         regime = "Bearish"
     else:
-        regime = "Neutral"
+        regime = "Choppy"
 
     return {
         "regime": regime,
