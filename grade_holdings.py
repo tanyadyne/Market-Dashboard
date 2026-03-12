@@ -126,6 +126,7 @@ ETF_INFO = [
     {"t":"COOL","h":"FIX,EME,JCI,TT,WSO,VRT,CARR,LII,SPXC,AAON"},
     {"t":"AGENT","h":"GTLB,ASAN,PATH,BRZE,VERI,AI,SOUN,BBAI,LAW,CRNC"},
     {"t":"OPTIC","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM"},
+    {"t":"LIDAR","h":"OUST,AEVA,HSAI,TDY"},
     {"t":"IYR","h":"WELL,PLD,EQIX,O,AMT,SPG,DLR,PSA,CBRE,VTR,CCI,VICI,EXR,IRM"},
 ]
 
@@ -363,4 +364,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
