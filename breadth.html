@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Breadth Tracker</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
+.hdr{padding:18px 20px 14px;border-bottom:1px solid #111827;display:flex;align-items:center;gap:10px}
+.btn-back{padding:4px 10px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #1e293b;background:#0f172a;color:#94a3b8;text-decoration:none;transition:.15s;font-family:inherit}
+.btn-back:hover{background:#1e293b;color:#e2e8f0}
+.hdr-t{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.content{padding:20px;max-width:1400px;margin:0 auto}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-full{display:grid;grid-template-columns:1fr;gap:16px}
+.chart-box{background:#0f172a;border:1px solid #1e293b;border-radius:10px;overflow:hidden}
+.chart-header{padding:10px 16px 6px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#94a3b8;font-family:'JetBrains Mono',monospace}
+.chart-body{height:380px;position:relative}
+.chart-body-tall{height:420px;position:relative}
+.chart-body .tradingview-widget-container,
+.chart-body-tall .tradingview-widget-container{height:100%!important;width:100%!important}
+.chart-body .tradingview-widget-container__widget,
+.chart-body-tall .tradingview-widget-container__widget{height:100%!important;width:100%!important}
+
+@media(max-width:768px){
+  .chart-row{grid-template-columns:1fr}
+  .chart-body{height:300px}
+  .chart-body-tall{height:340px}
+  .content{padding:12px}
+  .hdr{padding:12px}
+  .hdr-t{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <a href="index.html" class="btn-back" title="Back to Market Dashboard">←</a>
+  <div class="hdr-t">Market Breadth Tracker</div>
+</div>
+
+<div class="content">
+  <div class="chart-row">
+    <div class="chart-box">
+      <div class="chart-header">Stocks above 5 SMA</div>
+      <div class="chart-body" id="chart-s5fd"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-header">Stocks above 50 SMA</div>
+      <div class="chart-body" id="chart-mmfi"></div>
+    </div>
+  </div>
+  <div class="chart-full">
+    <div class="chart-box">
+      <div class="chart-header">Stocks above 200 SMA</div>
+      <div class="chart-body-tall" id="chart-mmth"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function injectChart(containerId, symbol, interval, lines){
+  const el = document.getElementById(containerId);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'tradingview-widget-container';
+  wrapper.style.cssText = 'height:100%;width:100%';
+  const widgetDiv = document.createElement('div');
+  widgetDiv.className = 'tradingview-widget-container__widget';
+  widgetDiv.style.cssText = 'height:100%;width:100%';
+  wrapper.appendChild(widgetDiv);
+  el.appendChild(wrapper);
+
+  const studies = lines.map(val => ({
+    id: "HorizontalLine@tv-basicstudies",
+    inputs: { Price: val }
+  }));
+
+  const script = document.createElement('script');
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+  script.type = 'text/javascript';
+  script.async = true;
+  script.innerHTML = JSON.stringify({
+    "allow_symbol_change": false,
+    "calendar": false,
+    "details": false,
+    "hide_side_toolbar": true,
+    "hide_top_toolbar": false,
+    "hide_legend": false,
+    "hide_volume": true,
+    "hotlist": false,
+    "interval": interval,
+    "locale": "en",
+    "save_image": false,
+    "style": "1",
+    "symbol": symbol,
+    "theme": "dark",
+    "timezone": "Etc/UTC",
+    "backgroundColor": "#0f172a",
+    "gridColor": "rgba(30, 41, 59, 0.5)",
+    "watchlist": [],
+    "withdateranges": true,
+    "compareSymbols": [],
+    "studies": studies,
+    "autosize": true
+  });
+  wrapper.appendChild(script);
+}
+
+injectChart('chart-s5fd', 'S5FD', 'W', [90, 10]);
+injectChart('chart-mmfi', 'MMFI', 'W', [70, 20]);
+injectChart('chart-mmth', 'MMTH', 'M', [70, 20]);
+</script>
+
+</body>
+</html>
