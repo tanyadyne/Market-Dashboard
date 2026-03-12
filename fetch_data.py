@@ -167,6 +167,55 @@ def percentrank_inc(values, x):
     return sum(1 for v in values if v < x) / (n - 1)
 
 
+def compute_ema_series(closes, period):
+    """Compute full EMA series from closes array."""
+    if len(closes) < period:
+        return [None] * len(closes)
+    mult = 2 / (period + 1)
+    ema_out = [None] * len(closes)
+    ema_out[period - 1] = np.mean(closes[:period])
+    for i in range(period, len(closes)):
+        ema_out[i] = (closes[i] - ema_out[i-1]) * mult + ema_out[i-1]
+    return ema_out
+
+
+def compute_sma_series(closes, period):
+    """Compute full SMA series from closes array."""
+    sma_out = [None] * len(closes)
+    for i in range(period - 1, len(closes)):
+        sma_out[i] = np.mean(closes[i - period + 1:i + 1])
+    return sma_out
+
+
+def compute_ma_status(closes):
+    """Compute MA status: price vs MAs and MA slopes for breadth panel."""
+    if len(closes) < 200:
+        return None
+    ema9 = compute_ema_series(closes, 9)
+    ema21 = compute_ema_series(closes, 21)
+    sma50 = compute_sma_series(closes, 50)
+    sma200 = compute_sma_series(closes, 200)
+    price = closes[-1]
+    p_ema9 = price > ema9[-1] if ema9[-1] is not None else None
+    p_ema21 = price > ema21[-1] if ema21[-1] is not None else None
+    p_sma50 = price > sma50[-1] if sma50[-1] is not None else None
+    p_sma200 = price > sma200[-1] if sma200[-1] is not None else None
+    lookback = 5
+    def slope(series):
+        if series[-1] is not None and len(series) > lookback and series[-1 - lookback] is not None:
+            return series[-1] > series[-1 - lookback]
+        return None
+    s_ema9 = slope(ema9)
+    s_ema21 = slope(ema21)
+    s_sma50 = slope(sma50)
+    s_sma200 = slope(sma200)
+    return {
+        "price": round(price, 2),
+        "pos": [p_ema9, p_ema21, p_sma50, p_sma200],
+        "slope": [s_ema9, s_ema21, s_sma50, s_sma200],
+    }
+
+
 def load_dynamic_holdings():
     """Load dynamic holdings for FFTY/BUZZ from dynamic_holdings.json."""
     if os.path.exists("dynamic_holdings.json"):
@@ -198,7 +247,7 @@ def main():
                 basket_components.add(h)
 
     regular_tickers = [e.get("yt", e["t"]) for e in regular_etfs]
-    all_download = list(set(["SPY"] + regular_tickers + sorted(basket_components)))
+    all_download = list(set(["SPY", "QQQ"] + regular_tickers + sorted(basket_components)))
 
     print(f"Fetching data for {len(all_download)} tickers ({len(regular_tickers)} ETFs + {len(basket_components)} basket components)...")
 
@@ -455,6 +504,28 @@ def main():
     adv_streak_list = [[r["t"], r["n"]] for r in results if r.get("ra", 0) >= 4]
     dec_streak_list = [[r["t"], r["n"]] for r in results if r.get("rf", 0) >= 4]
 
+    # ─── Breadth MA Status for IWM, QQQ, SPY ────────────────
+    breadth_tickers = ["IWM", "QQQ", "SPY"]
+    breadth_status = {}
+    # Need 200+ trading days (~400 calendar days) for 200 SMA
+    b_start = (datetime.now() - timedelta(days=400)).strftime("%Y-%m-%d")
+    b_end = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+    try:
+        b_raw = yf.download(breadth_tickers, start=b_start, end=b_end, group_by="ticker", auto_adjust=True, threads=True)
+        for bt in breadth_tickers:
+            try:
+                bdf = b_raw[bt].dropna(subset=["Close"]) if len(breadth_tickers) > 1 else b_raw.dropna(subset=["Close"])
+                if bdf is not None and len(bdf) >= 200:
+                    c = bdf["Close"].values.tolist()
+                    status = compute_ma_status(c)
+                    if status:
+                        breadth_status[bt] = status
+            except Exception as e:
+                print(f"  Breadth {bt} error: {e}")
+    except Exception as e:
+        print(f"  Breadth download error: {e}")
+    print(f"Breadth MA status: {list(breadth_status.keys())}")
+
     data = {
         "e": results,
         "s": {
@@ -468,6 +539,7 @@ def main():
             "spy_price": round(spy_price, 2),
             "spy_change": round(float(spy_chg), 2),
         },
+        "breadth": breadth_status,
     }
 
     with open("data.json", "w") as f:
