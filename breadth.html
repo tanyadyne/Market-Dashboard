@@ -21,6 +21,8 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
 .chart-header span{font-size:10px;color:#475569;font-weight:500;letter-spacing:0;text-transform:none;margin-left:8px}
 .chart-body{height:380px;position:relative}
 .chart-body-tall{height:420px;position:relative}
+.sheet-box{background:#0f172a;border:1px solid #1e293b;border-radius:10px;overflow:hidden;margin-top:16px}
+.sheet-embed{width:100%;height:600px;border:none;background:#fff;border-radius:0 0 10px 10px}
 .chart-body .tradingview-widget-container,
 .chart-body-tall .tradingview-widget-container{height:100%!important;width:100%!important}
 .chart-body .tradingview-widget-container__widget,
@@ -43,7 +45,7 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
 <div class="content">
   <div class="chart-row">
     <div class="chart-box">
-      <div class="chart-header">Stocks above 5 SMA<span>Overbought: 85 · Oversold: 15</span></div>
+      <div class="chart-header">Stocks above 5 SMA<span>Overbought: 90 · Oversold: 10</span></div>
       <div class="chart-body" id="chart-s5fd"></div>
     </div>
     <div class="chart-box">
@@ -56,6 +58,10 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
       <div class="chart-header">Stocks above 200 SMA<span>Overbought: 70 · Oversold: 20</span></div>
       <div class="chart-body-tall" id="chart-mmth"></div>
     </div>
+  </div>
+  <div class="sheet-box">
+    <div class="chart-header">Stockbee Market Monitor</div>
+    <iframe class="sheet-embed" src="https://docs.google.com/spreadsheet/pub?key=0Am_cU8NLIU20dEhiQnVHN3Nnc3B1S3J6eGhKZFo0N3c&output=html&widget=true" frameborder="0" scrolling="yes"></iframe>
   </div>
 </div>
 <script>
