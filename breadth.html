@@ -18,25 +18,18 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
 .chart-full{display:grid;grid-template-columns:1fr;gap:16px}
 .chart-box{background:#0f172a;border:1px solid #1e293b;border-radius:10px;overflow:hidden}
 .chart-header{padding:10px 16px 6px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#94a3b8;font-family:'JetBrains Mono',monospace}
-.chart-wrap{height:380px;position:relative;overflow:hidden}
-.chart-wrap-tall{height:420px;position:relative;overflow:hidden}
-.chart-wrap .tradingview-widget-container,
-.chart-wrap-tall .tradingview-widget-container{height:100%!important;width:100%!important}
-.chart-wrap .tradingview-widget-container__widget,
-.chart-wrap-tall .tradingview-widget-container__widget{height:100%!important;width:100%!important}
-
-/* Horizontal reference lines overlaid on chart */
-.hline{position:absolute;left:0;right:55px;height:0;border-top:1px dashed;z-index:5;pointer-events:none}
-.hline-label{position:absolute;right:56px;font-size:8px;font-family:'JetBrains Mono',monospace;font-weight:700;padding:1px 4px;border-radius:2px;z-index:5;pointer-events:none;transform:translateY(-50%);letter-spacing:.5px}
-.hline.hi{border-color:rgba(248,113,113,0.6)}
-.hline.lo{border-color:rgba(74,222,128,0.6)}
-.hline-label.hi{color:#fca5a5;background:rgba(127,29,29,0.8)}
-.hline-label.lo{color:#86efac;background:rgba(20,83,45,0.8)}
+.chart-header span{font-size:10px;color:#475569;font-weight:500;letter-spacing:0;text-transform:none;margin-left:8px}
+.chart-body{height:380px;position:relative}
+.chart-body-tall{height:420px;position:relative}
+.chart-body .tradingview-widget-container,
+.chart-body-tall .tradingview-widget-container{height:100%!important;width:100%!important}
+.chart-body .tradingview-widget-container__widget,
+.chart-body-tall .tradingview-widget-container__widget{height:100%!important;width:100%!important}
 
 @media(max-width:768px){
   .chart-row{grid-template-columns:1fr}
-  .chart-wrap{height:300px}
-  .chart-wrap-tall{height:340px}
+  .chart-body{height:300px}
+  .chart-body-tall{height:340px}
   .content{padding:12px}
   .hdr{padding:12px}
   .hdr-t{font-size:12px}
@@ -53,54 +46,25 @@ body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkM
 <div class="content">
   <div class="chart-row">
     <div class="chart-box">
-      <div class="chart-header">Stocks above 5 SMA</div>
-      <div class="chart-wrap" id="chart-s5fd"></div>
+      <div class="chart-header">Stocks above 5 SMA<span>Overbought: 90 · Oversold: 10</span></div>
+      <div class="chart-body" id="chart-s5fd"></div>
     </div>
     <div class="chart-box">
-      <div class="chart-header">Stocks above 50 SMA</div>
-      <div class="chart-wrap" id="chart-mmfi"></div>
+      <div class="chart-header">Stocks above 50 SMA<span>Overbought: 70 · Oversold: 20</span></div>
+      <div class="chart-body" id="chart-mmfi"></div>
     </div>
   </div>
   <div class="chart-full">
     <div class="chart-box">
-      <div class="chart-header">Stocks above 200 SMA</div>
-      <div class="chart-wrap-tall" id="chart-mmth"></div>
+      <div class="chart-header">Stocks above 200 SMA<span>Overbought: 70 · Oversold: 20</span></div>
+      <div class="chart-body-tall" id="chart-mmth"></div>
     </div>
   </div>
 </div>
 
 <script>
-// Chart area mapping: TradingView embed uses ~top 8% for toolbar, ~bottom 7% for time axis
-// The price range 0-100 maps to roughly 8%-93% of the container height
-const CHART_TOP_PCT = 8;   // toolbar area
-const CHART_BOT_PCT = 93;  // above time axis
-
-function valToY(value, containerHeight){
-  // value 0-100 maps to CHART_BOT_PCT (bottom) to CHART_TOP_PCT (top) of container
-  const chartRange = CHART_BOT_PCT - CHART_TOP_PCT;
-  const pct = CHART_TOP_PCT + chartRange * (1 - value / 100);
-  return (pct / 100) * containerHeight;
-}
-
-function addLine(container, value, type){
-  const h = container.offsetHeight;
-  const y = valToY(value, h);
-
-  const line = document.createElement('div');
-  line.className = 'hline ' + type;
-  line.style.top = y + 'px';
-  container.appendChild(line);
-
-  const label = document.createElement('div');
-  label.className = 'hline-label ' + type;
-  label.style.top = y + 'px';
-  label.textContent = value;
-  container.appendChild(label);
-}
-
-function injectChart(containerId, symbol, interval, lines){
+function injectChart(containerId, symbol, interval){
   const el = document.getElementById(containerId);
-
   const wrapper = document.createElement('div');
   wrapper.className = 'tradingview-widget-container';
   wrapper.style.cssText = 'height:100%;width:100%';
@@ -139,16 +103,11 @@ function injectChart(containerId, symbol, interval, lines){
     "autosize": true
   });
   wrapper.appendChild(script);
-
-  // Add overlay lines after a short delay to let the container size settle
-  setTimeout(() => {
-    lines.forEach(([val, type]) => addLine(el, val, type));
-  }, 500);
 }
 
-injectChart('chart-s5fd', 'S5FD', 'W', [[90,'hi'], [10,'lo']]);
-injectChart('chart-mmfi', 'MMFI', 'W', [[70,'hi'], [20,'lo']]);
-injectChart('chart-mmth', 'MMTH', 'M', [[70,'hi'], [20,'lo']]);
+injectChart('chart-s5fd', 'S5FD', 'W');
+injectChart('chart-mmfi', 'MMFI', 'W');
+injectChart('chart-mmth', 'MMTH', 'M');
 </script>
 
 </body>
