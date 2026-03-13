@@ -744,9 +744,9 @@ def main():
     adv_streak_list = [[r["t"], r["n"]] for r in results if r.get("ra", 0) >= 4]
     dec_streak_list = [[r["t"], r["n"]] for r in results if r.get("rf", 0) >= 4]
 
-    # Weekly streak lists (2+ weeks)
-    w_adv_streak_list = [[r["t"], r["n"]] for r in results if r.get("w_ra", 0) >= 2]
-    w_dec_streak_list = [[r["t"], r["n"]] for r in results if r.get("w_rf", 0) >= 2]
+    # Weekly streak lists (3+ weeks)
+    w_adv_streak_list = [[r["t"], r["n"]] for r in results if r.get("w_ra", 0) >= 3]
+    w_dec_streak_list = [[r["t"], r["n"]] for r in results if r.get("w_rf", 0) >= 3]
 
     # ─── Breadth MA Status for IWM, QQQ, SPY ────────────────
     breadth_tickers = ["IWM", "QQQ", "SPY"]
