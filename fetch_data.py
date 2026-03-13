@@ -430,7 +430,13 @@ def main():
         atr = compute_atr(h, l, c, ATR_PERIOD)
         valid_c = [x for x in c if x is not None]
         sma50 = np.mean(valid_c[-50:]) if len(valid_c) >= 50 else np.mean(valid_c)
-        atr_mult = abs(c[-1] - sma50) / atr if atr > 0 else 0
+
+        # ATR Extension: how far price is from 50-day SMA in ATR units (same for D/W)
+        atr_ext = abs(c[-1] - sma50) / atr if atr > 0 else 0
+
+        # ATR Mult (D): today's move relative to daily ATR%
+        atr_pct = (atr / c[-2] * 100) if length >= 2 and c[-2] != 0 else 1
+        atr_mult = abs(change) / atr_pct if atr_pct > 0 else 0
 
         vols = [x for x in v if x is not None and x > 0]
         if len(vols) > 1:
@@ -448,7 +454,7 @@ def main():
         if len(common) < LOOKBACK:
             return {
                 "rv": round(rvol * 100) if rvol else None,
-                "am": round(atr_mult * 100), "ch": round(change, 2),
+                "am": round(atr_mult * 100), "ax": round(atr_ext * 100), "ch": round(change, 2),
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2),
@@ -493,6 +499,7 @@ def main():
         return {
             "rv": round(rvol * 100) if rvol else None,
             "am": round(atr_mult * 100),
+            "ax": round(atr_ext * 100),
             "ch": round(change, 2),
             "c5": round(c5, 2) if c5 is not None else None,
             "c20": round(c20, 2) if c20 is not None else None,
@@ -515,11 +522,11 @@ def main():
         v = df_w["Volume"].values
         length = len(c)
 
-        # Weekly ATR mult
+        # Weekly ATR mult: this week's change / weekly ATR%
         atr = compute_atr(h, l, c, ATR_PERIOD)
-        valid_c = [x for x in c if x is not None]
-        sma20 = np.mean(valid_c[-20:]) if len(valid_c) >= 20 else np.mean(valid_c)
-        atr_mult = abs(c[-1] - sma20) / atr if atr > 0 else 0
+        week_change = (c[-1] / c[-2] - 1) * 100 if length >= 2 else 0
+        atr_pct_w = (atr / c[-2] * 100) if length >= 2 and c[-2] != 0 else 1
+        atr_mult = abs(week_change) / atr_pct_w if atr_pct_w > 0 else 0
 
         # Weekly R.Vol
         vols = [x for x in v if x is not None and x > 0]
@@ -591,7 +598,7 @@ def main():
         metrics = process_ticker(ticker, df)
         w_metrics = process_ticker_weekly(ticker, get_df_w(ticker))
         if metrics is None:
-            results.append({**info, "rv": None, "am": None, "ch": None, "c5": None,
+            results.append({**info, "rv": None, "am": None, "ax": None, "ch": None, "c5": None,
                             "c20": None, "rs": None, "rf": 0, "ra": 0, "p": None,
                             "fr": None, "vs": None, **w_metrics})
         else:
@@ -615,7 +622,7 @@ def main():
         valid = [h for h in holdings if h in component_metrics]
 
         if not valid:
-            results.append({**info, "rv": None, "am": None, "ch": None, "c5": None,
+            results.append({**info, "rv": None, "am": None, "ax": None, "ch": None, "c5": None,
                             "c20": None, "rs": None, "rf": 0, "ra": 0, "p": None,
                             "fr": None, "vs": None,
                             "w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None})
@@ -695,6 +702,7 @@ def main():
             **info,
             "rv": round(avg_metric("rv")) if avg_metric("rv") is not None else None,
             "am": round(avg_metric("am")) if avg_metric("am") is not None else None,
+            "ax": round(avg_metric("ax")) if avg_metric("ax") is not None else None,
             "ch": avg_metric("ch"),
             "c5": avg_metric("c5"),
             "c20": avg_metric("c20"),
