@@ -453,7 +453,9 @@ function render(){
   const mxRV=Math.max(...DATA.e.map(e=>e[rvKey]||0)),mxAM=Math.max(...DATA.e.map(e=>e[amKey]||0));
   const sparkW=isMobile?120:250;
   let html='';
+  let rank=0;
   for(const e of items){
+    rank++;
     const exp=expandedTicker===e.t;
     const rf=e[rfKey]||0, ra=e[raKey]||0;
     const ar=rf>=4?'<span class="ad">▼</span>':(ra>=4?'<span class="au">▲</span>':'');
@@ -461,7 +463,7 @@ function render(){
     const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
     const amP=am!=null?Math.min(am/mxAM*100,100):0;
     const cellMap={
-      rk:`<td class="rk">${e.rk}</td>`,
+      rk:`<td class="rk">${rank}</td>`,
       t:`<td class="tk">${esc(e.t)}${ar}</td>`,
       n:`<td class="sc2">${esc(e.n)}</td>`,
       rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>`,
