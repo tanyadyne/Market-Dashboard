@@ -144,8 +144,11 @@ html[data-view="mobile"]{overflow-x:hidden}
     <div class="hdr-t" style="font-size:15px;letter-spacing:1.5px;text-transform:uppercase">Relative Strength Tracker</div>
   </div>
   <div class="hdr-r">
-    <button class="btn btn-a" id="bA" title="RS Advancing: ETFs whose relative strength today is higher than yesterday, sustained 4+ consecutive days">Advancing —%</button>
-    <button class="btn btn-d" id="bD" title="RS Declining: ETFs whose relative strength today is lower than yesterday, sustained 4+ consecutive days">Declining —%</button>
+    <div class="toggle-wrap">
+      <span>Daily</span>
+      <label class="toggle"><input type="checkbox" id="freqToggle" onchange="toggleFreq()"><span class="slider"></span></label>
+      <span>Weekly</span>
+    </div>
     <button class="btn btn-t" onclick="openSortModal()" title="Multi-level sort">⇅ Sort</button>
     <button class="btn btn-t" onclick="openColModal()" title="Show/hide columns">⊞ Columns</button>
     <button class="btn btn-t" id="bClip" onclick="toggleClipboard()" title="Clipboard">📋 Clipboard <span id="clipCount"></span></button>
@@ -208,7 +211,7 @@ html[data-view="mobile"]{overflow-x:hidden}
 </div>
 <script>
 let DATA=null,sortKey='rk',sortDir=1,expandedTicker=null;
-let multiSort=[],useMultiSort=false,isMobile=false;
+let multiSort=[],useMultiSort=false,isMobile=false,isWeekly=false;
 
 const ALL_COLUMNS=[
   {key:'rk',label:'#',align:'c',width:'40px',mob:true},
@@ -219,9 +222,25 @@ const ALL_COLUMNS=[
   {key:'ch',label:'1D',align:'c',width:'72px',mob:true},
   {key:'c5',label:'1W',align:'c',width:'72px',mob:false},
   {key:'c20',label:'1M',align:'c',width:'72px',mob:false},
-  {key:'rs',label:'RS',align:'c',width:'62px',mob:false},
-  {key:'vs',label:'VARS',align:'c',width:'200px',mob:true}
+  {key:'rs',label:'RS (D)',align:'c',width:'62px',mob:false},
+  {key:'vs',label:'VARS (D)',align:'c',width:'200px',mob:true}
 ];
+
+function updateColumnLabels(){
+  const suffix=isWeekly?' (W)':' (D)';
+  ALL_COLUMNS.forEach(c=>{
+    if(c.key==='rs') c.label='RS'+suffix;
+    if(c.key==='vs') c.label='VARS'+suffix;
+    if(c.key==='rv') c.label='R.Vol'+(isWeekly?' (W)':'');
+    if(c.key==='am') c.label='ATR Mult'+(isWeekly?' (W)':'');
+  });
+}
+
+function toggleFreq(){
+  isWeekly=document.getElementById('freqToggle').checked;
+  updateColumnLabels();
+  buildHeader();render();
+}
 
 let colVisible={};
 ALL_COLUMNS.forEach(c=>{colVisible[c.key]=true;});
@@ -330,8 +349,6 @@ async function loadData(){
 function onDataLoaded(){
   document.getElementById('statusBar').style.display='none';
   document.getElementById('tw').style.display='block';
-  document.getElementById('bA').textContent=`Advancing ${DATA.s.ap}%`;
-  document.getElementById('bD').textContent=`Declining ${DATA.s.dp}%`;
   if(DATA.meta){
     document.getElementById('spyBar').style.display='flex';
     document.getElementById('spyP').textContent='$'+DATA.meta.spy_price;
@@ -383,25 +400,31 @@ function render(){
     items=[...items].sort((a,b)=>{if(sortKey==='rk')return sortDir*(a.rk-b.rk);const av=a[sortKey]??(typeof a[sortKey]==='string'?'':-Infinity),bv=b[sortKey]??(typeof b[sortKey]==='string'?'':-Infinity);return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av>bv?1:av<bv?-1:0);});
   }
   const visCols=ALL_COLUMNS.filter(c=>colVisible[c.key]),colSpan=visCols.length;
-  const mxRV=Math.max(...DATA.e.map(e=>e.rv||0)),mxAM=Math.max(...DATA.e.map(e=>e.am||0));
+  // Pick daily or weekly keys based on toggle
+  const rvKey=isWeekly?'w_rv':'rv', amKey=isWeekly?'w_am':'am';
+  const rsKey=isWeekly?'w_rs':'rs', vsKey=isWeekly?'w_vs':'vs';
+  const rfKey=isWeekly?'w_rf':'rf', raKey=isWeekly?'w_ra':'ra';
+  const mxRV=Math.max(...DATA.e.map(e=>e[rvKey]||0)),mxAM=Math.max(...DATA.e.map(e=>e[amKey]||0));
   const sparkW=isMobile?120:250;
   let html='';
   for(const e of items){
     const exp=expandedTicker===e.t;
-    const ar=e.rf>=4?'<span class="ad">▼</span>':(e.ra>=4?'<span class="au">▲</span>':'');
-    const rvP=e.rv!=null?Math.min(e.rv/mxRV*100,100):0;
-    const amP=e.am!=null?Math.min(e.am/mxAM*100,100):0;
+    const rf=e[rfKey]||0, ra=e[raKey]||0;
+    const ar=rf>=4?'<span class="ad">▼</span>':(ra>=4?'<span class="au">▲</span>':'');
+    const rv=e[rvKey], am=e[amKey], rs=e[rsKey], vs=e[vsKey];
+    const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
+    const amP=am!=null?Math.min(am/mxAM*100,100):0;
     const cellMap={
       rk:`<td class="rk">${e.rk}</td>`,
       t:`<td class="tk">${esc(e.t)}${ar}</td>`,
       n:`<td class="sc2">${esc(e.n)}</td>`,
-      rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(e.rv)}</span></div></td>`,
-      am:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(e.am)}</span></div></td>`,
+      rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>`,
+      am:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(am)}</span></div></td>`,
       ch:`<td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>`,
       c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
       c20:`<td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>`,
-      rs:`<td class="c"><span class="rs" style="background:${getRSBg(e.rs)};color:${getRSCol(e.rs)}">${e.rs!=null?e.rs+'%':'—'}</span></td>`,
-      vs:`<td class="c"><div class="spark-wrap"><canvas data-ticker="${e.t}" width="${sparkW}" height="28"></canvas></div></td>`
+      rs:`<td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span></td>`,
+      vs:`<td class="c"><div class="spark-wrap"><canvas data-ticker="${e.t}" data-freq="${isWeekly?'w':'d'}" width="${sparkW}" height="28"></canvas></div></td>`
     };
     html+=`<tr class="${exp?'exp':''}" onclick="togRow('${e.t}')">`;
     visCols.forEach(c=>{html+=cellMap[c.key]||'';});
@@ -420,7 +443,8 @@ function render(){
   document.getElementById('ft').textContent=`${items.length} ETFs · ${useMultiSort?'Multi-level sort active':'Sorted by '+sortKey}`;
   requestAnimationFrame(()=>{
     const etfMap={};DATA.e.forEach(e=>{etfMap[e.t]=e;});
-    document.querySelectorAll('canvas[data-ticker]').forEach(c=>{const etf=etfMap[c.dataset.ticker];if(etf&&etf.vs)drawSparkline(c,etf.vs);});
+    const vsKey=isWeekly?'w_vs':'vs';
+    document.querySelectorAll('canvas[data-ticker]').forEach(c=>{const etf=etfMap[c.dataset.ticker];if(etf&&etf[vsKey])drawSparkline(c,etf[vsKey]);});
     if(!isMobile)injectTVCharts();
   });
 }
