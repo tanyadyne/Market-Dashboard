@@ -219,6 +219,7 @@ const ALL_COLUMNS=[
   {key:'n',label:'Sector',align:'l',width:'160px',mob:true},
   {key:'rv',label:'R.Vol',align:'c',width:'80px',mob:false},
   {key:'am',label:'ATR Mult',align:'c',width:'80px',mob:false},
+  {key:'ax',label:'ATR Ext',align:'c',width:'80px',mob:false},
   {key:'ch',label:'1D',align:'c',width:'72px',mob:true},
   {key:'c5',label:'1W',align:'c',width:'72px',mob:false},
   {key:'c20',label:'1M',align:'c',width:'72px',mob:false},
@@ -251,7 +252,7 @@ function toggleFreq(){
 function dataKey(key){
   if(!isWeekly) return key;
   const wMap={rv:'w_rv',am:'w_am',rs:'w_rs',vs:'w_vs'};
-  return wMap[key]||key;
+  return wMap[key]||key;  // ax, ch, c5, c20 etc stay the same
 }
 
 let colVisible={};
@@ -428,6 +429,7 @@ function render(){
   const rsKey=isWeekly?'w_rs':'rs', vsKey=isWeekly?'w_vs':'vs';
   const rfKey=isWeekly?'w_rf':'rf', raKey=isWeekly?'w_ra':'ra';
   const mxRV=Math.max(...DATA.e.map(e=>e[rvKey]||0)),mxAM=Math.max(...DATA.e.map(e=>e[amKey]||0));
+  const mxAX=Math.max(...DATA.e.map(e=>e.ax||0));
   const sparkW=isMobile?120:250;
   let html='';
   for(const e of items){
@@ -437,12 +439,14 @@ function render(){
     const rv=e[rvKey], am=e[amKey], rs=e[rsKey], vs=e[vsKey];
     const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
     const amP=am!=null?Math.min(am/mxAM*100,100):0;
+    const axP=e.ax!=null?Math.min(e.ax/mxAX*100,100):0;
     const cellMap={
       rk:`<td class="rk">${e.rk}</td>`,
       t:`<td class="tk">${esc(e.t)}${ar}</td>`,
       n:`<td class="sc2">${esc(e.n)}</td>`,
       rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>`,
       am:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(am)}</span></div></td>`,
+      ax:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${axP}%"></div></div><span class="bv">${multText(e.ax)}</span></div></td>`,
       ch:`<td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>`,
       c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
       c20:`<td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>`,
