@@ -744,6 +744,10 @@ def main():
     adv_streak_list = [[r["t"], r["n"]] for r in results if r.get("ra", 0) >= 4]
     dec_streak_list = [[r["t"], r["n"]] for r in results if r.get("rf", 0) >= 4]
 
+    # Weekly streak lists (3+ weeks)
+    w_adv_streak_list = [[r["t"], r["n"]] for r in results if r.get("w_ra", 0) >= 3]
+    w_dec_streak_list = [[r["t"], r["n"]] for r in results if r.get("w_rf", 0) >= 3]
+
     # ─── Breadth MA Status for IWM, QQQ, SPY ────────────────
     breadth_tickers = ["IWM", "QQQ", "SPY"]
     breadth_status = {}
@@ -770,6 +774,8 @@ def main():
             "dp": dec_pct,
             "a": adv_streak_list[:30],
             "d": dec_streak_list[:30],
+            "wa": w_adv_streak_list[:30],
+            "wd": w_dec_streak_list[:30],
         },
         "meta": {
             "updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
