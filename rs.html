@@ -389,8 +389,8 @@ function updatePanels(){
     el.innerHTML=`<span class="pnl-l">${label}</span>`+items.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');
   };
   if(isWeekly){
-    mk('pA','▲ RS Advancing 2+ Weeks',DATA.s.wa||[]);
-    mk('pD','▼ RS Declining 2+ Weeks',DATA.s.wd||[]);
+    mk('pA','▲ RS Advancing 3+ Weeks',DATA.s.wa||[]);
+    mk('pD','▼ RS Declining 3+ Weeks',DATA.s.wd||[]);
   }else{
     mk('pA','▲ RS Advancing 4+ Days',DATA.s.a);
     mk('pD','▼ RS Declining 4+ Days',DATA.s.d);
