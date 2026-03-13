@@ -245,12 +245,13 @@ function updateColumnLabels(){
 function toggleFreq(){
   isWeekly=document.getElementById('freqToggle').checked;
   updateColumnLabels();
-  // Reset to default sort for the new frequency
   useMultiSort=false;
   multiSort=[];
   sortKey='rk';
   sortDir=1;
-  buildHeader();render();
+  buildHeader();
+  if(DATA) updatePanels();
+  render();
 }
 
 // Map logical column keys to actual data keys based on frequency
@@ -375,15 +376,25 @@ function onDataLoaded(){
     sc.style.color=DATA.meta.spy_change>0?'var(--g)':DATA.meta.spy_change<0?'var(--r)':'var(--t3)';
     document.getElementById('ut').textContent='Updated: '+toSGT(DATA.meta.updated);
   }
+  updatePanels();
+  if(expandedTicker&&document.querySelector('.tv-chart[data-loaded="1"]'))return;
+  render();
+}
+
+function updatePanels(){
+  if(!DATA)return;
   const mk=(id,label,items)=>{
     const el=document.getElementById(id);
     if(items.length===0){el.innerHTML=`<span class="pnl-l">${label}</span><span class="pnl-empty">None</span>`;return;}
     el.innerHTML=`<span class="pnl-l">${label}</span>`+items.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');
   };
-  mk('pA','▲ RS Advancing 4+ Days',DATA.s.a);
-  mk('pD','▼ RS Declining 4+ Days',DATA.s.d);
-  if(expandedTicker&&document.querySelector('.tv-chart[data-loaded="1"]'))return;
-  render();
+  if(isWeekly){
+    mk('pA','▲ RS Advancing 3+ Weeks',DATA.s.wa||[]);
+    mk('pD','▼ RS Declining 3+ Weeks',DATA.s.wd||[]);
+  }else{
+    mk('pA','▲ RS Advancing 4+ Days',DATA.s.a);
+    mk('pD','▼ RS Declining 4+ Days',DATA.s.d);
+  }
 }
 
 function drawSparkline(canvas,series){
