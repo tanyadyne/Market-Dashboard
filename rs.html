@@ -239,7 +239,19 @@ function updateColumnLabels(){
 function toggleFreq(){
   isWeekly=document.getElementById('freqToggle').checked;
   updateColumnLabels();
+  // Reset to default sort for the new frequency
+  useMultiSort=false;
+  multiSort=[];
+  sortKey='rk';
+  sortDir=1;
   buildHeader();render();
+}
+
+// Map logical column keys to actual data keys based on frequency
+function dataKey(key){
+  if(!isWeekly) return key;
+  const wMap={rv:'w_rv',am:'w_am',rs:'w_rs',vs:'w_vs'};
+  return wMap[key]||key;
 }
 
 let colVisible={};
@@ -394,10 +406,21 @@ function render(){
   const f=document.getElementById('si').value.toLowerCase();
   let items=DATA.e;
   if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||e.n.toLowerCase().includes(f)||(e.h&&e.h.toLowerCase().includes(f)));
+
+  // Default sort: daily=by rank, weekly=by w_rs desc then c5 desc
   if(useMultiSort&&multiSort.length>0){
-    items=[...items].sort((a,b)=>{for(const{key,dir}of multiSort){const av=a[key]??(typeof a[key]==='string'?'':-Infinity),bv=b[key]??(typeof b[key]==='string'?'':-Infinity);let cmp=typeof av==='string'?av.localeCompare(bv):av>bv?1:av<bv?-1:0;if(cmp!==0)return dir*cmp;}return 0;});
+    items=[...items].sort((a,b)=>{for(const{key,dir}of multiSort){const dk=dataKey(key);const av=a[dk]??(typeof a[dk]==='string'?'':-Infinity),bv=b[dk]??(typeof b[dk]==='string'?'':-Infinity);let cmp=typeof av==='string'?av.localeCompare(bv):av>bv?1:av<bv?-1:0;if(cmp!==0)return dir*cmp;}return 0;});
+  }else if(isWeekly&&sortKey==='rk'){
+    // Weekly default: sort by w_rs desc, then c5 desc
+    items=[...items].sort((a,b)=>{
+      const a_rs=a.w_rs??-Infinity, b_rs=b.w_rs??-Infinity;
+      if(a_rs!==b_rs) return b_rs-a_rs;
+      const a_c5=a.c5??-Infinity, b_c5=b.c5??-Infinity;
+      return b_c5-a_c5;
+    });
   }else{
-    items=[...items].sort((a,b)=>{if(sortKey==='rk')return sortDir*(a.rk-b.rk);const av=a[sortKey]??(typeof a[sortKey]==='string'?'':-Infinity),bv=b[sortKey]??(typeof b[sortKey]==='string'?'':-Infinity);return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av>bv?1:av<bv?-1:0);});
+    const sk=dataKey(sortKey);
+    items=[...items].sort((a,b)=>{if(sortKey==='rk')return sortDir*(a.rk-b.rk);const av=a[sk]??(typeof a[sk]==='string'?'':-Infinity),bv=b[sk]??(typeof b[sk]==='string'?'':-Infinity);return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av>bv?1:av<bv?-1:0);});
   }
   const visCols=ALL_COLUMNS.filter(c=>colVisible[c.key]),colSpan=visCols.length;
   // Pick daily or weekly keys based on toggle
