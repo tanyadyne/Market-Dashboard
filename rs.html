@@ -61,6 +61,11 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .bc{display:flex;align-items:center;gap:6px}.bt{width:40px;height:5px;background:var(--bg4);border-radius:2px;overflow:hidden;flex-shrink:0}
 .bf{height:100%;border-radius:2px}.bf.i{background:var(--indigo)}.bf.p{background:var(--purple)}
 .bv{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--t2)}
+.bars{display:flex;align-items:flex-end;gap:1.5px;height:14px}
+.bars .bar{width:3px;border-radius:1px}
+.bars.low .bar{background:var(--g)}
+.bars.mid .bar{background:#f59e0b}
+.bars.hi .bar{background:var(--r)}
 .cp{color:var(--g);font-weight:600}.cn{color:var(--r);font-weight:600}.cz{color:var(--t3)}
 .rs{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;min-width:38px;text-align:center}
 .hr td{padding:10px 16px 14px 50px;background:var(--card)}
@@ -402,6 +407,23 @@ function drawSparkline(canvas,series){
   ctx.beginPath();ctx.arc(px(minIdx),py(minIdx),2.5,0,Math.PI*2);ctx.fillStyle=isDark?'#f87171':'#dc2626';ctx.fill();
 }
 
+function atrExtBars(val){
+  if(val==null) return '<div class="bars low"><div class="bar" style="height:4px"></div></div>';
+  const v=val/100; // stored as *100
+  let cls='low',n=1;
+  if(v>=4){cls='hi';n=4;}
+  else if(v>=2){cls='mid';n=3;}
+  else if(v>=1){cls='low';n=2;}
+  else{cls='low';n=1;}
+  const heights=[4,7,10,14];
+  let bars='';
+  for(let i=0;i<4;i++){
+    const active=i<n;
+    bars+=`<div class="bar" style="height:${heights[i]}px;opacity:${active?1:0.2}"></div>`;
+  }
+  return `<div class="bars ${cls}">${bars}</div>`;
+}
+
 function render(){
   if(!DATA)return;
   const f=document.getElementById('si').value.toLowerCase();
@@ -429,7 +451,6 @@ function render(){
   const rsKey=isWeekly?'w_rs':'rs', vsKey=isWeekly?'w_vs':'vs';
   const rfKey=isWeekly?'w_rf':'rf', raKey=isWeekly?'w_ra':'ra';
   const mxRV=Math.max(...DATA.e.map(e=>e[rvKey]||0)),mxAM=Math.max(...DATA.e.map(e=>e[amKey]||0));
-  const mxAX=Math.max(...DATA.e.map(e=>e.ax||0));
   const sparkW=isMobile?120:250;
   let html='';
   for(const e of items){
@@ -439,14 +460,13 @@ function render(){
     const rv=e[rvKey], am=e[amKey], rs=e[rsKey], vs=e[vsKey];
     const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
     const amP=am!=null?Math.min(am/mxAM*100,100):0;
-    const axP=e.ax!=null?Math.min(e.ax/mxAX*100,100):0;
     const cellMap={
       rk:`<td class="rk">${e.rk}</td>`,
       t:`<td class="tk">${esc(e.t)}${ar}</td>`,
       n:`<td class="sc2">${esc(e.n)}</td>`,
       rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>`,
       am:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(am)}</span></div></td>`,
-      ax:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${axP}%"></div></div><span class="bv">${multText(e.ax)}</span></div></td>`,
+      ax:`<td class="c"><div class="bc" style="justify-content:center;gap:4px">${atrExtBars(e.ax)}<span class="bv">${multText(e.ax)}</span></div></td>`,
       ch:`<td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>`,
       c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
       c20:`<td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>`,
