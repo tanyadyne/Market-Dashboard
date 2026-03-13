@@ -320,7 +320,7 @@ def main():
                 basket_components.add(h)
 
     regular_tickers = [e.get("yt", e["t"]) for e in regular_etfs]
-    all_download = list(set(["SPY", "QQQ"] + regular_tickers + sorted(basket_components)))
+    all_download = list(set(["SPY", "QQQ", "IWM"] + regular_tickers + sorted(basket_components)))
 
     print(f"Fetching data for {len(all_download)} tickers ({len(regular_tickers)} ETFs + {len(basket_components)} basket components)...")
 
