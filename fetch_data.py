@@ -353,12 +353,37 @@ def main():
         print("ERROR: No data returned from Yahoo Finance")
         sys.exit(1)
 
+    # Also download weekly data for weekly VARS
+    w_start = end - timedelta(days=365)
+    raw_w = yf.download(
+        all_download,
+        start=w_start.strftime("%Y-%m-%d"),
+        end=end.strftime("%Y-%m-%d"),
+        interval="1wk",
+        group_by="ticker",
+        auto_adjust=True,
+        threads=True,
+    )
+    print(f"Weekly data downloaded: {not raw_w.empty}")
+
     def get_df(ticker):
         try:
             if len(all_download) == 1:
                 df = raw.dropna(subset=["Close"])
             else:
                 df = raw[ticker].dropna(subset=["Close"])
+            return df
+        except Exception:
+            return None
+
+    def get_df_w(ticker):
+        try:
+            if raw_w.empty:
+                return None
+            if len(all_download) == 1:
+                df = raw_w.dropna(subset=["Close"])
+            else:
+                df = raw_w[ticker].dropna(subset=["Close"])
             return df
         except Exception:
             return None
@@ -376,6 +401,15 @@ def main():
     spy_price = float(spy_closes[-1])
     spy_chg = (spy_closes[-1] / spy_closes[-2] - 1) * 100 if len(spy_closes) >= 2 else 0
     spy_ts_map = {ts: i for i, ts in enumerate(spy_df.index)}
+
+    # Weekly SPY baseline
+    LOOKBACK_W = 12  # 12 weeks lookback for weekly VARS
+    spy_df_w = get_df_w("SPY")
+    spy_w_closes = spy_df_w["Close"].values if spy_df_w is not None else np.array([])
+    spy_w_highs = spy_df_w["High"].values if spy_df_w is not None else np.array([])
+    spy_w_lows = spy_df_w["Low"].values if spy_df_w is not None else np.array([])
+    spy_w_atr_series = compute_atr_series(spy_w_highs, spy_w_lows, spy_w_closes, ATR_PERIOD) if len(spy_w_closes) > ATR_PERIOD else []
+    spy_w_ts_map = {ts: i for i, ts in enumerate(spy_df_w.index)} if spy_df_w is not None else {}
 
     def process_ticker(ticker, df):
         """Process a single ticker (ETF or component) and return metrics dict."""
@@ -470,27 +504,111 @@ def main():
             "vs": vs_series,
         }
 
+    def process_ticker_weekly(ticker, df_w):
+        """Process weekly data for a ticker — same VARS logic but on weekly bars."""
+        if df_w is None or len(df_w) < 5:
+            return {"w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None}
+
+        c = df_w["Close"].values
+        h = df_w["High"].values
+        l = df_w["Low"].values
+        v = df_w["Volume"].values
+        length = len(c)
+
+        # Weekly ATR mult
+        atr = compute_atr(h, l, c, ATR_PERIOD)
+        valid_c = [x for x in c if x is not None]
+        sma20 = np.mean(valid_c[-20:]) if len(valid_c) >= 20 else np.mean(valid_c)
+        atr_mult = abs(c[-1] - sma20) / atr if atr > 0 else 0
+
+        # Weekly R.Vol
+        vols = [x for x in v if x is not None and x > 0]
+        if len(vols) > 1:
+            today_vol = vols[-1]
+            avg_vol = np.mean(vols[:-1][-10:])
+            rvol = today_vol / avg_vol if avg_vol > 0 else None
+        else:
+            rvol = None
+
+        # Weekly VARS
+        common = []
+        for idx, ts in enumerate(df_w.index):
+            if ts in spy_w_ts_map and c[idx] is not None and spy_w_closes[spy_w_ts_map[ts]] is not None:
+                common.append((idx, spy_w_ts_map[ts]))
+
+        if len(common) < LOOKBACK_W:
+            return {"w_rv": round(rvol * 100) if rvol else None, "w_am": round(atr_mult * 100),
+                    "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None}
+
+        etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
+        extended = common[-(LOOKBACK_W + 1):]
+        vars_series = []
+        cumulative = 0.0
+        for k in range(1, len(extended)):
+            etf_i_prev, spy_i_prev = extended[k - 1]
+            etf_i, spy_i = extended[k]
+            etf_ret = (c[etf_i] - c[etf_i_prev]) / c[etf_i_prev] if c[etf_i_prev] != 0 else 0
+            spy_ret = (spy_w_closes[spy_i] - spy_w_closes[spy_i_prev]) / spy_w_closes[spy_i_prev] if spy_w_closes[spy_i_prev] != 0 else 0
+            etf_atr_pct = etf_atr_series[etf_i] / c[etf_i_prev] if c[etf_i_prev] != 0 and etf_atr_series[etf_i] > 0 else 1
+            spy_atr_pct = spy_w_atr_series[spy_i] / spy_w_closes[spy_i_prev] if spy_i < len(spy_w_atr_series) and spy_w_closes[spy_i_prev] != 0 and spy_w_atr_series[spy_i] > 0 else 1
+            etf_norm = etf_ret / etf_atr_pct if etf_atr_pct > 0 else 0
+            spy_norm = spy_ret / spy_atr_pct if spy_atr_pct > 0 else 0
+            cumulative += (etf_norm - spy_norm)
+            vars_series.append(round(cumulative, 4))
+
+        rs_series = vars_series
+        vs_series = [0.0] + vars_series
+        final_rs = rs_series[-1] if rs_series else 0
+        rs_pctrank = percentrank_inc(rs_series, final_rs) if len(rs_series) > 1 else None
+
+        adv_streak = 0
+        for j in range(len(rs_series) - 1, 0, -1):
+            if rs_series[j] > rs_series[j - 1]:
+                adv_streak += 1
+            else:
+                break
+        dec_streak = 0
+        for j in range(len(rs_series) - 1, 0, -1):
+            if rs_series[j] < rs_series[j - 1]:
+                dec_streak += 1
+            else:
+                break
+
+        return {
+            "w_rv": round(rvol * 100) if rvol else None,
+            "w_am": round(atr_mult * 100),
+            "w_rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
+            "w_rf": dec_streak,
+            "w_ra": adv_streak,
+            "w_vs": vs_series,
+        }
+
     # ─── Process regular ETFs ──────────────────────────────
     results = []
     for info in regular_etfs:
         ticker = info.get("yt", info["t"])
         df = get_df(ticker)
         metrics = process_ticker(ticker, df)
+        w_metrics = process_ticker_weekly(ticker, get_df_w(ticker))
         if metrics is None:
             results.append({**info, "rv": None, "am": None, "ch": None, "c5": None,
                             "c20": None, "rs": None, "rf": 0, "ra": 0, "p": None,
-                            "fr": None, "vs": None})
+                            "fr": None, "vs": None, **w_metrics})
         else:
-            results.append({**info, **metrics})
+            results.append({**info, **metrics, **w_metrics})
 
     # ─── Process custom baskets (averaged component metrics) ──
-    # Pre-compute metrics for all basket components
+    # Pre-compute metrics for all basket components (daily + weekly)
     component_metrics = {}
+    component_w_metrics = {}
     for tk in sorted(basket_components):
         df = get_df(tk)
         m = process_ticker(tk, df)
         if m:
             component_metrics[tk] = m
+        wm = process_ticker_weekly(tk, get_df_w(tk))
+        if wm:
+            component_w_metrics[tk] = wm
 
     for info in basket_etfs:
         holdings = [h.strip() for h in info["h"].split(",") if h.strip()]
@@ -499,10 +617,11 @@ def main():
         if not valid:
             results.append({**info, "rv": None, "am": None, "ch": None, "c5": None,
                             "c20": None, "rs": None, "rf": 0, "ra": 0, "p": None,
-                            "fr": None, "vs": None})
+                            "fr": None, "vs": None,
+                            "w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None})
             continue
 
-        # Average VARS series (equal-weighted)
+        # Average daily VARS series (equal-weighted)
         vs_lists = [component_metrics[h]["vs"] for h in valid if component_metrics[h].get("vs")]
         if vs_lists:
             min_len = min(len(vs) for vs in vs_lists)
@@ -510,7 +629,6 @@ def main():
             for i in range(min_len):
                 avg_vs.append(round(np.mean([vs[i] for vs in vs_lists]), 4))
 
-            # Derive RS from averaged VARS
             rs_series = avg_vs[1:] if len(avg_vs) > 1 else []
             final_rs = rs_series[-1] if rs_series else 0
             rs_pctrank = percentrank_inc(rs_series, final_rs) if len(rs_series) > 1 else None
@@ -533,9 +651,44 @@ def main():
             adv_streak = 0
             dec_streak = 0
 
+        # Average weekly VARS series (equal-weighted)
+        valid_w = [h for h in holdings if h in component_w_metrics]
+        w_vs_lists = [component_w_metrics[h]["w_vs"] for h in valid_w if component_w_metrics[h].get("w_vs")]
+        if w_vs_lists:
+            w_min_len = min(len(vs) for vs in w_vs_lists)
+            w_avg_vs = []
+            for i in range(w_min_len):
+                w_avg_vs.append(round(np.mean([vs[i] for vs in w_vs_lists]), 4))
+
+            w_rs_series = w_avg_vs[1:] if len(w_avg_vs) > 1 else []
+            w_final_rs = w_rs_series[-1] if w_rs_series else 0
+            w_rs_pctrank = percentrank_inc(w_rs_series, w_final_rs) if len(w_rs_series) > 1 else None
+
+            w_adv_streak = 0
+            for j in range(len(w_rs_series) - 1, 0, -1):
+                if w_rs_series[j] > w_rs_series[j - 1]:
+                    w_adv_streak += 1
+                else:
+                    break
+            w_dec_streak = 0
+            for j in range(len(w_rs_series) - 1, 0, -1):
+                if w_rs_series[j] < w_rs_series[j - 1]:
+                    w_dec_streak += 1
+                else:
+                    break
+        else:
+            w_avg_vs = None
+            w_rs_pctrank = None
+            w_adv_streak = 0
+            w_dec_streak = 0
+
         # Average scalar metrics
         def avg_metric(key):
             vals = [component_metrics[h][key] for h in valid if component_metrics[h].get(key) is not None]
+            return round(np.mean(vals), 2) if vals else None
+
+        def avg_w_metric(key):
+            vals = [component_w_metrics[h][key] for h in valid_w if component_w_metrics[h].get(key) is not None]
             return round(np.mean(vals), 2) if vals else None
 
         results.append({
@@ -548,9 +701,15 @@ def main():
             "rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
             "rf": dec_streak,
             "ra": adv_streak,
-            "p": None,  # No single price for baskets
+            "p": None,
             "fr": round(final_rs, 4) if rs_series else None,
             "vs": avg_vs,
+            "w_rv": round(avg_w_metric("w_rv")) if avg_w_metric("w_rv") is not None else None,
+            "w_am": round(avg_w_metric("w_am")) if avg_w_metric("w_am") is not None else None,
+            "w_rs": round(w_rs_pctrank * 100) if w_rs_pctrank is not None else None,
+            "w_rf": w_dec_streak,
+            "w_ra": w_adv_streak,
+            "w_vs": w_avg_vs,
         })
 
     # Sort: RS desc, then Change desc
