@@ -77,7 +77,7 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .tv-chart-wrap{border-radius:6px;overflow:hidden;border:1px solid var(--bdr2);background:#0F0F0F}
 .tv-chart{height:300px;width:100%;position:relative}
 [data-theme="light"] .tv-chart-wrap{background:#fff}
-.tv-label{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1);padding:6px 8px 2px;background:var(--card);letter-spacing:.5px}
+.tv-label{font-size:11px;font-weight:700;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:var(--t1);padding:6px 8px 2px;background:var(--card);letter-spacing:.3px}
 .tv-chart .tradingview-widget-container{height:300px!important;width:100%!important}
 .tv-chart .tradingview-widget-container__widget{height:268px!important;width:100%!important}
 .pill{display:inline-block;padding:2px 7px;margin:2px;border-radius:3px;font-size:11px;font-family:'JetBrains Mono',monospace;border:1px solid}
@@ -516,7 +516,7 @@ function render(){
       const gs=hl.filter(h=>hg[h]==='g'),ss=hl.filter(h=>hg[h]==='s'),bs=hl.filter(h=>hg[h]==='b');
       let chartHtml='';
       const chartStocks=[...gs,...ss];
-      if(!isMobile&&chartStocks.length>0){chartHtml=`<div class="tv-grid">${chartStocks.map(tk=>{const isGold=gs.includes(tk);const diamond=isGold?'<span style="color:#f59e0b">◆</span>':'<span style="color:#9ca3af">◆</span>';const name=NAMES[tk]?(' - '+esc(NAMES[tk])):'';return `<div class="tv-chart-wrap"><div class="tv-label">${diamond} ${esc(tk)}${name}</div><div class="tv-chart" id="tvc-${esc(tk)}"></div></div>`;}).join('')}</div>`;}
+      if(!isMobile&&chartStocks.length>0){chartHtml=`<div class="tv-grid">${chartStocks.map(tk=>{const isGold=gs.includes(tk);const sq=isGold?'<span style="color:#f59e0b;font-size:13px">🟨</span>':'<span style="color:#9ca3af;font-size:13px">⬜</span>';const name=NAMES[tk]?(' - '+esc(NAMES[tk])):'';return `<div class="tv-chart-wrap"><div class="tv-label">${sq} ${esc(tk)}${name}</div><div class="tv-chart" id="tvc-${esc(tk)}"></div></div>`;}).join('')}</div>`;}
       html+=`<tr><td colspan="${colSpan}" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}): <span class="pill pill-g" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(gs).replace(/"/g,'&quot;')})" title="Click to add gold stocks to clipboard">● Gold ${gs.length}</span> <span class="pill pill-s" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(ss).replace(/"/g,'&quot;')})" title="Click to add silver stocks to clipboard">● Silver ${ss.length}</span> <span class="pill pill-b" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(bs).replace(/"/g,'&quot;')})" title="Click to add bronze stocks to clipboard">● Bronze ${bs.length}</span></div><div class="hw">${hl.map(h=>`<span class="pill ${gc(h)}">${esc(h)}</span>`).join('')}</div>${chartHtml}</td></tr>`;
     }
   }
