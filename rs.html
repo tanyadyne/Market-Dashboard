@@ -40,6 +40,8 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .pnl-t{padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace}
 .pnl.a .pnl-t{background:var(--gbg);color:var(--g2)}.pnl.d .pnl-t{background:var(--rbg);color:var(--r2)}
 .pnl-empty{font-size:10px;color:var(--t4);font-style:italic}
+.streak-sel{padding:1px 4px;border-radius:3px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer;margin:0 2px;outline:none}
+.streak-sel option{background:var(--bg2);color:var(--t1)}
 .status{padding:30px;text-align:center;color:var(--t3);font-size:13px}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--bdr2);border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -171,8 +173,8 @@ html[data-view="mobile"]{overflow-x:hidden}
   <span><b>SPY</b> <span class="m" id="spyP"></span> <span class="m" id="spyC" style="font-weight:600"></span></span>
   <span id="ut" style="color:var(--t2)"></span>
 </div>
-<div class="pnl a" id="pA"><span class="pnl-l">▲ RS Advancing 4+ Days</span><span class="pnl-empty">Loading...</span></div>
-<div class="pnl d" id="pD"><span class="pnl-l">▼ RS Declining 4+ Days</span><span class="pnl-empty">Loading...</span></div>
+<div class="pnl a" id="pA"><span class="pnl-l">▲ RS Advancing <select class="streak-sel" id="streakSelA" onchange="updatePanels()"><option value="2">2+</option><option value="3">3+</option><option value="4" selected>4+</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option></select><span class="streak-unit" id="streakUnitA">Days</span></span><span class="pnl-empty">Loading...</span></div>
+<div class="pnl d" id="pD"><span class="pnl-l">▼ RS Declining <select class="streak-sel" id="streakSelD" onchange="updatePanels()"><option value="2">2+</option><option value="3">3+</option><option value="4" selected>4+</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option></select><span class="streak-unit" id="streakUnitD">Days</span></span><span class="pnl-empty">Loading...</span></div>
 <div class="clip-panel" id="clipPanel">
   <div class="clip-header">
     <span class="clip-title">📋 Clipboard</span>
@@ -383,18 +385,27 @@ function onDataLoaded(){
 
 function updatePanels(){
   if(!DATA)return;
-  const mk=(id,label,items)=>{
-    const el=document.getElementById(id);
-    if(items.length===0){el.innerHTML=`<span class="pnl-l">${label}</span><span class="pnl-empty">None</span>`;return;}
-    el.innerHTML=`<span class="pnl-l">${label}</span>`+items.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');
-  };
-  if(isWeekly){
-    mk('pA','▲ RS Advancing 3+ Weeks',DATA.s.wa||[]);
-    mk('pD','▼ RS Declining 3+ Weeks',DATA.s.wd||[]);
-  }else{
-    mk('pA','▲ RS Advancing 4+ Days',DATA.s.a);
-    mk('pD','▼ RS Declining 4+ Days',DATA.s.d);
-  }
+  const threshA=parseInt(document.getElementById('streakSelA').value)||4;
+  const threshD=parseInt(document.getElementById('streakSelD').value)||4;
+  const unit=isWeekly?'Weeks':'Days';
+  document.getElementById('streakUnitA').textContent=unit;
+  document.getElementById('streakUnitD').textContent=unit;
+  const raKey=isWeekly?'w_ra':'ra';
+  const rfKey=isWeekly?'w_rf':'rf';
+  const advItems=DATA.e.filter(e=>(e[raKey]||0)>=threshA).map(e=>[e.t,e.n]);
+  const decItems=DATA.e.filter(e=>(e[rfKey]||0)>=threshD).map(e=>[e.t,e.n]);
+
+  const selHtml=(id,sel)=>[2,3,4,5,6,7].map(v=>`<option value="${v}"${v===sel?' selected':''}>${v}+</option>`).join('');
+
+  const pA=document.getElementById('pA');
+  const advLabel=`<span class="pnl-l">▲ RS Advancing <select class="streak-sel" id="streakSelA" onchange="updatePanels()">${selHtml('A',threshA)}</select><span class="streak-unit" id="streakUnitA">${unit}</span></span>`;
+  if(advItems.length===0){pA.innerHTML=advLabel+`<span class="pnl-empty">None</span>`;}
+  else{pA.innerHTML=advLabel+advItems.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');}
+
+  const pD=document.getElementById('pD');
+  const decLabel=`<span class="pnl-l">▼ RS Declining <select class="streak-sel" id="streakSelD" onchange="updatePanels()">${selHtml('D',threshD)}</select><span class="streak-unit" id="streakUnitD">${unit}</span></span>`;
+  if(decItems.length===0){pD.innerHTML=decLabel+`<span class="pnl-empty">None</span>`;}
+  else{pD.innerHTML=decLabel+decItems.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');}
 }
 
 function drawSparkline(canvas,series){
