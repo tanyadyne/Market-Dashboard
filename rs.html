@@ -57,6 +57,8 @@ tbody tr:hover{background:var(--hovbg)!important}tbody tr.exp{background:var(--b
 td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c{text-align:center}.rt{text-align:right}.m{font-family:'JetBrains Mono',monospace}
 .rk{text-align:center;color:var(--t4);font-family:'JetBrains Mono',monospace;font-size:11px}
+.rd{text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600}
+.rd-up{color:var(--g)}.rd-dn{color:var(--r)}.rd-flat{color:var(--t4)}
 .tk{font-weight:700;font-size:13px;color:var(--t1);font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
 .sc2{color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .au{color:var(--g);font-size:11px;margin-left:4px}.ad{color:var(--r);font-size:11px;margin-left:4px}
@@ -224,6 +226,7 @@ let multiSort=[],useMultiSort=false,isMobile=false,isWeekly=false;
 
 const ALL_COLUMNS=[
   {key:'rk',label:'#',align:'c',width:'40px',mob:true},
+  {key:'rd',label:'Δ Rank',align:'c',width:'56px',mob:false},
   {key:'t',label:'Ticker',align:'l',width:'68px',mob:true},
   {key:'n',label:'Sector',align:'l',width:'160px',mob:true},
   {key:'rv',label:'R.Vol',align:'c',width:'80px',mob:false},
@@ -261,7 +264,7 @@ function toggleFreq(){
 // Map logical column keys to actual data keys based on frequency
 function dataKey(key){
   if(!isWeekly) return key;
-  const wMap={rv:'w_rv',am:'w_am',rs:'w_rs',vs:'w_vs'};
+  const wMap={rv:'w_rv',am:'w_am',rs:'w_rs',vs:'w_vs',rd:'w_rd'};
   return wMap[key]||key;  // ax, ch, c5, c20 etc stay the same
 }
 
@@ -441,6 +444,13 @@ function drawSparkline(canvas,series){
   ctx.beginPath();ctx.arc(px(minIdx),py(minIdx),2.5,0,Math.PI*2);ctx.fillStyle=isDark?'#f87171':'#dc2626';ctx.fill();
 }
 
+function rankDelta(val){
+  if(val==null) return '<td class="rd rd-flat">—</td>';
+  if(val>0) return `<td class="rd rd-up">▲${val}</td>`;
+  if(val<0) return `<td class="rd rd-dn">▼${Math.abs(val)}</td>`;
+  return '<td class="rd rd-flat">–</td>';
+}
+
 function atrExtBars(val){
   if(val==null) return '<div class="bars low"><div class="bar" style="height:4px"></div></div>';
   const v=val/100; // stored as *100
@@ -492,13 +502,14 @@ function render(){
     rank++;
     const exp=expandedTicker===e.t;
     const rf=e[rfKey]||0, ra=e[raKey]||0;
-    const ar=rf>=4?'<span class="ad">▼</span>':(ra>=4?'<span class="au">▲</span>':'');
+    const rdVal=e[isWeekly?'w_rd':'rd'];
     const rv=e[rvKey], am=e[amKey], rs=e[rsKey], vs=e[vsKey];
     const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
     const amP=am!=null?Math.min(am/mxAM*100,100):0;
     const cellMap={
       rk:`<td class="rk">${rank}</td>`,
-      t:`<td class="tk">${esc(e.t)}${ar}</td>`,
+      rd:rankDelta(rdVal),
+      t:`<td class="tk">${esc(e.t)}</td>`,
       n:`<td class="sc2">${esc(e.n)}</td>`,
       rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>`,
       am:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(am)}</span></div></td>`,
