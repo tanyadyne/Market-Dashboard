@@ -32,7 +32,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add grades.json dynamic_holdings.json
+          git add grades.json dynamic_holdings.json names.json
           git diff --staged --quiet || git commit -m "Update holding grades $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
-
