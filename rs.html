@@ -304,8 +304,15 @@ function buildHeader(){
     th.className=col.align==='l'?'l':col.align==='c'?'c':'';
     th.dataset.key=col.key;
     if(!isMobile)th.style.width=col.width;
-    th.innerHTML=col.label+(isMobile?'':'<div class="rh"></div>');
-    th.addEventListener('click',e=>{if(!e.target.classList.contains('rh'))srt(col.key);});
+    if(col.key==='rd'){
+      // Dropdown header for rank delta lookback
+      const maxWeeks=DATA&&DATA.rh?(isWeekly?DATA.rh.w.length:DATA.rh.d.length):8;
+      const opts=[];for(let i=1;i<=Math.min(8,Math.max(maxWeeks,1));i++)opts.push(`<option value="${i}"${i===rankLookback?' selected':''}>${i}W</option>`);
+      th.innerHTML=`Δ <select class="streak-sel" id="rdSel" onchange="event.stopPropagation();rankLookback=parseInt(this.value);render();" style="font-size:9px;padding:1px 2px">${opts.join('')}</select>`+(isMobile?'':'<div class="rh"></div>');
+    }else{
+      th.innerHTML=col.label+(isMobile?'':'<div class="rh"></div>');
+    }
+    th.addEventListener('click',e=>{if(!e.target.classList.contains('rh')&&e.target.tagName!=='SELECT'&&e.target.tagName!=='OPTION')srt(col.key);});
     tr.appendChild(th);
   });
 }
@@ -444,10 +451,27 @@ function drawSparkline(canvas,series){
   ctx.beginPath();ctx.arc(px(minIdx),py(minIdx),2.5,0,Math.PI*2);ctx.fillStyle=isDark?'#f87171':'#dc2626';ctx.fill();
 }
 
-function rankDelta(val){
-  if(val==null) return '<td class="rd rd-flat">—</td>';
-  if(val>0) return `<td class="rd rd-up">▲${val}</td>`;
-  if(val<0) return `<td class="rd rd-dn">▼${Math.abs(val)}</td>`;
+let rankLookback = 1; // default: compare to 1 week ago
+
+function getRankDeltaVal(ticker){
+  if(!DATA||!DATA.rh) return null;
+  const hist = isWeekly ? DATA.rh.w : DATA.rh.d;
+  const idx = hist.length - rankLookback;
+  if(idx < 0 || idx >= hist.length) return null;
+  const prevRk = hist[idx][ticker];
+  if(prevRk == null) return null;
+  const etf = DATA.e.find(e=>e.t===ticker);
+  if(!etf) return null;
+  const curRk = isWeekly ? etf.w_rk : etf.rk;
+  if(curRk == null) return null;
+  return prevRk - curRk;
+}
+
+function rankDelta(ticker){
+  const delta = getRankDeltaVal(ticker);
+  if(delta == null) return '<td class="rd rd-flat">—</td>';
+  if(delta > 0) return `<td class="rd rd-up">▲${delta}</td>`;
+  if(delta < 0) return `<td class="rd rd-dn">▼${Math.abs(delta)}</td>`;
   return '<td class="rd rd-flat">–</td>';
 }
 
@@ -485,6 +509,11 @@ function render(){
       const a_c5=a.c5??-Infinity, b_c5=b.c5??-Infinity;
       return b_c5-a_c5;
     });
+  }else if(sortKey==='rd'){
+    items=[...items].sort((a,b)=>{
+      const av=getRankDeltaVal(a.t)??-Infinity, bv=getRankDeltaVal(b.t)??-Infinity;
+      return sortDir*(av>bv?1:av<bv?-1:0);
+    });
   }else{
     const sk=dataKey(sortKey);
     items=[...items].sort((a,b)=>{if(sortKey==='rk')return sortDir*(a.rk-b.rk);const av=a[sk]??(typeof a[sk]==='string'?'':-Infinity),bv=b[sk]??(typeof b[sk]==='string'?'':-Infinity);return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av>bv?1:av<bv?-1:0);});
@@ -502,13 +531,12 @@ function render(){
     rank++;
     const exp=expandedTicker===e.t;
     const rf=e[rfKey]||0, ra=e[raKey]||0;
-    const rdVal=e[isWeekly?'w_rd':'rd'];
     const rv=e[rvKey], am=e[amKey], rs=e[rsKey], vs=e[vsKey];
     const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
     const amP=am!=null?Math.min(am/mxAM*100,100):0;
     const cellMap={
       rk:`<td class="rk">${rank}</td>`,
-      rd:rankDelta(rdVal),
+      rd:rankDelta(e.t),
       t:`<td class="tk">${esc(e.t)}</td>`,
       n:`<td class="sc2">${esc(e.n)}</td>`,
       rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>`,
