@@ -707,11 +707,40 @@ def main():
             "w_vs": w_avg_vs,
         })
 
-    # Sort: RS desc, then Change desc
+    # Sort: RS desc, then Change desc (daily ranks)
     results.sort(key=lambda x: (x["rs"] if x["rs"] is not None else -1,
                                  x["ch"] if x["ch"] is not None else -999), reverse=True)
     for i, r in enumerate(results):
         r["rk"] = i + 1
+
+    # Weekly ranks (sort by w_rs)
+    w_sorted = sorted(results, key=lambda x: (x["w_rs"] if x["w_rs"] is not None else -1,
+                                                x["c5"] if x["c5"] is not None else -999), reverse=True)
+    w_rank_map = {}
+    for i, r in enumerate(w_sorted):
+        w_rank_map[r["t"]] = i + 1
+    for r in results:
+        r["w_rk"] = w_rank_map.get(r["t"], len(results))
+
+    # Load previous data.json for rank change computation
+    prev_ranks = {}      # ticker -> previous daily rank
+    prev_w_ranks = {}    # ticker -> previous weekly rank
+    if os.path.exists("data.json"):
+        try:
+            with open("data.json") as pf:
+                prev_data = json.load(pf)
+            for e in prev_data.get("e", []):
+                prev_ranks[e["t"]] = e.get("rk", 999)
+                prev_w_ranks[e["t"]] = e.get("w_rk", 999)
+        except Exception:
+            pass
+
+    # Compute rank changes (positive = improved, negative = dropped)
+    for r in results:
+        prev_rk = prev_ranks.get(r["t"])
+        r["rd"] = prev_rk - r["rk"] if prev_rk is not None else None  # daily rank delta
+        prev_w_rk = prev_w_ranks.get(r["t"])
+        r["w_rd"] = prev_w_rk - r["w_rk"] if prev_w_rk is not None else None  # weekly rank delta
 
     # ─── Load cached holding grades from grades.json ────────
     holding_grades = {}
