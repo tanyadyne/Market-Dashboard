@@ -362,8 +362,18 @@ async function copyAll(){
   const el=document.getElementById('clipCopied');el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2000);
 }
 
+let NAMES={};
 async function loadData(){
-  try{const res=await fetch('data.json?_='+Date.now());if(!res.ok)throw new Error('data.json not found');DATA=await res.json();onDataLoaded();}
+  try{
+    const [dataRes,namesRes]=await Promise.all([
+      fetch('data.json?_='+Date.now()),
+      fetch('names.json?_='+Date.now()).catch(()=>null)
+    ]);
+    if(!dataRes.ok)throw new Error('data.json not found');
+    DATA=await dataRes.json();
+    if(namesRes&&namesRes.ok){try{NAMES=await namesRes.json();}catch(e){}}
+    onDataLoaded();
+  }
   catch(err){document.getElementById('statusBar').innerHTML=`<span style="color:var(--r)">Error: ${esc(err.message)}</span>`;}
 }
 
@@ -506,7 +516,7 @@ function render(){
       const gs=hl.filter(h=>hg[h]==='g'),ss=hl.filter(h=>hg[h]==='s'),bs=hl.filter(h=>hg[h]==='b');
       let chartHtml='';
       const chartStocks=[...gs,...ss];
-      if(!isMobile&&chartStocks.length>0){chartHtml=`<div class="tv-grid">${chartStocks.map(tk=>`<div class="tv-chart-wrap"><div class="tv-label">${esc(tk)}</div><div class="tv-chart" id="tvc-${esc(tk)}"></div></div>`).join('')}</div>`;}
+      if(!isMobile&&chartStocks.length>0){chartHtml=`<div class="tv-grid">${chartStocks.map(tk=>{const isGold=gs.includes(tk);const diamond=isGold?'<span style="color:#f59e0b">◆</span>':'<span style="color:#9ca3af">◆</span>';const name=NAMES[tk]?(' - '+esc(NAMES[tk])):'';return `<div class="tv-chart-wrap"><div class="tv-label">${diamond} ${esc(tk)}${name}</div><div class="tv-chart" id="tvc-${esc(tk)}"></div></div>`;}).join('')}</div>`;}
       html+=`<tr><td colspan="${colSpan}" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}): <span class="pill pill-g" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(gs).replace(/"/g,'&quot;')})" title="Click to add gold stocks to clipboard">● Gold ${gs.length}</span> <span class="pill pill-s" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(ss).replace(/"/g,'&quot;')})" title="Click to add silver stocks to clipboard">● Silver ${ss.length}</span> <span class="pill pill-b" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(bs).replace(/"/g,'&quot;')})" title="Click to add bronze stocks to clipboard">● Bronze ${bs.length}</span></div><div class="hw">${hl.map(h=>`<span class="pill ${gc(h)}">${esc(h)}</span>`).join('')}</div>${chartHtml}</td></tr>`;
     }
   }
