@@ -305,12 +305,22 @@ def main():
                 auto_adjust=False,
             )
 
-            # Fetch company name
+            # Fetch company name and description
             try:
                 info = ticker_obj.info
                 name = info.get("shortName") or info.get("longName") or ""
+                summary = info.get("longBusinessSummary") or ""
+                # Truncate summary to first 2 sentences or 200 chars
+                if summary:
+                    sentences = summary.split('. ')
+                    short = '. '.join(sentences[:2])
+                    if not short.endswith('.'):
+                        short += '.'
+                    if len(short) > 250:
+                        short = short[:247] + '...'
+                    summary = short
                 if name:
-                    holding_names[tk] = name
+                    holding_names[tk] = {"n": name, "d": summary} if summary else {"n": name}
             except Exception:
                 pass
 
