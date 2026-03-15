@@ -722,25 +722,57 @@ def main():
     for r in results:
         r["w_rk"] = w_rank_map.get(r["t"], len(results))
 
-    # Load previous data.json for rank change computation
-    prev_ranks = {}      # ticker -> previous daily rank
-    prev_w_ranks = {}    # ticker -> previous weekly rank
-    if os.path.exists("data.json"):
-        try:
-            with open("data.json") as pf:
-                prev_data = json.load(pf)
-            for e in prev_data.get("e", []):
-                prev_ranks[e["t"]] = e.get("rk", 999)
-                prev_w_ranks[e["t"]] = e.get("w_rk", 999)
-        except Exception:
-            pass
+    # ─── Rolling rank history (rank_history.json) ────────────
+    # Stores up to 8 weekly snapshots of daily and weekly ranks, one per calendar week.
+    # Structure: {"weeks": [{"date":"2026-03-14","d":{ticker:rank},"w":{ticker:rank}}, ...]}
+    # Most recent week is last in the list.
+    from datetime import date
+    today_str = date.today().isoformat()
+    # Determine ISO week key (year-week)
+    today_week = date.today().isocalendar()
+    week_key = f"{today_week[0]}-W{today_week[1]:02d}"
 
-    # Compute rank changes (positive = improved, negative = dropped)
-    for r in results:
-        prev_rk = prev_ranks.get(r["t"])
-        r["rd"] = prev_rk - r["rk"] if prev_rk is not None else None  # daily rank delta
-        prev_w_rk = prev_w_ranks.get(r["t"])
-        r["w_rd"] = prev_w_rk - r["w_rk"] if prev_w_rk is not None else None  # weekly rank delta
+    rank_history = {"weeks": []}
+    if os.path.exists("rank_history.json"):
+        try:
+            with open("rank_history.json") as rhf:
+                rank_history = json.load(rhf)
+        except Exception:
+            rank_history = {"weeks": []}
+
+    # Current rank snapshot
+    current_d_ranks = {r["t"]: r["rk"] for r in results}
+    current_w_ranks = {r["t"]: r["w_rk"] for r in results}
+
+    # Update or append this week's snapshot (overwrite if same week)
+    weeks = rank_history.get("weeks", [])
+    if weeks and weeks[-1].get("wk") == week_key:
+        # Update existing week entry
+        weeks[-1] = {"wk": week_key, "date": today_str, "d": current_d_ranks, "w": current_w_ranks}
+    else:
+        # New week — append
+        weeks.append({"wk": week_key, "date": today_str, "d": current_d_ranks, "w": current_w_ranks})
+
+    # Keep only last 9 weeks (current + 8 prior)
+    if len(weeks) > 9:
+        weeks = weeks[-9:]
+    rank_history["weeks"] = weeks
+
+    with open("rank_history.json", "w") as rhf:
+        json.dump(rank_history, rhf, separators=(",", ":"))
+    print(f"Rank history: {len(weeks)} weekly snapshots stored")
+
+    # ─── Attach rank history to data.json for frontend ────────
+    # Store the full rank history so the frontend can compute deltas for any N
+    # Format: rh_d = [[ticker, rank_N_weeks_ago], ...] for each week going back
+    # We send arrays of {ticker: rank} dicts, oldest first
+    rh_d = []  # daily rank snapshots, oldest to newest (excluding current)
+    rh_w = []  # weekly rank snapshots
+    for snap in weeks[:-1]:  # exclude current week
+        rh_d.append(snap.get("d", {}))
+        rh_w.append(snap.get("w", {}))
+
+    # Remove per-ETF rd/w_rd since frontend will compute them
 
     # ─── Load cached holding grades from grades.json ────────
     holding_grades = {}
@@ -812,6 +844,7 @@ def main():
             "spy_change": round(float(spy_chg), 2),
         },
         "breadth": breadth_status,
+        "rh": {"d": rh_d, "w": rh_w},
     }
 
     with open("data.json", "w") as f:
