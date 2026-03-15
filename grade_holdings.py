@@ -290,6 +290,7 @@ def main():
     h_start = end - timedelta(days=365)
 
     holding_grades = {}
+    holding_names = {}
     graded = 0
     failed = 0
 
@@ -303,6 +304,16 @@ def main():
                 end=end.strftime("%Y-%m-%d"),
                 auto_adjust=False,
             )
+
+            # Fetch company name
+            try:
+                info = ticker_obj.info
+                name = info.get("shortName") or info.get("longName") or ""
+                if name:
+                    holding_names[tk] = name
+            except Exception:
+                pass
+
             if hist.empty or "Close" not in hist.columns:
                 holding_grades[tk] = "b"
                 failed += 1
@@ -341,11 +352,15 @@ def main():
     with open("grades.json", "w") as f:
         json.dump(holding_grades, f, separators=(",", ":"))
 
+    with open("names.json", "w") as f:
+        json.dump(holding_names, f, separators=(",", ":"))
+
     g_count = sum(1 for v in holding_grades.values() if v == "g")
     s_count = sum(1 for v in holding_grades.values() if v == "s")
     b_count = sum(1 for v in holding_grades.values() if v == "b")
 
     print(f"\nWritten grades.json — {g_count} gold, {s_count} silver, {b_count} bronze")
+    print(f"Written names.json — {len(holding_names)} company names")
     print(f"Graded: {graded}, Failed/insufficient: {failed}")
 
 
