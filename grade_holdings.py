@@ -313,12 +313,15 @@ def main():
                 # Truncate summary to first 2 sentences or 200 chars
                 if summary:
                     sentences = summary.split('. ')
-                    short = '. '.join(sentences[:2])
-                    if not short.endswith('.'):
-                        short += '.'
-                    if len(short) > 250:
-                        short = short[:247] + '...'
-                    summary = short
+                    short = ''
+                    for s in sentences:
+                        candidate = short + s + '. ' if short else s + '. '
+                        if len(candidate) > 500:
+                            break
+                        short = candidate
+                    if not short:
+                        short = summary[:497] + '...'
+                    summary = short.strip()
                 if name:
                     holding_names[tk] = {"n": name, "d": summary} if summary else {"n": name}
             except Exception:
