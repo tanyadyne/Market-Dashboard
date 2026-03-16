@@ -57,8 +57,9 @@ tbody tr:hover{background:var(--hovbg)!important}tbody tr.exp{background:var(--b
 td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c{text-align:center}.rt{text-align:right}.m{font-family:'JetBrains Mono',monospace}
 .rk{text-align:center;color:var(--t4);font-family:'JetBrains Mono',monospace;font-size:11px}
-.rd{text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600}
+.rd{text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;white-space:nowrap}
 .rd-up{color:var(--g)}.rd-dn{color:var(--r)}.rd-flat{color:var(--t4)}
+.rd-num{color:var(--t4);font-weight:500}
 .tk{font-weight:700;font-size:13px;color:var(--t1);font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
 .sc2{color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .au{color:var(--g);font-size:11px;margin-left:4px}.ad{color:var(--r);font-size:11px;margin-left:4px}
@@ -305,9 +306,7 @@ function buildHeader(){
     th.dataset.key=col.key;
     if(!isMobile)th.style.width=col.width;
     if(col.key==='rd'){
-      // Dropdown header for rank delta lookback
-      const maxWeeks=DATA&&DATA.rh?(isWeekly?DATA.rh.w.length:DATA.rh.d.length):8;
-      const opts=[];for(let i=1;i<=Math.min(8,Math.max(maxWeeks,1));i++)opts.push(`<option value="${i}"${i===rankLookback?' selected':''}>${i}W</option>`);
+      const opts=[];for(let i=1;i<=8;i++)opts.push(`<option value="${i}"${i===rankLookback?' selected':''}>${i}W</option>`);
       th.innerHTML=`Δ <select class="streak-sel" id="rdSel" onchange="event.stopPropagation();rankLookback=parseInt(this.value);render();" style="font-size:9px;padding:1px 2px">${opts.join('')}</select>`+(isMobile?'':'<div class="rh"></div>');
     }else{
       th.innerHTML=col.label+(isMobile?'':'<div class="rh"></div>');
@@ -470,9 +469,9 @@ function getRankDeltaVal(ticker){
 function rankDelta(ticker){
   const delta = getRankDeltaVal(ticker);
   if(delta == null) return '<td class="rd rd-flat">—</td>';
-  if(delta > 0) return `<td class="rd rd-up">▲${delta}</td>`;
-  if(delta < 0) return `<td class="rd rd-dn">▼${Math.abs(delta)}</td>`;
-  return '<td class="rd rd-flat">–</td>';
+  if(delta > 0) return `<td class="rd"><span class="rd-up">▲</span>&nbsp;&nbsp;<span class="rd-num">(+${delta})</span></td>`;
+  if(delta < 0) return `<td class="rd"><span class="rd-dn">▼</span>&nbsp;&nbsp;<span class="rd-num">(${delta})</span></td>`;
+  return '<td class="rd"><span class="rd-flat">–</span>&nbsp;&nbsp;<span class="rd-num">(0)</span></td>';
 }
 
 function atrExtBars(val){
