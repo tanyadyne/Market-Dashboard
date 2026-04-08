@@ -112,7 +112,7 @@ def compute_wma(values, period):
     out = [None] * len(values)
     for i in range(period - 1, len(values)):
         window = values[i - period + 1:i + 1]
-        if None in window:
+        if any(v is None for v in window):
             continue
         weights = list(range(1, period + 1))
         out[i] = sum(w * v for w, v in zip(weights, window)) / sum(weights)
@@ -121,22 +121,26 @@ def compute_wma(values, period):
 
 def compute_hma(closes, period):
     """Hull Moving Average."""
-    half = compute_wma(closes, period // 2)
+    half_p = max(period // 2, 1)
+    half = compute_wma(closes, half_p)
     full = compute_wma(closes, period)
     diff = [None] * len(closes)
     for i in range(len(closes)):
         if half[i] is not None and full[i] is not None:
-            diff[i] = 2 * half[i] - full[i]
-    sqrt_period = int(np.sqrt(period))
+            diff[i] = 2.0 * half[i] - full[i]
+    sqrt_period = max(int(np.sqrt(period)), 1)
     return compute_wma(diff, sqrt_period)
 
 
 def compute_atr_series(highs, lows, closes, period=14):
     n = len(closes)
-    out = [None] * n
+    out = [0.0] * n
     trs = []
     for i in range(1, n):
-        tr = max(highs[i] - lows[i], abs(highs[i] - closes[i-1]), abs(lows[i] - closes[i-1]))
+        try:
+            tr = max(highs[i] - lows[i], abs(highs[i] - closes[i-1]), abs(lows[i] - closes[i-1]))
+        except (TypeError, ValueError):
+            tr = 0.0
         trs.append(tr)
         if len(trs) <= period:
             out[i] = np.mean(trs)
@@ -389,7 +393,12 @@ def main():
         if data is None:
             continue
         scanned += 1
-        scan = scan_ticker(data["c"], data["h"], data["l"], data["o"], data["v"])
+        try:
+            scan = scan_ticker(data["c"], data["h"], data["l"], data["o"], data["v"])
+        except Exception as ex:
+            if (i + 1) % 200 == 0:
+                print(f"    Error scanning {tk}: {ex}")
+            continue
         if scan is None:
             continue
 
