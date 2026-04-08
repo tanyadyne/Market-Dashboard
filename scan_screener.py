@@ -28,122 +28,102 @@ except ImportError:
     HAS_REQUESTS = False
 
 
-# ─── Fetch stock universe ────────────────────────────────────────────────────
+# ─── Hardcoded stock universe (reliable, no API/scraping needed) ──────────────
+# Updated March 2026. Update periodically when index reconstitutions occur.
 
-def get_sp500_tickers():
-    """Fetch S&P 500 constituents from FMP."""
-    fmp_key = os.environ.get("FMP_API_KEY", "")
-    if fmp_key and HAS_REQUESTS:
-        try:
-            url = f"https://financialmodelingprep.com/api/v3/sp500_constituent?apikey={fmp_key}"
-            resp = requests.get(url, timeout=30)
-            print(f"  FMP S&P 500 response: status={resp.status_code}, length={len(resp.text)}")
-            if resp.status_code == 200:
-                data = resp.json()
-                if isinstance(data, list):
-                    tickers = [d["symbol"] for d in data if "symbol" in d]
-                    if tickers:
-                        return tickers
-                    print(f"  FMP S&P 500: got list but no symbols")
-                else:
-                    print(f"  FMP S&P 500: unexpected response type: {type(data)}")
-        except Exception as e:
-            print(f"  FMP S&P 500 failed: {e}")
+SP500_TICKERS = [
+    "AAPL","ABBV","ABT","ACN","ADBE","ADI","ADM","ADP","ADSK","AEE","AEP","AES","AFL","AIG","AIZ","AJG",
+    "AKAM","ALB","ALGN","ALK","ALL","ALLE","AMAT","AMCR","AMD","AME","AMGN","AMP","AMT","AMZN","ANET",
+    "ANSS","AON","AOS","APA","APD","APH","APTV","ARE","ARES","ATO","AVGO","AVY","AWK","AXP","AZO","BA",
+    "BAC","BAX","BBY","BDX","BEN","BG","BIIB","BIO","BK","BKNG","BKR","BLDR","BLK","BMY","BR","BRK-B",
+    "BRO","BSX","BWA","BX","BXP","C","CAG","CAH","CARR","CAT","CB","CBOE","CBRE","CCI","CCL","CDNS",
+    "CDW","CE","CEG","CF","CFG","CHD","CHRW","CHTR","CI","CINF","CL","CLX","CNC","CNP","COF","COO",
+    "COP","COR","COST","CPAY","CPB","CPRT","CPT","CRL","CRM","CRWD","CSCO","CSGP","CSX","CTAS","CTRA",
+    "CTSH","CTVA","CVS","CVX","D","DAL","DAY","DD","DE","DECK","DFS","DG","DGX","DHI","DHR","DIS",
+    "DLTR","DOV","DOW","DPZ","DRI","DT","DUK","DVA","DVN","DXCM","EA","EBAY","ECL","ED","EFX","EIX",
+    "EL","EMN","EMR","ENPH","EOG","EPAM","EQIX","EQR","EQT","ES","ESS","ETN","ETR","EVRG","EW","EXC",
+    "EXPD","EXPE","EXR","F","FANG","FAST","FCX","FDS","FDX","FE","FFIV","FI","FICO","FIS","FISV","FITB",
+    "FMC","FOX","FOXA","FRT","FSLR","FTNT","FTV","GD","GDDY","GE","GEHC","GEN","GEV","GILD","GIS","GL",
+    "GLW","GM","GNRC","GOOG","GOOGL","GPC","GPN","GRMN","GS","GWW","HAL","HAS","HBAN","HCA","HD","HOLX",
+    "HON","HPE","HPQ","HRL","HSIC","HST","HSY","HUBB","HUM","HWM","IBM","ICE","IDXX","IEX","IFF","INCY",
+    "INTC","INTU","INVH","IP","IPG","IQV","IR","IRM","ISRG","IT","ITW","IVZ","J","JBHT","JBL","JCI",
+    "JKHY","JNJ","JNPR","JPM","K","KDP","KEY","KEYS","KHC","KIM","KKR","KLAC","KMB","KMI","KMX","KO",
+    "KR","KVUE","L","LDOS","LEN","LH","LHX","LIN","LKQ","LLY","LMT","LNT","LOW","LRCX","LULU","LUV",
+    "LVS","LW","LYB","LYV","MA","MAA","MAR","MAS","MCD","MCHP","MCK","MCO","MDLZ","MDT","MET","META",
+    "MGM","MHK","MKC","MLM","MMC","MMM","MNST","MO","MOH","MOS","MPC","MPWR","MRK","MRNA","MRVL","MS",
+    "MSCI","MSFT","MSI","MTB","MTCH","MTD","MU","NCLH","NDAQ","NDSN","NEE","NEM","NFLX","NI","NKE","NOC",
+    "NOW","NRG","NSC","NTAP","NTRS","NUE","NVDA","NVR","NWS","NWSA","NXPI","O","ODFL","OKE","OMC","ON",
+    "ORCL","ORLY","OTIS","OXY","PANW","PARA","PAYC","PAYX","PCAR","PCG","PEG","PEP","PFE","PFG","PG",
+    "PGR","PH","PHM","PKG","PLD","PLTR","PM","PNC","PNR","PNW","POOL","PPG","PPL","PRU","PSA","PSX",
+    "PTC","PVH","PWR","PYPL","QCOM","QRVO","RCL","REG","REGN","RF","RHI","RJF","RL","RMD","ROK","ROL",
+    "ROP","ROST","RSG","RTX","RVTY","SBAC","SBUX","SCHW","SEE","SHW","SJM","SLB","SMCI","SNA","SNPS",
+    "SO","SOLV","SPG","SPGI","SRE","STE","STLD","STT","STX","STZ","SWK","SWKS","SYF","SYK","SYY","T",
+    "TAP","TDG","TDY","TECH","TEL","TER","TFC","TFX","TGT","TJX","TMO","TMUS","TPR","TRGP","TRMB",
+    "TROW","TRV","TSCO","TSLA","TSN","TT","TTWO","TXN","TXT","TYL","UAL","UBER","UDR","UHS","ULTA",
+    "UNH","UNP","UPS","URI","USB","V","VFC","VICI","VLO","VLTO","VMC","VRSK","VRSN","VRTX","VST","VTR",
+    "VTRS","VZ","WAB","WAT","WBA","WBD","WDC","WEC","WELL","WFC","WHR","WM","WMB","WMT","WRB","WST",
+    "WTW","WY","WYNN","XEL","XOM","XRAY","XYL","YUM","ZBH","ZBRA","ZTS",
+]
 
-    # Wikipedia fallback
-    try:
-        import pandas as pd
-        tables = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
-        tickers = tables[0]["Symbol"].tolist()
-        result = [t.replace(".", "-") for t in tickers]
-        if len(result) > 400:
-            return result
-    except Exception as e:
-        print(f"  Wikipedia S&P 500 failed: {e}")
-    return []
+NASDAQ100_EXTRA = [
+    # Tickers in Nasdaq-100 but not already in S&P 500
+    "ABNB","APP","ARM","ASML","AZN","DASH","DDOG","DELL","GFS","KHC","LINU",
+    "MDB","MELI","PDD","TEAM","TTD","WDAY","ZS",
+]
 
+# Top ~500 Russell 2000 / IWM holdings (most liquid small/mid caps not in S&P 500)
+RUSSELL2000_TICKERS = [
+    "AAOI","ACLX","ACLS","ACVA","ADMA","AEIS","AEVA","AGI","AGYS","AHCO","AI","AIT","ALGT","ALKS",
+    "ALLO","ALRM","ALSN","AM","AMKR","AMPH","AMPL","AMR","AMSF","ANDE","ANIP","AORT","APAM","APGE",
+    "APPF","ARAY","ARCB","ARCO","ARIS","AROC","ARQQ","ARRY","ARVN","ASGN","ASTS","ATEC","ATGE","ATI",
+    "AVAV","AVNT","AVPT","AXNX","AXSM","AY","AZZ","B","BBIO","BBWI","BC","BCO","BE","BELFB",
+    "BGC","BHVN","BKH","BL","BLKB","BNL","BOOT","BOX","BRBR","BRSP","BSM","BTDR","BTU","BUR",
+    "BWXT","BYD","CAKE","CALM","CARG","CARS","CAVA","CBRE","CBSH","CC","CCS","CDE","CEIX","CELH",
+    "CENX","CERS","CHRD","CHS","CIFR","CIVI","CLDX","CLSK","CMC","CMPO","CNK","CNM","CNS","COCO",
+    "COHR","COMP","CORT","CPA","CPK","CPRX","CRAI","CRDO","CRI","CRK","CRSP","CRS","CRVL","CSGS",
+    "CW","CWK","CWST","CXT","CYAD","CYTK","CZR","DCGO","DFH","DINO","DIOD","DK","DLB","DORM",
+    "DOCS","DV","DXC","DY","EAT","EFSC","EHC","ELF","EMBC","EME","ENSG","ENVA","ENV","EPRT",
+    "ERJ","ESTA","EVTC","EXEL","EXLS","EXPI","EYE","FAF","FARO","FBIN","FCEL","FCNCA","FDMT",
+    "FG","FHI","FIGS","FIVE","FIX","FL","FLNC","FLYW","FNA","FNB","FNF","FOLD","FORM","FOXF",
+    "FRHC","FRPT","FRSH","FSS","FTRE","FTDR","FULT","FUN","FYBR","G","GATX","GBCI","GBX","GEO",
+    "GFF","GH","GHC","GLBE","GLNG","GLP","GMS","GNRC","GO","GPI","GSHD","GTLS","GTES","GTN",
+    "GBTC","GPCR","HAYW","HBI","HEES","HGV","HI","HLMN","HLNE","HLI","HLIO","HL","HNI","HOPE",
+    "HP","HQY","HRMY","HSAI","HUN","HURN","HXL","HYLN","IAC","IBKR","IBP","IBTX","ICL","ICUI",
+    "IDCC","IFS","IGMS","IMAX","INDI","INSM","INST","INTA","INVA","IONQ","IOVA","IRDM","IRON",
+    "ITCI","ITRI","IVT","JACK","JANX","JBT","JJSF","JOE","JOBY","KALU","KAR","KBH","KFY",
+    "KGS","KN","KNSL","KNX","KNTK","KRYS","KTOS","KWR","LADR","LANC","LAUR","LBRT","LEA","LGIH",
+    "LHCG","LITE","LIVN","LKFN","LMAT","LMND","LNTH","LNW","LOB","LPRO","LSCC","LSTR","LTCH",
+    "MATX","MBIN","MCRI","MDGL","MEDP","MGEE","MGY","MHO","MIDD","MKSI","MLI","MMSI","MNTK",
+    "MOD","MOG-A","MORF","MPLN","MQ","MRCY","MSTR","MTDR","MTSI","MTX","MUR","MWA","MXCT",
+    "NABL","NATL","NBHC","NBR","NBTB","NEO","NEOG","NFE","NGS","NKLA","NNI","NOVT","NR","NSA",
+    "NSIT","NUVB","NWE","NWL","NXT","OGN","OGS","OI","OLED","OLPX","OMF","ONB","ONTO","ORA",
+    "ORI","OSH","OSIS","OUST","OUT","OVV","PAG","PARR","PAYO","PBF","PCRX","PDCO","PDFS","PEB",
+    "PENN","PGNY","PIPR","PLAY","PLMR","PLXS","PNFP","PNM","POR","POST","POWL","PRCT","PRGS",
+    "PRGO","PRK","PRMW","PROK","PTGX","PVH","QTWO","QUBT","R","RAMP","RBC","RCKT","RDFN",
+    "RDN","RDNT","REZI","RGR","RGTI","RH","RHP","RIG","RIOT","RIVN","RKT","RLJ","RMBS","RNG",
+    "RNST","ROAD","ROCK","ROG","RPD","RPM","RRC","RVLV","RXO","RWT","RXRX","SAIA","SATS","SBCF",
+    "SBI","SBR","SCSC","SDGR","SEDG","SFBS","SGH","SHAK","SHOO","SIG","SITC","SITM","SKT","SKWD",
+    "SKYT","SLVM","SM","SMMT","SN","SND","SNEX","SNV","SONO","SPHR","SPNT","SPSC","SPT","SPXC",
+    "SRC","SRCL","SRRK","SSD","SSNC","SSRM","STEP","STNG","STRL","STWD","SUM","SUPN","SWIM",
+    "SWX","TALO","TASK","TBBK","TCBI","TCBK","TDOC","TDS","TENB","TH","THC","TIGO","TKO","TKR",
+    "TMHC","TNET","TOST","TREX","TRIP","TRUP","TSAT","TTGT","TTMI","TXRH","UCTT","UDMY","UFO",
+    "UMBF","URBN","USM","USLM","VCEL","VCTR","VCYT","VEL","VERX","VIRT","VKTX","VMI","VNDA",
+    "VNT","VPG","VRN","VRNS","VRNT","VSEC","VTOL","WD","WDFC","WERN","WGO","WHD","WINA","WING",
+    "WK","WLK","WNS","WOLF","WOR","WRBY","WSC","WSFS","WULF","XNCR","XPO","XPOF","YETI","YELP",
+    "YOU","ZETA","ZI","ZWS",
+]
 
-def get_nasdaq100_tickers():
-    """Fetch Nasdaq-100 constituents from FMP."""
-    fmp_key = os.environ.get("FMP_API_KEY", "")
-    if fmp_key and HAS_REQUESTS:
-        try:
-            url = f"https://financialmodelingprep.com/api/v3/nasdaq_constituent?apikey={fmp_key}"
-            resp = requests.get(url, timeout=30)
-            print(f"  FMP Nasdaq-100 response: status={resp.status_code}, length={len(resp.text)}")
-            if resp.status_code == 200:
-                data = resp.json()
-                if isinstance(data, list):
-                    tickers = [d["symbol"] for d in data if "symbol" in d]
-                    if tickers:
-                        return tickers
-        except Exception as e:
-            print(f"  FMP Nasdaq-100 failed: {e}")
-
-    # Wikipedia fallback
-    try:
-        import pandas as pd
-        tables = pd.read_html("https://en.wikipedia.org/wiki/Nasdaq-100")
-        for t in tables:
-            if "Ticker" in t.columns:
-                result = t["Ticker"].tolist()
-                if len(result) > 50:
-                    return result
-            if "Symbol" in t.columns:
-                result = t["Symbol"].tolist()
-                if len(result) > 50:
-                    return result
-    except Exception as e:
-        print(f"  Wikipedia Nasdaq-100 failed: {e}")
-    return []
-
-
-def get_russell_tickers():
-    """Fetch Russell 2000 tickers via FMP or fallback to FMP stock list."""
-    fmp_key = os.environ.get("FMP_API_KEY", "")
-    if not fmp_key or not HAS_REQUESTS:
-        return []
-
-    # Try Russell 2000 constituents
-    try:
-        url = f"https://financialmodelingprep.com/api/v3/russell2000_constituent?apikey={fmp_key}"
-        resp = requests.get(url, timeout=30)
-        if resp.status_code == 200:
-            data = resp.json()
-            if isinstance(data, list) and len(data) > 100:
-                tickers = [d["symbol"] for d in data if "symbol" in d]
-                print(f"  Russell 2000 via FMP: {len(tickers)}")
-                return tickers
-    except Exception as e:
-        print(f"  FMP Russell 2000 endpoint failed: {e}")
-
-    # Fallback: get all tradable US stocks and filter by market cap for small/mid caps
-    try:
-        url = f"https://financialmodelingprep.com/api/v3/available-traded/list?apikey={fmp_key}"
-        resp = requests.get(url, timeout=30)
-        if resp.status_code == 200:
-            data = resp.json()
-            # Filter: US exchanges, stocks only (not ETFs/funds)
-            us_stocks = [d["symbol"] for d in data
-                        if isinstance(d, dict)
-                        and d.get("exchangeShortName") in ("NYSE", "NASDAQ", "AMEX")
-                        and d.get("type") == "stock"
-                        and "." not in d.get("symbol", ".")]
-            print(f"  FMP tradable US stocks: {len(us_stocks)}")
-            return us_stocks
-    except Exception as e:
-        print(f"  FMP tradable list failed: {e}")
-
-    return []
+DOW30_TICKERS = [
+    "AAPL","AMGN","AMZN","AXP","BA","CAT","CRM","CSCO","CVX","DIS",
+    "GS","HD","HON","IBM","JNJ","JPM","KO","MCD","MMM","MRK",
+    "MSFT","NKE","NVDA","PG","SHW","TRV","UNH","V","VZ","WMT",
+]
 
 
-def get_dow_tickers():
-    """Dow Jones 30 tickers."""
-    return [
-        "AAPL", "AMGN", "AMZN", "AXP", "BA", "CAT", "CRM", "CSCO", "CVX", "DIS",
-        "GS", "HD", "HON", "IBM", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK",
-        "MSFT", "NKE", "NVDA", "PG", "SHW", "TRV", "UNH", "V", "VZ", "WMT"
-    ]
+def get_all_tickers():
+    """Combine all hardcoded lists into one deduplicated universe."""
+    all_tickers = sorted(set(SP500_TICKERS + NASDAQ100_EXTRA + DOW30_TICKERS + RUSSELL2000_TICKERS))
+    return all_tickers
 
 
 # ─── Technical helpers ────────────────────────────────────────────────────────
@@ -388,17 +368,8 @@ def main():
 
     # Gather universe
     print("\nStep 1: Building stock universe...")
-    sp500 = get_sp500_tickers()
-    print(f"  S&P 500: {len(sp500)} tickers")
-    nasdaq = get_nasdaq100_tickers()
-    print(f"  Nasdaq-100: {len(nasdaq)} tickers")
-    dow = get_dow_tickers()
-    print(f"  Dow 30: {len(dow)} tickers")
-    russell = get_russell_tickers()
-    print(f"  Russell: {len(russell)} tickers")
-
-    all_tickers = sorted(set(sp500 + nasdaq + dow + russell))
-    print(f"\n  Total unique tickers: {len(all_tickers)}")
+    all_tickers = get_all_tickers()
+    print(f"  Total unique tickers: {len(all_tickers)}")
 
     if not all_tickers:
         print("ERROR: No tickers found")
