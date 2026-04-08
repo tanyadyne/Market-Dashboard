@@ -15,6 +15,7 @@ Usage:
 """
 
 import json
+import os
 import time
 import re
 from datetime import datetime, timedelta
@@ -293,6 +294,31 @@ def main():
     holding_names = {}
     graded = 0
     failed = 0
+    fmp_fallback_count = 0
+
+    # FMP API key for fallback (optional — from environment)
+    fmp_api_key = os.environ.get("FMP_API_KEY", "")
+    if fmp_api_key:
+        print(f"FMP API key found — will use as fallback for insufficient yfinance data")
+
+    def fetch_closes_from_fmp(ticker, days=400):
+        """Fetch adjusted close prices from FMP as fallback."""
+        if not fmp_api_key:
+            return None
+        try:
+            url = f"https://financialmodelingprep.com/api/v3/historical-price-full/{ticker}?timeseries={days}&apikey={fmp_api_key}"
+            resp = requests.get(url, timeout=15)
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            hist = data.get("historical", [])
+            if not hist:
+                return None
+            # FMP returns newest first, reverse for chronological order
+            closes = [d["adjClose"] for d in reversed(hist) if "adjClose" in d]
+            return closes if len(closes) >= 50 else None
+        except Exception:
+            return None
 
     for i, tk in enumerate(holding_tickers):
         if (i + 1) % 50 == 0 or i == 0:
@@ -310,7 +336,6 @@ def main():
                 info = ticker_obj.info
                 name = info.get("shortName") or info.get("longName") or ""
                 summary = info.get("longBusinessSummary") or ""
-                # Truncate summary to first 2 sentences or 200 chars
                 if summary:
                     sentences = summary.split('. ')
                     short = ''
@@ -328,13 +353,19 @@ def main():
                 pass
 
             if hist.empty or "Close" not in hist.columns:
-                holding_grades[tk] = "b"
-                failed += 1
-                continue
+                closes = []
+            else:
+                closes = hist["Close"].dropna().values.tolist()
 
-            closes = hist["Close"].dropna().values.tolist()
-
+            # If yfinance returned insufficient data for SMA200, try FMP fallback
             if len(closes) < 200:
+                fmp_closes = fetch_closes_from_fmp(tk)
+                if fmp_closes and len(fmp_closes) > len(closes):
+                    print(f"    FMP fallback for {tk}: yf={len(closes)} pts -> fmp={len(fmp_closes)} pts")
+                    closes = fmp_closes
+                    fmp_fallback_count += 1
+
+            if len(closes) < 50:
                 holding_grades[tk] = "b"
                 failed += 1
                 continue
@@ -342,16 +373,16 @@ def main():
             ema9 = compute_ema(closes, 9)
             ema21 = compute_ema(closes, 21)
             sma50 = compute_sma(closes, 50)
-            sma200 = compute_sma(closes, 200)
+            sma200 = compute_sma(closes, 200)  # None if < 200 points
             price = closes[-1]
 
             grade = grade_holding(price, ema9, ema21, sma50, sma200)
             holding_grades[tk] = grade
             graded += 1
 
-            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM", "WES", "CWEN"):
+            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM", "WES", "CWEN", "ATI"):
                 print(f"    DEBUG {tk}: Price={price:.2f} EMA9={ema9:.2f} EMA21={ema21:.2f} "
-                      f"SMA50={sma50:.2f} SMA200={sma200:.2f} pts={len(closes)} -> {grade}")
+                      f"SMA50={sma50:.2f} SMA200={sma200 if sma200 is not None else 'N/A'} pts={len(closes)} -> {grade}")
 
         except Exception as ex:
             holding_grades[tk] = "b"
@@ -374,7 +405,7 @@ def main():
 
     print(f"\nWritten grades.json — {g_count} gold, {s_count} silver, {b_count} bronze")
     print(f"Written names.json — {len(holding_names)} company names")
-    print(f"Graded: {graded}, Failed/insufficient: {failed}")
+    print(f"Graded: {graded}, Failed/insufficient: {failed}, FMP fallbacks: {fmp_fallback_count}")
 
 
 if __name__ == "__main__":
