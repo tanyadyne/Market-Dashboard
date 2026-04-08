@@ -31,51 +31,109 @@ except ImportError:
 # ─── Fetch stock universe ────────────────────────────────────────────────────
 
 def get_sp500_tickers():
-    """Fetch S&P 500 tickers from Wikipedia."""
+    """Fetch S&P 500 constituents from FMP."""
+    fmp_key = os.environ.get("FMP_API_KEY", "")
+    if fmp_key and HAS_REQUESTS:
+        try:
+            url = f"https://financialmodelingprep.com/api/v3/sp500_constituent?apikey={fmp_key}"
+            resp = requests.get(url, timeout=30)
+            print(f"  FMP S&P 500 response: status={resp.status_code}, length={len(resp.text)}")
+            if resp.status_code == 200:
+                data = resp.json()
+                if isinstance(data, list):
+                    tickers = [d["symbol"] for d in data if "symbol" in d]
+                    if tickers:
+                        return tickers
+                    print(f"  FMP S&P 500: got list but no symbols")
+                else:
+                    print(f"  FMP S&P 500: unexpected response type: {type(data)}")
+        except Exception as e:
+            print(f"  FMP S&P 500 failed: {e}")
+
+    # Wikipedia fallback
     try:
         import pandas as pd
-        url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-        tables = pd.read_html(url)
+        tables = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
         tickers = tables[0]["Symbol"].tolist()
-        return [t.replace(".", "-") for t in tickers]
+        result = [t.replace(".", "-") for t in tickers]
+        if len(result) > 400:
+            return result
     except Exception as e:
-        print(f"  Failed to fetch S&P 500 list: {e}")
-        return []
+        print(f"  Wikipedia S&P 500 failed: {e}")
+    return []
 
 
 def get_nasdaq100_tickers():
-    """Fetch Nasdaq-100 tickers from Wikipedia."""
+    """Fetch Nasdaq-100 constituents from FMP."""
+    fmp_key = os.environ.get("FMP_API_KEY", "")
+    if fmp_key and HAS_REQUESTS:
+        try:
+            url = f"https://financialmodelingprep.com/api/v3/nasdaq_constituent?apikey={fmp_key}"
+            resp = requests.get(url, timeout=30)
+            print(f"  FMP Nasdaq-100 response: status={resp.status_code}, length={len(resp.text)}")
+            if resp.status_code == 200:
+                data = resp.json()
+                if isinstance(data, list):
+                    tickers = [d["symbol"] for d in data if "symbol" in d]
+                    if tickers:
+                        return tickers
+        except Exception as e:
+            print(f"  FMP Nasdaq-100 failed: {e}")
+
+    # Wikipedia fallback
     try:
         import pandas as pd
-        url = "https://en.wikipedia.org/wiki/Nasdaq-100"
-        tables = pd.read_html(url)
+        tables = pd.read_html("https://en.wikipedia.org/wiki/Nasdaq-100")
         for t in tables:
             if "Ticker" in t.columns:
-                return t["Ticker"].tolist()
+                result = t["Ticker"].tolist()
+                if len(result) > 50:
+                    return result
             if "Symbol" in t.columns:
-                return t["Symbol"].tolist()
-        return []
+                result = t["Symbol"].tolist()
+                if len(result) > 50:
+                    return result
     except Exception as e:
-        print(f"  Failed to fetch Nasdaq-100 list: {e}")
-        return []
+        print(f"  Wikipedia Nasdaq-100 failed: {e}")
+    return []
 
 
 def get_russell_tickers():
-    """Fetch Russell 2000/3000 tickers via FMP API if available."""
+    """Fetch Russell 2000 tickers via FMP or fallback to FMP stock list."""
     fmp_key = os.environ.get("FMP_API_KEY", "")
     if not fmp_key or not HAS_REQUESTS:
         return []
+
+    # Try Russell 2000 constituents
     try:
-        # FMP index constituents endpoint
         url = f"https://financialmodelingprep.com/api/v3/russell2000_constituent?apikey={fmp_key}"
         resp = requests.get(url, timeout=30)
         if resp.status_code == 200:
             data = resp.json()
-            tickers = [d["symbol"] for d in data if "symbol" in d]
-            print(f"  Fetched {len(tickers)} Russell 2000 tickers from FMP")
-            return tickers
+            if isinstance(data, list) and len(data) > 100:
+                tickers = [d["symbol"] for d in data if "symbol" in d]
+                print(f"  Russell 2000 via FMP: {len(tickers)}")
+                return tickers
     except Exception as e:
-        print(f"  Failed to fetch Russell tickers: {e}")
+        print(f"  FMP Russell 2000 endpoint failed: {e}")
+
+    # Fallback: get all tradable US stocks and filter by market cap for small/mid caps
+    try:
+        url = f"https://financialmodelingprep.com/api/v3/available-traded/list?apikey={fmp_key}"
+        resp = requests.get(url, timeout=30)
+        if resp.status_code == 200:
+            data = resp.json()
+            # Filter: US exchanges, stocks only (not ETFs/funds)
+            us_stocks = [d["symbol"] for d in data
+                        if isinstance(d, dict)
+                        and d.get("exchangeShortName") in ("NYSE", "NASDAQ", "AMEX")
+                        and d.get("type") == "stock"
+                        and "." not in d.get("symbol", ".")]
+            print(f"  FMP tradable US stocks: {len(us_stocks)}")
+            return us_stocks
+    except Exception as e:
+        print(f"  FMP tradable list failed: {e}")
+
     return []
 
 
