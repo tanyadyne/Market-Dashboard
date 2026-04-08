@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Screener</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
+.hdr{padding:18px 20px 14px;border-bottom:1px solid #111827;display:flex;align-items:center;gap:10px}
+.btn-back{padding:4px 10px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #1e293b;background:#0f172a;color:#94a3b8;text-decoration:none;transition:.15s;font-family:inherit}
+.btn-back:hover{background:#1e293b;color:#e2e8f0}
+.hdr-t{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.content{padding:20px;max-width:900px;margin:0 auto}
+
+/* Screener tabs */
+.tabs{display:flex;gap:8px;margin-bottom:20px}
+.tab{padding:8px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #1e293b;background:#0f172a;color:#64748b;transition:.15s;letter-spacing:.5px;text-transform:uppercase}
+.tab:hover{border-color:#334155;color:#94a3b8}
+.tab.active{border-color:#3b82f6;color:#e2e8f0;background:#111827}
+.tab.disabled{opacity:.35;cursor:default;pointer-events:none}
+
+/* Screener panel */
+.panel{display:none}
+.panel.active{display:block}
+
+/* Sub-screener selector */
+.sub-tabs{display:flex;gap:6px;margin-bottom:16px}
+.sub-tab{padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #1e293b;background:#0f172a;color:#64748b;transition:.15s}
+.sub-tab:hover{border-color:#334155;color:#94a3b8}
+.sub-tab.active{border-color:#22c55e;color:#4ade80;background:#0a1a0f}
+
+/* Filters */
+.filters{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.filter-label{font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+.filter-chip{padding:4px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #1e293b;background:#0f172a;color:#64748b;transition:.15s;font-family:'JetBrains Mono',monospace}
+.filter-chip:hover{border-color:#334155}
+.filter-chip.on{border-color:#3b82f6;color:#60a5fa;background:#0f1a2e}
+
+/* Scan button */
+.scan-row{display:flex;gap:12px;align-items:center;margin-bottom:20px}
+.btn-scan{padding:8px 24px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #22c55e;background:#14532d;color:#4ade80;transition:.15s;font-family:inherit;letter-spacing:.5px;text-transform:uppercase}
+.btn-scan:hover{background:#166534}
+.btn-scan.loading{opacity:.5;pointer-events:none}
+.scan-status{font-size:11px;color:#64748b}
+
+/* Results box */
+.results-box{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:16px;min-height:80px;position:relative}
+.results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.results-title{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px}
+.results-count{font-size:11px;color:#64748b;font-family:'JetBrains Mono',monospace}
+.results-tickers{font-family:'JetBrains Mono',monospace;font-size:12px;color:#e2e8f0;line-height:1.8;word-break:break-word;user-select:all;cursor:text}
+.results-empty{font-size:12px;color:#475569;font-style:italic}
+.btn-copy-results{padding:4px 12px;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid #3b82f6;background:transparent;color:#60a5fa;transition:.15s;font-family:inherit}
+.btn-copy-results:hover{background:#1e3a5f}
+.btn-copy-results.copied{border-color:#22c55e;color:#4ade80}
+.results-meta{margin-top:12px;font-size:10px;color:#475569}
+
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #1e293b;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){
+  .content{padding:12px}
+  .hdr{padding:12px}
+  .hdr-t{font-size:12px}
+  .tabs{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <a href="index.html" class="btn-back" title="Back to Market Dashboard">←</a>
+  <div class="hdr-t">Stock Screener</div>
+</div>
+<div class="content">
+  <!-- Screener tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchScreener('vcp')">VCP Coil</div>
+    <div class="tab disabled">Liquid Leaders (Coming Soon)</div>
+  </div>
+
+  <!-- VCP Panel -->
+  <div class="panel active" id="panel-vcp">
+    <div class="sub-tabs">
+      <div class="sub-tab active" data-sub="coil" onclick="switchSub(this,'coil')">Coil Active</div>
+      <div class="sub-tab" data-sub="breakout" onclick="switchSub(this,'breakout')">Coil Breakout</div>
+      <div class="sub-tab" data-sub="inside" onclick="switchSub(this,'inside')">Inside Box</div>
+    </div>
+
+    <div class="filters">
+      <span class="filter-label">Filters:</span>
+      <div class="filter-chip on" data-filter="a50" onclick="toggleFilter(this)">Price &gt; 50 SMA</div>
+      <div class="filter-chip on" data-filter="a200" onclick="toggleFilter(this)">Price &gt; 200 SMA</div>
+      <div class="filter-chip" data-filter="a21" onclick="toggleFilter(this)">Price &gt; 21 EMA</div>
+    </div>
+
+    <div class="scan-row">
+      <button class="btn-scan" id="btnScan" onclick="triggerScan()">⟳ Scan</button>
+      <span class="scan-status" id="scanStatus"></span>
+    </div>
+
+    <div class="results-box" id="resultsBox">
+      <div class="results-header">
+        <span class="results-title" id="resultsTitle">Results</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="results-count" id="resultsCount"></span>
+          <button class="btn-copy-results" id="btnCopy" onclick="copyResults()" style="display:none">Copy</button>
+        </div>
+      </div>
+      <div id="resultsBody">
+        <span class="results-empty">Click "Scan" to load results, or trigger the screener workflow from GitHub Actions first.</span>
+      </div>
+      <div class="results-meta" id="resultsMeta"></div>
+    </div>
+  </div>
+
+  <!-- Liquid Leaders placeholder -->
+  <div class="panel" id="panel-ll">
+    <div style="text-align:center;padding:60px 0;color:#475569">
+      <div style="font-size:36px;margin-bottom:12px">🔍</div>
+      <div style="font-size:16px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Coming Soon</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let SCREENER_DATA = null;
+let currentSub = 'coil';
+let ghToken = null;
+
+function switchScreener(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+}
+
+function switchSub(el, sub){
+  currentSub = sub;
+  document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderResults();
+}
+
+function toggleFilter(el){
+  el.classList.toggle('on');
+  renderResults();
+}
+
+function getActiveFilters(){
+  const filters = [];
+  document.querySelectorAll('.filter-chip.on').forEach(el=>{
+    filters.push(el.dataset.filter);
+  });
+  return filters;
+}
+
+function renderResults(){
+  if(!SCREENER_DATA || !SCREENER_DATA.results){
+    document.getElementById('resultsBody').innerHTML='<span class="results-empty">No data loaded. Click "Scan" to load results.</span>';
+    document.getElementById('resultsCount').textContent='';
+    document.getElementById('btnCopy').style.display='none';
+    return;
+  }
+
+  const items = SCREENER_DATA.results[currentSub] || [];
+  const filters = getActiveFilters();
+
+  const filtered = items.filter(item=>{
+    for(const f of filters){
+      if(!item[f]) return false;
+    }
+    return true;
+  });
+
+  const tickers = filtered.map(x=>x.t);
+  const subLabels = {coil:'Coil Active', breakout:'Coil Breakout', inside:'Inside Box'};
+
+  document.getElementById('resultsTitle').textContent = subLabels[currentSub] || 'Results';
+  document.getElementById('resultsCount').textContent = tickers.length + ' found';
+
+  if(tickers.length === 0){
+    document.getElementById('resultsBody').innerHTML='<span class="results-empty">No stocks match the current criteria.</span>';
+    document.getElementById('btnCopy').style.display='none';
+  } else {
+    document.getElementById('resultsBody').innerHTML='<div class="results-tickers">' + tickers.join(', ') + '</div>';
+    document.getElementById('btnCopy').style.display='inline-block';
+  }
+
+  if(SCREENER_DATA.meta){
+    document.getElementById('resultsMeta').textContent =
+      'Last scanned: ' + SCREENER_DATA.meta.updated +
+      ' · ' + SCREENER_DATA.meta.scanned + ' stocks scanned out of ' + SCREENER_DATA.meta.universe + ' universe';
+  }
+}
+
+async function loadScreenerData(){
+  try{
+    const res = await fetch('screener.json?_='+Date.now());
+    if(!res.ok) return;
+    SCREENER_DATA = await res.json();
+    renderResults();
+  }catch(e){}
+}
+
+function getToken(){
+  if(ghToken) return ghToken;
+  const t = prompt('Enter GitHub PAT to trigger screener workflow:');
+  if(t && t.trim()){ghToken = t.trim(); return ghToken;}
+  return null;
+}
+
+async function triggerScan(){
+  const btn = document.getElementById('btnScan');
+  const status = document.getElementById('scanStatus');
+
+  // First try loading existing data
+  status.textContent = 'Loading latest results...';
+  btn.className = 'btn-scan loading';
+  await loadScreenerData();
+
+  if(SCREENER_DATA && SCREENER_DATA.results){
+    btn.className = 'btn-scan';
+    btn.textContent = '⟳ Scan';
+    status.textContent = '';
+    renderResults();
+    return;
+  }
+
+  // If no data, offer to trigger workflow
+  const token = getToken();
+  if(!token){
+    btn.className = 'btn-scan';
+    status.textContent = 'Cancelled';
+    setTimeout(()=>{status.textContent='';}, 2000);
+    return;
+  }
+
+  status.innerHTML = '<span class="spinner"></span> Triggering scan workflow...';
+  try{
+    const res = await fetch('https://api.github.com/repos/tanyadyne/Market-Dashboard/actions/workflows/run-screener.yml/dispatches',{
+      method:'POST',
+      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify({ref:'main'})
+    });
+    if(res.status===204){
+      status.innerHTML = '<span class="spinner"></span> Scan triggered! Waiting for results (~3-5 min)...';
+      // Poll for results
+      let attempts = 0;
+      const poll = setInterval(async()=>{
+        attempts++;
+        if(attempts > 40){
+          clearInterval(poll);
+          status.textContent = 'Scan may still be running. Try clicking Scan again in a few minutes.';
+          btn.className = 'btn-scan';
+          return;
+        }
+        try{
+          const r = await fetch('screener.json?_='+Date.now());
+          if(r.ok){
+            const d = await r.json();
+            // Check if this is newer data
+            if(!SCREENER_DATA || d.meta.updated !== (SCREENER_DATA.meta||{}).updated){
+              SCREENER_DATA = d;
+              clearInterval(poll);
+              btn.className = 'btn-scan';
+              status.textContent = '';
+              renderResults();
+            }
+          }
+        }catch(e){}
+      }, 10000);
+    } else {
+      if(res.status===401) ghToken=null;
+      throw new Error('Status '+res.status);
+    }
+  }catch(err){
+    btn.className = 'btn-scan';
+    status.textContent = 'Failed: '+err.message;
+    setTimeout(()=>{status.textContent='';}, 5000);
+  }
+}
+
+async function copyResults(){
+  const el = document.querySelector('.results-tickers');
+  if(!el) return;
+  const text = el.textContent;
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch(e){
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  }
+  const btn = document.getElementById('btnCopy');
+  btn.textContent='Copied!';
+  btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');}, 2000);
+}
+
+// Load existing data on page load
+loadScreenerData();
+</script>
+</body>
+</html>
