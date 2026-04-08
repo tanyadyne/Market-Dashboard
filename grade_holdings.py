@@ -243,9 +243,14 @@ def compute_sma(closes, period):
 def grade_holding(price, ema9, ema21, sma50, sma200):
     if any(v is None for v in [price, ema9, ema21, sma50, sma200]):
         return "b"
+    # Gold: EMA9 > EMA21 > SMA50 AND Price > EMA21 AND Price > SMA200
+    if ema9 > ema21 and ema21 > sma50 and price > ema21 and price > sma200:
+        return "g"
+    # Silver path 1: EMA9 > EMA21 but doesn't meet all gold criteria
     if ema9 > ema21:
-        if ema21 > sma50 and price > ema21 and price > sma200:
-            return "g"
+        return "s"
+    # Silver path 2: EMA9 within 2% of EMA21 (just below) AND Price > SMA50 AND Price > SMA200 AND EMA21 > SMA50
+    if ema21 > 0 and (ema21 - ema9) / ema21 <= 0.02 and price > sma50 and price > sma200 and ema21 > sma50:
         return "s"
     return "b"
 
