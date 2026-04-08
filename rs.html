@@ -178,8 +178,6 @@ html[data-view="mobile"]{overflow-x:hidden}
   <span><b>SPY</b> <span class="m" id="spyP"></span> <span class="m" id="spyC" style="font-weight:600"></span></span>
   <span id="ut" style="color:var(--t2)"></span>
 </div>
-<div class="pnl a" id="pA"><span class="pnl-l">▲ RS Advancing <select class="streak-sel" id="streakSelA" onchange="updatePanels()"><option value="2">2+</option><option value="3">3+</option><option value="4" selected>4+</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option></select><span class="streak-unit" id="streakUnitA">Days</span></span><span class="pnl-empty">Loading...</span></div>
-<div class="pnl d" id="pD"><span class="pnl-l">▼ RS Declining <select class="streak-sel" id="streakSelD" onchange="updatePanels()"><option value="2">2+</option><option value="3">3+</option><option value="4" selected>4+</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option></select><span class="streak-unit" id="streakUnitD">Days</span></span><span class="pnl-empty">Loading...</span></div>
 <div class="clip-panel" id="clipPanel">
   <div class="clip-header">
     <span class="clip-title">📋 Clipboard</span>
@@ -227,8 +225,8 @@ let multiSort=[],useMultiSort=false,isMobile=false,isWeekly=false;
 
 const ALL_COLUMNS=[
   {key:'rk',label:'#',align:'c',width:'40px',mob:true},
-  {key:'rd',label:'Δ Rank',align:'c',width:'56px',mob:false},
-  {key:'t',label:'Ticker',align:'l',width:'68px',mob:true},
+  {key:'rd',label:'Δ Rank',align:'c',width:'56px',mob:true},
+  {key:'t',label:'Ticker',align:'l',width:'68px',mob:false},
   {key:'n',label:'Sector',align:'l',width:'160px',mob:true},
   {key:'rv',label:'R.Vol',align:'c',width:'80px',mob:false},
   {key:'am',label:'ATR Mult',align:'c',width:'80px',mob:false},
@@ -236,8 +234,8 @@ const ALL_COLUMNS=[
   {key:'ch',label:'1D',align:'c',width:'72px',mob:true},
   {key:'c5',label:'1W',align:'c',width:'72px',mob:false},
   {key:'c20',label:'1M',align:'c',width:'72px',mob:false},
-  {key:'rs',label:'RS (D)',align:'c',width:'62px',mob:false},
-  {key:'vs',label:'VARS (D)',align:'c',width:'200px',mob:true}
+  {key:'rs',label:'RS (D)',align:'c',width:'62px',mob:true},
+  {key:'vs',label:'VARS (D)',align:'c',width:'200px',mob:false}
 ];
 
 function updateColumnLabels(){
@@ -258,7 +256,6 @@ function toggleFreq(){
   sortKey='rk';
   sortDir=1;
   buildHeader();
-  if(DATA) updatePanels();
   render();
 }
 
@@ -399,34 +396,8 @@ function onDataLoaded(){
     sc.style.color=DATA.meta.spy_change>0?'var(--g)':DATA.meta.spy_change<0?'var(--r)':'var(--t3)';
     document.getElementById('ut').textContent='Updated: '+toSGT(DATA.meta.updated);
   }
-  updatePanels();
   if(expandedTicker&&document.querySelector('.tv-chart[data-loaded="1"]'))return;
   render();
-}
-
-function updatePanels(){
-  if(!DATA)return;
-  const threshA=parseInt(document.getElementById('streakSelA').value)||4;
-  const threshD=parseInt(document.getElementById('streakSelD').value)||4;
-  const unit=isWeekly?'Weeks':'Days';
-  document.getElementById('streakUnitA').textContent=unit;
-  document.getElementById('streakUnitD').textContent=unit;
-  const raKey=isWeekly?'w_ra':'ra';
-  const rfKey=isWeekly?'w_rf':'rf';
-  const advItems=DATA.e.filter(e=>(e[raKey]||0)>=threshA).map(e=>[e.t,e.n]);
-  const decItems=DATA.e.filter(e=>(e[rfKey]||0)>=threshD).map(e=>[e.t,e.n]);
-
-  const selHtml=(id,sel)=>[2,3,4,5,6,7].map(v=>`<option value="${v}"${v===sel?' selected':''}>${v}+</option>`).join('');
-
-  const pA=document.getElementById('pA');
-  const advLabel=`<span class="pnl-l">▲ RS Advancing <select class="streak-sel" id="streakSelA" onchange="updatePanels()">${selHtml('A',threshA)}</select><span class="streak-unit" id="streakUnitA">${unit}</span></span>`;
-  if(advItems.length===0){pA.innerHTML=advLabel+`<span class="pnl-empty">None</span>`;}
-  else{pA.innerHTML=advLabel+advItems.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');}
-
-  const pD=document.getElementById('pD');
-  const decLabel=`<span class="pnl-l">▼ RS Declining <select class="streak-sel" id="streakSelD" onchange="updatePanels()">${selHtml('D',threshD)}</select><span class="streak-unit" id="streakUnitD">${unit}</span></span>`;
-  if(decItems.length===0){pD.innerHTML=decLabel+`<span class="pnl-empty">None</span>`;}
-  else{pD.innerHTML=decLabel+decItems.map(([tk,nm])=>`<span class="pnl-t" title="${esc(nm)}">${esc(tk)}</span>`).join('');}
 }
 
 function drawSparkline(canvas,series){
