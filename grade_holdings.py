@@ -314,98 +314,94 @@ def main():
             hist = data.get("historical", [])
             if not hist:
                 return None
-            # FMP returns newest first, reverse for chronological order
             closes = [d["adjClose"] for d in reversed(hist) if "adjClose" in d]
             return closes if len(closes) >= 50 else None
         except Exception:
             return None
 
+    # ─── Bulk download all tickers at once (avoids rate limiting) ──
+    print(f"Bulk downloading {len(holding_tickers)} tickers from Yahoo Finance...")
+    raw = yf.download(
+        holding_tickers,
+        start=h_start.strftime("%Y-%m-%d"),
+        end=(end + timedelta(days=1)).strftime("%Y-%m-%d"),
+        group_by="ticker",
+        auto_adjust=True,
+        threads=True,
+    )
+
+    def get_closes(ticker):
+        try:
+            if len(holding_tickers) == 1:
+                df = raw.dropna(subset=["Close"])
+            else:
+                df = raw[ticker].dropna(subset=["Close"])
+            return df["Close"].values.tolist()
+        except Exception:
+            return []
+
+    # ─── Fetch names individually (uses yf.Ticker.info, slower) ──
+    print("Fetching company names and descriptions...")
     for i, tk in enumerate(holding_tickers):
-        if (i + 1) % 50 == 0 or i == 0:
-            print(f"  {i+1}/{len(holding_tickers)}...")
+        if (i + 1) % 100 == 0 or i == 0:
+            print(f"  Names: {i+1}/{len(holding_tickers)}...")
         try:
             ticker_obj = yf.Ticker(tk)
-            hist = ticker_obj.history(
-                start=h_start.strftime("%Y-%m-%d"),
-                end=end.strftime("%Y-%m-%d"),
-                auto_adjust=True,
-            )
-
-            # Fetch company name and description
-            try:
-                info = ticker_obj.info
-                name = info.get("shortName") or info.get("longName") or ""
-                summary = info.get("longBusinessSummary") or ""
-                if summary:
-                    sentences = summary.split('. ')
-                    short = ''
-                    for s in sentences:
-                        candidate = short + s + '. ' if short else s + '. '
-                        if len(candidate) > 500:
-                            break
-                        short = candidate
-                    if not short:
-                        short = summary[:497] + '...'
-                    summary = short.strip()
-                if name:
-                    holding_names[tk] = {"n": name, "d": summary} if summary else {"n": name}
-            except Exception:
-                pass
-
-            if hist.empty or "Close" not in hist.columns:
-                closes = []
-            else:
-                closes = hist["Close"].dropna().values.tolist()
-
-            # If yfinance returned insufficient data for SMA200, try FMP fallback
-            if len(closes) < 200:
-                fmp_closes = fetch_closes_from_fmp(tk)
-                if fmp_closes and len(fmp_closes) > len(closes):
-                    print(f"    FMP fallback for {tk}: yf={len(closes)} pts -> fmp={len(fmp_closes)} pts")
-                    closes = fmp_closes
-                    fmp_fallback_count += 1
-
-            if len(closes) < 50:
-                holding_grades[tk] = "b"
-                failed += 1
-                continue
-
-            ema9 = compute_ema(closes, 9)
-            ema21 = compute_ema(closes, 21)
-            sma50 = compute_sma(closes, 50)
-            sma200 = compute_sma(closes, 200)  # None if < 200 points
-            price = closes[-1]
-
-            grade = grade_holding(price, ema9, ema21, sma50, sma200)
-            holding_grades[tk] = grade
-            graded += 1
-
-            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM", "WES", "CWEN", "ATI"):
-                print(f"    DEBUG {tk}: Price={price:.2f} EMA9={ema9:.2f} EMA21={ema21:.2f} "
-                      f"SMA50={sma50:.2f} SMA200={sma200 if sma200 is not None else 'N/A'} pts={len(closes)} -> {grade}")
-
-        except Exception as ex:
-            # yfinance failed entirely — try FMP as last resort
-            fmp_closes = fetch_closes_from_fmp(tk)
-            if fmp_closes and len(fmp_closes) >= 50:
-                print(f"    FMP rescue for {tk}: yf FAILED ({ex}) -> fmp={len(fmp_closes)} pts")
-                fmp_fallback_count += 1
-                ema9 = compute_ema(fmp_closes, 9)
-                ema21 = compute_ema(fmp_closes, 21)
-                sma50 = compute_sma(fmp_closes, 50)
-                sma200 = compute_sma(fmp_closes, 200)
-                price = fmp_closes[-1]
-                grade = grade_holding(price, ema9, ema21, sma50, sma200)
-                holding_grades[tk] = grade
-                graded += 1
-            else:
-                holding_grades[tk] = "b"
-                failed += 1
-            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM", "WES", "CWEN", "ATI"):
-                print(f"    DEBUG {tk}: FAILED ({ex}) -> {holding_grades[tk]}")
-
+            info = ticker_obj.info
+            name = info.get("shortName") or info.get("longName") or ""
+            summary = info.get("longBusinessSummary") or ""
+            if summary:
+                sentences = summary.split('. ')
+                short = ''
+                for s in sentences:
+                    candidate = short + s + '. ' if short else s + '. '
+                    if len(candidate) > 500:
+                        break
+                    short = candidate
+                if not short:
+                    short = summary[:497] + '...'
+                summary = short.strip()
+            if name:
+                holding_names[tk] = {"n": name, "d": summary} if summary else {"n": name}
+        except Exception:
+            pass
         if (i + 1) % 10 == 0:
-            time.sleep(0.5)
+            time.sleep(0.3)
+
+    # ─── Grade each ticker ──
+    print("Grading tickers...")
+    for i, tk in enumerate(holding_tickers):
+        if (i + 1) % 100 == 0 or i == 0:
+            print(f"  Grading: {i+1}/{len(holding_tickers)}...")
+
+        closes = get_closes(tk)
+
+        # If yfinance returned insufficient data for SMA200, try FMP fallback
+        if len(closes) < 200:
+            fmp_closes = fetch_closes_from_fmp(tk)
+            if fmp_closes and len(fmp_closes) > len(closes):
+                print(f"    FMP fallback for {tk}: yf={len(closes)} pts -> fmp={len(fmp_closes)} pts")
+                closes = fmp_closes
+                fmp_fallback_count += 1
+
+        if len(closes) < 50:
+            holding_grades[tk] = "b"
+            failed += 1
+            continue
+
+        ema9 = compute_ema(closes, 9)
+        ema21 = compute_ema(closes, 21)
+        sma50 = compute_sma(closes, 50)
+        sma200 = compute_sma(closes, 200)
+        price = closes[-1]
+
+        grade = grade_holding(price, ema9, ema21, sma50, sma200)
+        holding_grades[tk] = grade
+        graded += 1
+
+        if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM", "WES", "CWEN", "ATI"):
+            print(f"    DEBUG {tk}: Price={price:.2f} EMA9={ema9:.2f} EMA21={ema21:.2f} "
+                  f"SMA50={sma50:.2f} SMA200={sma200 if sma200 is not None else 'N/A'} pts={len(closes)} -> {grade}")
 
     with open("grades.json", "w") as f:
         json.dump(holding_grades, f, separators=(",", ":"))
