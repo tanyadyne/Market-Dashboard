@@ -385,10 +385,24 @@ def main():
                       f"SMA50={sma50:.2f} SMA200={sma200 if sma200 is not None else 'N/A'} pts={len(closes)} -> {grade}")
 
         except Exception as ex:
-            holding_grades[tk] = "b"
-            failed += 1
-            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM", "WES", "CWEN"):
-                print(f"    DEBUG {tk}: FAILED ({ex}) -> b")
+            # yfinance failed entirely — try FMP as last resort
+            fmp_closes = fetch_closes_from_fmp(tk)
+            if fmp_closes and len(fmp_closes) >= 50:
+                print(f"    FMP rescue for {tk}: yf FAILED ({ex}) -> fmp={len(fmp_closes)} pts")
+                fmp_fallback_count += 1
+                ema9 = compute_ema(fmp_closes, 9)
+                ema21 = compute_ema(fmp_closes, 21)
+                sma50 = compute_sma(fmp_closes, 50)
+                sma200 = compute_sma(fmp_closes, 200)
+                price = fmp_closes[-1]
+                grade = grade_holding(price, ema9, ema21, sma50, sma200)
+                holding_grades[tk] = grade
+                graded += 1
+            else:
+                holding_grades[tk] = "b"
+                failed += 1
+            if tk in ("T", "CMCSA", "BAC", "AAPL", "XOM", "WES", "CWEN", "ATI"):
+                print(f"    DEBUG {tk}: FAILED ({ex}) -> {holding_grades[tk]}")
 
         if (i + 1) % 10 == 0:
             time.sleep(0.5)
