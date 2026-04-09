@@ -157,6 +157,15 @@ function getActiveFilters(){
   return filters;
 }
 
+function toSGT(utcStr){
+  try{
+    const s=utcStr.replace(' UTC','Z').replace(' ','T');
+    const d=new Date(s);
+    if(isNaN(d))return utcStr;
+    return d.toLocaleString('en-SG',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' SGT';
+  }catch(e){return utcStr;}
+}
+
 function renderResults(){
   if(!SCREENER_DATA || !SCREENER_DATA.results){
     document.getElementById('resultsBody').innerHTML='<span class="results-empty">No data loaded. Click "Scan" to load results.</span>';
@@ -191,7 +200,7 @@ function renderResults(){
 
   if(SCREENER_DATA.meta){
     document.getElementById('resultsMeta').textContent =
-      'Last scanned: ' + SCREENER_DATA.meta.updated +
+      'Last scanned: ' + toSGT(SCREENER_DATA.meta.updated) +
       ' · ' + SCREENER_DATA.meta.scanned + ' stocks scanned out of ' + SCREENER_DATA.meta.universe + ' universe';
   }
 }
