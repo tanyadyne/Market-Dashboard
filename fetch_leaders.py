@@ -663,33 +663,68 @@ def main():
     if len(spy_df) < LOOKBACK + 1:
         print(f"ERROR: SPY has only {len(spy_df)} bars, need {LOOKBACK + 1}"); sys.exit(1)
 
-    # ─── Bulk download prices for entire universe ─────────────
-    print(f"\nDownloading daily data for {len(all_tickers)} tickers (bulk)...")
-    raw = yf.download(all_tickers, start=start.strftime("%Y-%m-%d"),
-                      end=end.strftime("%Y-%m-%d"), group_by="ticker",
-                      auto_adjust=True, threads=True, progress=False)
-    if raw.empty:
-        print("ERROR: No daily data"); sys.exit(1)
+    # ─── Bulk download prices for entire universe (chunked) ──
+    # yfinance's bulk download silently fails for many tickers when given >500 at once.
+    # Chunk into batches of 200 with retries.
+    print(f"\nDownloading daily data for {len(all_tickers)} tickers (chunked)...")
+    import pandas as pd
 
-    print(f"Downloading weekly data (bulk)...")
-    raw_w = yf.download(all_tickers, start=w_start.strftime("%Y-%m-%d"),
-                        end=end.strftime("%Y-%m-%d"), interval="1wk",
-                        group_by="ticker", auto_adjust=True, threads=True, progress=False)
+    def chunked_download(tickers, **kwargs):
+        """Download in chunks of 200 to avoid yfinance batch failures."""
+        CHUNK = 200
+        all_dfs = {}
+        for i in range(0, len(tickers), CHUNK):
+            batch = tickers[i:i+CHUNK]
+            print(f"  Batch {i//CHUNK + 1}/{(len(tickers)+CHUNK-1)//CHUNK}: tickers {i+1}-{min(i+CHUNK, len(tickers))}...")
+            attempt = 0
+            while attempt < 3:
+                try:
+                    df = yf.download(batch, group_by="ticker", auto_adjust=True,
+                                     threads=True, progress=False, **kwargs)
+                    if df.empty:
+                        print(f"    Empty result, retrying...")
+                        attempt += 1
+                        time.sleep(5)
+                        continue
+                    # Extract per-ticker DataFrames
+                    if len(batch) == 1:
+                        all_dfs[batch[0]] = df.dropna(subset=["Close"])
+                    else:
+                        for tk in batch:
+                            try:
+                                tk_df = df[tk].dropna(subset=["Close"])
+                                if not tk_df.empty:
+                                    all_dfs[tk] = tk_df
+                            except (KeyError, Exception):
+                                pass
+                    break
+                except Exception as e:
+                    print(f"    Batch error: {e}, retrying...")
+                    attempt += 1
+                    time.sleep(5)
+            time.sleep(1)  # Pause between batches
+        return all_dfs
+
+    daily_data = chunked_download(all_tickers,
+                                   start=start.strftime("%Y-%m-%d"),
+                                   end=end.strftime("%Y-%m-%d"))
+    print(f"  Successfully downloaded daily data for {len(daily_data)}/{len(all_tickers)} tickers")
+
+    if not daily_data:
+        print("ERROR: No daily data downloaded"); sys.exit(1)
+
+    print(f"\nDownloading weekly data (chunked)...")
+    weekly_data = chunked_download(all_tickers,
+                                    start=w_start.strftime("%Y-%m-%d"),
+                                    end=end.strftime("%Y-%m-%d"),
+                                    interval="1wk")
+    print(f"  Successfully downloaded weekly data for {len(weekly_data)}/{len(all_tickers)} tickers")
 
     def get_df(ticker):
-        try:
-            df = raw[ticker].dropna(subset=["Close"]) if len(all_tickers) > 1 else raw.dropna(subset=["Close"])
-            return df
-        except Exception:
-            return None
+        return daily_data.get(ticker)
 
     def get_df_w(ticker):
-        try:
-            if raw_w.empty: return None
-            df = raw_w[ticker].dropna(subset=["Close"]) if len(all_tickers) > 1 else raw_w.dropna(subset=["Close"])
-            return df
-        except Exception:
-            return None
+        return weekly_data.get(ticker)
 
     # ─── Pre-filter: dollar volume + delisted + acquisition-limbo ──
     # Uses already-downloaded data — zero API cost.
