@@ -925,6 +925,18 @@ def main():
                 general_count += 1
     print(f"  Theme mapping: {protected_count} protected, {yahoo_count} via Yahoo, {etf_count} via ETF, {general_count} general · {len(set(theme_map.values()))} active themes")
 
+    # ─── Pharma/biotech mcap filter: require >= $20B for these themes ──
+    PHARMA_BIOTECH_THEMES = {"Pharmaceuticals", "Biotechnology"}
+    PHARMA_BIOTECH_MIN_MCAP = 20_000_000_000
+    before = len(all_tickers)
+    all_tickers = [
+        t for t in all_tickers
+        if theme_map.get(t) not in PHARMA_BIOTECH_THEMES
+        or mcap_cache.get(t, 0) >= PHARMA_BIOTECH_MIN_MCAP
+    ]
+    pharma_removed = before - len(all_tickers)
+    print(f"  Pharma/Biotech filter: {pharma_removed} removed (< ${PHARMA_BIOTECH_MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
+
     # ─── SPY baselines ────────────────────────────────────────
     spy_closes = spy_df["Close"].values
     spy_highs = spy_df["High"].values
