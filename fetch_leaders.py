@@ -466,6 +466,13 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     c5 = (c[-1] / c[-6] - 1) * 100 if n >= 6 else None
     c20 = (c[-1] / c[-21] - 1) * 100 if n >= 21 else None
 
+    # ─── Liquidity filter: Price × Avg Volume (10D) >= $70M ──
+    if n >= 10:
+        avg_vol_10d = float(np.mean(v[-10:]))
+        dollar_vol = price * avg_vol_10d
+        if dollar_vol < 70_000_000:
+            return None
+
     atr = compute_atr(h, l, c, ATR_PERIOD)
     valid_c = [x for x in c if x is not None]
     sma50 = np.mean(valid_c[-50:]) if len(valid_c) >= 50 else np.mean(valid_c)
