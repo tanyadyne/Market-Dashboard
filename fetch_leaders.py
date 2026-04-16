@@ -26,27 +26,294 @@ CSV_EXTRAS = [
     "GOOG","LNG","NOK","NVO","OWL","RDDT","SMCI","SNAP","SNDK","STX","WDC",
 ]
 
+# Yahoo Finance industry → our theme name mapping
+INDUSTRY_TO_THEME = {
+    # Tech
+    "Semiconductors": "Semiconductors",
+    "Semiconductor Equipment & Materials": "Semiconductors",
+    "Electronic Components": "Semiconductors",
+    "Software—Application": "Software",
+    "Software - Application": "Software",
+    "Software—Infrastructure": "Software",
+    "Software - Infrastructure": "Software",
+    "Information Technology Services": "Software",
+    "Computer Hardware": "Software",
+    "Communication Equipment": "Telecom",
+    "Consumer Electronics": "Software",
+    "Scientific & Technical Instruments": "Semiconductors",
+    "Electronic Gaming & Multimedia": "Esports & Gaming",
+    # Aerospace/Defense
+    "Aerospace & Defense": "Aerospace & Defense",
+    # Healthcare
+    "Biotechnology": "Biotechnology",
+    "Drug Manufacturers—General": "Pharmaceuticals",
+    "Drug Manufacturers - General": "Pharmaceuticals",
+    "Drug Manufacturers—Specialty & Generic": "Pharmaceuticals",
+    "Drug Manufacturers - Specialty & Generic": "Pharmaceuticals",
+    "Medical Devices": "Healthcare Equipment",
+    "Medical Instruments & Supplies": "Healthcare Equipment",
+    "Diagnostics & Research": "Healthcare",
+    "Healthcare Plans": "Healthcare Services",
+    "Health Information Services": "Healthcare Services",
+    "Medical Care Facilities": "Medical/Nursing Services",
+    "Medical Distribution": "Healthcare Services",
+    "Pharmaceutical Retailers": "Healthcare Services",
+    # Financials
+    "Banks—Diversified": "Banks",
+    "Banks - Diversified": "Banks",
+    "Banks—Regional": "Regional Banks",
+    "Banks - Regional": "Regional Banks",
+    "Capital Markets": "Capital Markets",
+    "Asset Management": "Capital Markets",
+    "Financial Data & Stock Exchanges": "Capital Markets",
+    "Credit Services": "Digital Payments",
+    "Insurance—Brokers": "Insurance",
+    "Insurance - Brokers": "Insurance",
+    "Insurance—Diversified": "Insurance",
+    "Insurance - Diversified": "Insurance",
+    "Insurance—Life": "Insurance",
+    "Insurance - Life": "Insurance",
+    "Insurance—Property & Casualty": "Insurance",
+    "Insurance - Property & Casualty": "Insurance",
+    "Insurance—Reinsurance": "Insurance",
+    "Insurance - Reinsurance": "Insurance",
+    "Insurance—Specialty": "Insurance",
+    "Insurance - Specialty": "Insurance",
+    "Mortgage Finance": "Financials",
+    "Financial Conglomerates": "Financials",
+    # Consumer
+    "Internet Retail": "Online Retail",
+    "Discount Stores": "Consumer Staples",
+    "Grocery Stores": "Consumer Staples",
+    "Department Stores": "Retail",
+    "Specialty Retail": "Retail",
+    "Footwear & Accessories": "Consumer Discretionary",
+    "Apparel Retail": "Retail",
+    "Apparel Manufacturing": "Consumer Discretionary",
+    "Luxury Goods": "Consumer Discretionary",
+    "Furnishings, Fixtures & Appliances": "Consumer Discretionary",
+    "Household & Personal Products": "Consumer Staples",
+    "Personal Services": "Consumer Discretionary",
+    "Restaurants": "Consumer Discretionary",
+    "Lodging": "Leisure & Ent",
+    "Resorts & Casinos": "Casinos & Gaming",
+    "Gambling": "Casinos & Gaming",
+    "Travel Services": "Airlines & Travel",
+    "Leisure": "Leisure & Ent",
+    "Recreational Vehicles": "Consumer Discretionary",
+    "Auto Manufacturers": "EV & Mobility",
+    "Auto Parts": "EV & Mobility",
+    "Auto & Truck Dealerships": "Consumer Discretionary",
+    # Food/Beverage
+    "Beverages—Brewers": "Food & Beverage",
+    "Beverages - Brewers": "Food & Beverage",
+    "Beverages—Non-Alcoholic": "Food & Beverage",
+    "Beverages - Non-Alcoholic": "Food & Beverage",
+    "Beverages—Wineries & Distilleries": "Food & Beverage",
+    "Beverages - Wineries & Distilleries": "Food & Beverage",
+    "Confectioners": "Food & Beverage",
+    "Packaged Foods": "Food & Beverage",
+    "Farm Products": "Food & Beverage",
+    "Food Distribution": "Food & Beverage",
+    "Tobacco": "Consumer Staples",
+    "Agricultural Inputs": "Chemicals (Agricultural)",
+    # Energy
+    "Oil & Gas Drilling": "Oil & Gas Equipment",
+    "Oil & Gas E&P": "Oil Refining/Exploration",
+    "Oil & Gas Equipment & Services": "Oil & Gas Equipment",
+    "Oil & Gas Integrated": "Oil Refining/Exploration",
+    "Oil & Gas Midstream": "Energy Infrastructure",
+    "Oil & Gas Refining & Marketing": "Oil Refining/Exploration",
+    "Thermal Coal": "Metals & Mining",
+    "Coking Coal": "Metals & Mining",
+    "Uranium": "Uranium / Nuclear",
+    "Solar": "Solar Energy",
+    # Industrial
+    "Conglomerates": "Industrials",
+    "Industrial Distribution": "Industrials",
+    "Engineering & Construction": "Infrastructure Dev",
+    "Farm & Heavy Construction Machinery": "Industrials",
+    "Building Products & Equipment": "Home Construction",
+    "Building Materials": "Basic Materials",
+    "Residential Construction": "Home Construction",
+    "Specialty Industrial Machinery": "Industrials",
+    "Specialty Business Services": "Industrials",
+    "Tools & Accessories": "Industrials",
+    "Electrical Equipment & Parts": "Industrials",
+    "Pollution & Treatment Controls": "Industrials",
+    "Waste Management": "Industrials",
+    "Rental & Leasing Services": "Industrials",
+    "Staffing & Employment Services": "Industrials",
+    "Consulting Services": "Industrials",
+    "Education & Training Services": "Industrials",
+    "Security & Protection Services": "Industrials",
+    "Business Equipment & Supplies": "Industrials",
+    "Metal Fabrication": "Metals & Mining",
+    # Transport
+    "Airlines": "Airlines & Travel",
+    "Trucking": "Transportation",
+    "Railroads": "Transportation",
+    "Marine Shipping": "Maritime & Shipping",
+    "Integrated Freight & Logistics": "Transportation",
+    # Materials
+    "Specialty Chemicals": "Chemicals (Specialty)",
+    "Chemicals": "Chemicals (Specialty)",
+    "Aluminum": "Metals & Mining",
+    "Copper": "Copper Miners",
+    "Gold": "Gold Miners",
+    "Silver": "Silver Miners",
+    "Other Industrial Metals & Mining": "Metals & Mining",
+    "Other Precious Metals & Mining": "Silver Miners",
+    "Steel": "Steel",
+    "Paper & Paper Products": "Timber & Forestry",
+    "Lumber & Wood Production": "Timber & Forestry",
+    "Packaging & Containers": "Basic Materials",
+    # Telecom/Media
+    "Telecom Services": "Telecom",
+    "Internet Content & Information": "Telecom",
+    "Entertainment": "Telecom",
+    "Broadcasting": "Telecom",
+    "Publishing": "Telecom",
+    "Advertising Agencies": "Telecom",
+    # Real Estate / REITs
+    "Real Estate—Development": "US Real Estate",
+    "Real Estate - Development": "US Real Estate",
+    "Real Estate—Diversified": "US Real Estate",
+    "Real Estate - Diversified": "US Real Estate",
+    "Real Estate Services": "US Real Estate",
+    "REIT—Diversified": "US Real Estate",
+    "REIT - Diversified": "US Real Estate",
+    "REIT—Healthcare Facilities": "US Real Estate",
+    "REIT - Healthcare Facilities": "US Real Estate",
+    "REIT—Hotel & Motel": "US Real Estate",
+    "REIT - Hotel & Motel": "US Real Estate",
+    "REIT—Industrial": "US Real Estate",
+    "REIT - Industrial": "US Real Estate",
+    "REIT—Mortgage": "US Real Estate",
+    "REIT - Mortgage": "US Real Estate",
+    "REIT—Office": "US Real Estate",
+    "REIT - Office": "US Real Estate",
+    "REIT—Residential": "US Real Estate",
+    "REIT - Residential": "US Real Estate",
+    "REIT—Retail": "US Real Estate",
+    "REIT - Retail": "US Real Estate",
+    "REIT—Specialty": "US Real Estate",
+    "REIT - Specialty": "US Real Estate",
+    # Utilities
+    "Utilities—Diversified": "Utilities",
+    "Utilities - Diversified": "Utilities",
+    "Utilities—Independent Power Producers": "Utilities",
+    "Utilities - Independent Power Producers": "Utilities",
+    "Utilities—Regulated Electric": "Utilities",
+    "Utilities - Regulated Electric": "Utilities",
+    "Utilities—Regulated Gas": "Utilities",
+    "Utilities - Regulated Gas": "Utilities",
+    "Utilities—Regulated Water": "Water Infrastructure",
+    "Utilities - Regulated Water": "Water Infrastructure",
+    "Utilities—Renewable": "Clean Energy",
+    "Utilities - Renewable": "Clean Energy",
+}
+
+
+def map_industry_to_theme(industry):
+    """Map Yahoo Finance industry to one of our themes."""
+    if not industry:
+        return None
+    # Direct match
+    if industry in INDUSTRY_TO_THEME:
+        return INDUSTRY_TO_THEME[industry]
+    # Try normalized (handle dash variants)
+    normalized = industry.replace("—", " - ").replace("–", " - ")
+    if normalized in INDUSTRY_TO_THEME:
+        return INDUSTRY_TO_THEME[normalized]
+    # Substring fallback
+    industry_lower = industry.lower()
+    for key, theme in INDUSTRY_TO_THEME.items():
+        if key.lower() in industry_lower or industry_lower in key.lower():
+            return theme
+    return None
+
+
 
 def build_universe():
-    """Build stock universe + theme map from ETF_INFO."""
+    """Build stock universe + collect all ETF assignments per stock.
+    Returns sorted stock list and stock_to_etfs dict (for later resolution).
+    """
     stocks = set()
-    theme_map = {}
+    stock_to_etfs = {}  # stock -> [(theme_name, holdings_count), ...]
     for info in ETF_INFO:
         h_str = info.get("h", "")
         name = info.get("n", "")
         if not h_str:
             continue
-        for h in h_str.split(","):
-            h = h.strip()
-            if h:
-                stocks.add(h)
-                if h not in theme_map:
-                    theme_map[h] = name
+        holdings = [h.strip() for h in h_str.split(",") if h.strip()]
+        count = len(holdings)
+        for h in holdings:
+            stocks.add(h)
+            stock_to_etfs.setdefault(h, []).append((name, count))
     for t in CSV_EXTRAS:
         stocks.add(t)
-        if t not in theme_map:
-            theme_map[t] = "General"
-    return sorted(stocks), theme_map
+    return sorted(stocks), stock_to_etfs
+
+
+# Niche themes Yahoo Finance can't properly classify — these baskets take priority over Yahoo industry
+PROTECTED_BASKETS = {
+    "Crypto Miners / Data Centers",
+    "AI & Power Infra",
+    "Agentic AI",
+    "Quantum",
+    "Photonics",
+    "LiDAR",
+    "HVAC / Cooling",
+    "Drones",
+    "Space",
+    "Hydrogen",
+    "Bitcoin",
+    "Blockchain",
+    "Cybersecurity",
+    "Cloud Computing",
+    "Cannabis",
+    "Genomics",
+    "China Large-Cap",
+    "Emerging Markets",
+    "Lithium & Battery",
+    "Rare Earth Metals",
+    "Clean Energy",
+    "Solar Energy",
+    "Uranium / Nuclear",
+    "EV & Mobility",
+    "Fintech Innovation",
+    "Digital Payments",
+    "Esports & Gaming",
+    "Casinos & Gaming",
+}
+
+
+def resolve_theme(ticker, stock_to_etfs, industry_cache):
+    """
+    Resolve theme for a stock with this priority:
+    1. If stock is in any PROTECTED_BASKETS ETF, use the most specific (fewest holdings)
+    2. Else if Yahoo industry maps to a theme, use Yahoo
+    3. Else use the ETF with fewest holdings (any theme)
+    4. Else "General"
+    """
+    etfs = stock_to_etfs.get(ticker, [])
+    # Step 1: protected baskets win
+    protected = [(n, c) for n, c in etfs if n in PROTECTED_BASKETS]
+    if protected:
+        protected.sort(key=lambda x: x[1])
+        return protected[0][0]
+    # Step 2: Yahoo industry
+    industry = industry_cache.get(ticker, "")
+    yahoo_theme = map_industry_to_theme(industry)
+    if yahoo_theme:
+        return yahoo_theme
+    # Step 3: any ETF (fewest holdings)
+    if etfs:
+        etfs_sorted = sorted(etfs, key=lambda x: x[1])
+        return etfs_sorted[0][0]
+    # Step 4: general
+    return "General"
 
 
 def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map):
@@ -258,20 +525,23 @@ def main():
     print("Liquid Leaders — Stock RS Tracker")
     print("=" * 60)
 
-    all_tickers, theme_map = build_universe()
-    print(f"Universe: {len(all_tickers)} stocks, {len(set(theme_map.values()))} themes")
+    all_tickers, stock_to_etfs = build_universe()
+    print(f"Universe: {len(all_tickers)} stocks, {len(set(name for etfs in stock_to_etfs.values() for name, _ in etfs))} unique ETF themes")
 
-    # ─── Filter by market cap >= $1B (cached, auto-refreshes weekly) ──
+    # ─── Filter by market cap >= $1B + fetch industry (cached, weekly auto-refresh) ──
     MIN_MCAP = 1_000_000_000
-    mcap_data = {"refreshed": "", "caps": {}}
+    mcap_data = {"refreshed": "", "caps": {}, "industries": {}}
     if os.path.exists("leaders_mcap.json"):
         try:
             with open("leaders_mcap.json") as f:
                 mcap_data = json.load(f)
+                if "industries" not in mcap_data:
+                    mcap_data["industries"] = {}
         except Exception:
-            mcap_data = {"refreshed": "", "caps": {}}
+            mcap_data = {"refreshed": "", "caps": {}, "industries": {}}
 
     mcap_cache = mcap_data.get("caps", {})
+    industry_cache = mcap_data.get("industries", {})
     last_refreshed = mcap_data.get("refreshed", "")
 
     # Auto-refresh if cache is older than 7 days
@@ -283,34 +553,73 @@ def main():
             days_old = (date.today() - date.fromisoformat(last_refreshed)).days
             if days_old >= 7:
                 needs_full_refresh = True
-                print(f"  Market cap cache is {days_old} days old — refreshing all")
+                print(f"  Cache is {days_old} days old — refreshing all market caps + industries")
     except Exception:
         needs_full_refresh = True
 
-    tickers_to_check = all_tickers if needs_full_refresh else [t for t in all_tickers if t not in mcap_cache]
+    # Refresh tickers missing either market cap OR industry
+    if needs_full_refresh:
+        tickers_to_check = all_tickers
+    else:
+        tickers_to_check = [t for t in all_tickers if t not in mcap_cache or t not in industry_cache]
 
     if tickers_to_check:
-        print(f"  Fetching market caps for {len(tickers_to_check)} tickers{'(full refresh)' if needs_full_refresh else ' (new only)'}...")
+        print(f"  Fetching market cap + industry for {len(tickers_to_check)} tickers{' (full refresh)' if needs_full_refresh else ' (new only)'}...")
         for i, tk in enumerate(tickers_to_check):
             try:
-                fi = yf.Ticker(tk).fast_info
+                ticker_obj = yf.Ticker(tk)
+                # Market cap from fast_info (faster)
+                fi = ticker_obj.fast_info
                 mc = fi.get("marketCap", fi.get("market_cap", 0)) or 0
                 mcap_cache[tk] = int(mc)
+                # Industry from full info (slower but needed)
+                try:
+                    info = ticker_obj.info
+                    industry_cache[tk] = info.get("industry", "") or ""
+                except Exception:
+                    industry_cache[tk] = ""
             except Exception:
-                mcap_cache[tk] = MIN_MCAP  # Assume valid if can't check
+                mcap_cache[tk] = MIN_MCAP  # Assume valid
+                industry_cache[tk] = industry_cache.get(tk, "")
             if (i + 1) % 50 == 0:
                 print(f"    {i+1}/{len(tickers_to_check)}...")
                 time.sleep(1)
-        mcap_data = {"refreshed": date.today().isoformat(), "caps": mcap_cache}
+        mcap_data = {"refreshed": date.today().isoformat(), "caps": mcap_cache, "industries": industry_cache}
         with open("leaders_mcap.json", "w") as f:
             json.dump(mcap_data, f, separators=(",", ":"))
-        print(f"  Saved {len(mcap_cache)} market caps (refreshed {date.today().isoformat()})")
+        print(f"  Saved {len(mcap_cache)} market caps + {len(industry_cache)} industries (refreshed {date.today().isoformat()})")
 
-    # Filter
+    # Filter by market cap
     filtered = [t for t in all_tickers if mcap_cache.get(t, MIN_MCAP) >= MIN_MCAP]
     removed = len(all_tickers) - len(filtered)
     print(f"  Market cap filter: {removed} stocks removed (< $1B), {len(filtered)} remaining")
     all_tickers = filtered
+
+    # ─── Resolve each stock's theme using protected basket > Yahoo industry > fallback ──
+    theme_map = {}
+    protected_count = yahoo_count = etf_count = general_count = 0
+    for tk in all_tickers:
+        etfs = stock_to_etfs.get(tk, [])
+        protected = [(n, c) for n, c in etfs if n in PROTECTED_BASKETS]
+        if protected:
+            protected.sort(key=lambda x: x[1])
+            theme_map[tk] = protected[0][0]
+            protected_count += 1
+        else:
+            industry = industry_cache.get(tk, "")
+            yahoo_theme = map_industry_to_theme(industry)
+            if yahoo_theme:
+                theme_map[tk] = yahoo_theme
+                yahoo_count += 1
+            elif etfs:
+                etfs_sorted = sorted(etfs, key=lambda x: x[1])
+                theme_map[tk] = etfs_sorted[0][0]
+                etf_count += 1
+            else:
+                theme_map[tk] = "General"
+                general_count += 1
+    print(f"  Theme mapping: {protected_count} protected baskets, {yahoo_count} via Yahoo industry, {etf_count} via ETF fallback, {general_count} general")
+    print(f"  Active themes: {len(set(theme_map.values()))}")
 
     # ─── Download daily data ──────────────────────────────────
     end = datetime.now() + timedelta(days=1)
