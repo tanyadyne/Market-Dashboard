@@ -738,7 +738,7 @@ def main():
     # ─── Market cap + industry lookup (ONLY on liquid survivors) ──
     MIN_MCAP = 2_000_000_000
     CACHE_VERSION = 3  # Bump forces cache refresh when fetching logic changes
-    mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "version": 0}
+    mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "version": 0, "refresh_in_progress": False}
     if os.path.exists("leaders_mcap.json"):
         try:
             with open("leaders_mcap.json") as f:
@@ -747,19 +747,27 @@ def main():
                     mcap_data["industries"] = {}
                 if "version" not in mcap_data:
                     mcap_data["version"] = 0
+                if "refresh_in_progress" not in mcap_data:
+                    mcap_data["refresh_in_progress"] = False
         except Exception:
-            mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "version": 0}
+            mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "version": 0, "refresh_in_progress": False}
 
     mcap_cache = mcap_data.get("caps", {})
     industry_cache = mcap_data.get("industries", {})
     last_refreshed = mcap_data.get("refreshed", "")
     cache_version = mcap_data.get("version", 0)
+    refresh_in_progress = mcap_data.get("refresh_in_progress", False)
+    # Per-version refresh checkpoint: tracks which tickers have been re-verified at the current schema
+    refreshed_at_v = mcap_data.get("refreshed_at_v", {})  # {ticker: version_int}
 
-    # Auto-refresh if: cache older than 7 days OR schema version changed
+    # Auto-refresh if: cache older than 7 days OR schema version changed OR refresh still in progress
     needs_full_refresh = False
-    if cache_version < CACHE_VERSION:
+    if cache_version < CACHE_VERSION or refresh_in_progress:
         needs_full_refresh = True
-        print(f"  Cache schema v{cache_version} → v{CACHE_VERSION} — will re-verify entries over coming runs")
+        if cache_version < CACHE_VERSION:
+            print(f"  Cache schema v{cache_version} → v{CACHE_VERSION} — re-verifying all entries (multi-run)")
+        else:
+            print(f"  Resuming in-progress refresh from previous run")
     else:
         try:
             if not last_refreshed:
@@ -772,9 +780,10 @@ def main():
         except Exception:
             needs_full_refresh = True
 
-    # Determine which liquid tickers need fetching
+    # Determine which liquid tickers need fetching this run
     if needs_full_refresh:
-        tickers_to_check = list(liquid_tickers)
+        # Only re-fetch tickers NOT yet verified at current schema version
+        tickers_to_check = [t for t in liquid_tickers if refreshed_at_v.get(t, 0) < CACHE_VERSION]
     else:
         tickers_to_check = []
         for t in liquid_tickers:
@@ -785,8 +794,9 @@ def main():
 
     if tickers_to_check:
         MAX_PER_RUN = 500
+        remaining_after_run = max(0, len(tickers_to_check) - MAX_PER_RUN)
         if len(tickers_to_check) > MAX_PER_RUN:
-            print(f"  {len(tickers_to_check)} tickers need refresh — capping at {MAX_PER_RUN}/run (self-heals over multiple runs)")
+            print(f"  {len(tickers_to_check)} tickers need refresh — processing {MAX_PER_RUN}/run, {remaining_after_run} remaining")
             tickers_to_check = tickers_to_check[:MAX_PER_RUN]
         total = len(tickers_to_check)
         print(f"  Fetching market cap + industry for {total} liquid tickers...")
@@ -824,16 +834,31 @@ def main():
                 failed += 1
             mcap_cache[tk] = mc
             industry_cache[tk] = industry
+            # Mark this ticker as verified at current schema version
+            refreshed_at_v[tk] = CACHE_VERSION
             time.sleep(0.2)
             if (i + 1) % 100 == 0:
                 print(f"    {i+1}/{total}  (failed so far: {failed})")
                 time.sleep(2)
         if failed > 0:
             print(f"  {failed} tickers failed lookup (will retry next run)")
-        mcap_data = {"refreshed": date.today().isoformat(), "caps": mcap_cache, "industries": industry_cache, "version": CACHE_VERSION}
+
+        # Determine if refresh is now complete
+        still_needs_refresh = remaining_after_run > 0
+        mcap_data = {
+            "refreshed": date.today().isoformat() if not still_needs_refresh else last_refreshed,
+            "caps": mcap_cache,
+            "industries": industry_cache,
+            "version": CACHE_VERSION if not still_needs_refresh else cache_version,
+            "refresh_in_progress": still_needs_refresh,
+            "refreshed_at_v": refreshed_at_v,
+        }
         with open("leaders_mcap.json", "w") as f:
             json.dump(mcap_data, f, separators=(",", ":"))
-        print(f"  Cache updated ({len(mcap_cache)} entries, refreshed {date.today().isoformat()})")
+        if still_needs_refresh:
+            print(f"  Cache partially updated ({len(mcap_cache)} entries, {remaining_after_run} more in next runs)")
+        else:
+            print(f"  Cache fully refreshed ({len(mcap_cache)} entries, version {CACHE_VERSION})")
 
     # Final filter: market cap >= $2B (unknowns excluded)
     all_tickers = [t for t in liquid_tickers if mcap_cache.get(t, 0) >= MIN_MCAP]
