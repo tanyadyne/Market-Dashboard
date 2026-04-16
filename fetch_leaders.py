@@ -759,15 +759,24 @@ def main():
         c = df["Close"].values
         v = df["Volume"].values
         n = len(c)
-        # Acquisition-limbo flat-price check
-        if n >= 20:
-            recent = c[-20:]
+        # ─── Acquisition-limbo detection ───────────────────────
+        # Two patterns:
+        # 1. Stock has been flat for a long time (slow-grinding pre-merger arb)
+        # 2. Stock gapped recently and now sits pinned at deal price (post-announcement)
+        # Use the LAST 10 BARS — short enough to catch post-gap pinning even when older
+        # data is volatile. Real stocks (even low-vol staples/utilities) have wider
+        # 10-day ranges than acquisition-pinned stocks.
+        if n >= 10:
+            recent = c[-10:]
             avg_price = np.mean(recent)
             if avg_price > 0:
-                price_range = (np.max(recent) - np.min(recent)) / avg_price
+                price_range_pct = (np.max(recent) - np.min(recent)) / avg_price
                 returns = np.diff(recent) / recent[:-1]
                 return_std = float(np.std(returns)) if len(returns) > 0 else 0
-                if price_range < 0.015 and return_std < 0.0025:
+                # Acquisition-pinned: range under 2% AND return std under 0.5% over 10 days.
+                # For comparison, even the lowest-vol utilities (e.g. SO, DUK) typically
+                # have 10-day ranges of 3-5% and return std of 0.7-1.2%.
+                if price_range_pct < 0.02 and return_std < 0.005:
                     excluded["flat"] += 1
                     continue
         # Dollar volume check (price × avg_vol_10d)
