@@ -44,7 +44,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.market_check.outputs.skip != 'true'
-        run: pip install "yfinance==0.2.54" numpy requests
+        run: pip install yfinance numpy requests
 
       - name: Fetch Liquid Leaders data
         if: steps.market_check.outputs.skip != 'true'
