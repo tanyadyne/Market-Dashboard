@@ -682,6 +682,33 @@ def main():
         """Download in chunks of 200 to avoid yfinance batch failures."""
         CHUNK = 200
         all_dfs = {}
+
+        def flatten_df(df):
+            """Flatten MultiIndex columns from new yfinance versions."""
+            if hasattr(df.columns, 'levels'):
+                # MultiIndex: take the top level (Price, not Ticker)
+                df.columns = [col[0] if isinstance(col, tuple) else col for col in df.columns]
+            return df
+
+        def extract_ticker(df, tk):
+            """Extract single-ticker DataFrame from bulk download result."""
+            try:
+                sub = df[tk]
+                if isinstance(sub.columns, type(df.columns)) and hasattr(sub.columns, 'levels'):
+                    sub.columns = [col[0] if isinstance(col, tuple) else col for col in sub.columns]
+                return sub.dropna(subset=["Close"])
+            except (KeyError, TypeError):
+                try:
+                    # Fallback: columns might be (field, ticker) tuples at top level
+                    cols = {col[0]: col for col in df.columns if isinstance(col, tuple) and col[1] == tk}
+                    if cols:
+                        sub = df[[cols[f] for f in ["Close","High","Low","Open","Volume"] if f in cols]]
+                        sub.columns = [col[0] for col in sub.columns]
+                        return sub.dropna(subset=["Close"])
+                except Exception:
+                    pass
+            return None
+
         for i in range(0, len(tickers), CHUNK):
             batch = tickers[i:i+CHUNK]
             print(f"  Batch {i//CHUNK + 1}/{(len(tickers)+CHUNK-1)//CHUNK}: tickers {i+1}-{min(i+CHUNK, len(tickers))}...")
@@ -697,21 +724,21 @@ def main():
                         continue
                     # Extract per-ticker DataFrames
                     if len(batch) == 1:
-                        all_dfs[batch[0]] = df.dropna(subset=["Close"])
+                        flat = flatten_df(df.copy())
+                        flat = flat.dropna(subset=["Close"])
+                        if not flat.empty:
+                            all_dfs[batch[0]] = flat
                     else:
                         for tk in batch:
-                            try:
-                                tk_df = df[tk].dropna(subset=["Close"])
-                                if not tk_df.empty:
-                                    all_dfs[tk] = tk_df
-                            except (KeyError, Exception):
-                                pass
+                            tk_df = extract_ticker(df, tk)
+                            if tk_df is not None and not tk_df.empty:
+                                all_dfs[tk] = tk_df
                     break
                 except Exception as e:
                     print(f"    Batch error: {e}, retrying...")
                     attempt += 1
                     time.sleep(5)
-            time.sleep(1)  # Pause between batches
+            time.sleep(1)
         return all_dfs
 
     daily_data = chunked_download(all_tickers,
