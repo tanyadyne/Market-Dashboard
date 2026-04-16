@@ -13,8 +13,10 @@ from datetime import datetime, timedelta, date
 # Import shared functions from fetch_data.py
 from fetch_data import ETF_INFO, compute_atr, compute_atr_series, percentrank_inc
 
-LOOKBACK = 25
-LOOKBACK_W = 12
+LOOKBACK = 50      # daily: compute deltas for last 50 bars
+MA_LENGTH = 20     # daily: SMA of deltas (smoothing)
+LOOKBACK_W = 20    # weekly: compute deltas for last 20 weeks
+MA_LENGTH_W = 8    # weekly: SMA of deltas (smoothing)
 ATR_PERIOD = 14
 MAX_HISTORY_DAYS = 30
 
@@ -72,7 +74,10 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     vols = [x for x in v if x is not None and x > 0]
     rvol = (vols[-1] / np.mean(vols[:-1][-20:])) if len(vols) > 1 and np.mean(vols[:-1][-20:]) > 0 else None
 
-    # VARS computation
+    # Real Relative Strength (Reddit method):
+    # Per-bar delta = (stock_change/stock_ATR) - (spy_change/spy_ATR)
+    # Then SMA(MA_LENGTH) of those deltas = smoothed RS
+    # Sparkline shows rolling SMA values over lookback
     common = []
     for idx, ts in enumerate(df.index):
         if ts in spy_ts_map and c[idx] is not None and spy_closes[spy_ts_map[ts]] is not None:
@@ -87,33 +92,48 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
 
     etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
     extended = common[-(LOOKBACK + 1):]
-    vars_series = []
-    cumulative = 0.0
+
+    # Compute per-bar deltas
+    deltas = []
     for k in range(1, len(extended)):
         ei_prev, si_prev = extended[k - 1]
         ei, si = extended[k]
-        etf_ret = (c[ei] - c[ei_prev]) / c[ei_prev] if c[ei_prev] != 0 else 0
-        spy_ret = (spy_closes[si] - spy_closes[si_prev]) / spy_closes[si_prev] if spy_closes[si_prev] != 0 else 0
-        e_atr_pct = etf_atr_series[ei] / c[ei_prev] if c[ei_prev] != 0 and etf_atr_series[ei] > 0 else 1
-        s_atr_pct = spy_atr_series[si] / spy_closes[si_prev] if spy_closes[si_prev] != 0 and spy_atr_series[si] > 0 else 1
-        cumulative += ((etf_ret / e_atr_pct if e_atr_pct > 0 else 0) - (spy_ret / s_atr_pct if s_atr_pct > 0 else 0))
-        vars_series.append(round(cumulative, 4))
+        stock_chg = c[ei] - c[ei_prev]
+        spy_chg = spy_closes[si] - spy_closes[si_prev]
+        stock_atr = etf_atr_series[ei] if etf_atr_series[ei] > 0 else 1
+        spy_atr = spy_atr_series[si] if spy_atr_series[si] > 0 else 1
+        # SPY Power Index: how many ATRs did SPY move?
+        spy_pi = spy_chg / spy_atr
+        # Expected stock change = SPY_PI * stock_ATR
+        expected = spy_pi * stock_atr
+        # Real RS = (actual - expected) / stock_ATR
+        rrs = (stock_chg - expected) / stock_atr
+        deltas.append(rrs)
 
-    rs_series = vars_series
-    vs_series = [0.0] + vars_series
-    final_rs = rs_series[-1] if rs_series else 0
-    rs_pctrank = percentrank_inc(rs_series, final_rs) if len(rs_series) > 1 else None
+    # Compute rolling SMA(MA_LENGTH) of deltas → smoothed RS series
+    sma_series = []
+    for i in range(MA_LENGTH - 1, len(deltas)):
+        window = deltas[i - MA_LENGTH + 1:i + 1]
+        sma_series.append(round(np.mean(window), 4))
 
-    adv = sum(1 for j in range(len(rs_series) - 1, 0, -1) if rs_series[j] > rs_series[j - 1]) if len(rs_series) > 1 else 0
-    dec = sum(1 for j in range(len(rs_series) - 1, 0, -1) if rs_series[j] < rs_series[j - 1]) if len(rs_series) > 1 else 0
-    # Count consecutive only
+    if not sma_series:
+        return {"rv": round(rvol * 100) if rvol else None, "am": round(atr_mult * 100),
+                "ax": round(atr_ext * 100), "ch": round(change, 2),
+                "c5": round(c5, 2) if c5 is not None else None,
+                "c20": round(c20, 2) if c20 is not None else None,
+                "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None}
+
+    final_rs = sma_series[-1]
+    # RS percentrank computed cross-sectionally in main() after all stocks processed
+
+    # Advancing/declining streaks on the smoothed series
     adv_streak = 0
-    for j in range(len(rs_series) - 1, 0, -1):
-        if rs_series[j] > rs_series[j - 1]: adv_streak += 1
+    for j in range(len(sma_series) - 1, 0, -1):
+        if sma_series[j] > sma_series[j - 1]: adv_streak += 1
         else: break
     dec_streak = 0
-    for j in range(len(rs_series) - 1, 0, -1):
-        if rs_series[j] < rs_series[j - 1]: dec_streak += 1
+    for j in range(len(sma_series) - 1, 0, -1):
+        if sma_series[j] < sma_series[j - 1]: dec_streak += 1
         else: break
 
     return {
@@ -122,14 +142,14 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "ch": round(change, 2),
         "c5": round(c5, 2) if c5 is not None else None,
         "c20": round(c20, 2) if c20 is not None else None,
-        "rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
+        "rs": None,  # Will be set cross-sectionally in main()
         "rf": dec_streak, "ra": adv_streak,
-        "p": round(price, 2), "fr": round(final_rs, 4), "vs": vs_series,
+        "p": round(price, 2), "fr": round(final_rs, 4), "vs": sma_series,
     }
 
 
 def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_map):
-    """Process weekly metrics for one stock."""
+    """Process weekly metrics using SMA-based Real Relative Strength."""
     null_result = {"w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None}
     if df_w is None or len(df_w) < 5:
         return null_result
@@ -155,40 +175,50 @@ def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_
 
     if len(common) < LOOKBACK_W:
         return {"w_rv": round(rvol * 100) if rvol else None, "w_am": round(atr_mult * 100),
-                "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None}
+                "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None}
 
     etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
     extended = common[-(LOOKBACK_W + 1):]
-    vars_series = []
-    cumulative = 0.0
+
+    # Per-week deltas
+    deltas = []
     for k in range(1, len(extended)):
         ei_prev, si_prev = extended[k - 1]
         ei, si = extended[k]
-        etf_ret = (c[ei] - c[ei_prev]) / c[ei_prev] if c[ei_prev] != 0 else 0
-        spy_ret = (spy_w_closes[si] - spy_w_closes[si_prev]) / spy_w_closes[si_prev] if spy_w_closes[si_prev] != 0 else 0
-        e_atr_pct = etf_atr_series[ei] / c[ei_prev] if c[ei_prev] != 0 and etf_atr_series[ei] > 0 else 1
-        s_atr_pct = spy_w_atr_series[si] / spy_w_closes[si_prev] if si < len(spy_w_atr_series) and spy_w_closes[si_prev] != 0 and spy_w_atr_series[si] > 0 else 1
-        cumulative += ((etf_ret / e_atr_pct if e_atr_pct > 0 else 0) - (spy_ret / s_atr_pct if s_atr_pct > 0 else 0))
-        vars_series.append(round(cumulative, 4))
+        stock_chg = c[ei] - c[ei_prev]
+        spy_chg = spy_w_closes[si] - spy_w_closes[si_prev]
+        stock_atr = etf_atr_series[ei] if etf_atr_series[ei] > 0 else 1
+        spy_atr = spy_w_atr_series[si] if si < len(spy_w_atr_series) and spy_w_atr_series[si] > 0 else 1
+        spy_pi = spy_chg / spy_atr
+        expected = spy_pi * stock_atr
+        rrs = (stock_chg - expected) / stock_atr
+        deltas.append(rrs)
 
-    rs_series = vars_series
-    vs_series = [0.0] + vars_series
-    final_rs = rs_series[-1] if rs_series else 0
-    rs_pctrank = percentrank_inc(rs_series, final_rs) if len(rs_series) > 1 else None
+    # SMA of deltas
+    sma_series = []
+    for i in range(MA_LENGTH_W - 1, len(deltas)):
+        window = deltas[i - MA_LENGTH_W + 1:i + 1]
+        sma_series.append(round(np.mean(window), 4))
+
+    if not sma_series:
+        return {"w_rv": round(rvol * 100) if rvol else None, "w_am": round(atr_mult * 100),
+                "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None}
+
+    final_rs = sma_series[-1]
 
     adv_streak = 0
-    for j in range(len(rs_series) - 1, 0, -1):
-        if rs_series[j] > rs_series[j - 1]: adv_streak += 1
+    for j in range(len(sma_series) - 1, 0, -1):
+        if sma_series[j] > sma_series[j - 1]: adv_streak += 1
         else: break
     dec_streak = 0
-    for j in range(len(rs_series) - 1, 0, -1):
-        if rs_series[j] < rs_series[j - 1]: dec_streak += 1
+    for j in range(len(sma_series) - 1, 0, -1):
+        if sma_series[j] < sma_series[j - 1]: dec_streak += 1
         else: break
 
     return {
         "w_rv": round(rvol * 100) if rvol else None, "w_am": round(atr_mult * 100),
-        "w_rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
-        "w_rf": dec_streak, "w_ra": adv_streak, "w_vs": vs_series,
+        "w_rs": None,  # Set cross-sectionally in main()
+        "w_rf": dec_streak, "w_ra": adv_streak, "w_vs": sma_series, "w_fr": round(final_rs, 4),
     }
 
 
@@ -233,7 +263,7 @@ def main():
 
     # ─── Download daily data ──────────────────────────────────
     end = datetime.now() + timedelta(days=1)
-    start = end - timedelta(days=91)
+    start = end - timedelta(days=180)  # Need ~84 trading days for LOOKBACK=50 + MA=20 + ATR=14
 
     dl_tickers = list(set(["SPY"] + all_tickers))
     print(f"\nDownloading daily data for {len(dl_tickers)} tickers...")
@@ -303,15 +333,25 @@ def main():
 
     print(f"  Processed: {processed}/{len(all_tickers)}")
 
+    # ─── Cross-sectional percentrank (compare each stock vs ALL others) ──
+    all_d_rs = [r["fr"] for r in results if r.get("fr") is not None]
+    all_w_rs = [r.get("w_fr") for r in results if r.get("w_fr") is not None]
+
+    for r in results:
+        if r.get("fr") is not None and len(all_d_rs) > 1:
+            r["rs"] = round(percentrank_inc(all_d_rs, r["fr"]) * 100)
+        if r.get("w_fr") is not None and len(all_w_rs) > 1:
+            r["w_rs"] = round(percentrank_inc(all_w_rs, r["w_fr"]) * 100)
+
     # ─── Rank stocks ──────────────────────────────────────────
-    # Daily rank (by RS desc, then 1D change desc)
-    results.sort(key=lambda x: (x["rs"] if x["rs"] is not None else -1,
+    # Daily rank (by raw RS value desc, then 1D change desc)
+    results.sort(key=lambda x: (x["fr"] if x["fr"] is not None else -999,
                                  x["ch"] if x["ch"] is not None else -999), reverse=True)
     for i, r in enumerate(results):
         r["rk"] = i + 1
 
-    # Weekly rank (by w_rs desc, then c5 desc)
-    w_sorted = sorted(results, key=lambda x: (x["w_rs"] if x["w_rs"] is not None else -1,
+    # Weekly rank (by raw weekly RS value desc, then c5 desc)
+    w_sorted = sorted(results, key=lambda x: (x.get("w_fr") if x.get("w_fr") is not None else -999,
                                                 x["c5"] if x["c5"] is not None else -999), reverse=True)
     w_rank_map = {r["t"]: i + 1 for i, r in enumerate(w_sorted)}
     for r in results:
