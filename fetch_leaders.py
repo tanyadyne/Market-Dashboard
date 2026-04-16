@@ -5,10 +5,16 @@ Computes VARS (daily + weekly) for ~1100 individual stocks vs SPY.
 Outputs leaders.json (current snapshot) and leaders_history.json (rolling 30-day history).
 """
 
-import json, os, sys, time
+import json, os, sys, time, io
 import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta, date
+
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
 
 # Import shared functions from fetch_data.py
 from fetch_data import ETF_INFO, compute_atr, compute_atr_series, percentrank_inc
@@ -22,7 +28,7 @@ MAX_HISTORY_DAYS = 30
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
-    "ACN","ALAB","APO","ARES","ARM","AXTI","BIRD","BP","BRK-B","CAR",
+    "ACN","AEHR","ALAB","APO","ARES","ARM","AXTI","BIRD","BP","BRK-B","CAR",
     "GOOG","LNG","NOK","NVO","OWL","RDDT","SMCI","SNAP","SNDK","STX","WDC",
 ]
 
@@ -235,9 +241,101 @@ def map_industry_to_theme(industry):
 
 
 
+def fetch_ishares_holdings(etf_id, name="ETF"):
+    """Fetch holdings list from iShares official CSV endpoint."""
+    if not HAS_REQUESTS:
+        return []
+    url = f"https://www.ishares.com/us/products/{etf_id}/ishares-{name.lower()}/1467271812596.ajax?fileType=csv&fileName={name}_holdings&dataType=fund"
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
+        resp = requests.get(url, timeout=30, headers=headers)
+        if resp.status_code != 200:
+            print(f"  iShares {name} HTTP {resp.status_code}")
+            return []
+        lines = resp.text.splitlines()
+        # iShares CSV has metadata header rows before the actual data table
+        header_idx = None
+        for i, line in enumerate(lines):
+            if line.startswith("Ticker,") or line.startswith('"Ticker"'):
+                header_idx = i
+                break
+        if header_idx is None:
+            print(f"  iShares {name}: couldn't find Ticker header")
+            return []
+        import csv as csvlib
+        reader = csvlib.reader(io.StringIO("\n".join(lines[header_idx:])))
+        header = next(reader)
+        try:
+            tk_col = header.index("Ticker")
+        except ValueError:
+            return []
+        ac_col = header.index("Asset Class") if "Asset Class" in header else -1
+
+        tickers = []
+        for row in reader:
+            if len(row) <= tk_col:
+                continue
+            tk = row[tk_col].strip().replace(".", "-")
+            if not tk or tk in ("-", "USD", "Cash"):
+                continue
+            if ac_col >= 0 and len(row) > ac_col:
+                ac = row[ac_col].strip()
+                if ac and "Equity" not in ac:
+                    continue
+            if len(tk) > 6 or "/" in tk:
+                continue
+            tickers.append(tk)
+        return tickers
+    except Exception as e:
+        print(f"  iShares {name} fetch failed: {e}")
+        return []
+
+
+def get_index_universe():
+    """Fetch IWV (Russell 3000) holdings — covers all of SPY, QQQ, DIA, IWM.
+    Cached for 7 days. Falls back to cache or empty list on failure.
+    """
+    cache_file = "leaders_index_universe.json"
+    cache = {"refreshed": "", "tickers": []}
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file) as f:
+                cache = json.load(f)
+        except Exception:
+            pass
+
+    try:
+        if cache.get("refreshed") and cache.get("tickers"):
+            days_old = (date.today() - date.fromisoformat(cache["refreshed"])).days
+            if days_old < 7:
+                print(f"  Using cached index universe ({len(cache['tickers'])} tickers, {days_old}d old)")
+                return cache["tickers"]
+    except Exception:
+        pass
+
+    print("  Fetching Russell 3000 (IWV) holdings from iShares...")
+    tickers = fetch_ishares_holdings("239714", "IWV")
+    if not tickers:
+        print("  IWV fetch failed, trying IWM (Russell 2000)...")
+        tickers = fetch_ishares_holdings("239710", "IWM")
+    if not tickers:
+        print(f"  All fetches failed, using cached version ({len(cache.get('tickers', []))} tickers)")
+        return cache.get("tickers", [])
+
+    print(f"  Fetched {len(tickers)} tickers from iShares")
+    cache = {"refreshed": date.today().isoformat(), "tickers": tickers}
+    with open(cache_file, "w") as f:
+        json.dump(cache, f, separators=(",", ":"))
+    return tickers
+
+
 def build_universe():
     """Build stock universe + collect all ETF assignments per stock.
-    Returns sorted stock list and stock_to_etfs dict (for later resolution).
+    Universe sources:
+      1. All stocks from ETF_INFO holdings (themed)
+      2. CSV_EXTRAS (manually added)
+      3. IWV (Russell 3000) holdings via iShares — covers SPY/QQQ/DIA/IWM
+    Returns sorted stock list and stock_to_etfs dict.
     """
     stocks = set()
     stock_to_etfs = {}  # stock -> [(theme_name, holdings_count), ...]
@@ -253,6 +351,17 @@ def build_universe():
             stock_to_etfs.setdefault(h, []).append((name, count))
     for t in CSV_EXTRAS:
         stocks.add(t)
+
+    # Add Russell 3000 constituents (covers SPY/QQQ/DIA/IWM)
+    print("Loading index universe (SPY/QQQ/DIA/IWM via Russell 3000)...")
+    index_tickers = get_index_universe()
+    added = 0
+    for t in index_tickers:
+        if t not in stocks:
+            stocks.add(t)
+            added += 1
+    print(f"  Added {added} new tickers from Russell 3000 (total universe before mcap filter: {len(stocks)})")
+
     return sorted(stocks), stock_to_etfs
 
 
