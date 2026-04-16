@@ -333,7 +333,7 @@ def main():
         end=end.strftime("%Y-%m-%d"),
         group_by="ticker",
         auto_adjust=True,
-        threads=True,
+        threads=False,
     )
 
     if raw.empty:
@@ -349,17 +349,28 @@ def main():
         interval="1wk",
         group_by="ticker",
         auto_adjust=True,
-        threads=True,
+        threads=False,
     )
     print(f"Weekly data downloaded: {not raw_w.empty}")
+
+    def flatten_columns(df):
+        """Flatten MultiIndex columns introduced in yfinance >= 0.2.51."""
+        if df is None:
+            return None
+        if hasattr(df.columns, 'levels'):
+            df = df.copy()
+            df.columns = [col[0] if isinstance(col, tuple) else col for col in df.columns]
+        return df
 
     def get_df(ticker):
         try:
             if len(all_download) == 1:
-                df = raw.dropna(subset=["Close"])
+                df = flatten_columns(raw)
+                return df.dropna(subset=["Close"]) if df is not None else None
             else:
-                df = raw[ticker].dropna(subset=["Close"])
-            return df
+                sub = raw[ticker]
+                sub = flatten_columns(sub)
+                return sub.dropna(subset=["Close"]) if sub is not None else None
         except Exception:
             return None
 
@@ -368,10 +379,12 @@ def main():
             if raw_w.empty:
                 return None
             if len(all_download) == 1:
-                df = raw_w.dropna(subset=["Close"])
+                df = flatten_columns(raw_w)
+                return df.dropna(subset=["Close"]) if df is not None else None
             else:
-                df = raw_w[ticker].dropna(subset=["Close"])
-            return df
+                sub = raw_w[ticker]
+                sub = flatten_columns(sub)
+                return sub.dropna(subset=["Close"]) if sub is not None else None
         except Exception:
             return None
 
