@@ -427,7 +427,7 @@ def resolve_theme(ticker, stock_to_etfs, industry_cache):
 
 def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map):
     """Process daily metrics for one stock. Returns dict or None.
-    Returns None if stock appears delisted (stale data) or in acquisition limbo (flat price).
+    Liquidity/delisted/flat-price filters are applied upstream in main().
     """
     if df is None or len(df) < 10:
         return None
@@ -437,41 +437,10 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     v = df["Volume"].values
     n = len(c)
 
-    # ─── Delisted check: last bar must be recent ─────────────
-    try:
-        last_bar = df.index[-1]
-        last_date = last_bar.date() if hasattr(last_bar, "date") else date.fromisoformat(str(last_bar)[:10])
-        days_stale = (date.today() - last_date).days
-        if days_stale > 7:  # More than a week with no data → likely delisted
-            return None
-    except Exception:
-        pass
-
-    # ─── Acquisition-limbo check: extremely flat price ───────
-    # Acquired stocks trade near the deal price with near-zero volatility for weeks before delisting.
-    # A normal large-cap has daily return std >= 0.4% and 20-day price range >= 2%.
-    if n >= 20:
-        recent = c[-20:]
-        avg_price = np.mean(recent)
-        if avg_price > 0:
-            price_range = (np.max(recent) - np.min(recent)) / avg_price
-            returns = np.diff(recent) / recent[:-1]
-            return_std = float(np.std(returns)) if len(returns) > 0 else 0
-            # Flag only if BOTH conditions met (avoids false positives on low-vol staples/utilities)
-            if price_range < 0.015 and return_std < 0.0025:
-                return None
-
     price = float(c[-1])
     change = (c[-1] / c[-2] - 1) * 100 if n >= 2 else 0
     c5 = (c[-1] / c[-6] - 1) * 100 if n >= 6 else None
     c20 = (c[-1] / c[-21] - 1) * 100 if n >= 21 else None
-
-    # ─── Liquidity filter: Price × Avg Volume (10D) >= $70M ──
-    if n >= 10:
-        avg_vol_10d = float(np.mean(v[-10:]))
-        dollar_vol = price * avg_vol_10d
-        if dollar_vol < 70_000_000:
-            return None
 
     atr = compute_atr(h, l, c, ATR_PERIOD)
     valid_c = [x for x in c if x is not None]
@@ -670,9 +639,105 @@ def main():
     all_tickers, stock_to_etfs = build_universe()
     print(f"Universe: {len(all_tickers)} stocks, {len(set(name for etfs in stock_to_etfs.values() for name, _ in etfs))} unique ETF themes")
 
-    # ─── Filter by market cap >= $1B + fetch industry (cached, weekly auto-refresh) ──
-    MIN_MCAP = 1_000_000_000
-    CACHE_VERSION = 2  # Bump this when mcap/industry fetching logic changes to force a refresh
+    # ─── Download SPY (daily + weekly) ────────────────────────
+    end = datetime.now() + timedelta(days=1)
+    start = end - timedelta(days=180)  # Need ~84 trading days for LOOKBACK=50 + MA=20 + ATR=14
+    w_start = end - timedelta(days=365)
+
+    print("\nDownloading SPY (daily + weekly)...")
+    spy_df = yf.download("SPY", start=start.strftime("%Y-%m-%d"),
+                          end=end.strftime("%Y-%m-%d"), auto_adjust=True, progress=False)
+    if isinstance(spy_df.columns, type(spy_df.columns)) and hasattr(spy_df.columns, 'levels'):
+        spy_df.columns = spy_df.columns.droplevel(1) if spy_df.columns.nlevels > 1 else spy_df.columns
+    spy_df = spy_df.dropna(subset=["Close"])
+    print(f"  SPY daily: {len(spy_df)} bars")
+
+    spy_df_w = yf.download("SPY", start=w_start.strftime("%Y-%m-%d"),
+                            end=end.strftime("%Y-%m-%d"), interval="1wk",
+                            auto_adjust=True, progress=False)
+    if isinstance(spy_df_w.columns, type(spy_df_w.columns)) and hasattr(spy_df_w.columns, 'levels'):
+        spy_df_w.columns = spy_df_w.columns.droplevel(1) if spy_df_w.columns.nlevels > 1 else spy_df_w.columns
+    spy_df_w = spy_df_w.dropna(subset=["Close"])
+    print(f"  SPY weekly: {len(spy_df_w)} bars")
+
+    if len(spy_df) < LOOKBACK + 1:
+        print(f"ERROR: SPY has only {len(spy_df)} bars, need {LOOKBACK + 1}"); sys.exit(1)
+
+    # ─── Bulk download prices for entire universe ─────────────
+    print(f"\nDownloading daily data for {len(all_tickers)} tickers (bulk)...")
+    raw = yf.download(all_tickers, start=start.strftime("%Y-%m-%d"),
+                      end=end.strftime("%Y-%m-%d"), group_by="ticker",
+                      auto_adjust=True, threads=True, progress=False)
+    if raw.empty:
+        print("ERROR: No daily data"); sys.exit(1)
+
+    print(f"Downloading weekly data (bulk)...")
+    raw_w = yf.download(all_tickers, start=w_start.strftime("%Y-%m-%d"),
+                        end=end.strftime("%Y-%m-%d"), interval="1wk",
+                        group_by="ticker", auto_adjust=True, threads=True, progress=False)
+
+    def get_df(ticker):
+        try:
+            df = raw[ticker].dropna(subset=["Close"]) if len(all_tickers) > 1 else raw.dropna(subset=["Close"])
+            return df
+        except Exception:
+            return None
+
+    def get_df_w(ticker):
+        try:
+            if raw_w.empty: return None
+            df = raw_w[ticker].dropna(subset=["Close"]) if len(all_tickers) > 1 else raw_w.dropna(subset=["Close"])
+            return df
+        except Exception:
+            return None
+
+    # ─── Pre-filter: dollar volume + delisted + acquisition-limbo ──
+    # Uses already-downloaded data — zero API cost.
+    # Narrows universe before expensive mcap/industry lookups.
+    MIN_DOLLAR_VOL = 70_000_000
+    print(f"\nPre-filtering by liquidity (price × avg_vol_10d >= ${MIN_DOLLAR_VOL/1e6:.0f}M)...")
+    liquid_tickers = []
+    excluded = {"no_data": 0, "stale": 0, "flat": 0, "illiquid": 0}
+    for tk in all_tickers:
+        df = get_df(tk)
+        if df is None or len(df) < 10:
+            excluded["no_data"] += 1
+            continue
+        # Stale data (likely delisted)
+        try:
+            last_bar = df.index[-1]
+            last_date = last_bar.date() if hasattr(last_bar, "date") else date.fromisoformat(str(last_bar)[:10])
+            if (date.today() - last_date).days > 7:
+                excluded["stale"] += 1
+                continue
+        except Exception:
+            pass
+        c = df["Close"].values
+        v = df["Volume"].values
+        n = len(c)
+        # Acquisition-limbo flat-price check
+        if n >= 20:
+            recent = c[-20:]
+            avg_price = np.mean(recent)
+            if avg_price > 0:
+                price_range = (np.max(recent) - np.min(recent)) / avg_price
+                returns = np.diff(recent) / recent[:-1]
+                return_std = float(np.std(returns)) if len(returns) > 0 else 0
+                if price_range < 0.015 and return_std < 0.0025:
+                    excluded["flat"] += 1
+                    continue
+        # Dollar volume check (price × avg_vol_10d)
+        last_price = float(c[-1])
+        avg_vol_10d = float(np.mean(v[-10:]))
+        if last_price * avg_vol_10d < MIN_DOLLAR_VOL:
+            excluded["illiquid"] += 1
+            continue
+        liquid_tickers.append(tk)
+    print(f"  Pre-filter: {len(all_tickers)} → {len(liquid_tickers)} (excluded: {excluded['no_data']} no data, {excluded['stale']} delisted, {excluded['flat']} acquisition-limbo, {excluded['illiquid']} illiquid)")
+
+    # ─── Market cap + industry lookup (ONLY on liquid survivors) ──
+    MIN_MCAP = 2_000_000_000
+    CACHE_VERSION = 3  # Bump forces cache refresh when fetching logic changes
     mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "version": 0}
     if os.path.exists("leaders_mcap.json"):
         try:
@@ -690,11 +755,11 @@ def main():
     last_refreshed = mcap_data.get("refreshed", "")
     cache_version = mcap_data.get("version", 0)
 
-    # Auto-refresh if: cache is older than 7 days OR schema version changed
+    # Auto-refresh if: cache older than 7 days OR schema version changed
     needs_full_refresh = False
     if cache_version < CACHE_VERSION:
         needs_full_refresh = True
-        print(f"  Cache schema v{cache_version} → v{CACHE_VERSION} — forcing full refresh")
+        print(f"  Cache schema v{cache_version} → v{CACHE_VERSION} — will re-verify entries over coming runs")
     else:
         try:
             if not last_refreshed:
@@ -703,30 +768,39 @@ def main():
                 days_old = (date.today() - date.fromisoformat(last_refreshed)).days
                 if days_old >= 7:
                     needs_full_refresh = True
-                    print(f"  Cache is {days_old} days old — refreshing all market caps + industries")
+                    print(f"  Cache is {days_old} days old — refreshing")
         except Exception:
             needs_full_refresh = True
 
-    # Refresh tickers missing either market cap OR industry
+    # Determine which liquid tickers need fetching
     if needs_full_refresh:
-        tickers_to_check = all_tickers
+        tickers_to_check = list(liquid_tickers)
     else:
-        tickers_to_check = [t for t in all_tickers if t not in mcap_cache or t not in industry_cache]
+        tickers_to_check = []
+        for t in liquid_tickers:
+            if t not in mcap_cache or t not in industry_cache:
+                tickers_to_check.append(t)
+            elif mcap_cache.get(t, 0) == 0:
+                tickers_to_check.append(t)  # Self-heal failed entries
 
     if tickers_to_check:
-        print(f"  Fetching market cap + industry for {len(tickers_to_check)} tickers{' (full refresh)' if needs_full_refresh else ' (new only)'}...")
+        MAX_PER_RUN = 500
+        if len(tickers_to_check) > MAX_PER_RUN:
+            print(f"  {len(tickers_to_check)} tickers need refresh — capping at {MAX_PER_RUN}/run (self-heals over multiple runs)")
+            tickers_to_check = tickers_to_check[:MAX_PER_RUN]
+        total = len(tickers_to_check)
+        print(f"  Fetching market cap + industry for {total} liquid tickers...")
+        failed = 0
         for i, tk in enumerate(tickers_to_check):
             mc = 0
             industry = ""
             try:
                 ticker_obj = yf.Ticker(tk)
                 fi = ticker_obj.fast_info
-                # Try fast_info.marketCap first
                 try:
                     mc = int(fi.get("marketCap", 0) or fi.get("market_cap", 0) or 0)
                 except Exception:
                     mc = 0
-                # Fallback: shares outstanding × last price
                 if mc == 0:
                     try:
                         shares = fi.get("shares", 0) or 0
@@ -735,7 +809,6 @@ def main():
                             mc = int(shares * last_price)
                     except Exception:
                         pass
-                # Fetch industry (and try one more market cap source from info)
                 try:
                     info = ticker_obj.info
                     industry = info.get("industry", "") or ""
@@ -747,23 +820,27 @@ def main():
                     pass
             except Exception:
                 pass
-            mcap_cache[tk] = mc  # 0 if all attempts failed → will be filtered out
+            if mc == 0:
+                failed += 1
+            mcap_cache[tk] = mc
             industry_cache[tk] = industry
-            if (i + 1) % 50 == 0:
-                print(f"    {i+1}/{len(tickers_to_check)}...")
-                time.sleep(1)
+            time.sleep(0.2)
+            if (i + 1) % 100 == 0:
+                print(f"    {i+1}/{total}  (failed so far: {failed})")
+                time.sleep(2)
+        if failed > 0:
+            print(f"  {failed} tickers failed lookup (will retry next run)")
         mcap_data = {"refreshed": date.today().isoformat(), "caps": mcap_cache, "industries": industry_cache, "version": CACHE_VERSION}
         with open("leaders_mcap.json", "w") as f:
             json.dump(mcap_data, f, separators=(",", ":"))
-        print(f"  Saved {len(mcap_cache)} market caps + {len(industry_cache)} industries (refreshed {date.today().isoformat()})")
+        print(f"  Cache updated ({len(mcap_cache)} entries, refreshed {date.today().isoformat()})")
 
-    # Filter by market cap
-    filtered = [t for t in all_tickers if mcap_cache.get(t, 0) >= MIN_MCAP]
-    removed = len(all_tickers) - len(filtered)
-    print(f"  Market cap filter: {removed} stocks removed (< $1B), {len(filtered)} remaining")
-    all_tickers = filtered
+    # Final filter: market cap >= $2B (unknowns excluded)
+    all_tickers = [t for t in liquid_tickers if mcap_cache.get(t, 0) >= MIN_MCAP]
+    removed = len(liquid_tickers) - len(all_tickers)
+    print(f"  Market cap filter: {removed} removed (< ${MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
 
-    # ─── Resolve each stock's theme using protected basket > Yahoo industry > fallback ──
+    # ─── Resolve themes: protected basket > Yahoo industry > ETF fallback ──
     theme_map = {}
     protected_count = yahoo_count = etf_count = general_count = 0
     for tk in all_tickers:
@@ -786,60 +863,7 @@ def main():
             else:
                 theme_map[tk] = "General"
                 general_count += 1
-    print(f"  Theme mapping: {protected_count} protected baskets, {yahoo_count} via Yahoo industry, {etf_count} via ETF fallback, {general_count} general")
-    print(f"  Active themes: {len(set(theme_map.values()))}")
-
-    # ─── Download daily data ──────────────────────────────────
-    end = datetime.now() + timedelta(days=1)
-    start = end - timedelta(days=180)  # Need ~84 trading days for LOOKBACK=50 + MA=20 + ATR=14
-    w_start = end - timedelta(days=365)
-
-    # Download SPY separately first (guaranteed)
-    print("\nDownloading SPY (daily + weekly) separately...")
-    spy_df = yf.download("SPY", start=start.strftime("%Y-%m-%d"),
-                          end=end.strftime("%Y-%m-%d"), auto_adjust=True, progress=False)
-    if isinstance(spy_df.columns, type(spy_df.columns)) and hasattr(spy_df.columns, 'levels'):
-        spy_df.columns = spy_df.columns.droplevel(1) if spy_df.columns.nlevels > 1 else spy_df.columns
-    spy_df = spy_df.dropna(subset=["Close"])
-    print(f"  SPY daily: {len(spy_df)} bars")
-
-    spy_df_w = yf.download("SPY", start=w_start.strftime("%Y-%m-%d"),
-                            end=end.strftime("%Y-%m-%d"), interval="1wk",
-                            auto_adjust=True, progress=False)
-    if isinstance(spy_df_w.columns, type(spy_df_w.columns)) and hasattr(spy_df_w.columns, 'levels'):
-        spy_df_w.columns = spy_df_w.columns.droplevel(1) if spy_df_w.columns.nlevels > 1 else spy_df_w.columns
-    spy_df_w = spy_df_w.dropna(subset=["Close"])
-    print(f"  SPY weekly: {len(spy_df_w)} bars")
-
-    if len(spy_df) < LOOKBACK + 1:
-        print(f"ERROR: SPY has only {len(spy_df)} bars, need {LOOKBACK + 1}"); sys.exit(1)
-
-    print(f"\nDownloading daily data for {len(all_tickers)} stock tickers...")
-    raw = yf.download(all_tickers, start=start.strftime("%Y-%m-%d"),
-                      end=end.strftime("%Y-%m-%d"), group_by="ticker",
-                      auto_adjust=True, threads=True, progress=False)
-    if raw.empty:
-        print("ERROR: No daily data"); sys.exit(1)
-
-    print(f"Downloading weekly data...")
-    raw_w = yf.download(all_tickers, start=w_start.strftime("%Y-%m-%d"),
-                        end=end.strftime("%Y-%m-%d"), interval="1wk",
-                        group_by="ticker", auto_adjust=True, threads=True, progress=False)
-
-    def get_df(ticker):
-        try:
-            df = raw[ticker].dropna(subset=["Close"]) if len(all_tickers) > 1 else raw.dropna(subset=["Close"])
-            return df
-        except Exception:
-            return None
-
-    def get_df_w(ticker):
-        try:
-            if raw_w.empty: return None
-            df = raw_w[ticker].dropna(subset=["Close"]) if len(all_tickers) > 1 else raw_w.dropna(subset=["Close"])
-            return df
-        except Exception:
-            return None
+    print(f"  Theme mapping: {protected_count} protected, {yahoo_count} via Yahoo, {etf_count} via ETF, {general_count} general · {len(set(theme_map.values()))} active themes")
 
     # ─── SPY baselines ────────────────────────────────────────
     spy_closes = spy_df["Close"].values
