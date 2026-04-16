@@ -442,7 +442,16 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     c5 = (c[-1] / c[-6] - 1) * 100 if n >= 6 else None
     c20 = (c[-1] / c[-21] - 1) * 100 if n >= 21 else None
 
-    atr = compute_atr(h, l, c, ATR_PERIOD)
+    # ATR for ATR Ext: use only the most recent 64 bars (50 SMA window + 14 ATR seed).
+    # This matches TradingView's standard ta.atr(14) behavior, which is responsive to
+    # recent volatility. Computing across the full 180-day download lets ancient
+    # volatility heavily influence the value via Wilder smoothing — making the ATR
+    # too low for stocks that recently broke out hard (e.g. CAR).
+    ATR_WINDOW = 64
+    h_recent = h[-ATR_WINDOW:] if n >= ATR_WINDOW else h
+    l_recent = l[-ATR_WINDOW:] if n >= ATR_WINDOW else l
+    c_recent = c[-ATR_WINDOW:] if n >= ATR_WINDOW else c
+    atr = compute_atr(h_recent, l_recent, c_recent, ATR_PERIOD)
     valid_c = [x for x in c if x is not None]
     sma50 = np.mean(valid_c[-50:]) if len(valid_c) >= 50 else np.mean(valid_c)
     atr_ext = abs(c[-1] - sma50) / atr if atr > 0 else 0
