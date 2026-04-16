@@ -23,7 +23,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install yfinance numpy requests beautifulsoup4
+        run: pip install "yfinance==0.2.54" numpy requests beautifulsoup4
 
       - name: Grade all holdings
         run: python grade_holdings.py
