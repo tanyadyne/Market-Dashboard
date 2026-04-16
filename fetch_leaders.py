@@ -315,25 +315,43 @@ def main():
     # ─── Download daily data ──────────────────────────────────
     end = datetime.now() + timedelta(days=1)
     start = end - timedelta(days=180)  # Need ~84 trading days for LOOKBACK=50 + MA=20 + ATR=14
+    w_start = end - timedelta(days=365)
 
-    dl_tickers = list(set(["SPY"] + all_tickers))
-    print(f"\nDownloading daily data for {len(dl_tickers)} tickers...")
-    raw = yf.download(dl_tickers, start=start.strftime("%Y-%m-%d"),
+    # Download SPY separately first (guaranteed)
+    print("\nDownloading SPY (daily + weekly) separately...")
+    spy_df = yf.download("SPY", start=start.strftime("%Y-%m-%d"),
+                          end=end.strftime("%Y-%m-%d"), auto_adjust=True, progress=False)
+    if isinstance(spy_df.columns, type(spy_df.columns)) and hasattr(spy_df.columns, 'levels'):
+        spy_df.columns = spy_df.columns.droplevel(1) if spy_df.columns.nlevels > 1 else spy_df.columns
+    spy_df = spy_df.dropna(subset=["Close"])
+    print(f"  SPY daily: {len(spy_df)} bars")
+
+    spy_df_w = yf.download("SPY", start=w_start.strftime("%Y-%m-%d"),
+                            end=end.strftime("%Y-%m-%d"), interval="1wk",
+                            auto_adjust=True, progress=False)
+    if isinstance(spy_df_w.columns, type(spy_df_w.columns)) and hasattr(spy_df_w.columns, 'levels'):
+        spy_df_w.columns = spy_df_w.columns.droplevel(1) if spy_df_w.columns.nlevels > 1 else spy_df_w.columns
+    spy_df_w = spy_df_w.dropna(subset=["Close"])
+    print(f"  SPY weekly: {len(spy_df_w)} bars")
+
+    if len(spy_df) < LOOKBACK + 1:
+        print(f"ERROR: SPY has only {len(spy_df)} bars, need {LOOKBACK + 1}"); sys.exit(1)
+
+    print(f"\nDownloading daily data for {len(all_tickers)} stock tickers...")
+    raw = yf.download(all_tickers, start=start.strftime("%Y-%m-%d"),
                       end=end.strftime("%Y-%m-%d"), group_by="ticker",
-                      auto_adjust=True, threads=True)
+                      auto_adjust=True, threads=True, progress=False)
     if raw.empty:
         print("ERROR: No daily data"); sys.exit(1)
 
-    # Download weekly data
-    w_start = end - timedelta(days=365)
     print(f"Downloading weekly data...")
-    raw_w = yf.download(dl_tickers, start=w_start.strftime("%Y-%m-%d"),
+    raw_w = yf.download(all_tickers, start=w_start.strftime("%Y-%m-%d"),
                         end=end.strftime("%Y-%m-%d"), interval="1wk",
-                        group_by="ticker", auto_adjust=True, threads=True)
+                        group_by="ticker", auto_adjust=True, threads=True, progress=False)
 
     def get_df(ticker):
         try:
-            df = raw[ticker].dropna(subset=["Close"]) if len(dl_tickers) > 1 else raw.dropna(subset=["Close"])
+            df = raw[ticker].dropna(subset=["Close"]) if len(all_tickers) > 1 else raw.dropna(subset=["Close"])
             return df
         except Exception:
             return None
@@ -341,27 +359,23 @@ def main():
     def get_df_w(ticker):
         try:
             if raw_w.empty: return None
-            df = raw_w[ticker].dropna(subset=["Close"]) if len(dl_tickers) > 1 else raw_w.dropna(subset=["Close"])
+            df = raw_w[ticker].dropna(subset=["Close"]) if len(all_tickers) > 1 else raw_w.dropna(subset=["Close"])
             return df
         except Exception:
             return None
 
     # ─── SPY baselines ────────────────────────────────────────
-    spy_df = get_df("SPY")
-    if spy_df is None or len(spy_df) < LOOKBACK + 1:
-        print("ERROR: Insufficient SPY data"); sys.exit(1)
     spy_closes = spy_df["Close"].values
     spy_highs = spy_df["High"].values
     spy_lows = spy_df["Low"].values
     spy_atr_series = compute_atr_series(spy_highs, spy_lows, spy_closes, ATR_PERIOD)
     spy_ts_map = {ts: i for i, ts in enumerate(spy_df.index)}
 
-    spy_df_w = get_df_w("SPY")
-    spy_w_closes = spy_df_w["Close"].values if spy_df_w is not None else np.array([])
-    spy_w_highs = spy_df_w["High"].values if spy_df_w is not None else np.array([])
-    spy_w_lows = spy_df_w["Low"].values if spy_df_w is not None else np.array([])
+    spy_w_closes = spy_df_w["Close"].values if spy_df_w is not None and len(spy_df_w) > 0 else np.array([])
+    spy_w_highs = spy_df_w["High"].values if spy_df_w is not None and len(spy_df_w) > 0 else np.array([])
+    spy_w_lows = spy_df_w["Low"].values if spy_df_w is not None and len(spy_df_w) > 0 else np.array([])
     spy_w_atr_series = compute_atr_series(spy_w_highs, spy_w_lows, spy_w_closes, ATR_PERIOD) if len(spy_w_closes) > ATR_PERIOD else []
-    spy_w_ts_map = {ts: i for i, ts in enumerate(spy_df_w.index)} if spy_df_w is not None else {}
+    spy_w_ts_map = {ts: i for i, ts in enumerate(spy_df_w.index)} if spy_df_w is not None and len(spy_df_w) > 0 else {}
 
     # ─── Process all stocks ───────────────────────────────────
     print(f"\nProcessing {len(all_tickers)} stocks...")
