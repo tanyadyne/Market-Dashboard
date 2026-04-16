@@ -665,32 +665,40 @@ def main():
 
     # ─── Filter by market cap >= $1B + fetch industry (cached, weekly auto-refresh) ──
     MIN_MCAP = 1_000_000_000
-    mcap_data = {"refreshed": "", "caps": {}, "industries": {}}
+    CACHE_VERSION = 2  # Bump this when mcap/industry fetching logic changes to force a refresh
+    mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "version": 0}
     if os.path.exists("leaders_mcap.json"):
         try:
             with open("leaders_mcap.json") as f:
                 mcap_data = json.load(f)
                 if "industries" not in mcap_data:
                     mcap_data["industries"] = {}
+                if "version" not in mcap_data:
+                    mcap_data["version"] = 0
         except Exception:
-            mcap_data = {"refreshed": "", "caps": {}, "industries": {}}
+            mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "version": 0}
 
     mcap_cache = mcap_data.get("caps", {})
     industry_cache = mcap_data.get("industries", {})
     last_refreshed = mcap_data.get("refreshed", "")
+    cache_version = mcap_data.get("version", 0)
 
-    # Auto-refresh if cache is older than 7 days
+    # Auto-refresh if: cache is older than 7 days OR schema version changed
     needs_full_refresh = False
-    try:
-        if not last_refreshed:
-            needs_full_refresh = True
-        else:
-            days_old = (date.today() - date.fromisoformat(last_refreshed)).days
-            if days_old >= 7:
-                needs_full_refresh = True
-                print(f"  Cache is {days_old} days old — refreshing all market caps + industries")
-    except Exception:
+    if cache_version < CACHE_VERSION:
         needs_full_refresh = True
+        print(f"  Cache schema v{cache_version} → v{CACHE_VERSION} — forcing full refresh")
+    else:
+        try:
+            if not last_refreshed:
+                needs_full_refresh = True
+            else:
+                days_old = (date.today() - date.fromisoformat(last_refreshed)).days
+                if days_old >= 7:
+                    needs_full_refresh = True
+                    print(f"  Cache is {days_old} days old — refreshing all market caps + industries")
+        except Exception:
+            needs_full_refresh = True
 
     # Refresh tickers missing either market cap OR industry
     if needs_full_refresh:
@@ -701,31 +709,49 @@ def main():
     if tickers_to_check:
         print(f"  Fetching market cap + industry for {len(tickers_to_check)} tickers{' (full refresh)' if needs_full_refresh else ' (new only)'}...")
         for i, tk in enumerate(tickers_to_check):
+            mc = 0
+            industry = ""
             try:
                 ticker_obj = yf.Ticker(tk)
-                # Market cap from fast_info (faster)
                 fi = ticker_obj.fast_info
-                mc = fi.get("marketCap", fi.get("market_cap", 0)) or 0
-                mcap_cache[tk] = int(mc)
-                # Industry from full info (slower but needed)
+                # Try fast_info.marketCap first
+                try:
+                    mc = int(fi.get("marketCap", 0) or fi.get("market_cap", 0) or 0)
+                except Exception:
+                    mc = 0
+                # Fallback: shares outstanding × last price
+                if mc == 0:
+                    try:
+                        shares = fi.get("shares", 0) or 0
+                        last_price = fi.get("lastPrice", fi.get("last_price", 0)) or 0
+                        if shares and last_price:
+                            mc = int(shares * last_price)
+                    except Exception:
+                        pass
+                # Fetch industry (and try one more market cap source from info)
                 try:
                     info = ticker_obj.info
-                    industry_cache[tk] = info.get("industry", "") or ""
+                    industry = info.get("industry", "") or ""
+                    if mc == 0:
+                        info_mc = info.get("marketCap", 0) or 0
+                        if info_mc:
+                            mc = int(info_mc)
                 except Exception:
-                    industry_cache[tk] = ""
+                    pass
             except Exception:
-                mcap_cache[tk] = MIN_MCAP  # Assume valid
-                industry_cache[tk] = industry_cache.get(tk, "")
+                pass
+            mcap_cache[tk] = mc  # 0 if all attempts failed → will be filtered out
+            industry_cache[tk] = industry
             if (i + 1) % 50 == 0:
                 print(f"    {i+1}/{len(tickers_to_check)}...")
                 time.sleep(1)
-        mcap_data = {"refreshed": date.today().isoformat(), "caps": mcap_cache, "industries": industry_cache}
+        mcap_data = {"refreshed": date.today().isoformat(), "caps": mcap_cache, "industries": industry_cache, "version": CACHE_VERSION}
         with open("leaders_mcap.json", "w") as f:
             json.dump(mcap_data, f, separators=(",", ":"))
         print(f"  Saved {len(mcap_cache)} market caps + {len(industry_cache)} industries (refreshed {date.today().isoformat()})")
 
     # Filter by market cap
-    filtered = [t for t in all_tickers if mcap_cache.get(t, MIN_MCAP) >= MIN_MCAP]
+    filtered = [t for t in all_tickers if mcap_cache.get(t, 0) >= MIN_MCAP]
     removed = len(all_tickers) - len(filtered)
     print(f"  Market cap filter: {removed} stocks removed (< $1B), {len(filtered)} remaining")
     all_tickers = filtered
