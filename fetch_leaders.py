@@ -426,7 +426,9 @@ def resolve_theme(ticker, stock_to_etfs, industry_cache):
 
 
 def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map):
-    """Process daily metrics for one stock. Returns dict or None."""
+    """Process daily metrics for one stock. Returns dict or None.
+    Returns None if stock appears delisted (stale data) or in acquisition limbo (flat price).
+    """
     if df is None or len(df) < 10:
         return None
     c = df["Close"].values
@@ -434,6 +436,30 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     l = df["Low"].values
     v = df["Volume"].values
     n = len(c)
+
+    # ─── Delisted check: last bar must be recent ─────────────
+    try:
+        last_bar = df.index[-1]
+        last_date = last_bar.date() if hasattr(last_bar, "date") else date.fromisoformat(str(last_bar)[:10])
+        days_stale = (date.today() - last_date).days
+        if days_stale > 7:  # More than a week with no data → likely delisted
+            return None
+    except Exception:
+        pass
+
+    # ─── Acquisition-limbo check: extremely flat price ───────
+    # Acquired stocks trade near the deal price with near-zero volatility for weeks before delisting.
+    # A normal large-cap has daily return std >= 0.4% and 20-day price range >= 2%.
+    if n >= 20:
+        recent = c[-20:]
+        avg_price = np.mean(recent)
+        if avg_price > 0:
+            price_range = (np.max(recent) - np.min(recent)) / avg_price
+            returns = np.diff(recent) / recent[:-1]
+            return_std = float(np.std(returns)) if len(returns) > 0 else 0
+            # Flag only if BOTH conditions met (avoids false positives on low-vol staples/utilities)
+            if price_range < 0.015 and return_std < 0.0025:
+                return None
 
     price = float(c[-1])
     change = (c[-1] / c[-2] - 1) * 100 if n >= 2 else 0
