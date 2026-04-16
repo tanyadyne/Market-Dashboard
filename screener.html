@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,28 +7,343 @@
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+:root,[data-theme="dark"]{--bg:#080e1a;--bg2:#0f172a;--bg3:#111827;--bg4:#1e293b;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--g:#4ade80;--g2:#16a34a;--r:#f87171;--r2:#dc2626;--gbg:#14532d;--rbg:#7f1d1d;--bdr:#1e293b;--bdr2:#111827;--card:#0f172a}
+[data-theme="light"]{--bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--bg4:#e2e8f0;--t1:#0f172a;--t2:#475569;--t3:#94a3b8;--t4:#cbd5e1;--g:#16a34a;--g2:#166534;--r:#dc2626;--r2:#991b1b;--gbg:#dcfce7;--rbg:#fee2e2;--bdr:#e2e8f0;--bdr2:#f1f5f9;--card:#ffffff}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
-.hdr{padding:18px 20px 14px;border-bottom:1px solid #111827;display:flex;align-items:center;gap:10px}
-.btn-back{padding:4px 10px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #1e293b;background:#0f172a;color:#94a3b8;text-decoration:none;transition:.15s;font-family:inherit}
-.btn-back:hover{background:#1e293b;color:#e2e8f0}
-.hdr-t{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
-.content{display:flex;align-items:center;justify-content:center;height:calc(100vh - 60px)}
-.placeholder{text-align:center;color:#475569}
-.placeholder .icon{font-size:48px;margin-bottom:16px}
-.placeholder .text{font-size:18px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-size:13px}
+.hdr{padding:14px 20px;border-bottom:1px solid var(--bdr2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
+.btn:hover{background:var(--bg3);color:var(--t1)}
+.btn.active{border-color:#3b82f6;color:#60a5fa;background:#0f1a2e}
+.spy{padding:8px 20px;border-bottom:1px solid var(--bdr2);display:flex;justify-content:space-between;font-size:11px;color:var(--t3)}
+.m{font-family:'JetBrains Mono',monospace;font-size:11px}
+table{width:100%;border-collapse:collapse}
+th{position:sticky;top:0;background:var(--bg3);padding:8px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;border-bottom:1px solid var(--bdr);white-space:nowrap;z-index:2}
+td{padding:7px 6px;border-bottom:1px solid var(--bdr2);font-size:12px}
+tr:hover{background:var(--bg3)}
+.c{text-align:center}.l{text-align:left}
+.rk{text-align:center;color:var(--t4);font-family:'JetBrains Mono',monospace;font-size:11px}
+.rd{text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;white-space:nowrap}
+.rd-up{color:var(--g)}.rd-dn{color:var(--r)}.rd-flat{color:var(--t4)}.rd-num{color:var(--t2);font-weight:500}
+.tk{font-weight:700;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.5px}
+.sc2{color:var(--t2);font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cp{color:var(--g)}.cn{color:var(--r)}.cz{color:var(--t3)}
+.rs{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.bc{display:flex;align-items:center;gap:4px}.bt{width:50px;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.bf{height:100%;border-radius:3px}.bf.i{background:#3b82f6}.bf.p{background:#a855f7}
+.bv{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--t2)}
+.bars{display:flex;align-items:flex-end;gap:1.5px;height:14px}
+.bars .bar{width:3px;border-radius:1px}.bars.low .bar{background:var(--g)}.bars.mid .bar{background:#f59e0b}.bars.hi .bar{background:var(--r)}
+.spark-wrap{display:flex;align-items:center;justify-content:center}
+.status{padding:30px;text-align:center;color:var(--t3)}
+.tw{display:none}
+.ft{padding:8px 20px;font-size:10px;color:var(--t4);text-align:center}
+.srch{padding:5px 12px;border-radius:6px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:12px;width:200px;font-family:inherit}
+/* Pagination */
+.pag{display:flex;justify-content:center;gap:4px;padding:12px 0}
+.pag .pg{padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2)}
+.pag .pg:hover{background:var(--bg3)}.pag .pg.cur{background:#1e3a5f;border-color:#3b82f6;color:#60a5fa}
+/* Search panel */
+.search-panel{display:none;padding:20px;max-width:900px;margin:0 auto}
+.search-input{width:100%;padding:10px 16px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:14px;font-family:inherit;margin-bottom:16px}
+.info-boxes{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.info-box{flex:1;min-width:140px;padding:12px 16px;border-radius:10px;border:1px solid var(--bdr);background:var(--bg2);text-align:center}
+.info-box .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:4px}
+.info-box .val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.info-box .sub{font-size:10px;color:var(--t3);margin-top:2px}
+.hist-table{margin-top:16px}
+.hist-table table{font-size:12px}
+.hist-table th{font-size:9px;padding:6px}
+.hist-table td{padding:5px 6px;font-family:'JetBrains Mono',monospace;font-size:11px}
+.tag-leader{color:#4ade80;font-weight:600}.tag-neutral{color:#94a3b8;font-weight:600}.tag-laggard{color:#f87171;font-weight:600}
+.streak-sel{padding:1px 4px;border-radius:3px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer}
+@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{flex-direction:column}}
 </style>
 </head>
 <body>
 <div class="hdr">
-  <a href="index.html" class="btn-back" title="Back to Market Dashboard">←</a>
-  <div class="hdr-t">Liquid Leaders</div>
-</div>
-<div class="content">
-  <div class="placeholder">
-    <div class="icon">📈</div>
-    <div class="text">Coming Soon</div>
+  <div class="hdr-l">
+    <a href="index.html" class="btn" style="text-decoration:none;padding:4px 10px">←</a>
+    <div style="font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Liquid Leaders</div>
+  </div>
+  <div class="hdr-r">
+    <button class="btn active" id="tabD" onclick="switchTab('daily')">Daily Rank</button>
+    <button class="btn" id="tabW" onclick="switchTab('weekly')">Weekly Rank</button>
+    <button class="btn" id="tabS" onclick="switchTab('search')">Search</button>
+    <button class="btn" id="bTheme" onclick="toggleTheme()">☀ Light</button>
+    <input class="srch" id="si" placeholder="Filter ticker..." oninput="render()">
   </div>
 </div>
+<div class="spy" id="spyBar" style="display:none">
+  <span>Updated: <span id="ut"></span></span>
+  <span><span id="stockCount"></span> stocks ranked</span>
+</div>
+<div class="status" id="statusBar">Loading data...</div>
+<div class="tw" id="tw" style="display:none">
+  <table><thead><tr id="headerRow"></tr></thead><tbody id="tb"></tbody></table>
+  <div class="pag" id="pagination"></div>
+  <div class="ft" id="ft"></div>
+</div>
+<div class="search-panel" id="searchPanel">
+  <input class="search-input" id="searchInput" placeholder="Enter stock ticker (e.g. AAPL, TSLA, NVDA)..." oninput="searchStock()">
+  <div id="searchResults"></div>
+</div>
+<script>
+let DATA=null,HISTORY=null,sortKey='rk',sortDir=1,currentTab='daily',currentPage=1;
+const PAGE_SIZE=200;
+let rankLookback=1;
+
+function toSGT(utcStr){
+  try{const s=utcStr.replace(' UTC','Z').replace(' ','T');const d=new Date(s);if(isNaN(d))return utcStr;
+  return d.toLocaleString('en-SG',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' SGT';}catch(e){return utcStr;}
+}
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
+function chgClass(v){return v>0?'cp':v<0?'cn':'cz';}
+function chgText(v){return v!=null?(v>0?'+':'')+v.toFixed(2)+'%':'—';}
+function multText(v){return v!=null?(v/100).toFixed(2)+'x':'—';}
+function getRSBg(rs){if(rs==null)return'var(--bg4)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--gbg)';if(rs>=80)return d?'#1a3a2a':'#dcfce7';if(rs>=60)return'var(--bg4)';if(rs>=40)return d?'#292524':'#fef3c7';if(rs>=20)return d?'#2c1810':'#ffedd5';return'var(--rbg)';}
+function getRSCol(rs){if(rs==null)return'var(--t3)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--g)';if(rs>=80)return'var(--g2)';if(rs>=60)return'var(--t2)';if(rs>=40)return d?'#d4a373':'#92400e';if(rs>=20)return d?'#fb923c':'#c2410c';return'var(--r)';}
+function atrExtBars(val){
+  if(val==null)return'<div class="bars low"><div class="bar" style="height:4px"></div></div>';
+  const v=val/100;let cls='low',n=1;if(v>=4){cls='hi';n=4;}else if(v>=2){cls='mid';n=3;}else if(v>=1){cls='low';n=2;}
+  let bars='';for(let i=0;i<4;i++){bars+=`<div class="bar" style="height:${[4,7,10,14][i]}px;opacity:${i<n?1:0.2}"></div>`;}
+  return`<div class="bars ${cls}">${bars}</div>`;
+}
+function getPosition(rank,total){if(rank<=50)return'Strong Leader';if(rank<=200)return'Leader Zone';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Laggard Zone';return'Deep Laggard';}
+function posClass(pos){if(pos.includes('Leader'))return'tag-leader';if(pos.includes('Laggard'))return'tag-laggard';return'tag-neutral';}
+function themeTag(status){if(status==='Leader')return'tag-leader';if(status==='Laggard')return'tag-laggard';return'tag-neutral';}
+
+function getRankDeltaVal(ticker){
+  if(!DATA||!DATA.rh)return null;
+  const isW=currentTab==='weekly';
+  const hist=isW?DATA.rh.w:DATA.rh.d;
+  const idx=hist.length-rankLookback;
+  if(idx<0||idx>=hist.length)return null;
+  const prevRk=hist[idx][ticker];if(prevRk==null)return null;
+  const etf=DATA.e.find(e=>e.t===ticker);if(!etf)return null;
+  const curRk=isW?etf.w_rk:etf.rk;if(curRk==null)return null;
+  return prevRk-curRk;
+}
+function rankDelta(ticker){
+  const d=getRankDeltaVal(ticker);
+  if(d==null)return'<td class="rd rd-flat">—</td>';
+  if(d>0)return`<td class="rd"><span class="rd-up">▲</span>&nbsp;&nbsp;<span class="rd-num">(+${d})</span></td>`;
+  if(d<0)return`<td class="rd"><span class="rd-dn">▼</span>&nbsp;&nbsp;<span class="rd-num">(${d})</span></td>`;
+  return'<td class="rd"><span class="rd-flat">–</span>&nbsp;&nbsp;<span class="rd-num">(0)</span></td>';
+}
+
+function toggleTheme(){
+  const h=document.documentElement,d=h.getAttribute('data-theme')==='dark';
+  h.setAttribute('data-theme',d?'light':'dark');
+  document.getElementById('bTheme').textContent=d?'🌙 Dark':'☀ Light';
+  render();
+}
+
+function switchTab(tab){
+  currentTab=tab;currentPage=1;sortKey='rk';sortDir=1;
+  document.querySelectorAll('.hdr-r .btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(tab==='daily'?'tabD':tab==='weekly'?'tabW':'tabS').classList.add('active');
+  if(tab==='search'){
+    document.getElementById('tw').style.display='none';
+    document.getElementById('searchPanel').style.display='block';
+    document.getElementById('si').style.display='none';
+  }else{
+    document.getElementById('tw').style.display='block';
+    document.getElementById('searchPanel').style.display='none';
+    document.getElementById('si').style.display='';
+    buildHeader();render();
+  }
+}
+
+function buildHeader(){
+  const isW=currentTab==='weekly';
+  const cols=[
+    {key:'rk',label:'#',w:'36px'},{key:'rd',label:'Δ',w:'56px'},
+    {key:'t',label:'Ticker',w:'64px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l'},
+    {key:'rv',label:isW?'R.Vol (W)':'R.Vol',w:'70px'},{key:'am',label:isW?'ATR M (W)':'ATR Mult',w:'70px'},
+    {key:'ax',label:'ATR Ext',w:'70px'},{key:'ch',label:'1D',w:'60px'},
+    {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},
+    {key:'rs',label:isW?'RS (W)':'RS (D)',w:'56px'},{key:'vs',label:isW?'VARS (W)':'VARS (D)',w:'160px'}
+  ];
+  const tr=document.getElementById('headerRow');tr.innerHTML='';
+  cols.forEach(col=>{
+    const th=document.createElement('th');
+    th.className=col.al==='l'?'l':'c';
+    th.style.width=col.w;
+    if(col.key==='rd'){
+      const opts=[1,2,3,4,5,6,7,8].map(v=>`<option value="${v}"${v===rankLookback?' selected':''}>${v}W</option>`).join('');
+      th.innerHTML=`Δ <select class="streak-sel" onchange="event.stopPropagation();rankLookback=parseInt(this.value);render();" style="font-size:9px;padding:1px 2px">${opts}</select>`;
+    }else{th.textContent=col.label;}
+    th.addEventListener('click',e=>{if(e.target.tagName==='SELECT'||e.target.tagName==='OPTION')return;
+      if(sortKey===col.key)sortDir=-sortDir;else{sortKey=col.key;sortDir=col.key==='rk'?1:-1;}currentPage=1;render();});
+    tr.appendChild(th);
+  });
+}
+
+function drawSparkline(canvas,series){
+  if(!series||!canvas)return;
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,dpr=window.devicePixelRatio||1;
+  canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
+  ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  const vals=series.filter(v=>v!=null);if(vals.length<2)return;
+  const min=Math.min(...vals),max=Math.max(...vals),range=max-min||1,pad=2;
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const px=i=>pad+(i/(vals.length-1))*(W-2*pad);
+  const py=i=>H-pad-((vals[i]-min)/range)*(H-2*pad);
+  ctx.beginPath();for(let i=0;i<vals.length;i++){if(i===0)ctx.moveTo(px(i),py(i));else ctx.lineTo(px(i),py(i));}
+  ctx.lineTo(px(vals.length-1),H-pad);ctx.lineTo(px(0),H-pad);ctx.closePath();
+  ctx.fillStyle=isDark?'rgba(192,132,252,0.08)':'rgba(147,51,234,0.08)';ctx.fill();
+  ctx.beginPath();for(let i=0;i<vals.length;i++){if(i===0)ctx.moveTo(px(i),py(i));else ctx.lineTo(px(i),py(i));}
+  ctx.strokeStyle=isDark?'#c084fc':'#9333ea';ctx.lineWidth=1.5;ctx.stroke();
+}
+
+function render(){
+  if(!DATA)return;
+  const isW=currentTab==='weekly';
+  const f=document.getElementById('si').value.toLowerCase();
+  let items=DATA.e;
+  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f));
+
+  // Sort
+  const dk=k=>{if(!isW)return k;const m={rv:'w_rv',am:'w_am',rs:'w_rs',vs:'w_vs'};return m[k]||k;};
+  if(sortKey==='rd'){
+    items=[...items].sort((a,b)=>{const av=getRankDeltaVal(a.t)??-Infinity,bv=getRankDeltaVal(b.t)??-Infinity;return sortDir*(av>bv?1:av<bv?-1:0);});
+  }else if(isW&&sortKey==='rk'){
+    items=[...items].sort((a,b)=>{const ar=a.w_rs??-Infinity,br=b.w_rs??-Infinity;if(ar!==br)return br-ar;return(b.c5??-Infinity)-(a.c5??-Infinity);});
+  }else{
+    const sk=dk(sortKey);
+    items=[...items].sort((a,b)=>{if(sortKey==='rk')return sortDir*(a.rk-b.rk);const av=a[sk]??(typeof a[sk]==='string'?'':-Infinity),bv=b[sk]??(typeof b[sk]==='string'?'':-Infinity);return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av>bv?1:av<bv?-1:0);});
+  }
+
+  const total=items.length;
+  const totalPages=Math.ceil(total/PAGE_SIZE);
+  if(currentPage>totalPages)currentPage=totalPages||1;
+  const start=(currentPage-1)*PAGE_SIZE;
+  const pageItems=items.slice(start,start+PAGE_SIZE);
+
+  const rvKey=isW?'w_rv':'rv',amKey=isW?'w_am':'am',rsKey=isW?'w_rs':'rs',vsKey=isW?'w_vs':'vs';
+  const mxRV=Math.max(...DATA.e.map(e=>e[rvKey]||0)),mxAM=Math.max(...DATA.e.map(e=>e[amKey]||0));
+
+  let html='';let rank=start;
+  for(const e of pageItems){
+    rank++;
+    const rv=e[rvKey],am=e[amKey],rs=e[rsKey],vs=e[vsKey];
+    const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
+    const amP=am!=null?Math.min(am/mxAM*100,100):0;
+    html+=`<tr>
+      <td class="rk">${rank}</td>
+      ${rankDelta(e.t)}
+      <td class="tk">${esc(e.t)}</td>
+      <td class="sc2" title="${esc(e.th||'')}">${esc(e.th||'—')}</td>
+      <td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>
+      <td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(am)}</span></div></td>
+      <td class="c"><div class="bc" style="justify-content:center;gap:4px">${atrExtBars(e.ax)}<span class="bv">${multText(e.ax)}</span></div></td>
+      <td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>
+      <td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>
+      <td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>
+      <td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span></td>
+      <td class="c"><div class="spark-wrap"><canvas data-ticker="${e.t}" width="140" height="28"></canvas></div></td>
+    </tr>`;
+  }
+  document.getElementById('tb').innerHTML=html;
+  document.getElementById('ft').textContent=`${total} stocks · Page ${currentPage}/${totalPages}`;
+
+  // Pagination
+  let pagHtml='';
+  if(totalPages>1){
+    if(currentPage>1)pagHtml+=`<span class="pg" onclick="currentPage=1;render()">«</span><span class="pg" onclick="currentPage--;render()">‹</span>`;
+    const startP=Math.max(1,currentPage-3),endP=Math.min(totalPages,currentPage+3);
+    for(let p=startP;p<=endP;p++)pagHtml+=`<span class="pg${p===currentPage?' cur':''}" onclick="currentPage=${p};render()">${p}</span>`;
+    if(currentPage<totalPages)pagHtml+=`<span class="pg" onclick="currentPage++;render()">›</span><span class="pg" onclick="currentPage=${totalPages};render()">»</span>`;
+  }
+  document.getElementById('pagination').innerHTML=pagHtml;
+
+  // Draw sparklines
+  requestAnimationFrame(()=>{
+    const etfMap={};DATA.e.forEach(e=>{etfMap[e.t]=e;});
+    document.querySelectorAll('canvas[data-ticker]').forEach(c=>{
+      const etf=etfMap[c.dataset.ticker];if(etf&&etf[vsKey])drawSparkline(c,etf[vsKey]);
+    });
+  });
+}
+
+function searchStock(){
+  const input=document.getElementById('searchInput').value.trim().toUpperCase();
+  const box=document.getElementById('searchResults');
+  if(!input||!DATA){box.innerHTML='';return;}
+
+  const stock=DATA.e.find(e=>e.t===input);
+  if(!stock){box.innerHTML=`<div style="text-align:center;color:var(--t3);padding:20px">No data found for "${esc(input)}"</div>`;return;}
+
+  const total=DATA.e.length;
+  const pos=getPosition(stock.rk,total);
+  const ts=stock.ts||'Neutral';
+
+  // Info boxes
+  let html=`<div class="info-boxes">
+    <div class="info-box"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.rs)}">${stock.rs!=null?stock.rs+'%':'—'}</div></div>
+    <div class="info-box"><div class="lbl">Daily Rank</div><div class="val">#${stock.rk}</div><div class="sub">of ${total}</div></div>
+    <div class="info-box"><div class="lbl">Weekly Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">of ${total}</div></div>
+    <div class="info-box"><div class="lbl">Theme</div><div class="val" style="font-size:14px">${esc(stock.th||'—')}</div><div class="sub"><span class="${themeTag(ts)}">${ts}</span></div></div>
+  </div>`;
+
+  // History table
+  if(HISTORY&&HISTORY.dates&&HISTORY.d[input]){
+    const h=HISTORY.d[input];
+    const dates=HISTORY.dates;
+    html+=`<div class="hist-table"><table><thead><tr>
+      <th class="l">Date</th><th class="c">Score</th><th class="c">D.Rank</th><th class="c">W.Rank</th><th class="c">Position</th><th class="l">Theme</th>
+    </tr></thead><tbody>`;
+    // Show newest first
+    for(let i=dates.length-1;i>=0;i--){
+      const dt=dates[i];const parts=dt.split('-');
+      const fmtDate=parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:dt;
+      const score=h.s[i];const dr=h.r[i];const wr=h.wr?h.wr[i]:null;
+      const p=dr!=null?getPosition(dr,total):'—';
+      const thStatus=stock.ts||'Neutral';
+      html+=`<tr>
+        <td class="l">${fmtDate}</td>
+        <td class="c"><span class="rs" style="background:${getRSBg(score)};color:${getRSCol(score)}">${score!=null?score+'%':'—'}</span></td>
+        <td class="c">${dr!=null?'#'+dr:'—'}</td>
+        <td class="c">${wr!=null?'#'+wr:'—'}</td>
+        <td class="c"><span class="${posClass(p)}">${p}</span></td>
+        <td class="l">${esc(stock.th||'—')} <span class="${themeTag(thStatus)}">(${thStatus})</span></td>
+      </tr>`;
+    }
+    html+=`</tbody></table></div>`;
+  }else{
+    html+=`<div style="text-align:center;color:var(--t3);padding:20px;font-size:12px">No history data available yet. History builds up over multiple trading days.</div>`;
+  }
+  box.innerHTML=html;
+}
+
+async function loadData(){
+  try{
+    const [dataRes,histRes]=await Promise.all([
+      fetch('leaders.json?_='+Date.now()),
+      fetch('leaders_score_history.json?_='+Date.now()).catch(()=>null)
+    ]);
+    if(!dataRes.ok)throw new Error('leaders.json not found');
+    DATA=await dataRes.json();
+    if(histRes&&histRes.ok){try{HISTORY=await histRes.json();}catch(e){}}
+    document.getElementById('statusBar').style.display='none';
+    document.getElementById('tw').style.display='block';
+    if(DATA.meta){
+      document.getElementById('spyBar').style.display='flex';
+      document.getElementById('ut').textContent=toSGT(DATA.meta.updated);
+      document.getElementById('stockCount').textContent=DATA.meta.count;
+    }
+    buildHeader();render();
+  }catch(err){
+    document.getElementById('statusBar').innerHTML=`<span style="color:var(--r)">Error: ${esc(err.message)}. Run the "Update Liquid Leaders" workflow first.</span>`;
+  }
+}
+
+// Auto-reload every 60s
+setInterval(()=>{if(currentTab!=='search')loadData();},60000);
+loadData();
+</script>
 </body>
 </html>
