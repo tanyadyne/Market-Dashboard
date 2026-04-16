@@ -5,7 +5,7 @@ Computes VARS (daily + weekly) for ~1100 individual stocks vs SPY.
 Outputs leaders.json (current snapshot) and leaders_history.json (rolling 30-day history).
 """
 
-import json, os, sys
+import json, os, sys, time
 import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta, date
@@ -260,6 +260,57 @@ def main():
 
     all_tickers, theme_map = build_universe()
     print(f"Universe: {len(all_tickers)} stocks, {len(set(theme_map.values()))} themes")
+
+    # ─── Filter by market cap >= $1B (cached, auto-refreshes weekly) ──
+    MIN_MCAP = 1_000_000_000
+    mcap_data = {"refreshed": "", "caps": {}}
+    if os.path.exists("leaders_mcap.json"):
+        try:
+            with open("leaders_mcap.json") as f:
+                mcap_data = json.load(f)
+        except Exception:
+            mcap_data = {"refreshed": "", "caps": {}}
+
+    mcap_cache = mcap_data.get("caps", {})
+    last_refreshed = mcap_data.get("refreshed", "")
+
+    # Auto-refresh if cache is older than 7 days
+    needs_full_refresh = False
+    try:
+        if not last_refreshed:
+            needs_full_refresh = True
+        else:
+            days_old = (date.today() - date.fromisoformat(last_refreshed)).days
+            if days_old >= 7:
+                needs_full_refresh = True
+                print(f"  Market cap cache is {days_old} days old — refreshing all")
+    except Exception:
+        needs_full_refresh = True
+
+    tickers_to_check = all_tickers if needs_full_refresh else [t for t in all_tickers if t not in mcap_cache]
+
+    if tickers_to_check:
+        print(f"  Fetching market caps for {len(tickers_to_check)} tickers{'(full refresh)' if needs_full_refresh else ' (new only)'}...")
+        for i, tk in enumerate(tickers_to_check):
+            try:
+                fi = yf.Ticker(tk).fast_info
+                mc = fi.get("marketCap", fi.get("market_cap", 0)) or 0
+                mcap_cache[tk] = int(mc)
+            except Exception:
+                mcap_cache[tk] = MIN_MCAP  # Assume valid if can't check
+            if (i + 1) % 50 == 0:
+                print(f"    {i+1}/{len(tickers_to_check)}...")
+                time.sleep(1)
+        mcap_data = {"refreshed": date.today().isoformat(), "caps": mcap_cache}
+        with open("leaders_mcap.json", "w") as f:
+            json.dump(mcap_data, f, separators=(",", ":"))
+        print(f"  Saved {len(mcap_cache)} market caps (refreshed {date.today().isoformat()})")
+
+    # Filter
+    filtered = [t for t in all_tickers if mcap_cache.get(t, MIN_MCAP) >= MIN_MCAP]
+    removed = len(all_tickers) - len(filtered)
+    print(f"  Market cap filter: {removed} stocks removed (< $1B), {len(filtered)} remaining")
+    all_tickers = filtered
 
     # ─── Download daily data ──────────────────────────────────
     end = datetime.now() + timedelta(days=1)
