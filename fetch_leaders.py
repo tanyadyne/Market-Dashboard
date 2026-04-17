@@ -1088,10 +1088,18 @@ def main():
     removed = len(liquid_tickers) - len(all_tickers)
     print(f"  Market cap filter: {removed} removed (< ${MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
 
-    # ─── Resolve themes: protected basket > Yahoo industry > ETF fallback ──
-    theme_map = {}
+    # ─── Resolve themes: two fields per stock ──────────────────
+    # th  = display label (Yahoo industry verbatim, shown in frontend column)
+    # thm = mapped sector basket name (used for Leader/Neutral/Laggard status)
+    theme_map = {}       # ticker -> mapped sector name
+    industry_label = {}  # ticker -> Yahoo industry verbatim
     protected_count = yahoo_count = etf_count = general_count = 0
     for tk in all_tickers:
+        # Display label: always use Yahoo's raw industry if available
+        raw_industry = industry_cache.get(tk, "")
+        industry_label[tk] = raw_industry if raw_industry else "General"
+
+        # Mapped sector: priority = protected basket > Yahoo mapping > ETF fallback
         etfs = stock_to_etfs.get(tk, [])
         protected = [(n, c) for n, c in etfs if n in PROTECTED_BASKETS]
         if protected:
@@ -1099,8 +1107,7 @@ def main():
             theme_map[tk] = protected[0][0]
             protected_count += 1
         else:
-            industry = industry_cache.get(tk, "")
-            yahoo_theme = map_industry_to_theme(industry)
+            yahoo_theme = map_industry_to_theme(raw_industry)
             if yahoo_theme:
                 theme_map[tk] = yahoo_theme
                 yahoo_count += 1
@@ -1152,7 +1159,7 @@ def main():
             if d_metrics is None:
                 continue
             processed += 1
-            entry = {"t": tk, "th": theme_map.get(tk, "General"), **d_metrics, **w_metrics}
+            entry = {"t": tk, "th": industry_label.get(tk, "General"), "thm": theme_map.get(tk, "General"), **d_metrics, **w_metrics}
             results.append(entry)
         except Exception:
             continue
@@ -1280,7 +1287,7 @@ def main():
 
     # Add theme status to each result
     for r in results:
-        r["ts"] = theme_status.get(r.get("th", ""), "Neutral")
+        r["ts"] = theme_status.get(r.get("thm", ""), "Neutral")
 
     # ─── Prepare rank history for frontend ────────────────────
     rh_d = [snap.get("d", {}) for snap in weeks[:-1]]
