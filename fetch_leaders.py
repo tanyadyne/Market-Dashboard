@@ -16,6 +16,14 @@ try:
 except ImportError:
     HAS_REQUESTS = False
 
+# Use curl_cffi to bypass Yahoo Finance rate limiting (impersonates Chrome)
+try:
+    from curl_cffi import requests as cffi_requests
+    _session = cffi_requests.Session(impersonate="chrome")
+    yf.Ticker._session = _session
+except ImportError:
+    _session = None
+
 # Import shared functions from fetch_data.py
 from fetch_data import ETF_INFO, compute_atr, compute_atr_series, percentrank_inc
 
@@ -789,14 +797,14 @@ def main():
     w_start = end - timedelta(days=365)
 
     print("\nDownloading SPY (daily + weekly)...")
-    spy_df = yf.download("SPY", start=start.strftime("%Y-%m-%d"),
+    spy_df = yf.download("SPY", session=_session, start=start.strftime("%Y-%m-%d"),
                           end=end.strftime("%Y-%m-%d"), auto_adjust=True, progress=False)
     if isinstance(spy_df.columns, type(spy_df.columns)) and hasattr(spy_df.columns, 'levels'):
         spy_df.columns = spy_df.columns.droplevel(1) if spy_df.columns.nlevels > 1 else spy_df.columns
     spy_df = spy_df.dropna(subset=["Close"])
     print(f"  SPY daily: {len(spy_df)} bars")
 
-    spy_df_w = yf.download("SPY", start=w_start.strftime("%Y-%m-%d"),
+    spy_df_w = yf.download("SPY", session=_session, start=w_start.strftime("%Y-%m-%d"),
                             end=end.strftime("%Y-%m-%d"), interval="1wk",
                             auto_adjust=True, progress=False)
     if isinstance(spy_df_w.columns, type(spy_df_w.columns)) and hasattr(spy_df_w.columns, 'levels'):
@@ -850,7 +858,7 @@ def main():
             attempt = 0
             while attempt < 3:
                 try:
-                    df = yf.download(batch, group_by="ticker", auto_adjust=True,
+                    df = yf.download(batch, group_by="ticker", auto_adjust=True, session=_session,
                                      threads=True, progress=False, **kwargs)
                     if df.empty:
                         print(f"    Empty result, retrying...")
@@ -1020,7 +1028,7 @@ def main():
             mc = 0
             industry = ""
             try:
-                ticker_obj = yf.Ticker(tk)
+                ticker_obj = yf.Ticker(tk, session=_session)
                 fi = ticker_obj.fast_info
                 try:
                     mc = int(fi.get("marketCap", 0) or fi.get("market_cap", 0) or 0)
