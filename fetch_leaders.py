@@ -425,6 +425,117 @@ def resolve_theme(ticker, stock_to_etfs, industry_cache):
     return "General"
 
 
+def compute_ema_value(closes, period):
+    """Compute the final EMA value of a closes array using standard EMA formula."""
+    n = len(closes)
+    if n == 0:
+        return 0.0
+    if n < period:
+        return float(np.mean(closes))
+    multiplier = 2.0 / (period + 1)
+    ema = float(np.mean(closes[:period]))  # Seed with SMA
+    for i in range(period, n):
+        ema = (closes[i] - ema) * multiplier + ema
+    return ema
+
+
+def compute_setup_adjustment(c, h, l, n):
+    """Evaluate technical setup criteria and return a score adjustment (in percentile points).
+
+    Gold criteria (+1.5 each met, -2.0 each NOT met):
+      G1: 21EMA > 50SMA
+      G2: Price > 21EMA
+      G3: Price > 50SMA
+      G4: 50SMA rising (positive slope)
+
+    Silver criteria (+0.75 each met, -1.0 each NOT met):
+      S1: Price > 100SMA
+      S2: 50SMA > 100SMA
+      S3: 200SMA rising (positive slope)
+
+    Bronze criteria (+0.5 each met, no penalty):
+      B1: 9EMA and 21EMA coiled within 0.5x ADR
+      B2: Price > 200SMA
+    """
+    price = float(c[-1])
+
+    # Compute MAs
+    ema9 = compute_ema_value(c, 9)
+    ema21 = compute_ema_value(c, 21)
+    sma50 = float(np.mean(c[-50:])) if n >= 50 else float(np.mean(c))
+    sma100 = float(np.mean(c[-100:])) if n >= 100 else None
+    sma200 = float(np.mean(c[-200:])) if n >= 200 else None
+
+    # 50SMA slope: compare current vs 5 bars ago
+    sma50_prev = float(np.mean(c[-55:-5])) if n >= 55 else None
+    sma50_rising = (sma50 > sma50_prev) if sma50_prev is not None else None
+
+    # 200SMA slope: compare current vs 5 bars ago
+    sma200_prev = float(np.mean(c[-205:-5])) if n >= 205 else None
+    sma200_rising = (sma200 > sma200_prev) if sma200_prev is not None else None
+
+    # ADR (Average Daily Range) over last 14 bars
+    adr = float(np.mean([h[i] - l[i] for i in range(max(0, n - 14), n)])) if n > 0 else 0
+
+    # ─── Evaluate criteria ────────────────────────────────────
+    adj = 0.0
+
+    # Gold criteria
+    GOLD_BONUS = 1.5
+    GOLD_PENALTY = -2.0
+
+    # G1: 21EMA > 50SMA
+    g1 = ema21 > sma50
+    adj += GOLD_BONUS if g1 else GOLD_PENALTY
+
+    # G2: Price > 21EMA
+    g2 = price > ema21
+    adj += GOLD_BONUS if g2 else GOLD_PENALTY
+
+    # G3: Price > 50SMA
+    g3 = price > sma50
+    adj += GOLD_BONUS if g3 else GOLD_PENALTY
+
+    # G4: 50SMA rising
+    if sma50_rising is not None:
+        adj += GOLD_BONUS if sma50_rising else GOLD_PENALTY
+    # If insufficient data, no bonus or penalty
+
+    # Silver criteria
+    SILVER_BONUS = 0.75
+    SILVER_PENALTY = -1.0
+
+    # S1: Price > 100SMA
+    if sma100 is not None:
+        s1 = price > sma100
+        adj += SILVER_BONUS if s1 else SILVER_PENALTY
+
+    # S2: 50SMA > 100SMA
+    if sma100 is not None:
+        s2 = sma50 > sma100
+        adj += SILVER_BONUS if s2 else SILVER_PENALTY
+
+    # S3: 200SMA rising
+    if sma200_rising is not None:
+        adj += SILVER_BONUS if sma200_rising else SILVER_PENALTY
+
+    # Bronze criteria (bonus only, no penalty)
+    BRONZE_BONUS = 0.5
+
+    # B1: 9EMA and 21EMA coiled within 0.5x ADR
+    if adr > 0:
+        coiled = abs(ema9 - ema21) < (0.5 * adr)
+        if coiled:
+            adj += BRONZE_BONUS
+
+    # B2: Price > 200SMA
+    if sma200 is not None:
+        if price > sma200:
+            adj += BRONZE_BONUS
+
+    return round(adj, 2)
+
+
 def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map):
     """Process daily metrics for one stock. Returns dict or None.
     Liquidity/delisted/flat-price filters are applied upstream in main().
@@ -481,7 +592,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "ax": round(atr_ext * 100), "ch": round(change, 2),
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
-                "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None}
+                "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
+                "sa": compute_setup_adjustment(c, h, l, n)}
 
     etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
     extended = common[-(LOOKBACK + 1):]
@@ -514,7 +626,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "ax": round(atr_ext * 100), "ch": round(change, 2),
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
-                "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None}
+                "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
+                "sa": compute_setup_adjustment(c, h, l, n)}
 
     final_rs = sma_series[-1]
     # RS percentrank computed cross-sectionally in main() after all stocks processed
@@ -529,6 +642,9 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         if sma_series[j] < sma_series[j - 1]: dec_streak += 1
         else: break
 
+    # Setup quality adjustment (applied to RS percentrank in main)
+    setup_adj = compute_setup_adjustment(c, h, l, n)
+
     return {
         "rv": round(rvol * 100) if rvol else None,
         "am": round(atr_mult * 100), "ax": round(atr_ext * 100),
@@ -538,6 +654,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "rs": None,  # Will be set cross-sectionally in main()
         "rf": dec_streak, "ra": adv_streak,
         "p": round(price, 2), "fr": round(final_rs, 4), "vs": sma_series,
+        "sa": setup_adj,
     }
 
 
@@ -656,7 +773,7 @@ def main():
 
     # ─── Download SPY (daily + weekly) ────────────────────────
     end = datetime.now() + timedelta(days=1)
-    start = end - timedelta(days=180)  # Need ~84 trading days for LOOKBACK=50 + MA=20 + ATR=14
+    start = end - timedelta(days=400)  # ~280 trading days for SMA200 + LOOKBACK + MA + ATR
     w_start = end - timedelta(days=365)
 
     print("\nDownloading SPY (daily + weekly)...")
@@ -1028,14 +1145,17 @@ def main():
 
     for r in results:
         if r.get("fr") is not None and len(all_d_rs) > 1:
-            r["rs"] = round(percentrank_inc(all_d_rs, r["fr"]) * 100)
+            raw_pctrank = round(percentrank_inc(all_d_rs, r["fr"]) * 100)
+            # Apply setup quality adjustment (bonus/penalty based on MA criteria)
+            sa = r.get("sa", 0)
+            adjusted = max(0, min(100, raw_pctrank + sa))
+            r["rs"] = round(adjusted)
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
             r["w_rs"] = round(percentrank_inc(all_w_rs, r["w_fr"]) * 100)
 
-    # ─── Rank stocks ──────────────────────────────────────────
-    # Daily rank (by raw RS value desc, then 1D change desc)
-    results.sort(key=lambda x: (x["fr"] if x["fr"] is not None else -999,
-                                 x["ch"] if x["ch"] is not None else -999), reverse=True)
+    # ─── Rank stocks (by adjusted RS score, then raw RS as tiebreak) ──
+    results.sort(key=lambda x: (x["rs"] if x["rs"] is not None else -999,
+                                 x["fr"] if x["fr"] is not None else -999), reverse=True)
     for i, r in enumerate(results):
         r["rk"] = i + 1
 
