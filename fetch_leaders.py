@@ -822,56 +822,62 @@ def main():
     import pandas as pd
 
     def chunked_download(tickers, **kwargs):
-        """Download in chunks of 200 to avoid yfinance batch failures."""
+        """Download in chunks of 200 with proper MultiIndex handling for yfinance 1.0+."""
         CHUNK = 200
         all_dfs = {}
 
-        def flatten_df(df):
-            """Flatten MultiIndex columns from new yfinance versions."""
-            if hasattr(df.columns, 'levels'):
-                # MultiIndex: take the top level (Price, not Ticker)
-                df.columns = [col[0] if isinstance(col, tuple) else col for col in df.columns]
-            return df
-
         def extract_ticker(df, tk):
-            """Extract single-ticker DataFrame from bulk download result."""
+            """Extract single-ticker DataFrame from bulk download."""
+            cols = df.columns
+            # yfinance 1.0+: MultiIndex with named levels ('Price', 'Ticker')
+            if hasattr(cols, 'names') and cols.names and 'Ticker' in cols.names:
+                try:
+                    sub = df.xs(tk, axis=1, level='Ticker')
+                    return sub.dropna(subset=['Close']) if not sub.empty else None
+                except KeyError:
+                    return None
+            # yfinance 0.2.51+: unnamed 2-level MultiIndex
+            if hasattr(cols, 'nlevels') and cols.nlevels == 2:
+                try:
+                    sub = df.xs(tk, axis=1, level=1)
+                    return sub.dropna(subset=['Close']) if not sub.empty else None
+                except KeyError:
+                    return None
+            # Old format: df[tk] gives sub-DataFrame
             try:
                 sub = df[tk]
-                if isinstance(sub.columns, type(df.columns)) and hasattr(sub.columns, 'levels'):
-                    sub.columns = [col[0] if isinstance(col, tuple) else col for col in sub.columns]
-                return sub.dropna(subset=["Close"])
-            except (KeyError, TypeError):
-                try:
-                    # Fallback: columns might be (field, ticker) tuples at top level
-                    cols = {col[0]: col for col in df.columns if isinstance(col, tuple) and col[1] == tk}
-                    if cols:
-                        sub = df[[cols[f] for f in ["Close","High","Low","Open","Volume"] if f in cols]]
-                        sub.columns = [col[0] for col in sub.columns]
-                        return sub.dropna(subset=["Close"])
-                except Exception:
-                    pass
-            return None
+                if hasattr(sub, 'columns') and hasattr(sub.columns, 'nlevels') and sub.columns.nlevels > 1:
+                    sub.columns = [c[0] if isinstance(c, tuple) else c for c in sub.columns]
+                return sub.dropna(subset=['Close']) if not sub.empty else None
+            except (KeyError, TypeError, AttributeError):
+                return None
+
+        def flatten_single(df):
+            """Flatten a single-ticker download."""
+            if hasattr(df.columns, 'names') and df.columns.names and 'Ticker' in df.columns.names:
+                df = df.droplevel('Ticker', axis=1)
+            elif hasattr(df.columns, 'nlevels') and df.columns.nlevels == 2:
+                df = df.droplevel(1, axis=1)
+            return df
 
         for i in range(0, len(tickers), CHUNK):
             batch = tickers[i:i+CHUNK]
-            print(f"  Batch {i//CHUNK + 1}/{(len(tickers)+CHUNK-1)//CHUNK}: tickers {i+1}-{min(i+CHUNK, len(tickers))}...")
+            print(f"  Batch {i//CHUNK + 1}/{(len(tickers)+CHUNK-1)//CHUNK}: {i+1}-{min(i+CHUNK, len(tickers))}...")
             attempt = 0
             while attempt < 3:
                 try:
-                    df = yf.download(batch, group_by="ticker", auto_adjust=True, session=_session,
-                                     threads=True, progress=False, **kwargs)
+                    df = yf.download(batch, group_by="ticker", auto_adjust=True,
+                                     session=_session, threads=False, progress=False, **kwargs)
                     if df.empty:
                         print(f"    Empty result, retrying...")
-                        attempt += 1
-                        time.sleep(5)
-                        continue
-                    # Extract per-ticker DataFrames
+                        attempt += 1; time.sleep(5); continue
                     if len(batch) == 1:
-                        flat = flatten_df(df.copy())
-                        flat = flat.dropna(subset=["Close"])
+                        flat = flatten_single(df.copy()).dropna(subset=['Close'])
                         if not flat.empty:
                             all_dfs[batch[0]] = flat
                     else:
+                        if i == 0:
+                            print(f"    Column format: nlevels={df.columns.nlevels}, names={df.columns.names}")
                         for tk in batch:
                             tk_df = extract_ticker(df, tk)
                             if tk_df is not None and not tk_df.empty:
@@ -879,10 +885,10 @@ def main():
                     break
                 except Exception as e:
                     print(f"    Batch error: {e}, retrying...")
-                    attempt += 1
-                    time.sleep(5)
+                    attempt += 1; time.sleep(5)
             time.sleep(1)
         return all_dfs
+
 
     daily_data = chunked_download(all_tickers,
                                    start=start.strftime("%Y-%m-%d"),
@@ -960,7 +966,7 @@ def main():
 
     # ─── Market cap + industry lookup (ONLY on liquid survivors) ──
     MIN_MCAP = 2_000_000_000
-    CACHE_VERSION = 3  # Bump forces cache refresh when fetching logic changes
+    CACHE_VERSION = 4  # Bumped: forces re-fetch of empty industries
     mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "version": 0, "refresh_in_progress": False}
     if os.path.exists("leaders_mcap.json"):
         try:
@@ -1013,7 +1019,9 @@ def main():
             if t not in mcap_cache or t not in industry_cache:
                 tickers_to_check.append(t)
             elif mcap_cache.get(t, 0) == 0:
-                tickers_to_check.append(t)  # Self-heal failed entries
+                tickers_to_check.append(t)  # Self-heal failed mcap
+            elif not industry_cache.get(t, ""):
+                tickers_to_check.append(t)  # Self-heal missing industry
 
     if tickers_to_check:
         MAX_PER_RUN = 500
