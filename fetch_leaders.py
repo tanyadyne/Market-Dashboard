@@ -479,6 +479,7 @@ def compute_setup_adjustment(c, h, l, n):
 
     # ─── Evaluate criteria ────────────────────────────────────
     adj = 0.0
+    flags = 0  # Bitmask: G1=1, G2=2, G3=4, G4=8, S1=16, S2=32, S3=64, B1=128, B2=256
 
     # Gold criteria
     GOLD_BONUS = 1.5
@@ -487,18 +488,22 @@ def compute_setup_adjustment(c, h, l, n):
     # G1: 21EMA > 50SMA
     g1 = ema21 > sma50
     adj += GOLD_BONUS if g1 else GOLD_PENALTY
+    if g1: flags |= 1
 
     # G2: Price > 21EMA
     g2 = price > ema21
     adj += GOLD_BONUS if g2 else GOLD_PENALTY
+    if g2: flags |= 2
 
     # G3: Price > 50SMA
     g3 = price > sma50
     adj += GOLD_BONUS if g3 else GOLD_PENALTY
+    if g3: flags |= 4
 
     # G4: 50SMA rising
     if sma50_rising is not None:
         adj += GOLD_BONUS if sma50_rising else GOLD_PENALTY
+        if sma50_rising: flags |= 8
     # If insufficient data, no bonus or penalty
 
     # Silver criteria
@@ -509,15 +514,18 @@ def compute_setup_adjustment(c, h, l, n):
     if sma100 is not None:
         s1 = price > sma100
         adj += SILVER_BONUS if s1 else SILVER_PENALTY
+        if s1: flags |= 16
 
     # S2: 50SMA > 100SMA
     if sma100 is not None:
         s2 = sma50 > sma100
         adj += SILVER_BONUS if s2 else SILVER_PENALTY
+        if s2: flags |= 32
 
     # S3: 200SMA rising
     if sma200_rising is not None:
         adj += SILVER_BONUS if sma200_rising else SILVER_PENALTY
+        if sma200_rising: flags |= 64
 
     # Bronze criteria (bonus only, no penalty)
     BRONZE_BONUS = 0.5
@@ -527,13 +535,15 @@ def compute_setup_adjustment(c, h, l, n):
         coiled = abs(ema9 - ema21) < (0.5 * adr)
         if coiled:
             adj += BRONZE_BONUS
+            flags |= 128
 
     # B2: Price > 200SMA
     if sma200 is not None:
         if price > sma200:
             adj += BRONZE_BONUS
+            flags |= 256
 
-    return round(adj, 2)
+    return round(adj, 2), flags
 
 
 def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map):
@@ -588,12 +598,13 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
             common.append((idx, spy_ts_map[ts]))
 
     if len(common) < LOOKBACK:
+        _sa, _sf = compute_setup_adjustment(c, h, l, n)
         return {"rv": round(rvol * 100) if rvol else None, "am": round(atr_mult * 100),
                 "ax": round(atr_ext * 100), "ch": round(change, 2),
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
-                "sa": compute_setup_adjustment(c, h, l, n)}
+                "sa": _sa, "sf": _sf}
 
     etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
     extended = common[-(LOOKBACK + 1):]
@@ -622,12 +633,13 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         sma_series.append(round(np.mean(window), 4))
 
     if not sma_series:
+        _sa, _sf = compute_setup_adjustment(c, h, l, n)
         return {"rv": round(rvol * 100) if rvol else None, "am": round(atr_mult * 100),
                 "ax": round(atr_ext * 100), "ch": round(change, 2),
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
-                "sa": compute_setup_adjustment(c, h, l, n)}
+                "sa": _sa, "sf": _sf}
 
     final_rs = sma_series[-1]
     # RS percentrank computed cross-sectionally in main() after all stocks processed
@@ -643,7 +655,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         else: break
 
     # Setup quality adjustment (applied to RS percentrank in main)
-    setup_adj = compute_setup_adjustment(c, h, l, n)
+    setup_adj, setup_flags = compute_setup_adjustment(c, h, l, n)
 
     return {
         "rv": round(rvol * 100) if rvol else None,
@@ -654,7 +666,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "rs": None,  # Will be set cross-sectionally in main()
         "rf": dec_streak, "ra": adv_streak,
         "p": round(price, 2), "fr": round(final_rs, 4), "vs": sma_series,
-        "sa": setup_adj,
+        "sa": setup_adj, "sf": setup_flags,
     }
 
 
