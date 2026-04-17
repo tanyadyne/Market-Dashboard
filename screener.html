@@ -275,7 +275,7 @@ function render(){
   const isW=currentTab==='weekly';
   const f=document.getElementById('si').value.toLowerCase();
   let items=DATA.e;
-  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f));
+  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f)||(e.thm||'').toLowerCase().includes(f));
   // Setup criteria filter (bitmask)
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
 
@@ -359,7 +359,7 @@ function searchStock(){
     <div class="info-box"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.rs)}">${stock.rs!=null?stock.rs+'%':'—'}</div></div>
     <div class="info-box"><div class="lbl">Daily Rank</div><div class="val">#${stock.rk}</div><div class="sub">of ${total}</div></div>
     <div class="info-box"><div class="lbl">Weekly Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">of ${total}</div></div>
-    <div class="info-box"><div class="lbl">Theme</div><div class="val" style="font-size:14px">${esc(stock.th||'—')}</div><div class="sub"><span class="${themeTag(ts)}">${ts}</span></div></div>
+    <div class="info-box"><div class="lbl">Theme</div><div class="val" style="font-size:14px">${esc(stock.thm||stock.th||'—')}</div><div class="sub"><span class="${themeTag(ts)}">${ts}</span></div></div>
   </div>`;
 
   // History table
@@ -382,7 +382,7 @@ function searchStock(){
         <td class="c">${dr!=null?'#'+dr:'—'}</td>
         <td class="c">${wr!=null?'#'+wr:'—'}</td>
         <td class="c"><span class="${posClass(p)}">${p}</span></td>
-        <td class="l">${esc(stock.th||'—')} <span class="${themeTag(thStatus)}">(${thStatus})</span></td>
+        <td class="l">${esc(stock.thm||stock.th||'—')} <span class="${themeTag(thStatus)}">(${thStatus})</span></td>
       </tr>`;
     }
     html+=`</tbody></table></div>`;
