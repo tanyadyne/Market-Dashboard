@@ -11,14 +11,35 @@
 [data-theme="light"]{--bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--bg4:#e2e8f0;--t1:#0f172a;--t2:#475569;--t3:#94a3b8;--t4:#cbd5e1;--g:#16a34a;--g2:#166534;--r:#dc2626;--r2:#991b1b;--gbg:#dcfce7;--rbg:#fee2e2;--bdr:#e2e8f0;--bdr2:#f1f5f9;--card:#ffffff}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-size:13px}
-.hdr{padding:14px 20px;border-bottom:1px solid var(--bdr2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+/* Header bar */
+.hdr{padding:12px 20px;border-bottom:1px solid var(--bdr2);display:flex;align-items:center;justify-content:space-between;gap:8px}
 .hdr-l{display:flex;align-items:center;gap:10px}
 .hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.btn{padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
-.btn:hover{background:var(--bg3);color:var(--t1)}
-.btn.active{border-color:#3b82f6;color:#60a5fa;background:#0f1a2e}
+.btn-sm{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
+.btn-sm:hover{background:var(--bg3);color:var(--t1)}
+/* Centered tab strip */
+.tab-strip{display:flex;justify-content:center;gap:6px;padding:14px 20px 12px;border-bottom:1px solid var(--bdr2)}
+.tab-btn{padding:10px 32px;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.6px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:all .2s;font-family:inherit;text-transform:uppercase}
+.tab-btn:hover{background:var(--bg3);color:var(--t1);border-color:var(--t3)}
+.tab-btn.active{border-color:#3b82f6;color:#60a5fa;background:#0c1a30;box-shadow:0 0 12px rgba(59,130,246,.15)}
+/* Info bar */
 .spy{padding:8px 20px;border-bottom:1px solid var(--bdr2);display:flex;justify-content:space-between;font-size:11px;color:var(--t3)}
 .m{font-family:'JetBrains Mono',monospace;font-size:11px}
+/* Filter dropdown */
+.filter-wrap{position:relative;display:inline-block}
+.filter-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
+.filter-btn:hover{background:var(--bg3);color:var(--t1)}
+.filter-btn.has-filter{border-color:#f59e0b;color:#fbbf24}
+.filter-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:8px 0;min-width:240px;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.filter-menu.open{display:block}
+.filter-menu-hdr{padding:6px 16px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t4);font-weight:700}
+.filter-item{padding:7px 16px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--t2);transition:.1s}
+.filter-item:hover{background:var(--bg3);color:var(--t1)}
+.filter-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.filter-item .dot.gold{background:#fbbf24}.filter-item .dot.silver{background:#94a3b8}.filter-item .dot.bronze{background:#cd7f32}
+.filter-item.active{color:var(--t1);font-weight:600}
+.filter-item.active::after{content:'✓';margin-left:auto;color:var(--g);font-size:13px}
+/* Table */
 table{width:100%;border-collapse:collapse}
 th{position:sticky;top:0;background:var(--bg3);padding:8px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;border-bottom:1px solid var(--bdr);white-space:nowrap;z-index:2}
 td{padding:7px 6px;border-bottom:1px solid var(--bdr2);font-size:12px}
@@ -41,11 +62,9 @@ tr:hover{background:var(--bg3)}
 .tw{display:none}
 .ft{padding:8px 20px;font-size:10px;color:var(--t4);text-align:center}
 .srch{padding:5px 12px;border-radius:6px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:12px;width:200px;font-family:inherit}
-/* Pagination */
 .pag{display:flex;justify-content:center;gap:4px;padding:12px 0}
 .pag .pg{padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2)}
 .pag .pg:hover{background:var(--bg3)}.pag .pg.cur{background:#1e3a5f;border-color:#3b82f6;color:#60a5fa}
-/* Search panel */
 .search-panel{display:none;padding:20px;max-width:900px;margin:0 auto}
 .search-input{width:100%;padding:10px 16px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:14px;font-family:inherit;margin-bottom:16px}
 .info-boxes{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
@@ -59,22 +78,45 @@ tr:hover{background:var(--bg3)}
 .hist-table td{padding:5px 6px;font-family:'JetBrains Mono',monospace;font-size:11px}
 .tag-leader{color:#4ade80;font-weight:600}.tag-neutral{color:#94a3b8;font-weight:600}.tag-laggard{color:#f87171;font-weight:600}
 .streak-sel{padding:1px 4px;border-radius:3px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer}
-@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{flex-direction:column}}
+@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{flex-direction:column}.tab-btn{padding:8px 18px;font-size:11px}}
 </style>
 </head>
 <body>
+<!-- Header bar: back button + title on left, controls on right -->
 <div class="hdr">
   <div class="hdr-l">
-    <a href="index.html" class="btn" style="text-decoration:none;padding:4px 10px">←</a>
+    <a href="index.html" class="btn-sm" style="text-decoration:none;padding:4px 10px">←</a>
     <div style="font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Liquid Leaders</div>
   </div>
   <div class="hdr-r">
-    <button class="btn active" id="tabD" onclick="switchTab('daily')">Daily Rank</button>
-    <button class="btn" id="tabW" onclick="switchTab('weekly')">Weekly Rank</button>
-    <button class="btn" id="tabS" onclick="switchTab('search')">Search</button>
-    <button class="btn" id="bTheme" onclick="toggleTheme()">☀ Light</button>
+    <div class="filter-wrap">
+      <button class="filter-btn" id="filterBtn" onclick="toggleFilterMenu()">⚙ Filters</button>
+      <div class="filter-menu" id="filterMenu">
+        <div class="filter-menu-hdr">Gold Criteria</div>
+        <div class="filter-item" data-bit="1" onclick="toggleFilter(this)"><span class="dot gold"></span>21EMA &gt; 50SMA</div>
+        <div class="filter-item" data-bit="2" onclick="toggleFilter(this)"><span class="dot gold"></span>Price &gt; 21EMA</div>
+        <div class="filter-item" data-bit="4" onclick="toggleFilter(this)"><span class="dot gold"></span>Price &gt; 50SMA</div>
+        <div class="filter-item" data-bit="8" onclick="toggleFilter(this)"><span class="dot gold"></span>50SMA Rising</div>
+        <div class="filter-menu-hdr" style="margin-top:4px">Silver Criteria</div>
+        <div class="filter-item" data-bit="16" onclick="toggleFilter(this)"><span class="dot silver"></span>Price &gt; 100SMA</div>
+        <div class="filter-item" data-bit="32" onclick="toggleFilter(this)"><span class="dot silver"></span>50SMA &gt; 100SMA</div>
+        <div class="filter-item" data-bit="64" onclick="toggleFilter(this)"><span class="dot silver"></span>200SMA Rising</div>
+        <div class="filter-menu-hdr" style="margin-top:4px">Bronze Criteria</div>
+        <div class="filter-item" data-bit="128" onclick="toggleFilter(this)"><span class="dot bronze"></span>9/21 EMA Coiled</div>
+        <div class="filter-item" data-bit="256" onclick="toggleFilter(this)"><span class="dot bronze"></span>Price &gt; 200SMA</div>
+        <div style="border-top:1px solid var(--bdr);margin:6px 0"></div>
+        <div class="filter-item" onclick="clearFilters()" style="color:var(--t3);font-size:11px">Clear All Filters</div>
+      </div>
+    </div>
+    <button class="btn-sm" id="bTheme" onclick="toggleTheme()">☀ Light</button>
     <input class="srch" id="si" placeholder="Filter ticker..." oninput="render()">
   </div>
+</div>
+<!-- Centered tab strip -->
+<div class="tab-strip" id="tabStrip">
+  <button class="tab-btn active" id="tabD" onclick="switchTab('daily')">Daily Rank</button>
+  <button class="tab-btn" id="tabW" onclick="switchTab('weekly')">Weekly Rank</button>
+  <button class="tab-btn" id="tabS" onclick="switchTab('search')">Search</button>
 </div>
 <div class="spy" id="spyBar" style="display:none">
   <span>Updated: <span id="ut"></span></span>
@@ -94,6 +136,35 @@ tr:hover{background:var(--bg3)}
 let DATA=null,HISTORY=null,sortKey='rk',sortDir=1,currentTab='daily',currentPage=1;
 const PAGE_SIZE=200;
 let rankLookback=1;
+let activeFilters=0; // bitmask of required setup flags
+
+function toggleFilterMenu(){
+  document.getElementById('filterMenu').classList.toggle('open');
+}
+function toggleFilter(el){
+  const bit=parseInt(el.dataset.bit);
+  activeFilters ^= bit;
+  el.classList.toggle('active');
+  document.getElementById('filterBtn').className = activeFilters ? 'filter-btn has-filter' : 'filter-btn';
+  currentPage=1;
+  render();
+}
+function clearFilters(){
+  activeFilters=0;
+  document.querySelectorAll('.filter-item[data-bit]').forEach(el=>el.classList.remove('active'));
+  document.getElementById('filterBtn').className='filter-btn';
+  document.getElementById('filterMenu').classList.remove('open');
+  currentPage=1;
+  render();
+}
+// Close filter menu when clicking outside
+document.addEventListener('click',e=>{
+  const wrap=document.getElementById('filterMenu');
+  const btn=document.getElementById('filterBtn');
+  if(wrap && !wrap.contains(e.target) && e.target!==btn){
+    wrap.classList.remove('open');
+  }
+});
 
 function toSGT(utcStr){
   try{const s=utcStr.replace(' UTC','Z').replace(' ','T');const d=new Date(s);if(isNaN(d))return utcStr;
@@ -143,7 +214,7 @@ function toggleTheme(){
 
 function switchTab(tab){
   currentTab=tab;currentPage=1;sortKey='rk';sortDir=1;
-  document.querySelectorAll('.hdr-r .btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(tab==='daily'?'tabD':tab==='weekly'?'tabW':'tabS').classList.add('active');
   if(tab==='search'){
     document.getElementById('tw').style.display='none';
@@ -205,6 +276,8 @@ function render(){
   const f=document.getElementById('si').value.toLowerCase();
   let items=DATA.e;
   if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f));
+  // Setup criteria filter (bitmask)
+  if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
 
   // Sort
   const dk=k=>{if(!isW)return k;const m={rv:'w_rv',am:'w_am',rs:'w_rs',vs:'w_vs'};return m[k]||k;};
