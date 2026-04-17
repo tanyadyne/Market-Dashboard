@@ -22,6 +22,13 @@ from datetime import datetime, timedelta
 import numpy as np
 import yfinance as yf
 
+# Use curl_cffi to bypass Yahoo Finance rate limiting (impersonates Chrome)
+try:
+    from curl_cffi import requests as cffi_requests
+    _session = cffi_requests.Session(impersonate="chrome")
+except ImportError:
+    _session = None
+
 try:
     import requests
     from bs4 import BeautifulSoup
@@ -159,7 +166,7 @@ def fetch_holdings_from_perplexity(ticker):
 def fetch_holdings_from_yfinance(ticker, min_weight=1.0):
     """Fallback: try yfinance to get ETF holdings."""
     try:
-        etf = yf.Ticker(ticker)
+        etf = yf.Ticker(ticker, session=_session)
         # Try the holdings property (available in newer yfinance)
         try:
             holdings = etf.get_institutional_holders()
@@ -332,7 +339,8 @@ def main():
         end=(end + timedelta(days=1)).strftime("%Y-%m-%d"),
         group_by="ticker",
         auto_adjust=True,
-        threads=True,
+        threads=False,
+        session=_session,
     )
 
     def get_closes(ticker):
@@ -351,7 +359,7 @@ def main():
         if (i + 1) % 100 == 0 or i == 0:
             print(f"  Names: {i+1}/{len(holding_tickers)}...")
         try:
-            ticker_obj = yf.Ticker(tk)
+            ticker_obj = yf.Ticker(tk, session=_session)
             info = ticker_obj.info
             name = info.get("shortName") or info.get("longName") or ""
             summary = info.get("longBusinessSummary") or ""
