@@ -21,6 +21,13 @@ from datetime import datetime, timedelta
 import numpy as np
 import yfinance as yf
 
+# Use curl_cffi to bypass Yahoo Finance rate limiting (impersonates Chrome)
+try:
+    from curl_cffi import requests as cffi_requests
+    _session = cffi_requests.Session(impersonate="chrome")
+except ImportError:
+    _session = None
+
 BENCHMARK = "SPY"
 LOOKBACK = 25
 ATR_PERIOD = 14
@@ -334,6 +341,7 @@ def main():
         group_by="ticker",
         auto_adjust=True,
         threads=False,
+        session=_session,
     )
 
     if raw.empty:
@@ -350,6 +358,7 @@ def main():
         group_by="ticker",
         auto_adjust=True,
         threads=False,
+        session=_session,
     )
     print(f"Weekly data downloaded: {not raw_w.empty}")
 
