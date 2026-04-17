@@ -45,7 +45,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.market_check.outputs.skip != 'true'
-        run: pip install yfinance numpy
+        run: pip install yfinance numpy curl_cffi
 
       - name: Fetch ETF data (fast refresh)
         if: steps.market_check.outputs.skip != 'true'
