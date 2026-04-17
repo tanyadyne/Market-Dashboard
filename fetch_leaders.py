@@ -442,21 +442,27 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     c5 = (c[-1] / c[-6] - 1) * 100 if n >= 6 else None
     c20 = (c[-1] / c[-21] - 1) * 100 if n >= 21 else None
 
-    # ATR for ATR Ext: use only the most recent 64 bars (50 SMA window + 14 ATR seed).
-    # This matches TradingView's standard ta.atr(14) behavior, which is responsive to
-    # recent volatility. Computing across the full 180-day download lets ancient
-    # volatility heavily influence the value via Wilder smoothing — making the ATR
-    # too low for stocks that recently broke out hard (e.g. CAR).
-    ATR_WINDOW = 64
-    h_recent = h[-ATR_WINDOW:] if n >= ATR_WINDOW else h
-    l_recent = l[-ATR_WINDOW:] if n >= ATR_WINDOW else l
-    c_recent = c[-ATR_WINDOW:] if n >= ATR_WINDOW else c
-    atr = compute_atr(h_recent, l_recent, c_recent, ATR_PERIOD)
+    # ATR Ext = gainPct / atrPct (matches Pine Script exactly)
+    # gainPct = (price - sma50) / sma50 * 100
+    # atrPct  = atr / price * 100
+    # atrMultiple = gainPct / atrPct = ((price - sma50) / sma50) / (atr / price)
+    trs = []
+    for i in range(max(1, n - 14), n):
+        if c[i] is None or c[i-1] is None or h[i] is None or l[i] is None:
+            continue
+        tr = max(h[i] - l[i], abs(h[i] - c[i-1]), abs(l[i] - c[i-1]))
+        trs.append(tr)
+    atr = float(np.mean(trs)) if trs else 0
     valid_c = [x for x in c if x is not None]
     sma50 = np.mean(valid_c[-50:]) if len(valid_c) >= 50 else np.mean(valid_c)
-    atr_ext = abs(c[-1] - sma50) / atr if atr > 0 else 0
-    atr_pct = (atr / c[-2] * 100) if n >= 2 and c[-2] != 0 else 1
-    atr_mult = abs(change) / atr_pct if atr_pct > 0 else 0
+    if atr > 0 and sma50 > 0:
+        gain_pct = (c[-1] - sma50) / sma50 * 100
+        atr_pct  = atr / c[-1] * 100
+        atr_ext  = gain_pct / atr_pct  # can be negative (below SMA)
+    else:
+        atr_ext = 0
+    atr_pct_for_mult = (atr / c[-2] * 100) if n >= 2 and c[-2] != 0 else 1
+    atr_mult = abs(change) / atr_pct_for_mult if atr_pct_for_mult > 0 else 0
 
     vols = [x for x in v if x is not None and x > 0]
     rvol = (vols[-1] / np.mean(vols[:-1][-20:])) if len(vols) > 1 and np.mean(vols[:-1][-20:]) > 0 else None
