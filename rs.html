@@ -279,10 +279,21 @@ function toggleView(){
 
 function toggleTheme(){
   const h=document.documentElement,d=h.getAttribute('data-theme')==='dark';
-  h.setAttribute('data-theme',d?'light':'dark');
+  const newTheme=d?'light':'dark';
+  h.setAttribute('data-theme',newTheme);
+  try{localStorage.setItem('dashboardTheme',newTheme);}catch(e){}
   document.getElementById('bTheme').textContent=d?'🌙 Dark':'☀ Light';
   requestAnimationFrame(()=>render());
 }
+// Restore persisted theme on page load
+(function(){try{
+  const t=localStorage.getItem('dashboardTheme');
+  if(t && t!=='dark'){
+    document.documentElement.setAttribute('data-theme',t);
+    const btn=document.getElementById('bTheme');
+    if(btn)btn.textContent=t==='dark'?'☀ Light':'🌙 Dark';
+  }
+}catch(e){}})();
 
 (function initResize(){
   document.addEventListener('mousedown',e=>{
