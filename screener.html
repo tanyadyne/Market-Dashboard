@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Liquid Leaders</title>
+<title>Stock Screener</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -11,14 +11,20 @@
 [data-theme="light"]{--bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--bg4:#e2e8f0;--t1:#0f172a;--t2:#475569;--t3:#94a3b8;--t4:#cbd5e1;--g:#16a34a;--g2:#166534;--r:#dc2626;--r2:#991b1b;--gbg:#dcfce7;--rbg:#fee2e2;--bdr:#e2e8f0;--bdr2:#f1f5f9;--card:#ffffff}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-size:13px}
-/* Header bar */
+/* Fixed header wrapper */
+.top-fixed{position:sticky;top:0;z-index:50;background:var(--bg)}
 .hdr{padding:12px 20px;border-bottom:1px solid var(--bdr2);display:flex;align-items:center;justify-content:space-between;gap:8px}
 .hdr-l{display:flex;align-items:center;gap:10px}
 .hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .btn-sm{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
 .btn-sm:hover{background:var(--bg3);color:var(--t1)}
+/* Segmented toggles */
+.seg-toggle{display:inline-flex;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;background:var(--bg2)}
+.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s}
+.seg-toggle button.on{background:var(--bg4);color:var(--t1)}
+.seg-toggle button:hover:not(.on){color:var(--t1)}
 /* Centered tab strip */
-.tab-strip{display:flex;justify-content:center;gap:6px;padding:14px 20px 12px;border-bottom:1px solid var(--bdr2)}
+.tab-strip{display:flex;justify-content:center;gap:6px;padding:14px 20px 12px;border-bottom:1px solid var(--bdr2);background:var(--bg)}
 .tab-btn{padding:10px 32px;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.6px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:all .2s;font-family:inherit;text-transform:uppercase}
 .tab-btn:hover{background:var(--bg3);color:var(--t1);border-color:var(--t3)}
 .tab-btn.active{border-color:#3b82f6;color:#60a5fa;background:#0c1a30;box-shadow:0 0 12px rgba(59,130,246,.15)}
@@ -78,15 +84,29 @@ tr:hover{background:var(--bg3)}
 .hist-table td{padding:5px 6px;font-family:'JetBrains Mono',monospace;font-size:11px}
 .tag-leader{color:#4ade80;font-weight:600}.tag-neutral{color:#94a3b8;font-weight:600}.tag-laggard{color:#f87171;font-weight:600}
 .streak-sel{padding:1px 4px;border-radius:3px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer}
-@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{flex-direction:column}.tab-btn{padding:8px 18px;font-size:11px}}
+/* Chart view grid */
+.chart-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}
+.chart-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.chart-card-hdr{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr2)}
+.chart-card-tk{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.5px}
+.chart-card-rs{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.chart-card-rk{font-family:'JetBrains Mono',monospace;color:var(--t3);font-size:10px;margin-right:6px}
+.chart-card-body{height:260px;width:100%}
+/* History delta arrow */
+.hist-delta{text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600}
+.hist-delta .up{color:var(--g)}
+.hist-delta .dn{color:var(--r)}
+.hist-delta .fl{color:var(--t4)}
+@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{flex-direction:column}.tab-btn{padding:8px 18px;font-size:11px}.chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.chart-card-body{height:200px}}
 </style>
 </head>
 <body>
-<!-- Header bar: back button + title on left, controls on right -->
+<!-- Fixed top: header + tabs + info bar -->
+<div class="top-fixed">
 <div class="hdr">
   <div class="hdr-l">
     <a href="index.html" class="btn-sm" style="text-decoration:none;padding:4px 10px">←</a>
-    <div style="font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Liquid Leaders</div>
+    <div style="font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Stock Screener</div>
   </div>
   <div class="hdr-r">
     <div class="filter-wrap">
@@ -108,11 +128,17 @@ tr:hover{background:var(--bg3)}
         <div class="filter-item" onclick="clearFilters()" style="color:var(--t3);font-size:11px">Clear All Filters</div>
       </div>
     </div>
-    <button class="btn-sm" id="bTheme" onclick="toggleTheme()">☀ Light</button>
+    <div class="seg-toggle" id="viewToggle">
+      <button id="viewList" class="on" onclick="switchView('list')">List</button>
+      <button id="viewChart" onclick="switchView('chart')">Charts</button>
+    </div>
+    <div class="seg-toggle" id="themeToggle">
+      <button id="themeDark" class="on" onclick="setTheme('dark')">Dark</button>
+      <button id="themeLight" onclick="setTheme('light')">Light</button>
+    </div>
     <input class="srch" id="si" placeholder="Filter ticker..." oninput="render()">
   </div>
 </div>
-<!-- Centered tab strip -->
 <div class="tab-strip" id="tabStrip">
   <button class="tab-btn active" id="tabD" onclick="switchTab('daily')">Daily Rank</button>
   <button class="tab-btn" id="tabW" onclick="switchTab('weekly')">Weekly Rank</button>
@@ -122,20 +148,66 @@ tr:hover{background:var(--bg3)}
   <span>Updated: <span id="ut"></span></span>
   <span><span id="stockCount"></span> stocks ranked</span>
 </div>
+</div><!-- /.top-fixed -->
 <div class="status" id="statusBar">Loading data...</div>
 <div class="tw" id="tw" style="display:none">
   <table><thead><tr id="headerRow"></tr></thead><tbody id="tb"></tbody></table>
   <div class="pag" id="pagination"></div>
   <div class="ft" id="ft"></div>
 </div>
+<div class="chart-grid" id="chartGrid" style="display:none"></div>
+<div class="pag" id="chartPagination" style="display:none"></div>
 <div class="search-panel" id="searchPanel">
   <input class="search-input" id="searchInput" placeholder="Enter stock ticker (e.g. AAPL, TSLA, NVDA)..." oninput="searchStock()">
   <div id="searchResults"></div>
 </div>
 <script>
-let DATA=null,HISTORY=null,sortKey='rk',sortDir=1,currentTab='daily',currentPage=1;
+let DATA=null,HISTORY=null,ETF_DATA=null,sortKey='rk',sortDir=1,currentTab='daily',currentPage=1;
 const PAGE_SIZE=200;
+const CHART_PAGE_SIZE=24;  // chart grid pagination
 let rankLookback=1;
+let activeFilters=0; // bitmask of required setup flags
+let currentView='list'; // 'list' or 'chart'
+let chartPage=1;
+
+// ─── Theme (persisted across pages via localStorage) ──────────
+function setTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  try{localStorage.setItem('dashboardTheme',theme);}catch(e){}
+  // Update toggle buttons
+  document.getElementById('themeDark').classList.toggle('on',theme==='dark');
+  document.getElementById('themeLight').classList.toggle('on',theme==='light');
+  // If chart view is active, clear TV widgets and re-render so they pick up new theme
+  if(currentView==='chart' && DATA){
+    document.querySelectorAll('.tv-chart').forEach(el=>{el.dataset.loaded='';el.innerHTML='';});
+    renderChartView();
+  }
+}
+// Init theme on load
+(function(){try{const t=localStorage.getItem('dashboardTheme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+
+// ─── View toggle (list vs chart) ──────────────────────────────
+function switchView(view){
+  currentView=view;
+  chartPage=1;
+  document.getElementById('viewList').classList.toggle('on',view==='list');
+  document.getElementById('viewChart').classList.toggle('on',view==='chart');
+  if(currentTab==='search'){
+    // view toggle doesn't affect search tab
+    return;
+  }
+  if(view==='chart'){
+    document.getElementById('tw').style.display='none';
+    document.getElementById('chartGrid').style.display='';
+    document.getElementById('chartPagination').style.display='';
+    renderChartView();
+  }else{
+    document.getElementById('tw').style.display='';
+    document.getElementById('chartGrid').style.display='none';
+    document.getElementById('chartPagination').style.display='none';
+    render();
+  }
+}
 let activeFilters=0; // bitmask of required setup flags
 
 function toggleFilterMenu(){
@@ -177,8 +249,14 @@ function multText(v){return v!=null?(v/100).toFixed(2)+'x':'—';}
 function getRSBg(rs){if(rs==null)return'var(--bg4)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--gbg)';if(rs>=80)return d?'#1a3a2a':'#dcfce7';if(rs>=60)return'var(--bg4)';if(rs>=40)return d?'#292524':'#fef3c7';if(rs>=20)return d?'#2c1810':'#ffedd5';return'var(--rbg)';}
 function getRSCol(rs){if(rs==null)return'var(--t3)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--g)';if(rs>=80)return'var(--g2)';if(rs>=60)return'var(--t2)';if(rs>=40)return d?'#d4a373':'#92400e';if(rs>=20)return d?'#fb923c':'#c2410c';return'var(--r)';}
 function atrExtBars(val){
+  // New thresholds: green-1bar <=2, green-2bars >2, yellow >4, red >8
   if(val==null)return'<div class="bars low"><div class="bar" style="height:4px"></div></div>';
-  const v=val/100;let cls='low',n=1;if(v>=4){cls='hi';n=4;}else if(v>=2){cls='mid';n=3;}else if(v>=1){cls='low';n=2;}
+  const v=val/100;
+  let cls='low',n=1;
+  if(v>8){cls='hi';n=4;}
+  else if(v>4){cls='mid';n=3;}
+  else if(v>2){cls='low';n=2;}
+  else{cls='low';n=1;}
   let bars='';for(let i=0;i<4;i++){bars+=`<div class="bar" style="height:${[4,7,10,14][i]}px;opacity:${i<n?1:0.2}"></div>`;}
   return`<div class="bars ${cls}">${bars}</div>`;
 }
@@ -205,26 +283,33 @@ function rankDelta(ticker){
   return'<td class="rd"><span class="rd-flat">–</span>&nbsp;&nbsp;<span class="rd-num">(0)</span></td>';
 }
 
-function toggleTheme(){
-  const h=document.documentElement,d=h.getAttribute('data-theme')==='dark';
-  h.setAttribute('data-theme',d?'light':'dark');
-  document.getElementById('bTheme').textContent=d?'🌙 Dark':'☀ Light';
-  render();
-}
-
 function switchTab(tab){
-  currentTab=tab;currentPage=1;sortKey='rk';sortDir=1;
+  currentTab=tab;currentPage=1;chartPage=1;sortKey='rk';sortDir=1;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(tab==='daily'?'tabD':tab==='weekly'?'tabW':'tabS').classList.add('active');
+  const viewToggle=document.getElementById('viewToggle');
   if(tab==='search'){
     document.getElementById('tw').style.display='none';
+    document.getElementById('chartGrid').style.display='none';
+    document.getElementById('chartPagination').style.display='none';
     document.getElementById('searchPanel').style.display='block';
     document.getElementById('si').style.display='none';
+    viewToggle.style.display='none';  // view toggle hidden in search tab
   }else{
-    document.getElementById('tw').style.display='block';
     document.getElementById('searchPanel').style.display='none';
     document.getElementById('si').style.display='';
-    buildHeader();render();
+    viewToggle.style.display='';
+    if(currentView==='chart'){
+      document.getElementById('tw').style.display='none';
+      document.getElementById('chartGrid').style.display='';
+      document.getElementById('chartPagination').style.display='';
+      renderChartView();
+    }else{
+      document.getElementById('tw').style.display='block';
+      document.getElementById('chartGrid').style.display='none';
+      document.getElementById('chartPagination').style.display='none';
+      buildHeader();render();
+    }
   }
 }
 
@@ -333,6 +418,102 @@ function render(){
   document.getElementById('pagination').innerHTML=pagHtml;
 }
 
+function renderChartView(){
+  if(!DATA)return;
+  const isW=currentTab==='weekly';
+  const rsKey=isW?'w_rs':'rs';
+  const f=document.getElementById('si').value.toLowerCase();
+
+  // Filter and sort by rank (use adjusted RS for daily, w_rs for weekly)
+  let items=DATA.e.slice();
+  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f)||(e.thm||'').toLowerCase().includes(f));
+  if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
+  // Sort by rank ascending (top stocks first)
+  items.sort((a,b)=>(isW?(a.w_rk||9999)-(b.w_rk||9999):(a.rk||9999)-(b.rk||9999)));
+
+  const total=items.length;
+  const totalPages=Math.max(1,Math.ceil(total/CHART_PAGE_SIZE));
+  if(chartPage>totalPages)chartPage=totalPages;
+  const startIdx=(chartPage-1)*CHART_PAGE_SIZE;
+  const pageItems=items.slice(startIdx,startIdx+CHART_PAGE_SIZE);
+
+  const grid=document.getElementById('chartGrid');
+  grid.innerHTML='';
+  pageItems.forEach(e=>{
+    const rs=e[rsKey];
+    const rk=isW?e.w_rk:e.rk;
+    const card=document.createElement('div');
+    card.className='chart-card';
+    card.innerHTML=`
+      <div class="chart-card-hdr">
+        <div><span class="chart-card-rk">#${rk||'—'}</span><span class="chart-card-tk">${esc(e.t)}</span></div>
+        <span class="chart-card-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span>
+      </div>
+      <div class="chart-card-body tv-chart" id="svc-${e.t}"></div>`;
+    grid.appendChild(card);
+  });
+
+  // Pagination bar
+  let pagHtml='';
+  if(totalPages>1){
+    if(chartPage>1)pagHtml+=`<span class="pg" onclick="chartPage=1;renderChartView()">«</span><span class="pg" onclick="chartPage--;renderChartView()">‹</span>`;
+    const startP=Math.max(1,chartPage-3),endP=Math.min(totalPages,chartPage+3);
+    for(let p=startP;p<=endP;p++)pagHtml+=`<span class="pg${p===chartPage?' cur':''}" onclick="chartPage=${p};renderChartView()">${p}</span>`;
+    if(chartPage<totalPages)pagHtml+=`<span class="pg" onclick="chartPage++;renderChartView()">›</span><span class="pg" onclick="chartPage=${totalPages};renderChartView()">»</span>`;
+  }
+  document.getElementById('chartPagination').innerHTML=pagHtml;
+
+  // Inject TradingView widgets
+  injectSVCharts();
+}
+
+function injectSVCharts(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const theme=isDark?'dark':'light';
+  const bgColor=isDark?'#111111':'#FFFFFF';
+  const gridColor=isDark?'rgba(242,242,242,0)':'rgba(0,0,0,0)';
+  document.querySelectorAll('.tv-chart').forEach(el=>{
+    if(el.dataset.loaded)return;
+    const tk=el.id.replace('svc-','');
+    if(!tk)return;
+    el.dataset.loaded='1';
+    const wrapper=document.createElement('div');
+    wrapper.className='tradingview-widget-container';
+    wrapper.style.cssText='height:100%;width:100%';
+    const widgetDiv=document.createElement('div');
+    widgetDiv.className='tradingview-widget-container__widget';
+    widgetDiv.style.cssText='height:calc(100% - 32px);width:100%';
+    wrapper.appendChild(widgetDiv);
+    el.appendChild(wrapper);
+    const script=document.createElement('script');
+    script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.type='text/javascript';
+    script.async=true;
+    script.innerHTML=`{"allow_symbol_change":false,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":true,"hide_legend":true,"hide_volume":true,"hotlist":false,"interval":"D","locale":"en","save_image":false,"style":"1","symbol":"${tk}","theme":"${theme}","timezone":"Etc/UTC","backgroundColor":"${bgColor}","gridColor":"${gridColor}","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}`;
+    wrapper.appendChild(script);
+  });
+}
+
+function getThemeRankInfo(themeName){
+  // Returns {rk, total, status} for the mapped sector name, or null
+  if(!ETF_DATA||!ETF_DATA.e||!themeName)return null;
+  const etfs=ETF_DATA.e;
+  const total=etfs.length;
+  for(const e of etfs){
+    if(e.n===themeName){
+      const rk=e.rk||total;
+      const wrk=e.w_rk||total;
+      const avg=(rk+wrk)/2;
+      const q=avg/total;
+      let status='Neutral';
+      if(q<=0.25)status='Leader';
+      else if(q>0.75)status='Laggard';
+      return {rk,total,status,avg:Math.round(avg)};
+    }
+  }
+  return null;
+}
+
 function searchStock(){
   const input=document.getElementById('searchInput').value.trim().toUpperCase();
   const box=document.getElementById('searchResults');
@@ -344,36 +525,66 @@ function searchStock(){
   const total=DATA.e.length;
   const pos=getPosition(stock.rk,total);
   const ts=stock.ts||'Neutral';
+  const rsStatus=getPosition(stock.rk,total);  // Leader/Neutral/Laggard based on daily rank
+  // Simplify to Leader/Neutral/Laggard label for the RS SCORE box
+  let rsLabel='Neutral';
+  if(rsStatus==='Strong Leader'||rsStatus==='Leader Zone')rsLabel='Leader';
+  else if(rsStatus==='Laggard Zone'||rsStatus==='Deep Laggard')rsLabel='Laggard';
 
-  // Info boxes
+  // Theme info (mapped sector with rank among ETFs)
+  const mappedSector=stock.thm||stock.th||'';
+  const themeRankInfo=getThemeRankInfo(mappedSector);
+  let themeSubline;
+  if(themeRankInfo){
+    themeSubline=`<span class="${themeTag(themeRankInfo.status)}">${themeRankInfo.status}: #${themeRankInfo.avg} of ${themeRankInfo.total}</span>`;
+  }else{
+    themeSubline=`<span class="${themeTag(ts)}">${ts}</span>`;
+  }
+
+  // Info boxes (4)
   let html=`<div class="info-boxes">
-    <div class="info-box"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.rs)}">${stock.rs!=null?stock.rs+'%':'—'}</div></div>
+    <div class="info-box"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.rs)}">${stock.rs!=null?stock.rs+'%':'—'}</div><div class="sub"><span class="${themeTag(rsLabel)}">${rsLabel}</span></div></div>
     <div class="info-box"><div class="lbl">Daily Rank</div><div class="val">#${stock.rk}</div><div class="sub">of ${total}</div></div>
     <div class="info-box"><div class="lbl">Weekly Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">of ${total}</div></div>
-    <div class="info-box"><div class="lbl">Theme</div><div class="val" style="font-size:14px">${esc(stock.thm||stock.th||'—')}</div><div class="sub"><span class="${themeTag(ts)}">${ts}</span></div></div>
+    <div class="info-box"><div class="lbl">Theme</div><div class="val" style="font-size:14px">${esc(mappedSector||'—')}</div><div class="sub">${themeSubline}</div></div>
   </div>`;
 
-  // History table
+  // History table with columns: DATE | Δ | SCORE | RANK | POSITION | THEME
   if(HISTORY&&HISTORY.dates&&HISTORY.d[input]){
     const h=HISTORY.d[input];
     const dates=HISTORY.dates;
     html+=`<div class="hist-table"><table><thead><tr>
-      <th class="l">Date</th><th class="c">Score</th><th class="c">D.Rank</th><th class="c">W.Rank</th><th class="c">Position</th><th class="l">Theme</th>
+      <th class="l">Date</th><th class="c">&#9650;&#9660;</th><th class="c">Score</th><th class="c">Rank</th><th class="c">Position</th><th class="l">Theme</th>
     </tr></thead><tbody>`;
     // Show newest first
     for(let i=dates.length-1;i>=0;i--){
       const dt=dates[i];const parts=dt.split('-');
       const fmtDate=parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:dt;
-      const score=h.s[i];const dr=h.r[i];const wr=h.wr?h.wr[i]:null;
+      const score=h.s[i];
+      // Delta: compare with previous day (i-1 is older in chronological order since we loop desc)
+      let deltaHtml='<span class="fl">—</span>';
+      if(i>0 && score!=null && h.s[i-1]!=null){
+        const diff=score-h.s[i-1];
+        if(diff>0)deltaHtml=`<span class="up">▲ +${diff}</span>`;
+        else if(diff<0)deltaHtml=`<span class="dn">▼ ${diff}</span>`;
+        else deltaHtml='<span class="fl">–</span>';
+      }
+      const dr=h.r[i];
       const p=dr!=null?getPosition(dr,total):'—';
-      const thStatus=stock.ts||'Neutral';
+      // Theme column uses current theme status (history doesn't store per-day theme status)
+      let themeCell=esc(mappedSector||'—');
+      if(themeRankInfo){
+        themeCell+=` <span class="${themeTag(themeRankInfo.status)}">(${themeRankInfo.status}: #${themeRankInfo.avg} of ${themeRankInfo.total})</span>`;
+      }else{
+        themeCell+=` <span class="${themeTag(ts)}">(${ts})</span>`;
+      }
       html+=`<tr>
         <td class="l">${fmtDate}</td>
+        <td class="hist-delta">${deltaHtml}</td>
         <td class="c"><span class="rs" style="background:${getRSBg(score)};color:${getRSCol(score)}">${score!=null?score+'%':'—'}</span></td>
         <td class="c">${dr!=null?'#'+dr:'—'}</td>
-        <td class="c">${wr!=null?'#'+wr:'—'}</td>
         <td class="c"><span class="${posClass(p)}">${p}</span></td>
-        <td class="l">${esc(stock.thm||stock.th||'—')} <span class="${themeTag(thStatus)}">(${thStatus})</span></td>
+        <td class="l">${themeCell}</td>
       </tr>`;
     }
     html+=`</tbody></table></div>`;
@@ -385,25 +596,42 @@ function searchStock(){
 
 async function loadData(){
   try{
-    const [dataRes,histRes]=await Promise.all([
+    const [dataRes,histRes,etfRes]=await Promise.all([
       fetch('leaders.json?_='+Date.now()),
-      fetch('leaders_score_history.json?_='+Date.now()).catch(()=>null)
+      fetch('leaders_score_history.json?_='+Date.now()).catch(()=>null),
+      fetch('data.json?_='+Date.now()).catch(()=>null)
     ]);
     if(!dataRes.ok)throw new Error('leaders.json not found');
     DATA=await dataRes.json();
     if(histRes&&histRes.ok){try{HISTORY=await histRes.json();}catch(e){}}
+    if(etfRes&&etfRes.ok){try{ETF_DATA=await etfRes.json();}catch(e){}}
     document.getElementById('statusBar').style.display='none';
-    document.getElementById('tw').style.display='block';
+    if(currentView==='chart'&&currentTab!=='search'){
+      document.getElementById('chartGrid').style.display='';
+      document.getElementById('chartPagination').style.display='';
+    }else if(currentTab!=='search'){
+      document.getElementById('tw').style.display='block';
+    }
     if(DATA.meta){
       document.getElementById('spyBar').style.display='flex';
       document.getElementById('ut').textContent=toSGT(DATA.meta.updated);
       document.getElementById('stockCount').textContent=DATA.meta.count;
     }
-    buildHeader();render();
+    buildHeader();
+    if(currentView==='chart'&&currentTab!=='search')renderChartView();
+    else render();
   }catch(err){
     document.getElementById('statusBar').innerHTML=`<span style="color:var(--r)">Error: ${esc(err.message)}. Run the "Update Liquid Leaders" workflow first.</span>`;
   }
 }
+
+// Sync theme toggle button state with persisted theme on load
+(function(){
+  const t=document.documentElement.getAttribute('data-theme')||'dark';
+  const dark=document.getElementById('themeDark'),light=document.getElementById('themeLight');
+  if(dark)dark.classList.toggle('on',t==='dark');
+  if(light)light.classList.toggle('on',t==='light');
+})();
 
 // Auto-reload every 60s
 setInterval(()=>{if(currentTab!=='search')loadData();},60000);
