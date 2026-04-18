@@ -8,47 +8,47 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#080e1a;color:#e2e8f0;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
-.hdr{padding:18px 20px 14px;border-bottom:1px solid #111827;display:flex;align-items:center;gap:10px}
-.btn-back{padding:4px 10px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #1e293b;background:#0f172a;color:#94a3b8;text-decoration:none;transition:.15s;font-family:inherit}
-.btn-back:hover{background:#1e293b;color:#e2e8f0}
+body{background:#0a0a0a;color:#e8e8e8;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
+.hdr{padding:18px 20px 14px;border-bottom:1px solid #141414;display:flex;align-items:center;gap:10px}
+.btn-back{padding:4px 10px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #1f1f1f;background:#111111;color:#888;text-decoration:none;transition:.15s;font-family:inherit}
+.btn-back:hover{background:#1f1f1f;color:#e8e8e8}
 .hdr-t{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
 .content{padding:20px;max-width:1400px;margin:0 auto}
 
 /* MA Status Cards */
 .ma-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
-.ma-card{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:14px 0;display:flex;flex-direction:column}
-.ma-top{text-align:center;padding:0 16px 12px;border-bottom:1px solid #1e293b}
-.ma-ticker{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#e2e8f0;margin-bottom:2px}
-.ma-price{font-size:12px;color:#64748b;font-family:'JetBrains Mono',monospace}
+.ma-card{background:#111111;border:1px solid #1f1f1f;border-radius:12px;padding:14px 0;display:flex;flex-direction:column}
+.ma-top{text-align:center;padding:0 16px 12px;border-bottom:1px solid #1f1f1f}
+.ma-ticker{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#e8e8e8;margin-bottom:2px}
+.ma-price{font-size:12px;color:#666;font-family:'JetBrains Mono',monospace}
 .ma-body{display:flex;align-items:center;padding:12px 16px;flex:1}
 .ma-sec{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ma-vdiv{width:1px;background:#1e293b;align-self:stretch}
-.ma-label{color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:9px;margin-bottom:6px}
+.ma-vdiv{width:1px;background:#1f1f1f;align-self:stretch}
+.ma-label{color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:9px;margin-bottom:6px}
 .ma-dots-col{display:flex;gap:8px}
 .ma-dot-group{display:flex;flex-direction:column;align-items:center;gap:3px}
 .ma-dot{width:13px;height:13px;border-radius:50%;display:block}
-.ma-dot.green{background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,0.4)}
-.ma-dot.red{background:#f87171;box-shadow:0 0 6px rgba(248,113,113,0.4)}
-.ma-dot.grey{background:#475569}
-.ma-sublabel{font-size:7px;color:#475569;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
-.regime-text{font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase}
-.regime-text.bull{color:#4ade80}
-.regime-text.bear{color:#f87171}
+.ma-dot.green{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.5)}
+.ma-dot.red{background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,0.5)}
+.ma-dot.grey{background:#444}
+.ma-sublabel{font-size:7px;color:#444;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+.regime-text{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase}
+.regime-text.bull{color:#22c55e}
+.regime-text.bear{color:#ef4444}
 .regime-text.choppy{color:#fbbf24}
 .big-dot{width:26px;height:26px;border-radius:50%}
-.big-dot.green{background:#4ade80;box-shadow:0 0 12px rgba(74,222,128,0.5)}
-.big-dot.red{background:#f87171;box-shadow:0 0 12px rgba(248,113,113,0.5)}
+.big-dot.green{background:#22c55e;box-shadow:0 0 12px rgba(34,197,94,0.6)}
+.big-dot.red{background:#ef4444;box-shadow:0 0 12px rgba(239,68,68,0.6)}
 .big-dot.yellow{background:#fbbf24;box-shadow:0 0 12px rgba(251,191,36,0.5)}
 
 .chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .chart-full{display:grid;grid-template-columns:1fr;gap:16px}
-.chart-box{background:#0f172a;border:1px solid #1e293b;border-radius:10px;overflow:hidden}
-.chart-header{padding:10px 16px 6px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#94a3b8;font-family:'JetBrains Mono',monospace}
-.chart-header span{font-size:10px;color:#475569;font-weight:500;letter-spacing:0;text-transform:none;margin-left:8px}
+.chart-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden}
+.chart-header{padding:10px 16px 6px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#888;font-family:'JetBrains Mono',monospace}
+.chart-header span{font-size:10px;color:#444;font-weight:500;letter-spacing:0;text-transform:none;margin-left:8px}
 .chart-body{height:380px;position:relative}
 .chart-body-tall{height:420px;position:relative}
-.sheet-box{background:#0f172a;border:1px solid #1e293b;border-radius:10px;overflow:hidden;margin-top:16px}
+.sheet-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden;margin-top:16px}
 .sheet-embed{width:100%;height:600px;border:none;background:#fff;border-radius:0 0 10px 10px}
 .chart-body .tradingview-widget-container,
 .chart-body-tall .tradingview-widget-container{height:100%!important;width:100%!important}
@@ -186,7 +186,7 @@ function injectChart(containerId, symbol, interval){
           "symbol": "${symbol}",
           "theme": "dark",
           "timezone": "Etc/UTC",
-          "backgroundColor": "#0f172a",
+          "backgroundColor": "#111111",
           "gridColor": "rgba(242, 242, 242, 0.06)",
           "watchlist": [],
           "withdateranges": false,
