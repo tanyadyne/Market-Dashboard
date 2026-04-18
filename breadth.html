@@ -9,10 +9,20 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a0a;color:#e8e8e8;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
-.hdr{padding:18px 20px 14px;border-bottom:1px solid #141414;display:flex;align-items:center;gap:10px}
+body[data-theme="light"]{background:#f8fafc;color:#0f172a}
+.top-fixed{position:sticky;top:0;z-index:50;background:inherit}
+.hdr{padding:18px 20px 14px;border-bottom:1px solid #141414;display:flex;align-items:center;gap:10px;background:inherit}
+body[data-theme="light"] .hdr{border-bottom-color:#e2e8f0}
 .btn-back{padding:4px 10px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #1f1f1f;background:#111111;color:#888;text-decoration:none;transition:.15s;font-family:inherit}
+body[data-theme="light"] .btn-back{background:#fff;border-color:#e2e8f0;color:#475569}
 .btn-back:hover{background:#1f1f1f;color:#e8e8e8}
-.hdr-t{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.hdr-t{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;flex:1}
+.seg-toggle{display:inline-flex;border:1px solid #1f1f1f;border-radius:6px;overflow:hidden;background:#111111}
+body[data-theme="light"] .seg-toggle{border-color:#e2e8f0;background:#fff}
+.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:#666;font-family:inherit;transition:.15s}
+body[data-theme="light"] .seg-toggle button{color:#94a3b8}
+.seg-toggle button.on{background:#1f1f1f;color:#e8e8e8}
+body[data-theme="light"] .seg-toggle button.on{background:#e2e8f0;color:#0f172a}
 .content{padding:20px;max-width:1400px;margin:0 auto}
 
 /* MA Status Cards */
@@ -66,10 +76,27 @@ body{background:#0a0a0a;color:#e8e8e8;font-family:'DM Sans',-apple-system,BlinkM
 </style>
 </head>
 <body>
+<div class="top-fixed">
 <div class="hdr">
   <a href="index.html" class="btn-back" title="Back to Market Dashboard">←</a>
   <div class="hdr-t">Market Health</div>
+  <div class="seg-toggle" id="themeToggle">
+    <button id="themeDark" class="on" onclick="setTheme('dark')">Dark</button>
+    <button id="themeLight" onclick="setTheme('light')">Light</button>
+  </div>
 </div>
+</div>
+<script>
+function setTheme(theme){
+  document.body.setAttribute('data-theme',theme);
+  document.documentElement.setAttribute('data-theme',theme);
+  try{localStorage.setItem('dashboardTheme',theme);}catch(e){}
+  const d=document.getElementById('themeDark'),l=document.getElementById('themeLight');
+  if(d)d.classList.toggle('on',theme==='dark');
+  if(l)l.classList.toggle('on',theme==='light');
+}
+(function(){try{const t=localStorage.getItem('dashboardTheme')||'dark';setTheme(t);}catch(e){}})();
+</script>
 <div class="content">
   <div class="ma-row" id="maCards">
     <div class="ma-card"><div class="ma-top"><div class="ma-ticker">SPY</div><div class="ma-price">Loading...</div></div></div>
