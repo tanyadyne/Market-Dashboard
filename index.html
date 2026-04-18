@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,42 +7,58 @@
 <title>Market Dashboard</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+// Apply persisted theme before any content renders (avoids flash)
+(function(){try{const t=localStorage.getItem('dashboardTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
 <style>
+:root,[data-theme="dark"]{--bg:#0a0a0a;--card:#111111;--card-hover:#141414;--bdr:#1f1f1f;--bdr-hover:#333;--t1:#e8e8e8;--t2:#888;--t3:#666;--t4:#444;--accent-blue:#3b82f6;--accent-blue-bg:#1e3a5f}
+[data-theme="light"]{--bg:#f8fafc;--card:#ffffff;--card-hover:#f1f5f9;--bdr:#e2e8f0;--bdr-hover:#cbd5e1;--t1:#0f172a;--t2:#475569;--t3:#64748b;--t4:#94a3b8;--accent-blue:#2563eb;--accent-blue-bg:#dbeafe}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0a;color:#e8e8e8;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background .2s,color .2s}
 
-.header{padding:48px 24px 16px;text-align:center}
-.header h1{font-size:28px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e8e8e8}
-.header p{font-size:13px;color:#666;margin-top:8px;letter-spacing:.5px}
+.header{padding:48px 24px 16px;text-align:center;position:relative;width:100%;max-width:520px}
+.header h1{font-size:28px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t1)}
+.header p{font-size:13px;color:var(--t3);margin-top:8px;letter-spacing:.5px}
+.theme-toggle-wrap{position:absolute;top:20px;right:24px}
+.seg-toggle{display:inline-flex;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;background:var(--card)}
+.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s}
+.seg-toggle button.on{background:var(--card-hover);color:var(--t1)}
 
 .grid{display:flex;flex-direction:column;gap:16px;padding:40px 24px;width:100%;max-width:520px}
 
-.card{display:flex;align-items:center;gap:16px;padding:22px 24px;border-radius:14px;border:1px solid #1f1f1f;background:#111111;cursor:pointer;transition:all .2s ease;text-decoration:none;color:inherit}
-.card:hover{border-color:#333;background:#141414;transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+.card{display:flex;align-items:center;gap:16px;padding:22px 24px;border-radius:14px;border:1px solid var(--bdr);background:var(--card);cursor:pointer;transition:all .2s ease;text-decoration:none;color:inherit}
+.card:hover{border-color:var(--bdr-hover);background:var(--card-hover);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
 .card.disabled{opacity:.35;cursor:default;pointer-events:none}
 
 .card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-.card-icon.rs{background:linear-gradient(135deg,#1e3a5f,#111111);border:1px solid #3b82f6}
-.card-icon.ph2{background:linear-gradient(135deg,#1a2e1a,#111111);border:1px solid #444}
-.card-icon.ph3{background:linear-gradient(135deg,#2a1a1a,#111111);border:1px solid #444}
+.card-icon.rs{background:var(--accent-blue-bg);border:1px solid var(--accent-blue)}
+.card-icon.ph2{background:var(--card-hover);border:1px solid var(--t4)}
+.card-icon.ph3{background:var(--card-hover);border:1px solid var(--t4)}
 
 .card-body{flex:1;min-width:0}
 .card-title{font-size:15px;font-weight:700;letter-spacing:.3px;margin-bottom:3px}
-.card-desc{font-size:11px;color:#666;line-height:1.4}
+.card-desc{font-size:11px;color:var(--t3);line-height:1.4}
 
-.card-arrow{color:#444;font-size:18px;transition:color .2s,transform .2s}
-.card:hover .card-arrow{color:#888;transform:translateX(3px)}
+.card-arrow{color:var(--t4);font-size:18px;transition:color .2s,transform .2s}
+.card:hover .card-arrow{color:var(--t2);transform:translateX(3px)}
 
 .tag{display:inline-block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;border-radius:4px;margin-top:6px}
 .tag.live{background:#0a2818;color:#22c55e}
-.tag.soon{background:#1f1f1f;color:#666}
+.tag.soon{background:var(--bdr);color:var(--t3)}
 
-.footer{margin-top:auto;padding:24px;text-align:center;font-size:10px;color:#333;letter-spacing:.5px}
+.footer{margin-top:auto;padding:24px;text-align:center;font-size:10px;color:var(--t4);letter-spacing:.5px}
 </style>
 </head>
 <body>
 
 <div class="header">
+  <div class="theme-toggle-wrap">
+    <div class="seg-toggle">
+      <button id="themeDark" class="on" onclick="setTheme('dark')">Dark</button>
+      <button id="themeLight" onclick="setTheme('light')">Light</button>
+    </div>
+  </div>
   <h1>Market Dashboard</h1>
   <p>Tools for tracking relative strength, momentum & market structure</p>
 </div>
@@ -69,7 +85,7 @@ body{background:#0a0a0a;color:#e8e8e8;font-family:'DM Sans',-apple-system,BlinkM
   <a class="card" href="screener.html">
     <div class="card-icon ph3">📈</div>
     <div class="card-body">
-      <div class="card-title">Liquid Leaders</div>
+      <div class="card-title">Stock Screener</div>
       <div class="card-desc">Scan for the leading stocks in the market</div>
     </div>
     <span class="card-arrow">→</span>
@@ -77,6 +93,16 @@ body{background:#0a0a0a;color:#e8e8e8;font-family:'DM Sans',-apple-system,BlinkM
 </div>
 
 <div class="footer">Market Dashboard · Data from Yahoo Finance & TradingView</div>
+
+<script>
+function setTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  try{localStorage.setItem('dashboardTheme',theme);}catch(e){}
+  document.getElementById('themeDark').classList.toggle('on',theme==='dark');
+  document.getElementById('themeLight').classList.toggle('on',theme==='light');
+}
+(function(){const t=document.documentElement.getAttribute('data-theme')||'dark';document.getElementById('themeDark').classList.toggle('on',t==='dark');document.getElementById('themeLight').classList.toggle('on',t==='light');})();
+</script>
 
 </body>
 </html>
