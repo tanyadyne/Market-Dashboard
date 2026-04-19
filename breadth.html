@@ -17,12 +17,12 @@ body[data-theme="light"] .hdr{border-bottom-color:#e2e8f0}
 body[data-theme="light"] .btn-back{background:#fff;border-color:#e2e8f0;color:#475569}
 .btn-back:hover{background:#1f1f1f;color:#e8e8e8}
 .hdr-t{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;flex:1}
-.seg-toggle{display:inline-flex;border:1px solid #1f1f1f;border-radius:6px;overflow:hidden;background:#111111}
-body[data-theme="light"] .seg-toggle{border-color:#e2e8f0;background:#fff}
-.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:#666;font-family:inherit;transition:.15s}
-body[data-theme="light"] .seg-toggle button{color:#94a3b8}
-.seg-toggle button.on{background:#1f1f1f;color:#e8e8e8}
-body[data-theme="light"] .seg-toggle button.on{background:#e2e8f0;color:#0f172a}
+.pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid #1f1f1f;cursor:pointer;background:#000;transition:background .25s ease;flex-shrink:0}
+body[data-theme="light"] .pill-toggle{background:#e0e0e0;border-color:#cbd5e1}
+.pill-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.3);left:32px}
+body[data-theme="light"] .pill-toggle .knob{left:2px}
+.pill-toggle .knob::before{content:"🌙"}
+body[data-theme="light"] .pill-toggle .knob::before{content:"☀"}
 .content{padding:20px;max-width:1400px;margin:0 auto}
 
 /* MA Status Cards */
@@ -80,10 +80,7 @@ body[data-theme="light"] .seg-toggle button.on{background:#e2e8f0;color:#0f172a}
 <div class="hdr">
   <a href="index.html" class="btn-back" title="Back to Market Dashboard">←</a>
   <div class="hdr-t">Market Health</div>
-  <div class="seg-toggle" id="themeToggle">
-    <button id="themeDark" class="on" onclick="setTheme('dark')">Dark</button>
-    <button id="themeLight" onclick="setTheme('light')">Light</button>
-  </div>
+  <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
 </div>
 </div>
 <script>
@@ -91,9 +88,10 @@ function setTheme(theme){
   document.body.setAttribute('data-theme',theme);
   document.documentElement.setAttribute('data-theme',theme);
   try{localStorage.setItem('dashboardTheme',theme);}catch(e){}
-  const d=document.getElementById('themeDark'),l=document.getElementById('themeLight');
-  if(d)d.classList.toggle('on',theme==='dark');
-  if(l)l.classList.toggle('on',theme==='light');
+}
+function toggleTheme(){
+  const current=document.body.getAttribute('data-theme')||'dark';
+  setTheme(current==='dark'?'light':'dark');
 }
 (function(){try{const t=localStorage.getItem('dashboardTheme')||'dark';setTheme(t);}catch(e){}})();
 </script>
