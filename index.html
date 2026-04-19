@@ -21,9 +21,12 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .header h1{font-size:28px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t1)}
 .header p{font-size:13px;color:var(--t3);margin-top:8px;letter-spacing:.5px}
 .theme-toggle-wrap{position:absolute;top:20px;right:24px}
-.seg-toggle{display:inline-flex;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;background:var(--card)}
-.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s}
-.seg-toggle button.on{background:var(--card-hover);color:var(--t1)}
+.pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#000;transition:background .25s ease}
+[data-theme="light"] .pill-toggle{background:#e0e0e0}
+.pill-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.3);left:32px}
+[data-theme="light"] .pill-toggle .knob{left:2px}
+.pill-toggle .knob::before{content:"🌙"}
+[data-theme="light"] .pill-toggle .knob::before{content:"☀"}
 
 .grid{display:flex;flex-direction:column;gap:16px;padding:40px 24px;width:100%;max-width:520px}
 
@@ -54,10 +57,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 
 <div class="header">
   <div class="theme-toggle-wrap">
-    <div class="seg-toggle">
-      <button id="themeDark" class="on" onclick="setTheme('dark')">Dark</button>
-      <button id="themeLight" onclick="setTheme('light')">Light</button>
-    </div>
+    <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
   </div>
   <h1>Market Dashboard</h1>
   <p>Tools for tracking relative strength, momentum & market structure</p>
@@ -98,10 +98,11 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 function setTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
   try{localStorage.setItem('dashboardTheme',theme);}catch(e){}
-  document.getElementById('themeDark').classList.toggle('on',theme==='dark');
-  document.getElementById('themeLight').classList.toggle('on',theme==='light');
 }
-(function(){const t=document.documentElement.getAttribute('data-theme')||'dark';document.getElementById('themeDark').classList.toggle('on',t==='dark');document.getElementById('themeLight').classList.toggle('on',t==='light');})();
+function toggleTheme(){
+  const current=document.documentElement.getAttribute('data-theme')||'dark';
+  setTheme(current==='dark'?'light':'dark');
+}
 </script>
 
 </body>
