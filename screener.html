@@ -23,6 +23,13 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s}
 .seg-toggle button.on{background:var(--bg4);color:var(--t1)}
 .seg-toggle button:hover:not(.on){color:var(--t1)}
+/* Single pill theme toggle (☀/🌙) */
+.pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#e0e0e0;transition:background .25s ease;flex-shrink:0}
+[data-theme="dark"] .pill-toggle{background:#000}
+.pill-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease, background .25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.3);left:2px}
+[data-theme="dark"] .pill-toggle .knob{left:32px;background:#fff}
+.pill-toggle .knob::before{content:"☀";}
+[data-theme="dark"] .pill-toggle .knob::before{content:"🌙";}
 /* Centered tab strip */
 .tab-strip{display:flex;justify-content:center;gap:6px;padding:14px 20px 12px;border-bottom:1px solid var(--bdr2);background:var(--bg)}
 .tab-btn{padding:10px 32px;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.6px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:all .2s;font-family:inherit;text-transform:uppercase}
@@ -92,6 +99,16 @@ tr:hover{background:var(--bg3)}
 .chart-card-rs{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .chart-card-rk{font-family:'JetBrains Mono',monospace;color:var(--t3);font-size:10px;margin-right:6px}
 .chart-card-body{height:260px;width:100%}
+/* Profile box (chart LHS + company info RHS) */
+.profile-box{display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:20px}
+.profile-chart{height:340px;min-height:340px}
+.profile-info{display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.profile-tk{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;letter-spacing:.5px;line-height:1.1}
+.profile-name{font-size:14px;color:var(--t2);font-weight:500;line-height:1.2}
+.profile-price{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;margin-top:8px}
+.profile-price .chg{font-size:13px;margin-left:8px;font-weight:500}
+.profile-desc{font-size:12px;color:var(--t2);line-height:1.5;margin-top:8px;max-height:180px;overflow-y:auto;padding-right:6px}
+@media(max-width:768px){.profile-box{grid-template-columns:1fr}.profile-chart{height:240px;min-height:240px}.profile-tk{font-size:22px}.profile-price{font-size:16px}}
 /* History delta arrow */
 .hist-delta{text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600}
 .hist-delta .up{color:var(--g)}
@@ -132,17 +149,14 @@ tr:hover{background:var(--bg3)}
       <button id="viewList" class="on" onclick="switchView('list')">List</button>
       <button id="viewChart" onclick="switchView('chart')">Charts</button>
     </div>
-    <div class="seg-toggle" id="themeToggle">
-      <button id="themeDark" class="on" onclick="setTheme('dark')">Dark</button>
-      <button id="themeLight" onclick="setTheme('light')">Light</button>
-    </div>
-    <input class="srch" id="si" placeholder="Filter ticker..." oninput="render()">
+    <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
+    <input class="srch" id="si" placeholder="Search ticker, name, theme..." oninput="render()">
   </div>
 </div>
 <div class="tab-strip" id="tabStrip">
   <button class="tab-btn active" id="tabD" onclick="switchTab('daily')">Daily Rank</button>
   <button class="tab-btn" id="tabW" onclick="switchTab('weekly')">Weekly Rank</button>
-  <button class="tab-btn" id="tabS" onclick="switchTab('search')">Search</button>
+  <button class="tab-btn" id="tabS" onclick="switchTab('search')">Individual Profile</button>
 </div>
 <div class="spy" id="spyBar" style="display:none">
   <span>Updated: <span id="ut"></span></span>
@@ -174,14 +188,15 @@ let chartPage=1;
 function setTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
   try{localStorage.setItem('dashboardTheme',theme);}catch(e){}
-  // Update toggle buttons
-  document.getElementById('themeDark').classList.toggle('on',theme==='dark');
-  document.getElementById('themeLight').classList.toggle('on',theme==='light');
   // If chart view is active, clear TV widgets and re-render so they pick up new theme
   if(currentView==='chart' && DATA){
     document.querySelectorAll('.tv-chart').forEach(el=>{el.dataset.loaded='';el.innerHTML='';});
     renderChartView();
   }
+}
+function toggleTheme(){
+  const current=document.documentElement.getAttribute('data-theme')||'dark';
+  setTheme(current==='dark'?'light':'dark');
 }
 // Init theme on load
 (function(){try{const t=localStorage.getItem('dashboardTheme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
@@ -316,7 +331,7 @@ function buildHeader(){
   const isW=currentTab==='weekly';
   const cols=[
     {key:'rk',label:'#',w:'36px'},{key:'rd',label:'Δ',w:'56px'},
-    {key:'t',label:'Ticker',w:'64px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l'},
+    {key:'t',label:'Ticker',w:'64px',al:'l'},{key:'n',label:'Name',w:'160px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l'},
     {key:'rv',label:isW?'R.Vol (W)':'R.Vol',w:'70px'},{key:'am',label:isW?'ATR M (W)':'ATR Mult',w:'70px'},
     {key:'ax',label:'ATR Ext',w:'70px'},{key:'ch',label:'1D',w:'60px'},
     {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},
@@ -359,7 +374,7 @@ function render(){
   const isW=currentTab==='weekly';
   const f=document.getElementById('si').value.toLowerCase();
   let items=DATA.e;
-  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f)||(e.thm||'').toLowerCase().includes(f));
+  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.n||'').toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f)||(e.thm||'').toLowerCase().includes(f));
   // Setup criteria filter (bitmask)
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
 
@@ -393,6 +408,7 @@ function render(){
       <td class="rk">${rank}</td>
       ${rankDelta(e.t)}
       <td class="tk">${esc(e.t)}</td>
+      <td class="sc2" title="${esc(e.n||'')}">${esc(e.n||'—')}</td>
       <td class="sc2" title="${esc(e.th||'')}">${esc(e.th||'—')}</td>
       <td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>
       <td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(am)}</span></div></td>
@@ -425,7 +441,7 @@ function renderChartView(){
 
   // Filter and sort by rank (use adjusted RS for daily, w_rs for weekly)
   let items=DATA.e.slice();
-  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f)||(e.thm||'').toLowerCase().includes(f));
+  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.n||'').toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f)||(e.thm||'').toLowerCase().includes(f));
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
   // Sort by rank ascending (top stocks first)
   items.sort((a,b)=>(isW?(a.w_rk||9999)-(b.w_rk||9999):(a.rk||9999)-(b.rk||9999)));
@@ -473,7 +489,7 @@ function injectSVCharts(){
   const gridColor=isDark?'rgba(242,242,242,0)':'rgba(0,0,0,0)';
   document.querySelectorAll('.tv-chart').forEach(el=>{
     if(el.dataset.loaded)return;
-    const tk=el.id.replace('svc-','');
+    const tk=el.id.replace('svc-profile-','').replace('svc-','');
     if(!tk)return;
     el.dataset.loaded='1';
     const wrapper=document.createElement('div');
@@ -504,7 +520,7 @@ function getThemeRankInfo(themeName){
       const wrk=e.w_rk||total;
       const avg=(rk+wrk)/2;
       const q=avg/total;
-      let status='Neutral';
+      let status='Mid-Range';
       if(q<=0.25)status='Leader';
       else if(q>0.75)status='Laggard';
       return {rk,total,status,avg:Math.round(avg)};
@@ -523,10 +539,10 @@ function searchStock(){
 
   const total=DATA.e.length;
   const pos=getPosition(stock.rk,total);
-  const ts=stock.ts||'Neutral';
+  const ts=stock.ts||'Mid-Range';
   const rsStatus=getPosition(stock.rk,total);  // Leader/Neutral/Laggard based on daily rank
   // Simplify to Leader/Neutral/Laggard label for the RS SCORE box
-  let rsLabel='Neutral';
+  let rsLabel='Mid-Range';
   if(rsStatus==='Strong Leader'||rsStatus==='Moderate Leader')rsLabel='Leader';
   else if(rsStatus==='Moderate Laggard'||rsStatus==='Deep Laggard')rsLabel='Laggard';
 
@@ -548,27 +564,41 @@ function searchStock(){
     <div class="info-box"><div class="lbl">Theme</div><div class="val" style="font-size:14px">${esc(mappedSector||'—')}</div><div class="sub">${themeSubline}</div></div>
   </div>`;
 
+  // Profile box: chart on LHS, company info on RHS
+  const chgCls=chgClass(stock.ch);
+  const chgTxt=stock.ch!=null?(stock.ch>=0?'+':'')+stock.ch.toFixed(2)+'%':'—';
+  html+=`<div class="profile-box">
+    <div class="profile-chart tv-chart" id="svc-profile-${stock.t}"></div>
+    <div class="profile-info">
+      <div class="profile-tk">${esc(stock.t)}</div>
+      <div class="profile-name">${esc(stock.n||'')}</div>
+      <div class="profile-price">$${stock.p!=null?stock.p.toFixed(2):'—'}<span class="chg ${chgCls}">${chgTxt}</span></div>
+      <div class="profile-desc">${esc(stock.d||'No description available.')}</div>
+    </div>
+  </div>`;
+
   // History table with columns: DATE | Δ | SCORE | RANK | POSITION | THEME
   if(HISTORY&&HISTORY.dates&&HISTORY.d[input]){
     const h=HISTORY.d[input];
     const dates=HISTORY.dates;
     html+=`<div class="hist-table"><table><thead><tr>
-      <th class="l">Date</th><th class="c">&#9650;&#9660;</th><th class="c">Score</th><th class="c">Rank</th><th class="c">Position</th><th class="l">Theme</th>
+      <th class="l">Date</th><th class="c">Score</th><th class="c">Rank</th><th class="c">Δ</th><th class="c">Position</th><th class="l">Theme</th>
     </tr></thead><tbody>`;
     // Show newest first
     for(let i=dates.length-1;i>=0;i--){
       const dt=dates[i];const parts=dt.split('-');
       const fmtDate=parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:dt;
       const score=h.s[i];
-      // Delta: compare with previous day (i-1 is older in chronological order since we loop desc)
+      // Delta: compare rank (not score) with previous day. Smaller rank = better, so improvement shown green.
       let deltaHtml='<span class="fl">—</span>';
-      if(i>0 && score!=null && h.s[i-1]!=null){
-        const diff=score-h.s[i-1];
+      const wr=h.wr?h.wr[i]:null;
+      const wrPrev=h.wr&&i>0?h.wr[i-1]:null;
+      if(wr!=null && wrPrev!=null){
+        const diff=wrPrev-wr; // positive = improved (rank went down)
         if(diff>0)deltaHtml=`<span class="up">▲ +${diff}</span>`;
         else if(diff<0)deltaHtml=`<span class="dn">▼ ${diff}</span>`;
         else deltaHtml='<span class="fl">–</span>';
       }
-      const wr=h.wr?h.wr[i]:null;
       const p=wr!=null?getPosition(wr,total):'—';
       // Theme column uses current theme status (history doesn't store per-day theme status)
       let themeCell=esc(mappedSector||'—');
@@ -579,9 +609,9 @@ function searchStock(){
       }
       html+=`<tr>
         <td class="l">${fmtDate}</td>
-        <td class="hist-delta">${deltaHtml}</td>
         <td class="c"><span class="rs" style="background:${getRSBg(score)};color:${getRSCol(score)}">${score!=null?score+'%':'—'}</span></td>
         <td class="c">${wr!=null?'#'+wr:'—'}</td>
+        <td class="hist-delta">${deltaHtml}</td>
         <td class="c"><span class="${posClass(p)}">${p}</span></td>
         <td class="l">${themeCell}</td>
       </tr>`;
@@ -591,6 +621,8 @@ function searchStock(){
     html+=`<div style="text-align:center;color:var(--t3);padding:20px;font-size:12px">No history data available yet. History builds up over multiple trading days.</div>`;
   }
   box.innerHTML=html;
+  // Inject the profile TradingView chart
+  injectSVCharts();
 }
 
 async function loadData(){
@@ -623,14 +655,6 @@ async function loadData(){
     document.getElementById('statusBar').innerHTML=`<span style="color:var(--r)">Error: ${esc(err.message)}. Run the "Update Liquid Leaders" workflow first.</span>`;
   }
 }
-
-// Sync theme toggle button state with persisted theme on load
-(function(){
-  const t=document.documentElement.getAttribute('data-theme')||'dark';
-  const dark=document.getElementById('themeDark'),light=document.getElementById('themeLight');
-  if(dark)dark.classList.toggle('on',t==='dark');
-  if(light)light.classList.toggle('on',t==='light');
-})();
 
 // Auto-reload every 60s
 setInterval(()=>{if(currentTab!=='search')loadData();},60000);
