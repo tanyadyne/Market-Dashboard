@@ -1110,12 +1110,19 @@ def main():
                 pass
             if mc == 0:
                 failed += 1
-            mcap_cache[tk] = mc
-            industry_cache[tk] = industry
-            name_cache[tk] = name
-            desc_cache[tk] = desc
-            # Mark this ticker as verified at current schema version
-            refreshed_at_v[tk] = CACHE_VERSION
+                # DO NOT overwrite cache with empty values on failure.
+                # Keep any previously-cached data so transient fetch failures don't erase good entries.
+                # If this ticker has never been successfully fetched, leave it unmarked so we retry next run.
+                # If it has good cached data, mark as verified at current schema.
+                if mcap_cache.get(tk, 0) > 0:
+                    refreshed_at_v[tk] = CACHE_VERSION
+            else:
+                # Successful fetch — update all fields
+                mcap_cache[tk] = mc
+                industry_cache[tk] = industry
+                name_cache[tk] = name
+                desc_cache[tk] = desc
+                refreshed_at_v[tk] = CACHE_VERSION
             time.sleep(0.2)
             if (i + 1) % 100 == 0:
                 print(f"    {i+1}/{total}  (failed so far: {failed})")
