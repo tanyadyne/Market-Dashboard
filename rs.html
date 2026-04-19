@@ -23,6 +23,12 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .btn-a{border-color:#1e3a1e;background:transparent;color:var(--g)}.btn-a.on{background:var(--gbg)}
 .btn-d{border-color:#3a1e1e;background:transparent;color:var(--r)}.btn-d.on{background:var(--rbg)}
 .btn-t{border-color:var(--bdr2);background:var(--bg3);color:var(--t2)}.btn-t:hover{background:var(--bg4)}
+.pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#000;transition:background .25s ease;flex-shrink:0}
+[data-theme="light"] .pill-toggle{background:#e0e0e0;border-color:#cbd5e1}
+.pill-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.3);left:32px}
+[data-theme="light"] .pill-toggle .knob{left:2px}
+.pill-toggle .knob::before{content:"🌙"}
+[data-theme="light"] .pill-toggle .knob::before{content:"☀"}
 .srch{padding:6px 12px;border-radius:5px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:12px;width:200px;outline:none;font-family:inherit}.srch:focus{border-color:#3b82f6}
 .toggle-wrap{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .toggle{position:relative;width:36px;height:20px;cursor:pointer}
@@ -165,7 +171,7 @@ html[data-view="mobile"]{overflow-x:hidden}
     <button class="btn btn-t" onclick="openColModal()" title="Show/hide columns">⊞ Columns</button>
     <button class="btn btn-t" id="bClip" onclick="toggleClipboard()" title="Clipboard">📋 Clipboard <span id="clipCount"></span></button>
     <button class="btn btn-refresh" id="bRefresh" onclick="triggerRefresh()" title="Trigger data refresh">⟳ Refresh</button>
-    <button class="btn btn-t" id="bTheme" onclick="toggleTheme()">☀ Light</button>
+    <div class="pill-toggle" id="bTheme" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
     <div class="toggle-wrap">
       <span>Desktop</span>
       <label class="toggle"><input type="checkbox" id="viewToggle" onchange="toggleView()"><span class="slider"></span></label>
@@ -282,17 +288,12 @@ function toggleTheme(){
   const newTheme=d?'light':'dark';
   h.setAttribute('data-theme',newTheme);
   try{localStorage.setItem('dashboardTheme',newTheme);}catch(e){}
-  document.getElementById('bTheme').textContent=d?'🌙 Dark':'☀ Light';
   requestAnimationFrame(()=>render());
 }
 // Restore persisted theme on page load
 (function(){try{
   const t=localStorage.getItem('dashboardTheme');
-  if(t && t!=='dark'){
-    document.documentElement.setAttribute('data-theme',t);
-    const btn=document.getElementById('bTheme');
-    if(btn)btn.textContent=t==='dark'?'☀ Light':'🌙 Dark';
-  }
+  if(t)document.documentElement.setAttribute('data-theme',t);
 }catch(e){}})();
 
 (function initResize(){
