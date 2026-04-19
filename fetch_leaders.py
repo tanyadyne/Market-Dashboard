@@ -596,16 +596,19 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     vols = [x for x in v if x is not None and x > 0]
     rvol = (vols[-1] / np.mean(vols[:-1][-20:])) if len(vols) > 1 and np.mean(vols[:-1][-20:]) > 0 else None
 
-    # Real Relative Strength (Reddit method):
-    # Per-bar delta = (stock_change/stock_ATR) - (spy_change/spy_ATR)
-    # Then SMA(MA_LENGTH) of those deltas = smoothed RS
-    # Sparkline shows rolling SMA values over lookback
+    # ─── Pine Script RS calculation (4-quarter weighted performance vs SPY) ──
+    # Quarter 1 (most recent) = 40% weight, Q2/Q3/Q4 = 20% each
+    # rs_stock = 0.4*(px/px[-63]) + 0.2*(px/px[-126]) + 0.2*(px/px[-189]) + 0.2*(px/px[-252])
+    # rs_ref   = same for SPY
+    # totalRsScore = (rs_stock / rs_ref) * 100
+    # Align stock and SPY bars by timestamp
     common = []
     for idx, ts in enumerate(df.index):
         if ts in spy_ts_map and c[idx] is not None and spy_closes[spy_ts_map[ts]] is not None:
             common.append((idx, spy_ts_map[ts]))
 
-    if len(common) < LOOKBACK:
+    # Need at least 63 common bars for Q1 calculation
+    if len(common) < 63:
         _sa, _sf = compute_setup_adjustment(c, h, l, n)
         return {"rv": round(rvol * 100) if rvol else None, "am": round(atr_mult * 100),
                 "ax": round(atr_ext * 100), "ch": round(change, 2),
@@ -614,43 +617,73 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
                 "sa": _sa, "sf": _sf}
 
-    etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
-    extended = common[-(LOOKBACK + 1):]
+    # Handle IPOs with <252 bars: use actual bar count (mirrors Pine's "n63/n126/n189/n252" logic)
+    avail = len(common)
+    n63  = min(63,  avail - 1)
+    n126 = min(126, avail - 1)
+    n189 = min(189, avail - 1)
+    n252 = min(252, avail - 1)
 
-    # Compute per-bar deltas
-    deltas = []
-    for k in range(1, len(extended)):
-        ei_prev, si_prev = extended[k - 1]
-        ei, si = extended[k]
-        stock_chg = c[ei] - c[ei_prev]
-        spy_chg = spy_closes[si] - spy_closes[si_prev]
-        stock_atr = etf_atr_series[ei] if etf_atr_series[ei] > 0 else 1
-        spy_atr = spy_atr_series[si] if spy_atr_series[si] > 0 else 1
-        # SPY Power Index: how many ATRs did SPY move?
-        spy_pi = spy_chg / spy_atr
-        # Expected stock change = SPY_PI * stock_ATR
-        expected = spy_pi * stock_atr
-        # Real RS = (actual - expected) / stock_ATR
-        rrs = (stock_chg - expected) / stock_atr
-        deltas.append(rrs)
+    # Latest stock/SPY closes at common[-1]
+    cur_stock_idx, cur_spy_idx = common[-1]
+    stock_now = c[cur_stock_idx]
+    spy_now   = spy_closes[cur_spy_idx]
 
-    # Compute rolling SMA(MA_LENGTH) of deltas → smoothed RS series
+    # Lookback stock/SPY closes
+    def stock_at(offset):
+        idx = common[-1 - offset][0]
+        return c[idx]
+    def spy_at(offset):
+        idx = common[-1 - offset][1]
+        return spy_closes[idx]
+
+    perfT63  = stock_now / stock_at(n63)  if stock_at(n63)  else 1
+    perfT126 = stock_now / stock_at(n126) if stock_at(n126) else 1
+    perfT189 = stock_now / stock_at(n189) if stock_at(n189) else 1
+    perfT252 = stock_now / stock_at(n252) if stock_at(n252) else 1
+
+    perfS63  = spy_now / spy_at(n63)  if spy_at(n63)  else 1
+    perfS126 = spy_now / spy_at(n126) if spy_at(n126) else 1
+    perfS189 = spy_now / spy_at(n189) if spy_at(n189) else 1
+    perfS252 = spy_now / spy_at(n252) if spy_at(n252) else 1
+
+    rs_stock = 0.4 * perfT63 + 0.2 * perfT126 + 0.2 * perfT189 + 0.2 * perfT252
+    rs_ref   = 0.4 * perfS63 + 0.2 * perfS126 + 0.2 * perfS189 + 0.2 * perfS252
+    final_rs = (rs_stock / rs_ref) * 100 if rs_ref > 0 else 100
+
+    # Build a lightweight VARS-like sparkline: rolling 20-bar weighted RS score
+    # (for visual trend reference — kept for compatibility with frontend sparklines)
     sma_series = []
-    for i in range(MA_LENGTH - 1, len(deltas)):
-        window = deltas[i - MA_LENGTH + 1:i + 1]
-        sma_series.append(round(np.mean(window), 4))
+    if avail >= 63:
+        # Compute totalRsScore at each of the last min(30, avail-63) bars
+        span = min(30, avail - 63)
+        for k in range(span):
+            bar_offset = span - 1 - k  # oldest first → newest last
+            idx_end = avail - 1 - bar_offset
+            if idx_end < 63:
+                continue
+            s_idx, sp_idx = common[idx_end]
+            s_now = c[s_idx]; sp_now = spy_closes[sp_idx]
+            n63_k  = min(63, idx_end)
+            n126_k = min(126, idx_end)
+            n189_k = min(189, idx_end)
+            n252_k = min(252, idx_end)
+            s_63 = c[common[idx_end - n63_k][0]]
+            s_126 = c[common[idx_end - n126_k][0]]
+            s_189 = c[common[idx_end - n189_k][0]]
+            s_252 = c[common[idx_end - n252_k][0]]
+            p_63 = spy_closes[common[idx_end - n63_k][1]]
+            p_126 = spy_closes[common[idx_end - n126_k][1]]
+            p_189 = spy_closes[common[idx_end - n189_k][1]]
+            p_252 = spy_closes[common[idx_end - n252_k][1]]
+            if s_63 and s_126 and s_189 and s_252 and p_63 and p_126 and p_189 and p_252:
+                rss = 0.4*(s_now/s_63) + 0.2*(s_now/s_126) + 0.2*(s_now/s_189) + 0.2*(s_now/s_252)
+                rsr = 0.4*(sp_now/p_63) + 0.2*(sp_now/p_126) + 0.2*(sp_now/p_189) + 0.2*(sp_now/p_252)
+                if rsr > 0:
+                    sma_series.append(round((rss/rsr)*100, 2))
 
     if not sma_series:
-        _sa, _sf = compute_setup_adjustment(c, h, l, n)
-        return {"rv": round(rvol * 100) if rvol else None, "am": round(atr_mult * 100),
-                "ax": round(atr_ext * 100), "ch": round(change, 2),
-                "c5": round(c5, 2) if c5 is not None else None,
-                "c20": round(c20, 2) if c20 is not None else None,
-                "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
-                "sa": _sa, "sf": _sf}
-
-    final_rs = sma_series[-1]
-    # RS percentrank computed cross-sectionally in main() after all stocks processed
+        sma_series = [round(final_rs, 2)]
 
     # Advancing/declining streaks on the smoothed series
     adv_streak = 0
@@ -793,7 +826,7 @@ def main():
 
     # ─── Download SPY (daily + weekly) ────────────────────────
     end = datetime.now() + timedelta(days=1)
-    start = end - timedelta(days=400)  # ~280 trading days for SMA200 + LOOKBACK + MA + ATR
+    start = end - timedelta(days=400)  # ~280 trading days — enough for 252-bar Pine Script RS + SMA200
     w_start = end - timedelta(days=365)
 
     print("\nDownloading SPY (daily + weekly)...")
