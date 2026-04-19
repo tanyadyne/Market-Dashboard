@@ -999,23 +999,29 @@ def main():
 
     # ─── Market cap + industry lookup (ONLY on liquid survivors) ──
     MIN_MCAP = 2_000_000_000
-    CACHE_VERSION = 4  # Bumped: forces re-fetch of empty industries
-    mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "version": 0, "refresh_in_progress": False}
+    CACHE_VERSION = 5  # Bumped: adds names + descriptions
+    mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "names": {}, "descs": {}, "version": 0, "refresh_in_progress": False}
     if os.path.exists("leaders_mcap.json"):
         try:
             with open("leaders_mcap.json") as f:
                 mcap_data = json.load(f)
                 if "industries" not in mcap_data:
                     mcap_data["industries"] = {}
+                if "names" not in mcap_data:
+                    mcap_data["names"] = {}
+                if "descs" not in mcap_data:
+                    mcap_data["descs"] = {}
                 if "version" not in mcap_data:
                     mcap_data["version"] = 0
                 if "refresh_in_progress" not in mcap_data:
                     mcap_data["refresh_in_progress"] = False
         except Exception:
-            mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "version": 0, "refresh_in_progress": False}
+            mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "names": {}, "descs": {}, "version": 0, "refresh_in_progress": False}
 
     mcap_cache = mcap_data.get("caps", {})
     industry_cache = mcap_data.get("industries", {})
+    name_cache = mcap_data.get("names", {})
+    desc_cache = mcap_data.get("descs", {})
     last_refreshed = mcap_data.get("refreshed", "")
     cache_version = mcap_data.get("version", 0)
     refresh_in_progress = mcap_data.get("refresh_in_progress", False)
@@ -1055,6 +1061,10 @@ def main():
                 tickers_to_check.append(t)  # Self-heal failed mcap
             elif not industry_cache.get(t, ""):
                 tickers_to_check.append(t)  # Self-heal missing industry
+            elif not name_cache.get(t, ""):
+                tickers_to_check.append(t)  # Self-heal missing name
+            elif not desc_cache.get(t, ""):
+                tickers_to_check.append(t)  # Self-heal missing description
 
     if tickers_to_check:
         MAX_PER_RUN = 500
@@ -1068,6 +1078,8 @@ def main():
         for i, tk in enumerate(tickers_to_check):
             mc = 0
             industry = ""
+            name = ""
+            desc = ""
             try:
                 ticker_obj = yf.Ticker(tk, session=_session)
                 fi = ticker_obj.fast_info
@@ -1086,6 +1098,8 @@ def main():
                 try:
                     info = ticker_obj.info
                     industry = info.get("industry", "") or ""
+                    name = info.get("shortName", "") or info.get("longName", "") or ""
+                    desc = info.get("longBusinessSummary", "") or ""
                     if mc == 0:
                         info_mc = info.get("marketCap", 0) or 0
                         if info_mc:
@@ -1098,6 +1112,8 @@ def main():
                 failed += 1
             mcap_cache[tk] = mc
             industry_cache[tk] = industry
+            name_cache[tk] = name
+            desc_cache[tk] = desc
             # Mark this ticker as verified at current schema version
             refreshed_at_v[tk] = CACHE_VERSION
             time.sleep(0.2)
@@ -1113,6 +1129,8 @@ def main():
             "refreshed": date.today().isoformat() if not still_needs_refresh else last_refreshed,
             "caps": mcap_cache,
             "industries": industry_cache,
+            "names": name_cache,
+            "descs": desc_cache,
             "version": CACHE_VERSION if not still_needs_refresh else cache_version,
             "refresh_in_progress": still_needs_refresh,
             "refreshed_at_v": refreshed_at_v,
@@ -1200,7 +1218,7 @@ def main():
             if d_metrics is None:
                 continue
             processed += 1
-            entry = {"t": tk, "th": industry_label.get(tk, "General"), "thm": theme_map.get(tk, "General"), **d_metrics, **w_metrics}
+            entry = {"t": tk, "n": name_cache.get(tk, ""), "d": desc_cache.get(tk, ""), "th": industry_label.get(tk, "General"), "thm": theme_map.get(tk, "General"), **d_metrics, **w_metrics}
             results.append(entry)
         except Exception:
             continue
