@@ -447,6 +447,204 @@ def compute_ema_value(closes, period):
     return ema
 
 
+def compute_trend_zone(c, h, l, spy_closes, spy_ts_map, df_index):
+    """Compute the smooth_trend score from the Pine Script 'Custom CMI' indicator.
+
+    Returns a string zone name:
+      "bull_strong"  : smooth_trend > 30
+      "bull_light"   : 10 < smooth_trend <= 30
+      "neutral"      : -10 <= smooth_trend <= 10
+      "bear_light"   : -30 <= smooth_trend < -10
+      "bear_strong"  : smooth_trend < -30
+
+    trend_score is composed of:
+      25% RSI(14) momentum score = (RSI - 50) * 2
+      35% MA score: avg of 3 EMA divergences:
+           - daily EMA(5) vs EMA(20)
+           - weekly EMA(3) vs EMA(10)   → approximated with 15/50 daily bars
+           - intraday EMA(10) vs EMA(21) → approximated with 10/21 daily bars
+      20% Bollinger Band(20, 2) position score = (bbpos - 50) * 2
+      20% Relative strength vs SPY (1D change difference * 10)
+
+    Then smooth_trend = EMA(trend_score, 5).
+    """
+    c_arr = np.asarray([x for x in c if x is not None], dtype=float)
+    h_arr = np.asarray([x for x in h if x is not None], dtype=float)
+    l_arr = np.asarray([x for x in l if x is not None], dtype=float)
+    n = len(c_arr)
+    if n < 55:  # need at least 50 bars for longer EMAs + 5-bar smoothing
+        return "neutral"
+
+    def ema(arr, span):
+        if len(arr) < span:
+            return None
+        k = 2.0 / (span + 1)
+        e = float(arr[0])
+        for v in arr[1:]:
+            e = float(v) * k + e * (1 - k)
+        return e
+
+    def ema_series(arr, span):
+        if len(arr) < span:
+            return None
+        k = 2.0 / (span + 1)
+        out = [float(arr[0])]
+        for v in arr[1:]:
+            out.append(float(v) * k + out[-1] * (1 - k))
+        return np.array(out)
+
+    def rsi(arr, length=14):
+        if len(arr) < length + 1:
+            return None
+        deltas = np.diff(arr)
+        gains = np.maximum(deltas, 0)
+        losses = np.maximum(-deltas, 0)
+        # Wilder smoothing
+        avg_gain = np.mean(gains[:length])
+        avg_loss = np.mean(losses[:length])
+        for i in range(length, len(deltas)):
+            avg_gain = (avg_gain * (length - 1) + gains[i]) / length
+            avg_loss = (avg_loss * (length - 1) + losses[i]) / length
+        if avg_loss == 0:
+            return 100.0
+        rs = avg_gain / avg_loss
+        return 100.0 - 100.0 / (1.0 + rs)
+
+    def rsi_series(arr, length=14):
+        """RSI at every bar (Wilder smoothing)."""
+        if len(arr) < length + 1:
+            return None
+        deltas = np.diff(arr)
+        gains = np.maximum(deltas, 0)
+        losses = np.maximum(-deltas, 0)
+        avg_gain = np.mean(gains[:length])
+        avg_loss = np.mean(losses[:length])
+        rsi_vals = [50.0] * (length)  # pad until we have enough data
+        rs = avg_gain / avg_loss if avg_loss > 0 else float('inf')
+        rsi_vals.append(100.0 - 100.0 / (1.0 + rs) if avg_loss > 0 else 100.0)
+        for i in range(length, len(deltas)):
+            avg_gain = (avg_gain * (length - 1) + gains[i]) / length
+            avg_loss = (avg_loss * (length - 1) + losses[i]) / length
+            if avg_loss == 0:
+                rsi_vals.append(100.0)
+            else:
+                rs = avg_gain / avg_loss
+                rsi_vals.append(100.0 - 100.0 / (1.0 + rs))
+        return np.array(rsi_vals)
+
+    # Compute component scores across the last N bars so we can then smooth via EMA(5).
+    # We only need the last ~10 bars of trend_score for EMA(5) smoothing to be stable.
+    WINDOW = 10
+    if n < 55:
+        return "neutral"
+
+    # 1) RSI score series
+    rsi_s = rsi_series(c_arr, 14)
+    if rsi_s is None or len(rsi_s) < WINDOW:
+        return "neutral"
+
+    # 2) MA score = avg of 3 EMA divergence scores, per bar
+    # We'll compute EMAs as series
+    ema_f_intra_s = ema_series(c_arr, 10)
+    ema_s_intra_s = ema_series(c_arr, 21)
+    ema_f_day_s   = ema_series(c_arr, 5)
+    ema_s_day_s   = ema_series(c_arr, 20)
+    # Weekly EMA(3) and EMA(10) on weekly bars ≈ EMA(15) and EMA(50) on daily bars
+    ema_f_wk_s    = ema_series(c_arr, 15)
+    ema_s_wk_s    = ema_series(c_arr, 50)
+
+    if ema_s_wk_s is None or ema_s_day_s is None or ema_s_intra_s is None:
+        return "neutral"
+
+    # 3) Bollinger position series
+    bb_len = 20
+    bb_mult = 2.0
+    bb_score_s = np.zeros(n)
+    for i in range(bb_len - 1, n):
+        window = c_arr[i - bb_len + 1:i + 1]
+        basis = np.mean(window)
+        std = np.std(window, ddof=0)
+        upper = basis + bb_mult * std
+        lower = basis - bb_mult * std
+        if upper - lower > 0:
+            pos = (c_arr[i] - lower) / (upper - lower) * 100
+            bb_score_s[i] = (pos - 50) * 2
+        else:
+            bb_score_s[i] = 0
+
+    # 4) RS vs SPY score series: (stock daily change - SPY daily change) * 10
+    # Align with SPY bars
+    rs_score_s = np.zeros(n)
+    for i, ts in enumerate(df_index):
+        if i < 1:
+            continue
+        stock_chg = (c[i] / c[i - 1] - 1) * 100 if c[i] is not None and c[i - 1] else 0
+        spy_chg = 0
+        if ts in spy_ts_map:
+            si = spy_ts_map[ts]
+            if si > 0 and spy_closes[si] and spy_closes[si - 1]:
+                spy_chg = (spy_closes[si] / spy_closes[si - 1] - 1) * 100
+        rs_score_s[i] = max(-100, min(100, (stock_chg - spy_chg) * 10))
+
+    # Compute trend_score for each of the last WINDOW bars
+    trend_scores = []
+    for offset in range(WINDOW, 0, -1):
+        idx = n - offset
+        if idx < 50:
+            continue
+        # RSI score
+        rsi_val = rsi_s[idx] if idx < len(rsi_s) else 50
+        rsi_score = (rsi_val - 50) * 2
+
+        # MA scores
+        if ema_s_intra_s[idx] > 0:
+            md_intra = (ema_f_intra_s[idx] - ema_s_intra_s[idx]) / ema_s_intra_s[idx] * 100
+            ma_intra = max(-100, min(100, md_intra * 5))
+        else:
+            ma_intra = 0
+        if ema_s_day_s[idx] > 0:
+            md_day = (ema_f_day_s[idx] - ema_s_day_s[idx]) / ema_s_day_s[idx] * 100
+            ma_day = max(-100, min(100, md_day * 5))
+        else:
+            ma_day = 0
+        if ema_s_wk_s[idx] > 0:
+            md_wk = (ema_f_wk_s[idx] - ema_s_wk_s[idx]) / ema_s_wk_s[idx] * 100
+            ma_wk = max(-100, min(100, md_wk * 5))
+        else:
+            ma_wk = 0
+        ma_score = (ma_intra + ma_day + ma_wk) / 3
+
+        # BB score
+        bb_score = bb_score_s[idx] if idx < len(bb_score_s) else 0
+        # RS vs SPY
+        rs_score = rs_score_s[idx] if idx < len(rs_score_s) else 0
+
+        # Composite trend score
+        ts_score = (rsi_score * 0.25) + (ma_score * 0.35) + (bb_score * 0.20) + (rs_score * 0.20)
+        trend_scores.append(ts_score)
+
+    if not trend_scores:
+        return "neutral"
+
+    # Apply EMA(5) smoothing to the series to get smooth_trend
+    k = 2.0 / (5 + 1)
+    smooth = trend_scores[0]
+    for v in trend_scores[1:]:
+        smooth = v * k + smooth * (1 - k)
+
+    # Classify into zones
+    if smooth > 30:
+        return "bull_strong"
+    elif smooth > 10:
+        return "bull_light"
+    elif smooth < -30:
+        return "bear_strong"
+    elif smooth < -10:
+        return "bear_light"
+    else:
+        return "neutral"
+
+
 def compute_setup_adjustment(c, h, l, n):
     """Evaluate technical setup criteria and return a score adjustment (in percentile points).
 
@@ -615,7 +813,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
-                "sa": _sa, "sf": _sf}
+                "sa": _sa, "sf": _sf, "tz": "neutral"}
 
     # Handle IPOs with <252 bars: use actual bar count (mirrors Pine's "n63/n126/n189/n252" logic)
     avail = len(common)
@@ -698,6 +896,9 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     # Setup quality adjustment (applied to RS percentrank in main)
     setup_adj, setup_flags = compute_setup_adjustment(c, h, l, n)
 
+    # Trend zone (from Pine Script CMI "smooth_trend" — used as multiplier on RS)
+    trend_zone = compute_trend_zone(c, h, l, spy_closes, spy_ts_map, df.index)
+
     return {
         "rv": round(rvol * 100) if rvol else None,
         "am": round(atr_mult * 100), "ax": round(atr_ext * 100),
@@ -707,7 +908,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "rs": None,  # Will be set cross-sectionally in main()
         "rf": dec_streak, "ra": adv_streak,
         "p": round(price, 2), "fr": round(final_rs, 4), "vs": sma_series,
-        "sa": setup_adj, "sf": setup_flags,
+        "sa": setup_adj, "sf": setup_flags, "tz": trend_zone,
     }
 
 
@@ -1242,6 +1443,18 @@ def main():
             # Apply setup quality adjustment (bonus/penalty based on MA criteria)
             sa = r.get("sa", 0)
             adjusted = max(0, min(100, raw_pctrank + sa))
+            # Apply trend-zone multiplier from Pine Script CMI smooth_trend
+            # bear_strong → ×0.50, bear_light → ×0.75, neutral → ×1.00,
+            # bull_light → ×1.05, bull_strong → ×1.10
+            tz = r.get("tz", "neutral")
+            tz_mult = {
+                "bear_strong": 0.50,
+                "bear_light":  0.75,
+                "neutral":     1.00,
+                "bull_light":  1.05,
+                "bull_strong": 1.10,
+            }.get(tz, 1.0)
+            adjusted = max(0, min(100, adjusted * tz_mult))
             r["rs"] = round(adjusted)
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
             r["w_rs"] = round(percentrank_inc(all_w_rs, r["w_fr"]) * 100)
