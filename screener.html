@@ -259,7 +259,7 @@ function atrExtBars(val){
   let bars='';for(let i=0;i<4;i++){bars+=`<div class="bar" style="height:${[4,7,10,14][i]}px;opacity:${i<n?1:0.2}"></div>`;}
   return`<div class="bars ${cls}">${bars}</div>`;
 }
-function getPosition(rank,total){if(rank<=50)return'Strong Leader';if(rank<=200)return'Leader Zone';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Laggard Zone';return'Deep Laggard';}
+function getPosition(rank,total){if(rank<=50)return'Strong Leader';if(rank<=200)return'Moderate Leader';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Moderate Laggard';return'Deep Laggard';}
 function posClass(pos){if(pos.includes('Leader'))return'tag-leader';if(pos.includes('Laggard'))return'tag-laggard';return'tag-neutral';}
 function themeTag(status){if(status==='Leader')return'tag-leader';if(status==='Laggard')return'tag-laggard';return'tag-neutral';}
 
@@ -527,8 +527,8 @@ function searchStock(){
   const rsStatus=getPosition(stock.rk,total);  // Leader/Neutral/Laggard based on daily rank
   // Simplify to Leader/Neutral/Laggard label for the RS SCORE box
   let rsLabel='Neutral';
-  if(rsStatus==='Strong Leader'||rsStatus==='Leader Zone')rsLabel='Leader';
-  else if(rsStatus==='Laggard Zone'||rsStatus==='Deep Laggard')rsLabel='Laggard';
+  if(rsStatus==='Strong Leader'||rsStatus==='Moderate Leader')rsLabel='Leader';
+  else if(rsStatus==='Moderate Laggard'||rsStatus==='Deep Laggard')rsLabel='Laggard';
 
   // Theme info (mapped sector with rank among ETFs)
   const mappedSector=stock.thm||stock.th||'';
@@ -568,8 +568,8 @@ function searchStock(){
         else if(diff<0)deltaHtml=`<span class="dn">▼ ${diff}</span>`;
         else deltaHtml='<span class="fl">–</span>';
       }
-      const dr=h.r[i];
-      const p=dr!=null?getPosition(dr,total):'—';
+      const wr=h.wr?h.wr[i]:null;
+      const p=wr!=null?getPosition(wr,total):'—';
       // Theme column uses current theme status (history doesn't store per-day theme status)
       let themeCell=esc(mappedSector||'—');
       if(themeRankInfo){
@@ -581,7 +581,7 @@ function searchStock(){
         <td class="l">${fmtDate}</td>
         <td class="hist-delta">${deltaHtml}</td>
         <td class="c"><span class="rs" style="background:${getRSBg(score)};color:${getRSCol(score)}">${score!=null?score+'%':'—'}</span></td>
-        <td class="c">${dr!=null?'#'+dr:'—'}</td>
+        <td class="c">${wr!=null?'#'+wr:'—'}</td>
         <td class="c"><span class="${posClass(p)}">${p}</span></td>
         <td class="l">${themeCell}</td>
       </tr>`;
