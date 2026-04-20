@@ -100,18 +100,13 @@ def scrape():
         print("ERROR: no rows parsed", file=sys.stderr)
         sys.exit(1)
 
-    # Latest value / Q1 average from page text
+    # Latest value / Q1 average from page text.
+    # The page structure is: <h4>Last Quarter Average (Q1)</h4>\n\n82.00
+    # Skip all tags after the "(Q1)" token, then grab the first number.
     latest = rows[0]["mean"]
-    # The page text looks like: "Last Quarter Average (Q1) 82.00"
-    # Skip past the "(Q1)" token before grabbing the number.
     q1_match = re.search(
-        r"Last\s+Quarter\s+Average.*?\(Q1\)\s*</[^>]+>\s*<[^>]+>\s*([\-0-9.]+)",
+        r"Last\s+Quarter\s+Average\s*\([^)]*\)\s*(?:<[^>]*>\s*)*([\-0-9][0-9.]*)",
         html, re.IGNORECASE | re.DOTALL)
-    if not q1_match:
-        # Fallback: generic "Last Quarter Average [anything] 82.00"
-        q1_match = re.search(
-            r"Last\s+Quarter\s+Average[^\n]*?\)\s*[^0-9\-]*([\-0-9.]+)",
-            html, re.IGNORECASE)
     q1_avg = float(q1_match.group(1)) if q1_match else None
 
     out = {
