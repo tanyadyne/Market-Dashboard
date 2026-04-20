@@ -436,6 +436,20 @@ def main():
         c5 = (c[-1] / c[-6] - 1) * 100 if length >= 6 else None
         c20 = (c[-1] / c[-21] - 1) * 100 if length >= 21 else None
 
+        # YTD: price vs last bar of previous year
+        from datetime import date as _date
+        current_year = _date.today().year
+        ytd = None
+        try:
+            for i, ts in enumerate(df.index):
+                bar_year = ts.year if hasattr(ts, 'year') else int(str(ts)[:4])
+                if bar_year >= current_year:
+                    if i > 0 and c[i - 1] is not None and c[-1] is not None and c[i - 1] != 0:
+                        ytd = (c[-1] / c[i - 1] - 1) * 100
+                    break
+        except Exception:
+            ytd = None
+
         atr = compute_atr(h, l, c, ATR_PERIOD)
         valid_c = [x for x in c if x is not None]
         sma50 = np.mean(valid_c[-50:]) if len(valid_c) >= 50 else np.mean(valid_c)
@@ -466,6 +480,7 @@ def main():
                 "am": round(atr_mult * 100), "ax": round(atr_ext * 100), "ch": round(change, 2),
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
+                "ytd": round(ytd, 2) if ytd is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2),
                 "fr": None, "vs": None,
             }
@@ -512,6 +527,7 @@ def main():
             "ch": round(change, 2),
             "c5": round(c5, 2) if c5 is not None else None,
             "c20": round(c20, 2) if c20 is not None else None,
+            "ytd": round(ytd, 2) if ytd is not None else None,
             "rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
             "rf": dec_streak,
             "ra": adv_streak,
@@ -608,7 +624,7 @@ def main():
         w_metrics = process_ticker_weekly(ticker, get_df_w(ticker))
         if metrics is None:
             results.append({**info, "rv": None, "am": None, "ax": None, "ch": None, "c5": None,
-                            "c20": None, "rs": None, "rf": 0, "ra": 0, "p": None,
+                            "c20": None, "ytd": None, "rs": None, "rf": 0, "ra": 0, "p": None,
                             "fr": None, "vs": None, **w_metrics})
         else:
             results.append({**info, **metrics, **w_metrics})
@@ -632,7 +648,7 @@ def main():
 
         if not valid:
             results.append({**info, "rv": None, "am": None, "ax": None, "ch": None, "c5": None,
-                            "c20": None, "rs": None, "rf": 0, "ra": 0, "p": None,
+                            "c20": None, "ytd": None, "rs": None, "rf": 0, "ra": 0, "p": None,
                             "fr": None, "vs": None,
                             "w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None})
             continue
@@ -715,6 +731,7 @@ def main():
             "ch": avg_metric("ch"),
             "c5": avg_metric("c5"),
             "c20": avg_metric("c20"),
+            "ytd": avg_metric("ytd"),
             "rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
             "rf": dec_streak,
             "ra": adv_streak,
