@@ -33,6 +33,7 @@ LOOKBACK = 25
 ATR_PERIOD = 14
 
 ETF_INFO = [
+    {"t":"MAGS","n":"Magnificent Seven","fn":"Roundhill:Mag Seven ETF","h":"GOOGL,AMZN,AAPL,META,MSFT,NVDA,TSLA"},
     {"t":"XOP","n":"Oil Refining/Exploration","fn":"SS SPDR S&P Oil&Gas Exp","h":"APA,AR,CLMT,CNX,COP,CTRA,CVX,DINO,DK,DVN,EOG,EQT,EXE,FANG,GPOR,MGY,MPC,MUR,OVV,OXY,PARR,PBF,PR,PSX,RRC,SHEL,VLO,VNOM,XOM"},
     {"t":"REMX","n":"Rare Earth Metals","fn":"VanEck:RE & Str Metals","h":"ALB,SQM,LAC,MP,UUUU,USAR,SGML,DNN,UEC,CCJ,LAR,IDR,IPX,TROX"},
     {"t":"ITA","n":"Aerospace & Defense","fn":"iShares:US Aer&Def ETF","h":"ACHR,ATI,AVAV,AXON,BA,BWXT,CRS,CW,GD,GE,HEI,HII,HWM,HXL,KRMN,KTOS,LHX,LMT,NOC,RKLB,RTX,SARO,TDG,TXT,WWD"},
