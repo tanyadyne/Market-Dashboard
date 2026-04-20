@@ -162,7 +162,7 @@ html[data-view="mobile"]{overflow-x:hidden}
 <body>
 <div class="hdr">
   <div class="hdr-l">
-    <a href="index.html" class="btn btn-t" style="text-decoration:none;font-size:13px;padding:4px 10px" title="Back to Market Dashboard">←</a>
+    <a href="index.html" class="btn btn-t" style="text-decoration:none;font-size:13px;padding:4px 16px;letter-spacing:1px" title="Back to Market Dashboard">←</a>
     <div class="hdr-t" style="font-size:15px;letter-spacing:1.5px;text-transform:uppercase">Relative Strength Tracker</div>
   </div>
   <div class="hdr-r">
@@ -243,6 +243,7 @@ const ALL_COLUMNS=[
   {key:'ch',label:'1D',align:'c',width:'72px',mob:true},
   {key:'c5',label:'1W',align:'c',width:'72px',mob:false},
   {key:'c20',label:'1M',align:'c',width:'72px',mob:false},
+  {key:'ytd',label:'YTD',align:'c',width:'72px',mob:false},
   {key:'rs',label:'RS (D)',align:'c',width:'62px',mob:true},
   {key:'vs',label:'VARS (D)',align:'c',width:'200px',mob:false}
 ];
@@ -532,6 +533,7 @@ function render(){
       ch:`<td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>`,
       c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
       c20:`<td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>`,
+      ytd:`<td class="c m ${chgClass(e.ytd)}">${chgText(e.ytd)}</td>`,
       rs:`<td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span></td>`,
       vs:`<td class="c"><div class="spark-wrap"><canvas data-ticker="${e.t}" data-freq="${isWeekly?'w':'d'}" width="${sparkW}" height="28"></canvas></div></td>`
     };
