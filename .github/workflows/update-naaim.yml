@@ -1,0 +1,35 @@
+name: Update NAAIM Exposure Index
+
+on:
+  schedule:
+    # Thursdays at 23:00 UTC (after NAAIM's Thursday update)
+    - cron: "0 23 * * 4"
+    # Also Fridays at 02:00 UTC as a safety net
+    - cron: "0 2 * * 5"
+  workflow_dispatch:
+
+jobs:
+  update-naaim:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: pip install --retries 5 --timeout 60 requests
+      - name: Run fetch_naaim.py
+        run: python fetch_naaim.py
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [[ -n $(git status -s naaim.json) ]]; then
+            git add naaim.json
+            git commit -m "Update NAAIM Exposure Index"
+            git push
+          else
+            echo "No changes to commit"
+          fi
