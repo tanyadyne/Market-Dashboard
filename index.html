@@ -12,8 +12,8 @@
 (function(){try{const t=localStorage.getItem('dashboardTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
 <style>
-:root,[data-theme="dark"]{--bg:#0a0a0a;--card:#111111;--card-hover:#141414;--bdr:#1f1f1f;--bdr-hover:#333;--t1:#e8e8e8;--t2:#888;--t3:#666;--t4:#444;--accent-blue:#3b82f6;--accent-blue-bg:#1e3a5f}
-[data-theme="light"]{--bg:#f7f7f8;--card:#ffffff;--card-hover:#f3f4f6;--bdr:#e5e7eb;--bdr-hover:#d1d5db;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--t4:#9ca3af;--accent-blue:#2563eb;--accent-blue-bg:#dbeafe}
+:root,[data-theme="dark"]{--bg:#0a0a0a;--card:#111111;--card-hover:#141414;--bdr:#1f1f1f;--bdr-hover:#333;--t1:#e8e8e8;--t2:#888;--t3:#666;--t4:#444}
+[data-theme="light"]{--bg:#f7f7f8;--card:#ffffff;--card-hover:#f3f4f6;--bdr:#e5e7eb;--bdr-hover:#d1d5db;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--t4:#9ca3af}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background .2s,color .2s}
 
@@ -36,10 +36,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 [data-theme="light"] .card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
 .card.disabled{opacity:.35;cursor:default;pointer-events:none}
 
-.card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-.card-icon.rs{background:var(--accent-blue-bg);border:1px solid var(--accent-blue)}
-.card-icon.ph2{background:var(--card-hover);border:1px solid var(--t4)}
-.card-icon.ph3{background:var(--card-hover);border:1px solid var(--t4)}
+.card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:var(--card-hover);border:1px solid var(--t4)}
 
 .card-body{flex:1;min-width:0}
 .card-title{font-size:15px;font-weight:700;letter-spacing:.3px;margin-bottom:3px}
@@ -62,21 +59,20 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
     <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
   </div>
   <h1>Market Dashboard</h1>
-  <p>Tools for tracking relative strength, momentum & market structure</p>
 </div>
 
 <div class="grid">
   <a class="card" href="rs.html">
-    <div class="card-icon rs">📊</div>
+    <div class="card-icon">📊</div>
     <div class="card-body">
-      <div class="card-title">Relative Strength Tracker</div>
+      <div class="card-title">Theme Tracker</div>
       <div class="card-desc">Track the leading themes and sectors</div>
     </div>
     <span class="card-arrow">→</span>
   </a>
 
   <a class="card" href="breadth.html">
-    <div class="card-icon ph2">🌡️</div>
+    <div class="card-icon">🌡️</div>
     <div class="card-body">
       <div class="card-title">Market Health</div>
       <div class="card-desc">Monitor breadth indicators, momentum and market structure</div>
@@ -85,7 +81,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
   </a>
 
   <a class="card" href="screener.html">
-    <div class="card-icon ph3">📈</div>
+    <div class="card-icon">📈</div>
     <div class="card-body">
       <div class="card-title">Stock Screener</div>
       <div class="card-desc">Scan for the leading stocks in the market</div>
