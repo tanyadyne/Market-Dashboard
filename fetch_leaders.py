@@ -778,6 +778,19 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     c5 = (c[-1] / c[-6] - 1) * 100 if n >= 6 else None
     c20 = (c[-1] / c[-21] - 1) * 100 if n >= 21 else None
 
+    # YTD: find the last bar of the previous year (= first bar of current year - 1)
+    current_year = date.today().year
+    ytd = None
+    try:
+        for i, ts in enumerate(df.index):
+            bar_year = ts.year if hasattr(ts, 'year') else int(str(ts)[:4])
+            if bar_year >= current_year:
+                if i > 0 and c[i - 1] is not None and c[-1] is not None and c[i - 1] != 0:
+                    ytd = (c[-1] / c[i - 1] - 1) * 100
+                break
+    except Exception:
+        ytd = None
+
     # ATR Ext = gainPct / atrPct (matches Pine Script exactly)
     # gainPct = (price - sma50) / sma50 * 100
     # atrPct  = atr / price * 100
@@ -821,6 +834,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "ax": round(atr_ext * 100), "ch": round(change, 2),
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
+                "ytd": round(ytd, 2) if ytd is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
                 "sa": _sa, "sf": _sf, "tz": "neutral"}
 
@@ -914,6 +928,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "ch": round(change, 2),
         "c5": round(c5, 2) if c5 is not None else None,
         "c20": round(c20, 2) if c20 is not None else None,
+        "ytd": round(ytd, 2) if ytd is not None else None,
         "rs": None,  # Will be set cross-sectionally in main()
         "rf": dec_streak, "ra": adv_streak,
         "p": round(price, 2), "fr": round(final_rs, 4), "vs": sma_series,
