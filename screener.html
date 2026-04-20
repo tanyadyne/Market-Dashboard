@@ -9,6 +9,7 @@
 <style>
 :root,[data-theme="dark"]{--bg:#0a0a0a;--bg2:#111111;--bg3:#161616;--bg4:#1f1f1f;--t1:#e8e8e8;--t2:#888;--t3:#666;--t4:#444;--g:#22c55e;--g2:#16a34a;--r:#ef4444;--r2:#dc2626;--gbg:#0a2818;--rbg:#2a0a0a;--bdr:#1f1f1f;--bdr2:#141414;--card:#111111}
 [data-theme="light"]{--bg:#f7f7f8;--bg2:#ffffff;--bg3:#f3f4f6;--bg4:#e5e7eb;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--t4:#9ca3af;--g:#15803d;--g2:#166534;--r:#b91c1c;--r2:#991b1b;--gbg:#dcfce7;--rbg:#fee2e2;--bdr:#e5e7eb;--bdr2:#eef0f3;--card:#ffffff}
+:root{--top-h:0px}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-size:13px}
 /* Fixed header wrapper */
@@ -34,7 +35,8 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .tab-strip{display:flex;justify-content:center;gap:6px;padding:14px 20px 12px;border-bottom:1px solid var(--bdr2);background:var(--bg)}
 .tab-btn{padding:10px 32px;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.6px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:all .2s;font-family:inherit;text-transform:uppercase}
 .tab-btn:hover{background:var(--bg3);color:var(--t1);border-color:var(--t3)}
-.tab-btn.active{border-color:#3b82f6;color:#60a5fa;background:#0c1a30;box-shadow:0 0 12px rgba(59,130,246,.15)}
+.tab-btn.active{background:var(--bg4);color:var(--t1);border-color:var(--t3)}
+[data-theme="light"] .tab-btn.active{background:#e5e7eb;color:#111827;border-color:#9ca3af}
 /* Info bar */
 .spy{padding:8px 20px;border-bottom:1px solid var(--bdr2);display:flex;justify-content:space-between;font-size:11px;color:var(--t3)}
 .m{font-family:'JetBrains Mono',monospace;font-size:11px}
@@ -54,7 +56,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .filter-item.active::after{content:'✓';margin-left:auto;color:var(--g);font-size:13px}
 /* Table */
 table{width:100%;border-collapse:collapse}
-th{position:sticky;top:0;background:var(--bg3);padding:8px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;border-bottom:1px solid var(--bdr);white-space:nowrap;z-index:2}
+th{position:sticky;top:var(--top-h);background:var(--bg3);padding:8px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;border-bottom:1px solid var(--bdr);white-space:nowrap;z-index:2}
 td{padding:7px 6px;border-bottom:1px solid var(--bdr2);font-size:12px}
 tr:hover{background:var(--bg3)}
 .c{text-align:center}.l{text-align:left}
@@ -118,6 +120,30 @@ tr:hover{background:var(--bg3)}
 .hist-delta .dn{color:var(--r)}
 .hist-delta .fl{color:var(--t4)}
 @media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{flex-direction:column}.tab-btn{padding:8px 18px;font-size:11px}.chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.chart-card-body{height:200px}}
+
+/* Mobile layout toggle (controlled by data-view="mobile") */
+[data-view="mobile"] table{table-layout:fixed;width:100%;max-width:100vw}
+[data-view="mobile"] td{padding:6px 3px;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+[data-view="mobile"] th{padding:8px 3px;font-size:9.5px;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Mobile column widths: # | Δ | Ticker | Theme (flex) | 1D | YTD | RS */
+[data-view="mobile"] th:nth-child(1),[data-view="mobile"] td:nth-child(1){width:30px}
+[data-view="mobile"] th:nth-child(2),[data-view="mobile"] td:nth-child(2){width:44px}
+[data-view="mobile"] th:nth-child(3),[data-view="mobile"] td:nth-child(3){width:54px}
+[data-view="mobile"] th:nth-child(4),[data-view="mobile"] td:nth-child(4){width:auto}
+[data-view="mobile"] th:nth-child(5),[data-view="mobile"] td:nth-child(5){width:48px}
+[data-view="mobile"] th:nth-child(6),[data-view="mobile"] td:nth-child(6){width:48px}
+[data-view="mobile"] th:nth-child(7),[data-view="mobile"] td:nth-child(7){width:48px}
+[data-view="mobile"] .tk{font-size:11px}
+[data-view="mobile"] .tw{overflow-x:hidden}
+[data-view="mobile"] body{max-width:100vw;overflow-x:hidden}
+html[data-view="mobile"]{overflow-x:hidden}
+/* Chart view: 2 per row on mobile */
+[data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}
+[data-view="mobile"] .chart-card-body{height:200px}
+[data-view="mobile"] .hdr{padding:10px 12px;flex-wrap:wrap;gap:6px}
+[data-view="mobile"] .hdr-r{gap:6px;flex-wrap:wrap}
+[data-view="mobile"] .srch{width:100%;font-size:11px;padding:5px 8px;order:10}
+[data-view="mobile"] .tab-btn{padding:8px 14px;font-size:11px}
 </style>
 </head>
 <body>
@@ -151,6 +177,10 @@ tr:hover{background:var(--bg3)}
     <div class="seg-toggle" id="viewToggle">
       <button id="viewList" class="on" onclick="switchView('list')">List</button>
       <button id="viewChart" onclick="switchView('chart')">Charts</button>
+    </div>
+    <div class="seg-toggle" id="layoutToggle">
+      <button id="btnDesktop" class="on" onclick="setLayout(false)">Desktop</button>
+      <button id="btnMobile" onclick="setLayout(true)">Mobile</button>
     </div>
     <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
     <input class="srch" id="si" placeholder="Search ticker, name, theme..." oninput="render()">
@@ -186,6 +216,7 @@ let rankLookback=1;
 let activeFilters=0; // bitmask of required setup flags
 let currentView='list'; // 'list' or 'chart'
 let chartPage=1;
+let isMobile=false; // Mobile column layout toggle
 
 // ─── Theme (persisted across pages via localStorage) ──────────
 function setTheme(theme){
@@ -328,18 +359,39 @@ function switchTab(tab){
       buildHeader();render();
     }
   }
+  if(typeof syncTopHeight==='function')syncTopHeight();
+}
+
+// Columns to show when in mobile mode (default: #, Δ, Ticker, Theme, 1D, YTD, RS)
+const MOBILE_COLS=new Set(['rk','rd','t','th','ch','ytd','rs']);
+
+function setLayout(mobile){
+  isMobile=mobile;
+  document.getElementById('btnDesktop').classList.toggle('on',!mobile);
+  document.getElementById('btnMobile').classList.toggle('on',mobile);
+  document.documentElement.setAttribute('data-view',mobile?'mobile':'desktop');
+  if(currentTab!=='search'){
+    if(currentView==='chart'){
+      // chart-grid reflows via CSS, but re-render so the count-per-row matches
+      renderChartView();
+    }else{
+      buildHeader();render();
+    }
+  }
+  if(typeof syncTopHeight==='function')syncTopHeight();
 }
 
 function buildHeader(){
   const isW=currentTab==='weekly';
-  const cols=[
+  let cols=[
     {key:'rk',label:'#',w:'36px'},{key:'rd',label:'Δ',w:'56px'},
-    {key:'t',label:'Ticker',w:'64px',al:'l'},{key:'n',label:'Name',w:'160px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l'},
+    {key:'t',label:'Ticker',w:'64px',al:'l'},{key:'n',label:'Company Name',w:'160px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l'},
     {key:'rv',label:isW?'R.Vol (W)':'R.Vol',w:'70px'},{key:'am',label:isW?'ATR M (W)':'ATR Mult',w:'70px'},
     {key:'ax',label:'ATR Ext',w:'70px'},{key:'ch',label:'1D',w:'60px'},
     {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},{key:'ytd',label:'YTD',w:'60px'},
     {key:'rs',label:isW?'RS (W)':'RS (D)',w:'56px'}
   ];
+  if(isMobile)cols=cols.filter(c=>MOBILE_COLS.has(c.key));
   const tr=document.getElementById('headerRow');tr.innerHTML='';
   cols.forEach(col=>{
     const th=document.createElement('th');
@@ -407,21 +459,23 @@ function render(){
     const rv=e[rvKey],am=e[amKey],rs=e[rsKey],vs=e[vsKey];
     const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
     const amP=am!=null?Math.min(am/mxAM*100,100):0;
-    html+=`<tr>
-      <td class="rk">${rank}</td>
-      ${rankDelta(e.t)}
-      <td class="tk">${esc(e.t)}</td>
-      <td class="sc2" title="${esc(e.n||'')}">${esc(e.n||'—')}</td>
-      <td class="sc2" title="${esc(e.th||'')}">${esc(e.th||'—')}</td>
-      <td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>
-      <td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(am)}</span></div></td>
-      <td class="c"><div class="bc" style="justify-content:center;gap:4px">${atrExtBars(e.ax)}<span class="bv">${multText(e.ax)}</span></div></td>
-      <td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>
-      <td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>
-      <td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>
-      <td class="c m ${chgClass(e.ytd)}">${chgText(e.ytd)}</td>
-      <td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span></td>
-    </tr>`;
+    const cellMap={
+      rk:`<td class="rk">${rank}</td>`,
+      rd:rankDelta(e.t),
+      t:`<td class="tk">${esc(e.t)}</td>`,
+      n:`<td class="sc2" title="${esc(e.n||'')}">${esc(e.n||'—')}</td>`,
+      th:`<td class="sc2" title="${esc(e.th||'')}">${esc(e.th||'—')}</td>`,
+      rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>`,
+      am:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(am)}</span></div></td>`,
+      ax:`<td class="c"><div class="bc" style="justify-content:center;gap:4px">${atrExtBars(e.ax)}<span class="bv">${multText(e.ax)}</span></div></td>`,
+      ch:`<td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>`,
+      c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
+      c20:`<td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>`,
+      ytd:`<td class="c m ${chgClass(e.ytd)}">${chgText(e.ytd)}</td>`,
+      rs:`<td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span></td>`
+    };
+    const rowKeys=isMobile?['rk','rd','t','th','ch','ytd','rs']:['rk','rd','t','n','th','rv','am','ax','ch','c5','c20','ytd','rs'];
+    html+=`<tr>${rowKeys.map(k=>cellMap[k]||'').join('')}</tr>`;
   }
   document.getElementById('tb').innerHTML=html;
   document.getElementById('ft').textContent=`${total} stocks · Page ${currentPage}/${totalPages}`;
@@ -661,6 +715,19 @@ async function loadData(){
 }
 
 // Auto-reload every 60s
+// Keep the sticky table header below the top-fixed page header
+function syncTopHeight(){
+  const tf=document.querySelector('.top-fixed');
+  if(!tf)return;
+  const h=tf.offsetHeight;
+  document.documentElement.style.setProperty('--top-h', h+'px');
+}
+window.addEventListener('load',syncTopHeight);
+window.addEventListener('resize',syncTopHeight);
+// Also re-sync after initial data load / tab switches (header height can change)
+const _origLoad=loadData;
+loadData=async function(){await _origLoad.apply(this,arguments);syncTopHeight();};
+
 setInterval(()=>{if(currentTab!=='search')loadData();},60000);
 loadData();
 </script>
