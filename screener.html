@@ -594,15 +594,15 @@ function searchStock(){
       const score=h.s[i];
       // Delta: compare rank (not score) with previous day. Smaller rank = better, so improvement shown green.
       let deltaHtml='<span class="fl">—</span>';
-      const wr=h.wr?h.wr[i]:null;
-      const wrPrev=h.wr&&i>0?h.wr[i-1]:null;
-      if(wr!=null && wrPrev!=null){
-        const diff=wrPrev-wr; // positive = improved (rank went down)
+      const dr=h.r?h.r[i]:null;
+      const drPrev=h.r&&i>0?h.r[i-1]:null;
+      if(dr!=null && drPrev!=null){
+        const diff=drPrev-dr; // positive = improved (rank went down)
         if(diff>0)deltaHtml=`<span class="up">▲ +${diff}</span>`;
         else if(diff<0)deltaHtml=`<span class="dn">▼ ${diff}</span>`;
         else deltaHtml='<span class="fl">–</span>';
       }
-      const p=wr!=null?getPosition(wr,total):'—';
+      const p=dr!=null?getPosition(dr,total):'—';
       // Theme column uses current theme status (history doesn't store per-day theme status)
       let themeCell=esc(mappedSector||'—');
       if(themeRankInfo){
@@ -613,7 +613,7 @@ function searchStock(){
       html+=`<tr>
         <td class="l">${fmtDate}</td>
         <td class="c"><span class="rs" style="background:${getRSBg(score)};color:${getRSCol(score)}">${score!=null?score+'%':'—'}</span></td>
-        <td class="c">${wr!=null?'#'+wr:'—'}</td>
+        <td class="c">${dr!=null?'#'+dr:'—'}</td>
         <td class="hist-delta">${deltaHtml}</td>
         <td class="c"><span class="${posClass(p)}">${p}</span></td>
         <td class="l">${themeCell}</td>
