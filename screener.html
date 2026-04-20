@@ -125,7 +125,7 @@ tr:hover{background:var(--bg3)}
 <div class="top-fixed">
 <div class="hdr">
   <div class="hdr-l">
-    <a href="index.html" class="btn-sm" style="text-decoration:none;padding:4px 10px">←</a>
+    <a href="index.html" class="btn-sm" style="text-decoration:none;padding:4px 16px;letter-spacing:1px">←</a>
     <div style="font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Stock Screener</div>
   </div>
   <div class="hdr-r">
@@ -337,7 +337,7 @@ function buildHeader(){
     {key:'t',label:'Ticker',w:'64px',al:'l'},{key:'n',label:'Name',w:'160px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l'},
     {key:'rv',label:isW?'R.Vol (W)':'R.Vol',w:'70px'},{key:'am',label:isW?'ATR M (W)':'ATR Mult',w:'70px'},
     {key:'ax',label:'ATR Ext',w:'70px'},{key:'ch',label:'1D',w:'60px'},
-    {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},
+    {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},{key:'ytd',label:'YTD',w:'60px'},
     {key:'rs',label:isW?'RS (W)':'RS (D)',w:'56px'}
   ];
   const tr=document.getElementById('headerRow');tr.innerHTML='';
@@ -419,6 +419,7 @@ function render(){
       <td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>
       <td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>
       <td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>
+      <td class="c m ${chgClass(e.ytd)}">${chgText(e.ytd)}</td>
       <td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span></td>
     </tr>`;
   }
