@@ -146,17 +146,30 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] .hdr-r{gap:4px}
 [data-view="mobile"] .srch{width:100px;font-size:11px;padding:5px 8px}
 [data-view="mobile"] .btn{padding:4px 8px;font-size:10px}
-[data-view="mobile"] table{table-layout:auto;width:100%}
-[data-view="mobile"] td{padding:6px 4px;font-size:11px}
-[data-view="mobile"] thead th{padding:8px 4px;font-size:9.5px;letter-spacing:.4px}
+[data-view="mobile"] table{table-layout:fixed;width:100%}
+[data-view="mobile"] td{padding:6px 3px;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+[data-view="mobile"] thead th{padding:8px 3px;font-size:9.5px;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Mobile column sizing: rk | rd | Sector (flex) | 1D | RS */
+[data-view="mobile"] th:nth-child(1),[data-view="mobile"] td:nth-child(1){width:32px}
+[data-view="mobile"] th:nth-child(2),[data-view="mobile"] td:nth-child(2){width:46px}
+[data-view="mobile"] th:nth-child(3),[data-view="mobile"] td:nth-child(3){width:auto}
+[data-view="mobile"] th:nth-child(4),[data-view="mobile"] td:nth-child(4){width:50px}
+[data-view="mobile"] th:nth-child(5),[data-view="mobile"] td:nth-child(5){width:48px}
 [data-view="mobile"] .tk{font-size:11px}
 [data-view="mobile"] .tw{overflow-x:hidden}
-[data-view="mobile"] .hr td{padding:8px 10px 12px 10px;word-break:break-word;white-space:normal}
+[data-view="mobile"] .hr td{padding:8px 8px 10px 8px;word-break:break-word;white-space:normal}
 [data-view="mobile"] .hw{max-width:100%}
 [data-view="mobile"] .pnl{padding:8px 12px}
 [data-view="mobile"] .hdr-t{font-size:12px}
 [data-view="mobile"] body{max-width:100vw;overflow-x:hidden}
 html[data-view="mobile"]{overflow-x:hidden}
+/* Mobile chart grid: fit 2 charts per row on the expanded ETF dropdown */
+[data-view="mobile"] .tv-grid{grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+[data-view="mobile"] .tv-chart{height:180px}
+[data-view="mobile"] .tv-chart .tradingview-widget-container{height:180px!important}
+[data-view="mobile"] .tv-chart .tradingview-widget-container__widget{height:148px!important}
+[data-view="mobile"] .tv-label{font-size:10px;padding:5px 6px 2px;letter-spacing:.2px}
+[data-view="mobile"] .tv-desc{font-size:9.5px;padding:3px 6px 5px;line-height:1.35}
 </style>
 </head>
 <body>
@@ -546,7 +559,7 @@ function render(){
       const gs=hl.filter(h=>hg[h]==='g'),ss=hl.filter(h=>hg[h]==='s'),bs=hl.filter(h=>hg[h]==='b');
       let chartHtml='';
       const chartStocks=[...gs,...ss];
-      if(!isMobile&&chartStocks.length>0){chartHtml=`<div class="tv-grid">${chartStocks.map(tk=>{const isGold=gs.includes(tk);const sq=isGold?'<span style="color:#f59e0b;font-size:13px">🟨</span>':'<span style="color:#9ca3af;font-size:13px">⬜</span>';const nObj=NAMES[tk];const name=nObj?(typeof nObj==='string'?(' - '+esc(nObj)):nObj.n?(' - '+esc(nObj.n)):''):'';const desc=nObj&&typeof nObj==='object'&&nObj.d?esc(nObj.d):'';return `<div class="tv-chart-wrap"><div class="tv-label" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('show')">${sq}&nbsp;&nbsp;&nbsp;${esc(tk)}${name}</div><div class="tv-desc">${desc||'No description available.'}</div><div class="tv-chart" id="tvc-${esc(tk)}"></div></div>`;}).join('')}</div>`;}
+      if(chartStocks.length>0){chartHtml=`<div class="tv-grid">${chartStocks.map(tk=>{const isGold=gs.includes(tk);const sq=isGold?'<span style="color:#f59e0b;font-size:13px">🟨</span>':'<span style="color:#9ca3af;font-size:13px">⬜</span>';const nObj=NAMES[tk];const name=nObj?(typeof nObj==='string'?(' - '+esc(nObj)):nObj.n?(' - '+esc(nObj.n)):''):'';const desc=nObj&&typeof nObj==='object'&&nObj.d?esc(nObj.d):'';return `<div class="tv-chart-wrap"><div class="tv-label" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('show')">${sq}&nbsp;&nbsp;&nbsp;${esc(tk)}${name}</div><div class="tv-desc">${desc||'No description available.'}</div><div class="tv-chart" id="tvc-${esc(tk)}"></div></div>`;}).join('')}</div>`;}
       html+=`<tr><td colspan="${colSpan}" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}): <span class="pill pill-g" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(gs).replace(/"/g,'&quot;')})" title="Click to add gold stocks to clipboard">● Gold ${gs.length}</span> <span class="pill pill-s" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(ss).replace(/"/g,'&quot;')})" title="Click to add silver stocks to clipboard">● Silver ${ss.length}</span> <span class="pill pill-b" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(bs).replace(/"/g,'&quot;')})" title="Click to add bronze stocks to clipboard">● Bronze ${bs.length}</span></div><div class="hw">${hl.map(h=>`<span class="pill ${gc(h)}">${esc(h)}</span>`).join('')}</div>${chartHtml}</td></tr>`;
     }
   }
@@ -556,16 +569,18 @@ function render(){
     const etfMap={};DATA.e.forEach(e=>{etfMap[e.t]=e;});
     const vsKey=isWeekly?'w_vs':'vs';
     document.querySelectorAll('canvas[data-ticker]').forEach(c=>{const etf=etfMap[c.dataset.ticker];if(etf&&etf[vsKey])drawSparkline(c,etf[vsKey]);});
-    if(!isMobile)injectTVCharts();
+    injectTVCharts();
   });
 }
 
 function injectTVCharts(){
   const isDark=document.documentElement.getAttribute('data-theme')==='dark',theme=isDark?'dark':'light',bgColor=isDark?'#0F0F0F':'#FFFFFF',gridColor=isDark?'rgba(242, 242, 242, 0)':'rgba(0, 0, 0, 0)';
+  const mob=document.documentElement.getAttribute('data-view')==='mobile';
+  const wrapH=mob?180:300,widgetH=mob?148:268;
   document.querySelectorAll('.tv-chart').forEach(el=>{
     if(el.dataset.loaded)return;const tk=el.id.replace('tvc-','');if(!tk)return;el.dataset.loaded='1';
-    const wrapper=document.createElement('div');wrapper.className='tradingview-widget-container';wrapper.style.cssText='height:300px;width:100%';
-    const widgetDiv=document.createElement('div');widgetDiv.className='tradingview-widget-container__widget';widgetDiv.style.cssText='height:268px;width:100%';
+    const wrapper=document.createElement('div');wrapper.className='tradingview-widget-container';wrapper.style.cssText=`height:${wrapH}px;width:100%`;
+    const widgetDiv=document.createElement('div');widgetDiv.className='tradingview-widget-container__widget';widgetDiv.style.cssText=`height:${widgetH}px;width:100%`;
     wrapper.appendChild(widgetDiv);el.appendChild(wrapper);
     const script=document.createElement('script');script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';script.type='text/javascript';script.async=true;
     script.innerHTML=`{"allow_symbol_change":false,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":true,"hide_legend":true,"hide_volume":true,"hotlist":false,"interval":"D","locale":"en","save_image":false,"style":"1","symbol":"${tk}","theme":"${theme}","timezone":"Etc/UTC","backgroundColor":"${bgColor}","gridColor":"${gridColor}","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}`;
