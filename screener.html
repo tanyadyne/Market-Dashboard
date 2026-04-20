@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root,[data-theme="dark"]{--bg:#0a0a0a;--bg2:#111111;--bg3:#161616;--bg4:#1f1f1f;--t1:#e8e8e8;--t2:#888;--t3:#666;--t4:#444;--g:#22c55e;--g2:#16a34a;--r:#ef4444;--r2:#dc2626;--gbg:#0a2818;--rbg:#2a0a0a;--bdr:#1f1f1f;--bdr2:#141414;--card:#111111}
-[data-theme="light"]{--bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--bg4:#e2e8f0;--t1:#0f172a;--t2:#475569;--t3:#94a3b8;--t4:#cbd5e1;--g:#16a34a;--g2:#166534;--r:#dc2626;--r2:#991b1b;--gbg:#dcfce7;--rbg:#fee2e2;--bdr:#e2e8f0;--bdr2:#f1f5f9;--card:#ffffff}
+[data-theme="light"]{--bg:#f7f7f8;--bg2:#ffffff;--bg3:#f3f4f6;--bg4:#e5e7eb;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--t4:#9ca3af;--g:#15803d;--g2:#166534;--r:#b91c1c;--r2:#991b1b;--gbg:#dcfce7;--rbg:#fee2e2;--bdr:#e5e7eb;--bdr2:#eef0f3;--card:#ffffff}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-size:13px}
 /* Fixed header wrapper */
@@ -82,6 +82,7 @@ tr:hover{background:var(--bg3)}
 .search-input{width:100%;padding:10px 16px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:14px;font-family:inherit;margin-bottom:16px}
 .info-boxes{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .info-box{flex:1;min-width:140px;padding:12px 16px;border-radius:10px;border:1px solid var(--bdr);background:var(--bg2);text-align:center}
+[data-theme="light"] .info-box{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .info-box .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:4px}
 .info-box .val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .info-box .sub{font-size:10px;color:var(--t3);margin-top:2px}
@@ -94,6 +95,7 @@ tr:hover{background:var(--bg3)}
 /* Chart view grid */
 .chart-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}
 .chart-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+[data-theme="light"] .chart-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .chart-card-hdr{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr2)}
 .chart-card-tk{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.5px}
 .chart-card-rs{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
@@ -101,6 +103,7 @@ tr:hover{background:var(--bg3)}
 .chart-card-body{height:260px;width:100%}
 /* Profile box (chart LHS + company info RHS) */
 .profile-box{display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:20px}
+[data-theme="light"] .profile-box{box-shadow:0 1px 3px rgba(0,0,0,0.06)}
 .profile-chart{height:340px;min-height:340px}
 .profile-info{display:flex;flex-direction:column;gap:10px;overflow:hidden}
 .profile-tk{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;letter-spacing:.5px;line-height:1.1}
