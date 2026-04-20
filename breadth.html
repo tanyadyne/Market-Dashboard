@@ -23,47 +23,11 @@ body[data-theme="light"] .pill-toggle{background:#e0e0e0;border-color:#cbd5e1}
 body[data-theme="light"] .pill-toggle .knob{left:2px}
 .pill-toggle .knob::before{content:"🌙"}
 body[data-theme="light"] .pill-toggle .knob::before{content:"☀"}
-body[data-theme="light"] .ma-card,body[data-theme="light"] .chart-box,body[data-theme="light"] .sheet-box{background:#ffffff!important;border-color:#e5e7eb!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-body[data-theme="light"] .ma-top{border-bottom-color:#eef0f3!important}
-body[data-theme="light"] .ma-ticker{color:#111827!important}
-body[data-theme="light"] .ma-price{color:#6b7280!important}
-body[data-theme="light"] .ma-vdiv{background:#e5e7eb!important}
-body[data-theme="light"] .ma-label{color:#6b7280!important}
-body[data-theme="light"] .ma-sublabel{color:#9ca3af!important}
-body[data-theme="light"] .ma-dot.grey{background:#9ca3af!important}
-body[data-theme="light"] .chart-header{color:#4b5563!important}
-body[data-theme="light"] .chart-header span{color:#9ca3af!important}
-body[data-theme="light"] .regime-text.bull{color:#15803d!important}
-body[data-theme="light"] .regime-text.bear{color:#b91c1c!important}
+body[data-theme="light"] .chart-box,body[data-theme="light"] .sheet-box{background:#ffffff!important;border-color:#e5e7eb!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 
 .content{padding:20px;max-width:1400px;margin:0 auto}
 
 /* MA Status Cards */
-.ma-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
-.ma-card{background:#111111;border:1px solid #1f1f1f;border-radius:12px;padding:14px 0;display:flex;flex-direction:column}
-.ma-top{text-align:center;padding:0 16px 12px;border-bottom:1px solid #1f1f1f}
-.ma-ticker{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#e8e8e8;margin-bottom:2px}
-.ma-price{font-size:12px;color:#666;font-family:'JetBrains Mono',monospace}
-.ma-body{display:flex;align-items:center;padding:12px 16px;flex:1}
-.ma-sec{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ma-vdiv{width:1px;background:#1f1f1f;align-self:stretch}
-.ma-label{color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:9px;margin-bottom:6px}
-.ma-dots-col{display:flex;gap:8px}
-.ma-dot-group{display:flex;flex-direction:column;align-items:center;gap:3px}
-.ma-dot{width:13px;height:13px;border-radius:50%;display:block}
-.ma-dot.green{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.5)}
-.ma-dot.red{background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,0.5)}
-.ma-dot.grey{background:#444}
-.ma-sublabel{font-size:7px;color:#444;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
-.regime-text{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase}
-.regime-text.bull{color:#22c55e}
-.regime-text.bear{color:#ef4444}
-.regime-text.choppy{color:#fbbf24}
-.big-dot{width:26px;height:26px;border-radius:50%}
-.big-dot.green{background:#22c55e;box-shadow:0 0 12px rgba(34,197,94,0.6)}
-.big-dot.red{background:#ef4444;box-shadow:0 0 12px rgba(239,68,68,0.6)}
-.big-dot.yellow{background:#fbbf24;box-shadow:0 0 12px rgba(251,191,36,0.5)}
-
 .chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .chart-full{display:grid;grid-template-columns:1fr;gap:16px}
 .chart-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden}
@@ -103,7 +67,6 @@ body[data-theme="light"] .naaim-placeholder{color:#9ca3af!important}
 .chart-body-tall .tradingview-widget-container__widget{height:calc(100% - 32px)!important;width:100%!important}
 @media(max-width:768px){
   .chart-row{grid-template-columns:1fr}
-  .ma-row{grid-template-columns:1fr}
   .bottom-row{grid-template-columns:1fr}
   .chart-body{height:300px}
   .chart-body-tall{height:340px}
@@ -136,11 +99,6 @@ function toggleTheme(){
 (function(){try{const t=localStorage.getItem('dashboardTheme')||'dark';setTheme(t);}catch(e){}})();
 </script>
 <div class="content">
-  <div class="ma-row" id="maCards">
-    <div class="ma-card"><div class="ma-top"><div class="ma-ticker">SPY</div><div class="ma-price">Loading...</div></div></div>
-    <div class="ma-card"><div class="ma-top"><div class="ma-ticker">QQQ</div><div class="ma-price">Loading...</div></div></div>
-    <div class="ma-card"><div class="ma-top"><div class="ma-ticker">IWM</div><div class="ma-price">Loading...</div></div></div>
-  </div>
   <div class="chart-row">
     <div class="chart-box">
       <div class="chart-header">Stocks above 5 SMA<span>Overbought: 90 · Oversold: 10</span></div>
@@ -175,62 +133,6 @@ function toggleTheme(){
   </div>
 </div>
 <script>
-// ─── MA Status Cards ──────────────────────────────────────
-function dot(val){
-  if(val===true) return '<span class="ma-dot green"></span>';
-  if(val===false) return '<span class="ma-dot red"></span>';
-  return '<span class="ma-dot grey"></span>';
-}
-
-function dotGroup(val, label){
-  return `<div class="ma-dot-group">${dot(val)}<span class="ma-sublabel">${label}</span></div>`;
-}
-
-function renderMACards(breadth){
-  const order=['SPY','QQQ','IWM'];
-  const container=document.getElementById('maCards');
-
-  container.innerHTML=order.map(tk=>{
-    const d=breadth[tk];
-    if(!d) return `<div class="ma-card"><div class="ma-top"><div class="ma-ticker">${tk}</div><div class="ma-price">No data</div></div></div>`;
-    const pos=d.pos||[null,null,null];
-    const slope=d.slope||[null,null,null];
-    const regime=d.regime||'Choppy';
-    const regimeClass=regime==='Bullish'?'bull':regime==='Bearish'?'bear':'choppy';
-    const bigDotClass=regime==='Bullish'?'green':regime==='Bearish'?'red':'yellow';
-    return `<div class="ma-card">
-      <div class="ma-top">
-        <div class="ma-ticker">${tk}</div>
-        <div class="ma-price">$${d.price}</div>
-      </div>
-      <div class="ma-body">
-        <div class="ma-sec">
-          <div class="ma-label">Price</div>
-          <div class="ma-dots-col">${dotGroup(pos[0],'9')}${dotGroup(pos[1],'21')}${dotGroup(pos[2],'50')}</div>
-          <div style="height:8px"></div>
-          <div class="ma-label">Slope</div>
-          <div class="ma-dots-col">${dotGroup(slope[0],'9')}${dotGroup(slope[1],'21')}${dotGroup(slope[2],'50')}</div>
-        </div>
-        <div class="ma-vdiv"></div>
-        <div class="ma-sec">
-          <div class="regime-text ${regimeClass}">${regime.toUpperCase()}</div>
-        </div>
-        <div class="ma-vdiv"></div>
-        <div class="ma-sec">
-          <div class="big-dot ${bigDotClass}"></div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-fetch('data.json?_='+Date.now())
-  .then(r=>r.json())
-  .then(data=>{
-    if(data.breadth) renderMACards(data.breadth);
-  })
-  .catch(()=>{});
-
 // ─── Chart Injection ──────────────────────────────────────
 function injectChart(containerId, symbol, interval){
   const el=document.getElementById(containerId);
