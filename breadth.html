@@ -73,6 +73,30 @@ body[data-theme="light"] .regime-text.bear{color:#b91c1c!important}
 .chart-body-tall{height:420px;position:relative}
 .sheet-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden;margin-top:16px}
 .sheet-embed{width:100%;height:600px;border:none;background:#fff;border-radius:0 0 10px 10px}
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.bottom-row .sheet-box{margin-top:0}
+.naaim-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.naaim-summary{display:flex;gap:20px;padding:10px 16px 12px;border-bottom:1px solid #1f1f1f}
+.naaim-stat{display:flex;flex-direction:column;gap:2px}
+.naaim-stat-label{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace}
+.naaim-stat-val{font-size:20px;font-weight:700;color:#e8e8e8;font-family:'JetBrains Mono',monospace}
+.naaim-table-wrap{overflow:auto;max-height:530px}
+.naaim-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px}
+.naaim-table th{position:sticky;top:0;background:#1a1a1a;color:#888;font-size:9px;text-transform:uppercase;letter-spacing:.8px;padding:8px 6px;text-align:right;font-weight:600;border-bottom:1px solid #2a2a2a;white-space:nowrap}
+.naaim-table th:first-child{text-align:left}
+.naaim-table td{padding:7px 6px;border-bottom:1px solid #1a1a1a;text-align:right;color:#d0d0d0}
+.naaim-table td:first-child{text-align:left;color:#888;font-size:10px}
+.naaim-table tbody tr:hover{background:#141414}
+.naaim-placeholder{padding:40px 20px;text-align:center;color:#666;font-size:12px}
+body[data-theme="light"] .sheet-box,body[data-theme="light"] .naaim-box{background:#ffffff!important;border-color:#e5e7eb!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+body[data-theme="light"] .naaim-summary{border-bottom-color:#eef0f3!important}
+body[data-theme="light"] .naaim-stat-label{color:#6b7280!important}
+body[data-theme="light"] .naaim-stat-val{color:#111827!important}
+body[data-theme="light"] .naaim-table th{background:#f3f4f6!important;color:#4b5563!important;border-bottom-color:#e5e7eb!important}
+body[data-theme="light"] .naaim-table td{color:#111827!important;border-bottom-color:#eef0f3!important}
+body[data-theme="light"] .naaim-table td:first-child{color:#6b7280!important}
+body[data-theme="light"] .naaim-table tbody tr:hover{background:#f9fafb!important}
+body[data-theme="light"] .naaim-placeholder{color:#9ca3af!important}
 .chart-body .tradingview-widget-container,
 .chart-body-tall .tradingview-widget-container{height:100%!important;width:100%!important}
 .chart-body .tradingview-widget-container__widget,
@@ -80,6 +104,7 @@ body[data-theme="light"] .regime-text.bear{color:#b91c1c!important}
 @media(max-width:768px){
   .chart-row{grid-template-columns:1fr}
   .ma-row{grid-template-columns:1fr}
+  .bottom-row{grid-template-columns:1fr}
   .chart-body{height:300px}
   .chart-body-tall{height:340px}
   .content{padding:12px}
@@ -105,6 +130,8 @@ function setTheme(theme){
 function toggleTheme(){
   const current=document.body.getAttribute('data-theme')||'dark';
   setTheme(current==='dark'?'light':'dark');
+  // Re-inject charts so the TradingView widgets pick up the new theme
+  if(typeof injectAllCharts==='function')injectAllCharts();
 }
 (function(){try{const t=localStorage.getItem('dashboardTheme')||'dark';setTheme(t);}catch(e){}})();
 </script>
@@ -130,9 +157,21 @@ function toggleTheme(){
       <div class="chart-body-tall" id="chart-mmth"></div>
     </div>
   </div>
-  <div class="sheet-box">
-    <div class="chart-header">Stockbee Market Monitor</div>
-    <iframe class="sheet-embed" src="https://docs.google.com/spreadsheet/pub?key=0Am_cU8NLIU20dEhiQnVHN3Nnc3B1S3J6eGhKZFo0N3c&output=html&widget=true" frameborder="0" scrolling="yes"></iframe>
+  <div class="bottom-row">
+    <div class="sheet-box">
+      <div class="chart-header">Stockbee Market Monitor</div>
+      <iframe class="sheet-embed" src="https://docs.google.com/spreadsheet/pub?key=0Am_cU8NLIU20dEhiQnVHN3Nnc3B1S3J6eGhKZFo0N3c&output=html&widget=true" frameborder="0" scrolling="yes"></iframe>
+    </div>
+    <div class="naaim-box">
+      <div class="chart-header">NAAIM Exposure Index<span id="naaim-updated"></span></div>
+      <div class="naaim-summary" id="naaim-summary" style="display:none">
+        <div class="naaim-stat"><div class="naaim-stat-label">Latest</div><div class="naaim-stat-val" id="naaim-latest">—</div></div>
+        <div class="naaim-stat"><div class="naaim-stat-label">Q1 Average</div><div class="naaim-stat-val" id="naaim-q1avg">—</div></div>
+      </div>
+      <div class="naaim-table-wrap">
+        <div id="naaim-content" class="naaim-placeholder">Loading NAAIM data...</div>
+      </div>
+    </div>
   </div>
 </div>
 <script>
@@ -195,6 +234,12 @@ fetch('data.json?_='+Date.now())
 // ─── Chart Injection ──────────────────────────────────────
 function injectChart(containerId, symbol, interval){
   const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML='';
+  const isDark=(document.body.getAttribute('data-theme')||'dark')==='dark';
+  const theme=isDark?'dark':'light';
+  const bgColor=isDark?'#111111':'#ffffff';
+  const gridColor=isDark?'rgba(242, 242, 242, 0.06)':'rgba(0, 0, 0, 0.06)';
   const wrapper=document.createElement('div');
   wrapper.className='tradingview-widget-container';
   wrapper.style.cssText='height:100%;width:100%';
@@ -222,10 +267,10 @@ function injectChart(containerId, symbol, interval){
           "save_image": false,
           "style": "1",
           "symbol": "${symbol}",
-          "theme": "dark",
+          "theme": "${theme}",
           "timezone": "Etc/UTC",
-          "backgroundColor": "#111111",
-          "gridColor": "rgba(242, 242, 242, 0.06)",
+          "backgroundColor": "${bgColor}",
+          "gridColor": "${gridColor}",
           "watchlist": [],
           "withdateranges": false,
           "compareSymbols": [],
@@ -235,9 +280,58 @@ function injectChart(containerId, symbol, interval){
   wrapper.appendChild(script);
 }
 
-injectChart('chart-s5fd','S5FD','W');
-injectChart('chart-mmfi','MMFI','W');
-injectChart('chart-mmth','MMTH','M');
+function injectAllCharts(){
+  injectChart('chart-s5fd','S5FD','W');
+  injectChart('chart-mmfi','MMFI','W');
+  injectChart('chart-mmth','MMTH','M');
+}
+
+injectAllCharts();
+
+// ─── NAAIM Exposure Index ─────────────────────────────────
+function fmtNum(n,d=2){
+  if(n==null||isNaN(n))return'—';
+  return Number(n).toFixed(d);
+}
+function loadNaaim(){
+  fetch('naaim.json?_='+Date.now())
+    .then(r=>r.ok?r.json():Promise.reject())
+    .then(data=>{
+      const rows=data.rows||[];
+      if(!rows.length){document.getElementById('naaim-content').textContent='No NAAIM data available';return;}
+      // Summary
+      document.getElementById('naaim-summary').style.display='flex';
+      document.getElementById('naaim-latest').textContent=fmtNum(data.latest);
+      document.getElementById('naaim-q1avg').textContent=fmtNum(data.q1_avg);
+      // Updated label
+      if(data.updated){
+        const d=new Date(data.updated);
+        document.getElementById('naaim-updated').textContent=`Updated ${d.toLocaleDateString('en-GB')}`;
+      }
+      // Build table
+      let html='<table class="naaim-table"><thead><tr>'+
+        '<th>Date</th><th>Mean</th><th>Bear</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Bull</th><th>Dev</th>'+
+        '</tr></thead><tbody>';
+      for(const r of rows){
+        html+=`<tr>
+          <td>${r.date||'—'}</td>
+          <td>${fmtNum(r.mean)}</td>
+          <td>${fmtNum(r.bearish,0)}</td>
+          <td>${fmtNum(r.q1)}</td>
+          <td>${fmtNum(r.q2)}</td>
+          <td>${fmtNum(r.q3)}</td>
+          <td>${fmtNum(r.bullish,0)}</td>
+          <td>${fmtNum(r.deviation)}</td>
+        </tr>`;
+      }
+      html+='</tbody></table>';
+      document.getElementById('naaim-content').outerHTML=html;
+    })
+    .catch(()=>{
+      document.getElementById('naaim-content').innerHTML='<div style="padding:20px;text-align:center;font-size:11px">NAAIM data not yet available.<br>Run the "Update NAAIM Exposure Index" workflow.</div>';
+    });
+}
+loadNaaim();
 </script>
 </body>
 </html>
