@@ -384,6 +384,7 @@ def build_universe():
 
 # Niche themes Yahoo Finance can't properly classify — these baskets take priority over Yahoo industry
 PROTECTED_BASKETS = {
+    "Magnificent Seven",
     "Crypto Miners / Data Centers",
     "AI & Power Infra",
     "Agentic AI",
