@@ -37,6 +37,10 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .toggle .slider:before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:var(--t1);border-radius:50%;transition:.2s}
 .toggle input:checked+.slider{background:#3b82f6}
 .toggle input:checked+.slider:before{transform:translateX(16px)}
+.seg-toggle{display:inline-flex;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;background:var(--bg2)}
+.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s}
+.seg-toggle button.on{background:var(--bg4);color:var(--t1)}
+.seg-toggle button:hover:not(.on){color:var(--t1)}
 .spy{padding:8px 20px;background:var(--bg2);border-bottom:1px solid var(--bdr);display:flex;gap:20px;font-size:11px;color:var(--t4);align-items:center;flex-wrap:wrap}
 .spy b{color:var(--t3);font-weight:700}
 .pnl{padding:10px 20px;border-bottom:1px solid var(--bdr2);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
@@ -172,10 +176,9 @@ html[data-view="mobile"]{overflow-x:hidden}
     <button class="btn btn-t" id="bClip" onclick="toggleClipboard()" title="Clipboard">📋 Clipboard <span id="clipCount"></span></button>
     <button class="btn btn-refresh" id="bRefresh" onclick="triggerRefresh()" title="Trigger data refresh">⟳ Refresh</button>
     <div class="pill-toggle" id="bTheme" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
-    <div class="toggle-wrap">
-      <span>Desktop</span>
-      <label class="toggle"><input type="checkbox" id="viewToggle" onchange="toggleView()"><span class="slider"></span></label>
-      <span>Mobile</span>
+    <div class="seg-toggle">
+      <button id="btnDesktop" class="on" onclick="setView(false)">Desktop</button>
+      <button id="btnMobile" onclick="setView(true)">Mobile</button>
     </div>
     <input class="srch" id="si" placeholder="Search ticker, name, holding..." oninput="render()">
   </div>
@@ -275,8 +278,10 @@ function dataKey(key){
 let colVisible={};
 ALL_COLUMNS.forEach(c=>{colVisible[c.key]=true;});
 
-function toggleView(){
-  isMobile=document.getElementById('viewToggle').checked;
+function setView(mobile){
+  isMobile=mobile;
+  document.getElementById('btnDesktop').classList.toggle('on',!mobile);
+  document.getElementById('btnMobile').classList.toggle('on',mobile);
   document.documentElement.setAttribute('data-view',isMobile?'mobile':'desktop');
   if(isMobile){ALL_COLUMNS.forEach(c=>{colVisible[c.key]=c.mob;});}
   else{ALL_COLUMNS.forEach(c=>{colVisible[c.key]=true;});}
