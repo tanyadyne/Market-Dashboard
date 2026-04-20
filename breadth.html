@@ -9,12 +9,12 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a0a;color:#e8e8e8;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
-body[data-theme="light"]{background:#f8fafc;color:#0f172a}
+body[data-theme="light"]{background:#f7f7f8;color:#111827}
 .top-fixed{position:sticky;top:0;z-index:50;background:inherit}
 .hdr{padding:18px 20px 14px;border-bottom:1px solid #141414;display:flex;align-items:center;gap:10px;background:inherit}
-body[data-theme="light"] .hdr{border-bottom-color:#e2e8f0}
+body[data-theme="light"] .hdr{border-bottom-color:#e5e7eb}
 .btn-back{padding:4px 10px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #1f1f1f;background:#111111;color:#888;text-decoration:none;transition:.15s;font-family:inherit}
-body[data-theme="light"] .btn-back{background:#fff;border-color:#e2e8f0;color:#475569}
+body[data-theme="light"] .btn-back{background:#fff;border-color:#e5e7eb;color:#4b5563}
 .btn-back:hover{background:#1f1f1f;color:#e8e8e8}
 .hdr-t{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;flex:1}
 .pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid #1f1f1f;cursor:pointer;background:#000;transition:background .25s ease;flex-shrink:0}
@@ -23,6 +23,19 @@ body[data-theme="light"] .pill-toggle{background:#e0e0e0;border-color:#cbd5e1}
 body[data-theme="light"] .pill-toggle .knob{left:2px}
 .pill-toggle .knob::before{content:"🌙"}
 body[data-theme="light"] .pill-toggle .knob::before{content:"☀"}
+body[data-theme="light"] .ma-card,body[data-theme="light"] .chart-box,body[data-theme="light"] .sheet-box{background:#ffffff!important;border-color:#e5e7eb!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+body[data-theme="light"] .ma-top{border-bottom-color:#eef0f3!important}
+body[data-theme="light"] .ma-ticker{color:#111827!important}
+body[data-theme="light"] .ma-price{color:#6b7280!important}
+body[data-theme="light"] .ma-vdiv{background:#e5e7eb!important}
+body[data-theme="light"] .ma-label{color:#6b7280!important}
+body[data-theme="light"] .ma-sublabel{color:#9ca3af!important}
+body[data-theme="light"] .ma-dot.grey{background:#9ca3af!important}
+body[data-theme="light"] .chart-header{color:#4b5563!important}
+body[data-theme="light"] .chart-header span{color:#9ca3af!important}
+body[data-theme="light"] .regime-text.bull{color:#15803d!important}
+body[data-theme="light"] .regime-text.bear{color:#b91c1c!important}
+
 .content{padding:20px;max-width:1400px;margin:0 auto}
 
 /* MA Status Cards */
