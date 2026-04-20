@@ -37,7 +37,7 @@ MAX_HISTORY_DAYS = 30
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
     "ACN","AEHR","ALAB","APO","ARES","ARM","AXTI","BIRD","BP","BRK-B","CAR",
-    "GOOG","LNG","NOK","NVO","OWL","RDDT","SMCI","SNAP","SNDK","STX","WDC",
+    "GOOG","LNG","NOK","NVO","OWL","RDDT","RIG","SMCI","SNAP","SNDK","STX","WDC",
 ]
 
 # Yahoo Finance industry → our theme name mapping
@@ -115,8 +115,8 @@ INDUSTRY_TO_THEME = {
     "Travel Services": "Airlines & Travel",
     "Leisure": "Leisure & Ent",
     "Recreational Vehicles": "Consumer Discretionary",
-    "Auto Manufacturers": "EV & Mobility",
-    "Auto Parts": "EV & Mobility",
+    "Auto Manufacturers": "Consumer Discretionary",
+    "Auto Parts": "Consumer Discretionary",
     "Auto & Truck Dealerships": "Consumer Discretionary",
     # Food/Beverage
     "Beverages—Brewers": "Food & Beverage",
@@ -370,6 +370,15 @@ def build_universe():
             added += 1
     print(f"  Added {added} new tickers from Russell 3000 (total universe before mcap filter: {len(stocks)})")
 
+    # Diagnostic: check if specific tickers are present in the starting universe
+    DEBUG_TICKERS_UNIV = {"RIG"}
+    for tk in DEBUG_TICKERS_UNIV:
+        if tk in stocks:
+            etfs_for_tk = stock_to_etfs.get(tk, [])
+            print(f"  [DEBUG] {tk}: in starting universe (ETF baskets: {[n for n,_ in etfs_for_tk] or 'Russell3000/CSV only'})")
+        else:
+            print(f"  [DEBUG] {tk}: NOT in starting universe — will never appear in rankings")
+
     return sorted(stocks), stock_to_etfs
 
 
@@ -398,7 +407,6 @@ PROTECTED_BASKETS = {
     "Clean Energy",
     "Solar Energy",
     "Uranium / Nuclear",
-    "EV & Mobility",
     "Fintech Innovation",
     "Digital Payments",
     "Esports & Gaming",
@@ -1150,12 +1158,18 @@ def main():
     # Narrows universe before expensive mcap/industry lookups.
     MIN_DOLLAR_VOL = 70_000_000
     print(f"\nPre-filtering by liquidity (price × avg_vol_10d >= ${MIN_DOLLAR_VOL/1e6:.0f}M)...")
+
+    # Tickers to log verbosely through each filter (for debugging why a stock is missing)
+    DEBUG_TICKERS = {"RIG"}
+
     liquid_tickers = []
     excluded = {"no_data": 0, "stale": 0, "flat": 0, "illiquid": 0}
     for tk in all_tickers:
         df = get_df(tk)
         if df is None or len(df) < 10:
             excluded["no_data"] += 1
+            if tk in DEBUG_TICKERS:
+                print(f"  [DEBUG] {tk}: EXCLUDED — no_data (df={'None' if df is None else f'{len(df)} bars'})")
             continue
         # Stale data (likely delisted)
         try:
@@ -1163,6 +1177,8 @@ def main():
             last_date = last_bar.date() if hasattr(last_bar, "date") else date.fromisoformat(str(last_bar)[:10])
             if (date.today() - last_date).days > 7:
                 excluded["stale"] += 1
+                if tk in DEBUG_TICKERS:
+                    print(f"  [DEBUG] {tk}: EXCLUDED — stale (last bar {last_date}, {(date.today()-last_date).days} days ago)")
                 continue
         except Exception:
             pass
@@ -1188,14 +1204,21 @@ def main():
                 # have 10-day ranges of 3-5% and return std of 0.7-1.2%.
                 if price_range_pct < 0.02 and return_std < 0.005:
                     excluded["flat"] += 1
+                    if tk in DEBUG_TICKERS:
+                        print(f"  [DEBUG] {tk}: EXCLUDED — acquisition-limbo (10d range {price_range_pct*100:.2f}%, std {return_std*100:.2f}%)")
                     continue
         # Dollar volume check (price × avg_vol_10d)
         last_price = float(c[-1])
         avg_vol_10d = float(np.mean(v[-10:]))
-        if last_price * avg_vol_10d < MIN_DOLLAR_VOL:
+        dollar_vol = last_price * avg_vol_10d
+        if dollar_vol < MIN_DOLLAR_VOL:
             excluded["illiquid"] += 1
+            if tk in DEBUG_TICKERS:
+                print(f"  [DEBUG] {tk}: EXCLUDED — illiquid (price ${last_price:.2f} × avg_vol_10d {avg_vol_10d/1e6:.2f}M = ${dollar_vol/1e6:.1f}M < ${MIN_DOLLAR_VOL/1e6:.0f}M)")
             continue
         liquid_tickers.append(tk)
+        if tk in DEBUG_TICKERS:
+            print(f"  [DEBUG] {tk}: PASSED pre-filter (price ${last_price:.2f}, dollar_vol ${dollar_vol/1e6:.1f}M)")
     print(f"  Pre-filter: {len(all_tickers)} → {len(liquid_tickers)} (excluded: {excluded['no_data']} no data, {excluded['stale']} delisted, {excluded['flat']} acquisition-limbo, {excluded['illiquid']} illiquid)")
 
     # ─── Market cap + industry lookup (ONLY on liquid survivors) ──
@@ -1351,9 +1374,18 @@ def main():
             print(f"  Cache fully refreshed ({len(mcap_cache)} entries, version {CACHE_VERSION})")
 
     # Final filter: market cap >= $2B (unknowns excluded)
+    all_tickers_before_mcap = list(liquid_tickers)
     all_tickers = [t for t in liquid_tickers if mcap_cache.get(t, 0) >= MIN_MCAP]
     removed = len(liquid_tickers) - len(all_tickers)
     print(f"  Market cap filter: {removed} removed (< ${MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
+    # Diagnostic: log DEBUG_TICKERS that got filtered here
+    for tk in DEBUG_TICKERS:
+        if tk in all_tickers_before_mcap and tk not in all_tickers:
+            cached_mc = mcap_cache.get(tk, 0)
+            print(f"  [DEBUG] {tk}: EXCLUDED by market cap filter (mc=${cached_mc/1e9:.2f}B, need >= ${MIN_MCAP/1e9:.0f}B)")
+        elif tk in all_tickers:
+            cached_mc = mcap_cache.get(tk, 0)
+            print(f"  [DEBUG] {tk}: PASSED market cap filter (mc=${cached_mc/1e9:.2f}B)")
 
     # ─── Resolve themes: two fields per stock ──────────────────
     # th  = display label (Yahoo industry verbatim, shown in frontend column)
@@ -1398,6 +1430,22 @@ def main():
     ]
     pharma_removed = before - len(all_tickers)
     print(f"  Pharma/Biotech filter: {pharma_removed} removed (< ${PHARMA_BIOTECH_MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
+    # Diagnostic for DEBUG_TICKERS
+    for tk in DEBUG_TICKERS:
+        if tk in all_tickers:
+            mc = mcap_cache.get(tk, 0)
+            theme = theme_map.get(tk, "?")
+            industry = industry_label.get(tk, "?")
+            print(f"  [DEBUG] {tk}: IN FINAL UNIVERSE (mc=${mc/1e9:.2f}B, theme='{theme}', industry='{industry}')")
+        else:
+            # Check if it ever made it this far
+            if tk not in all_tickers_before_mcap:
+                pass  # already logged as excluded earlier
+            else:
+                mc = mcap_cache.get(tk, 0)
+                theme = theme_map.get(tk, "?")
+                if theme in PHARMA_BIOTECH_THEMES and mc < PHARMA_BIOTECH_MIN_MCAP:
+                    print(f"  [DEBUG] {tk}: EXCLUDED by pharma filter (mc=${mc/1e9:.2f}B, theme='{theme}')")
 
     # ─── SPY baselines ────────────────────────────────────────
     spy_closes = spy_df["Close"].values
