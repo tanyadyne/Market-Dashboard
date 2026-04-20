@@ -17,10 +17,9 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background .2s,color .2s}
 
-.header{padding:48px 24px 16px;text-align:center;position:relative;width:100%;max-width:520px}
+.header{padding:48px 24px 16px;text-align:center;width:100%;max-width:520px}
 .header h1{font-size:28px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t1)}
-.header p{font-size:13px;color:var(--t3);margin-top:8px;letter-spacing:.5px}
-.theme-toggle-wrap{position:absolute;top:20px;right:24px}
+.theme-toggle-wrap{display:flex;justify-content:flex-end;width:100%;max-width:520px;padding:20px 24px 0}
 .pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#000;transition:background .25s ease}
 [data-theme="light"] .pill-toggle{background:#e0e0e0}
 .pill-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.3);left:32px}
@@ -54,10 +53,11 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 </head>
 <body>
 
+<div class="theme-toggle-wrap">
+  <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
+</div>
+
 <div class="header">
-  <div class="theme-toggle-wrap">
-    <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
-  </div>
   <h1>Market Dashboard</h1>
 </div>
 
@@ -75,7 +75,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
     <div class="card-icon">🌡️</div>
     <div class="card-body">
       <div class="card-title">Market Health</div>
-      <div class="card-desc">Monitor breadth indicators, momentum and market structure</div>
+      <div class="card-desc">Monitor breadth indicators, market structure, and NAAIM exposure</div>
     </div>
     <span class="card-arrow">→</span>
   </a>
