@@ -762,6 +762,26 @@ def compute_setup_adjustment(c, h, l, n):
     return round(adj, 2), flags
 
 
+def close_on_or_before(df_index, closes, target_date):
+    """Find the close of the most recent trading day at or before target_date.
+    Returns the close value (float) or None. Used for calendar-based 1W/1M lookups
+    (matching MarketWatch / Yahoo / TradingView conventions).
+    """
+    for i in range(len(df_index) - 1, -1, -1):
+        ts = df_index[i]
+        d = ts.date() if hasattr(ts, 'date') else None
+        if d is None:
+            continue
+        if d <= target_date:
+            v = closes[i]
+            if v is not None:
+                try:
+                    return float(v)
+                except Exception:
+                    return None
+    return None
+
+
 def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map):
     """Process daily metrics for one stock. Returns dict or None.
     Liquidity/delisted/flat-price filters are applied upstream in main().
@@ -776,8 +796,31 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
 
     price = float(c[-1])
     change = (c[-1] / c[-2] - 1) * 100 if n >= 2 else 0
-    c5 = (c[-1] / c[-6] - 1) * 100 if n >= 6 else None
-    c20 = (c[-1] / c[-21] - 1) * 100 if n >= 21 else None
+
+    # ─── 1W / 1M via CALENDAR-date lookback ─────────────────────────
+    # MarketWatch / Yahoo / TradingView use "close closest to N calendar days ago" — not
+    # "N trading days back from latest bar". Reference date is the next business day after
+    # the last completed session (so the week-ago date advances automatically when a new
+    # session closes). This is what users see on financial platforms.
+    try:
+        _last_ts = df.index[-1]
+        _last_date = _last_ts.date() if hasattr(_last_ts, 'date') else None
+    except Exception:
+        _last_date = None
+    if _last_date is not None:
+        try:
+            import pandas as _pd
+            _today_ref = (_last_ts + _pd.offsets.BDay(1)).date()
+        except Exception:
+            _today_ref = _last_date + timedelta(days=1)
+    else:
+        _today_ref = date.today()
+    _w_target = _today_ref - timedelta(days=7)
+    _m_target = _today_ref - timedelta(days=30)
+    w_base = close_on_or_before(df.index, c, _w_target)
+    m_base = close_on_or_before(df.index, c, _m_target)
+    c5  = ((c[-1] / w_base) - 1) * 100 if (w_base and w_base > 0) else None
+    c20 = ((c[-1] / m_base) - 1) * 100 if (m_base and m_base > 0) else None
 
     # YTD: find the last bar of the previous year (= first bar of current year - 1)
     current_year = date.today().year
@@ -798,23 +841,6 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     except Exception:
         ytd = None
         ytd_base = None
-
-    # ─── Intraday overlay baseline selection ───────────────────────
-    # During the overlay, `live` is substituted as "today's price". We want the 5/20-trading-day
-    # baselines to span the conventional distance from TODAY, not from c[-1].
-    #   • If c[-1] is today's (possibly partial) bar: overlay replaces c[-1] → 5d back = c[-6]
-    #   • If c[-1] is yesterday (df not yet updated): overlay adds today via live → 5d back = c[-5]
-    try:
-        from datetime import timezone as _tz
-        _now_utc = datetime.now(_tz.utc)
-        _today_et = (_now_utc - timedelta(hours=4)).date()  # EDT approx; workflow gates on ET anyway
-        _last_ts = df.index[-1]
-        _last_date = _last_ts.date() if hasattr(_last_ts, 'date') else None
-        _c1_is_today = (_last_date == _today_et)
-    except Exception:
-        _c1_is_today = True  # default to "EOD semantics" on error
-    _b5_off  = 6  if _c1_is_today else 5
-    _b20_off = 21 if _c1_is_today else 20
 
     # ATR Ext = gainPct / atrPct (matches Pine Script exactly)
     # gainPct = (price - sma50) / sma50 * 100
@@ -864,8 +890,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "sa": _sa, "sf": _sf, "tz": "neutral",
                 # Internal baselines for intraday overlay (stripped before output)
                 "_pc": float(c[-2]) if n >= 2 else None,
-                "_5b": float(c[-_b5_off]) if n >= _b5_off else None,
-                "_20b": float(c[-_b20_off]) if n >= _b20_off else None,
+                "_5b": w_base,
+                "_20b": m_base,
                 "_yb": ytd_base}
 
     # Handle IPOs with <252 bars: use actual bar count (mirrors Pine's "n63/n126/n189/n252" logic)
@@ -965,8 +991,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "sa": setup_adj, "sf": setup_flags, "tz": trend_zone,
         # Internal baselines for intraday overlay (stripped before output)
         "_pc": float(c[-2]) if n >= 2 else None,
-        "_5b": float(c[-_b5_off]) if n >= _b5_off else None,
-        "_20b": float(c[-_b20_off]) if n >= _b20_off else None,
+        "_5b": w_base,
+        "_20b": m_base,
         "_yb": ytd_base,
     }
 
