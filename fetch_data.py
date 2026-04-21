@@ -509,7 +509,11 @@ def main():
         start=start.strftime("%Y-%m-%d"),
         end=end.strftime("%Y-%m-%d"),
         group_by="ticker",
-        auto_adjust=True,
+        # auto_adjust=False so historical closes are UNADJUSTED (raw). This matches
+        # Yahoo Finance's quote-page % changes (1D/1W/1M/YTD) exactly. With auto_adjust=True
+        # yfinance silently lowers historical closes by any subsequent dividends, inflating
+        # the computed YTD relative to Yahoo's displayed YTD.
+        auto_adjust=False,
         threads=False,
         session=_session,
     )
@@ -526,7 +530,7 @@ def main():
         end=end.strftime("%Y-%m-%d"),
         interval="1wk",
         group_by="ticker",
-        auto_adjust=True,
+        auto_adjust=False,
         threads=False,
         session=_session,
     )
