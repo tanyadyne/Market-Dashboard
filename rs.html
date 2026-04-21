@@ -534,16 +534,16 @@ function render(){
   const mxRV=Math.max(...DATA.e.map(e=>e[rvKey]||0)),mxAM=Math.max(...DATA.e.map(e=>e[amKey]||0));
   const sparkW=isMobile?120:250;
   let html='';
-  let rank=0;
   for(const e of items){
-    rank++;
+    // Use the original rank stored on the ETF object (preserved across filters/searches)
+    const origRank=isWeekly?(e.w_rk||'—'):(e.rk||'—');
     const exp=expandedTicker===e.t;
     const rf=e[rfKey]||0, ra=e[raKey]||0;
     const rv=e[rvKey], am=e[amKey], rs=e[rsKey], vs=e[vsKey];
     const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
     const amP=am!=null?Math.min(am/mxAM*100,100):0;
     const cellMap={
-      rk:`<td class="rk">${rank}</td>`,
+      rk:`<td class="rk">${origRank}</td>`,
       rd:rankDelta(e.t),
       t:`<td class="tk">${esc(e.t)}</td>`,
       n:`<td class="sc2">${esc(e.n)}</td>`,
