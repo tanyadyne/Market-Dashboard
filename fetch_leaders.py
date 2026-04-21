@@ -799,6 +799,23 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         ytd = None
         ytd_base = None
 
+    # ─── Intraday overlay baseline selection ───────────────────────
+    # During the overlay, `live` is substituted as "today's price". We want the 5/20-trading-day
+    # baselines to span the conventional distance from TODAY, not from c[-1].
+    #   • If c[-1] is today's (possibly partial) bar: overlay replaces c[-1] → 5d back = c[-6]
+    #   • If c[-1] is yesterday (df not yet updated): overlay adds today via live → 5d back = c[-5]
+    try:
+        from datetime import timezone as _tz
+        _now_utc = datetime.now(_tz.utc)
+        _today_et = (_now_utc - timedelta(hours=4)).date()  # EDT approx; workflow gates on ET anyway
+        _last_ts = df.index[-1]
+        _last_date = _last_ts.date() if hasattr(_last_ts, 'date') else None
+        _c1_is_today = (_last_date == _today_et)
+    except Exception:
+        _c1_is_today = True  # default to "EOD semantics" on error
+    _b5_off  = 6  if _c1_is_today else 5
+    _b20_off = 21 if _c1_is_today else 20
+
     # ATR Ext = gainPct / atrPct (matches Pine Script exactly)
     # gainPct = (price - sma50) / sma50 * 100
     # atrPct  = atr / price * 100
@@ -847,8 +864,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "sa": _sa, "sf": _sf, "tz": "neutral",
                 # Internal baselines for intraday overlay (stripped before output)
                 "_pc": float(c[-2]) if n >= 2 else None,
-                "_5b": float(c[-6]) if n >= 6 else None,
-                "_20b": float(c[-21]) if n >= 21 else None,
+                "_5b": float(c[-_b5_off]) if n >= _b5_off else None,
+                "_20b": float(c[-_b20_off]) if n >= _b20_off else None,
                 "_yb": ytd_base}
 
     # Handle IPOs with <252 bars: use actual bar count (mirrors Pine's "n63/n126/n189/n252" logic)
@@ -948,8 +965,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "sa": setup_adj, "sf": setup_flags, "tz": trend_zone,
         # Internal baselines for intraday overlay (stripped before output)
         "_pc": float(c[-2]) if n >= 2 else None,
-        "_5b": float(c[-6]) if n >= 6 else None,
-        "_20b": float(c[-21]) if n >= 21 else None,
+        "_5b": float(c[-_b5_off]) if n >= _b5_off else None,
+        "_20b": float(c[-_b20_off]) if n >= _b20_off else None,
         "_yb": ytd_base,
     }
 
@@ -1183,8 +1200,11 @@ def main():
     w_start = end - timedelta(days=365)
 
     print("\nDownloading SPY (daily + weekly)...")
+    # auto_adjust=False so historical closes are UNADJUSTED (raw) — matches Yahoo Finance's
+    # quote-page % changes. Dividend back-adjustment was inflating YTD for stocks that
+    # paid divs between Dec 31 and today.
     spy_df = yf.download("SPY", session=_session, start=start.strftime("%Y-%m-%d"),
-                          end=end.strftime("%Y-%m-%d"), auto_adjust=True, progress=False)
+                          end=end.strftime("%Y-%m-%d"), auto_adjust=False, progress=False)
     if isinstance(spy_df.columns, type(spy_df.columns)) and hasattr(spy_df.columns, 'levels'):
         spy_df.columns = spy_df.columns.droplevel(1) if spy_df.columns.nlevels > 1 else spy_df.columns
     spy_df = spy_df.dropna(subset=["Close"])
@@ -1192,7 +1212,7 @@ def main():
 
     spy_df_w = yf.download("SPY", session=_session, start=w_start.strftime("%Y-%m-%d"),
                             end=end.strftime("%Y-%m-%d"), interval="1wk",
-                            auto_adjust=True, progress=False)
+                            auto_adjust=False, progress=False)
     if isinstance(spy_df_w.columns, type(spy_df_w.columns)) and hasattr(spy_df_w.columns, 'levels'):
         spy_df_w.columns = spy_df_w.columns.droplevel(1) if spy_df_w.columns.nlevels > 1 else spy_df_w.columns
     spy_df_w = spy_df_w.dropna(subset=["Close"])
@@ -1252,7 +1272,7 @@ def main():
             attempt = 0
             while attempt < 3:
                 try:
-                    df = yf.download(batch, group_by="ticker", auto_adjust=True,
+                    df = yf.download(batch, group_by="ticker", auto_adjust=False,
                                      session=_session, threads=False, progress=False, **kwargs)
                     if df.empty:
                         print(f"    Empty result, retrying...")
