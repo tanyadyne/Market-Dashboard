@@ -496,8 +496,28 @@ function getTickersInMatchingBaskets(f){
   return set;
 }
 
+// Per-keyword search overrides: for terms with custom match rules, replacing the default
+// behavior. Each entry is a function(e, ETF_DATA) -> boolean.
+const SEARCH_OVERRIDES={
+  // "energy" → match only by company name OR membership in selected energy ETFs.
+  // Skip Theme column (matches too many adjacent industries) and description text.
+  energy(e){
+    if((e.n||'').toLowerCase().includes('energy'))return true;
+    const ENERGY_ETFS=new Set(['ICLN','TAN','AMLP','XLE','FAN']);
+    if(!ETF_DATA||!ETF_DATA.e)return false;
+    for(const etf of ETF_DATA.e){
+      if(!ENERGY_ETFS.has(etf.t))continue;
+      const holdings=(etf.h||'').split(',').map(s=>s.trim());
+      if(holdings.includes(e.t))return true;
+    }
+    return false;
+  },
+};
+
 function matchesSearch(e,f){
   if(!f)return true;
+  // Custom override for specific keywords that need bespoke match logic
+  if(SEARCH_OVERRIDES[f])return SEARCH_OVERRIDES[f](e);
   // Hard exclusion: if this ticker has the search term in its exclusion list, never match
   // (even if the term appears in description / basket / theme). Ticker/name still match.
   const exc=SEARCH_EXCLUSIONS[e.t];
