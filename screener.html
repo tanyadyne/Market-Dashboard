@@ -18,6 +18,9 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .hdr-l{display:flex;align-items:center;gap:10px}
 .hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .btn-sm{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
+.btn-back{padding:4px 16px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);text-decoration:none;transition:.15s;font-family:inherit;letter-spacing:1px;display:inline-block}
+[data-theme="light"] .btn-back{background:#fff;border-color:#e5e7eb;color:#4b5563;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+.btn-back:hover{background:var(--bg3);color:var(--t1)}
 .btn-sm:hover{background:var(--bg3);color:var(--t1)}
 /* Segmented toggles */
 .seg-toggle{display:inline-flex;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;background:var(--bg2)}
@@ -155,7 +158,7 @@ html[data-view="mobile"]{overflow-x:hidden}
 <div class="top-fixed">
 <div class="hdr">
   <div class="hdr-l">
-    <a href="index.html" class="btn-sm" style="text-decoration:none;font-size:13px;padding:4px 16px;letter-spacing:1px">←</a>
+    <a href="index.html" class="btn-back" title="Back to Market Dashboard">←</a>
     <div style="font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Stock Screener</div>
   </div>
   <div class="hdr-r">
