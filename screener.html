@@ -335,7 +335,7 @@ function atrExtBars(val){
   let bars='';for(let i=0;i<4;i++){bars+=`<div class="bar" style="height:${[4,7,10,14][i]}px;opacity:${i<n?1:0.2}"></div>`;}
   return`<div class="bars ${cls}">${bars}</div>`;
 }
-function getPosition(rank,total){if(rank<=50)return'Strong Leader';if(rank<=200)return'Moderate Leader';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Moderate Laggard';return'Deep Laggard';}
+function getPosition(rank,total){if(rank<=100)return'Strong Leader';if(rank<=200)return'Moderate Leader';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Moderate Laggard';return'Deep Laggard';}
 function posClass(pos){if(pos.includes('Leader'))return'tag-leader';if(pos.includes('Laggard'))return'tag-laggard';return'tag-neutral';}
 function themeTag(status){if(status==='Leader')return'tag-leader';if(status==='Laggard')return'tag-laggard';return'tag-neutral';}
 
