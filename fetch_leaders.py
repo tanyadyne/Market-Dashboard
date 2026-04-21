@@ -1106,53 +1106,51 @@ def fetch_live_quotes_bulk(tickers, max_workers=20):
 
 
 def is_us_market_open_or_recently_closed():
-    """Return True if US equity session is open OR has closed today.
-    We apply the intraday-overlay in both cases:
-      • Market open   → fast_info.lastPrice is live intraday price
-      • Just closed   → fast_info.lastPrice is today's official close (Yahoo updates it
-                        within seconds of 4:00pm ET). The daily df, by contrast, can lag
-                        by several minutes after close, so the overlay gives us more
-                        accurate 1D values than the df alone.
-    Returns False pre-open (≤9:30 ET) and on weekends — in those windows fast_info.lastPrice
-    can legitimately be yesterday's or pre-market NEXT-day's value, which would corrupt 1D.
+    """Return True if US equity regular session is currently OPEN (9:30am–4:00pm ET, Mon–Fri).
+
+    IMPORTANT: Post-close, we intentionally return False. fast_info fields behave
+    inconsistently outside regular hours:
+      - lastPrice can be the regular close OR after-hours / pre-market (venue-dependent)
+      - previousClose can shift from "yesterday" to "today" immediately at 4:00pm
+    Relying on those values outside RTH produces corrupted 1D/1W numbers (e.g. today's
+    pre-market price divided by "previous close" that's actually today's close → near-0%
+    change; or today's post-close price divided by 2-sessions-ago close → double move).
+
+    Post-close, the daily df from yf.download is the canonical source. The workflow's
+    recovery passes now reliably populate it, so the overlay is unnecessary post-close.
     """
     try:
         from datetime import timezone
         now_utc = datetime.now(timezone.utc)
-        # ET offset: use -4 for EDT (approx — the workflow already gates by UTC hour so
-        # in practice both EDT and EST routes through this function during market hours).
         et_hour = (now_utc.hour - 4) % 24
         et_min  = now_utc.minute
         et_min_of_day = et_hour * 60 + et_min
         if now_utc.weekday() >= 5:
             return False
-        # Window: 9:30am (570) through 8:00pm (1200) ET — covers regular session + the
-        # post-close window when yfinance's daily bar may not yet reflect today's close
-        # but fast_info.lastPrice already does. We intentionally DO NOT run the overlay
-        # pre-open (would replace today's c[-1] = yesterday's close with today's pre-market
-        # bid, breaking yesterday's 1D display).
-        return 570 <= et_min_of_day <= 1200
+        # Strict regular session only: 9:30am–3:55pm ET (stop 5 min early so the final
+        # scheduled run at 4:00pm falls out of the window and uses the EOD df instead).
+        return 570 <= et_min_of_day <= 955
     except Exception:
         return False
 
 
-# Back-compat alias (older code calls this name)
 def is_us_market_open():
     return is_us_market_open_or_recently_closed()
 
 
 def apply_intraday_overlay(results):
-    """For each result, fetch live price via fast_info and recompute ch/c5/c20/ytd/p so the
-    output reflects the current intraday move (not just the last completed daily bar).
+    """Refresh ch/c5/c20/ytd/p with live intraday price. Only runs during regular session.
 
-    Only runs if US market is open. RS scores are NOT recomputed (they remain anchored to
-    the last EOD bar — recomputing intraday would require re-running the full VARS pipeline).
-
-    Each result must carry internal baseline fields (_pc, _5b, _20b, _yb) which were set
-    by process_stock(); these are stripped before output.
+    Validation:
+      - `live` must be finite and positive
+      - `prev_close` must be finite and positive
+      - `live` within ±50% of the EOD close `r["p"]` (catches stale/wrong-ticker values)
+      - Resulting 1D change must be within ±75% (catches bogus prev_close values like
+        fast_info returning a stale 2-sessions-ago close that produces 50%+ phantom moves)
+    If any check fails, that ticker's values are left as-is (the EOD df values).
     """
     if not is_us_market_open():
-        print("  [Intraday overlay] Skipping — US market not open.")
+        print("  [Intraday overlay] Skipping — outside regular session hours.")
         return
     tickers = [r["t"] for r in results]
     print(f"  [Intraday overlay] Fetching live quotes for {len(tickers)} stocks...")
@@ -1160,24 +1158,26 @@ def apply_intraday_overlay(results):
     quotes = fetch_live_quotes_bulk(tickers)
     print(f"  [Intraday overlay] Got {len(quotes)} live quotes in {time.time()-t0:.1f}s")
     refreshed = 0
+    rejected = 0
     for r in results:
         q = quotes.get(r["t"])
         if not q:
             continue
         live, prev_close = q
-        if live <= 0 or prev_close <= 0:
+        if not live or not prev_close or live <= 0 or prev_close <= 0:
             continue
-        # Sanity check: live should be within ±50% of the EOD close. Reject wild values
-        # (could be a stale fast_info or ticker mismatch).
         eod = r.get("p")
         if eod and (live > eod * 1.5 or live < eod * 0.5):
+            rejected += 1
+            continue
+        # Compute candidate 1D — reject if implausible (±75%).
+        candidate_ch = (live / prev_close - 1) * 100
+        if candidate_ch > 75 or candidate_ch < -75:
+            rejected += 1
             continue
         # Apply overlay
         r["p"] = round(live, 2)
-        # 1D change uses live's own previousClose for accuracy (handles dividends/splits
-        # adjustments yfinance applies to fast_info)
-        r["ch"] = round((live / prev_close - 1) * 100, 2)
-        # 1W/1M/YTD: substitute live for the "current" leg, keep historical baselines
+        r["ch"] = round(candidate_ch, 2)
         if r.get("_5b") and r["_5b"] > 0:
             r["c5"] = round((live / r["_5b"] - 1) * 100, 2)
         if r.get("_20b") and r["_20b"] > 0:
@@ -1185,7 +1185,7 @@ def apply_intraday_overlay(results):
         if r.get("_yb") and r["_yb"] > 0:
             r["ytd"] = round((live / r["_yb"] - 1) * 100, 2)
         refreshed += 1
-    print(f"  [Intraday overlay] Refreshed {refreshed}/{len(results)} entries with live prices")
+    print(f"  [Intraday overlay] Refreshed {refreshed}/{len(results)} entries (rejected {rejected} with suspicious values)")
 
 
 def strip_internal_fields(results):
