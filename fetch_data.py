@@ -17,7 +17,9 @@ Usage:
 import json
 import os
 import sys
+import time
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
 import yfinance as yf
 
@@ -81,7 +83,7 @@ ETF_INFO = [
     {"t":"ARKF","n":"Fintech Innovation","fn":"ARK BC & Fintech Innov","h":"SHOP,COIN,HOOD,PLTR,TOST,SOFI,XYZ,RBLX,ROKU,CRCL,MELI,AMD,DKNG,META,AMZN,BMNR,PINS,NU,KLAR,SE,BLSH,FUTU,Z"},
     {"t":"EWZ","n":"Brazil","fn":"iShares:MSCI Brazil","h":"NU,MELI,DLO"},
     {"t":"XBI","n":"Biotechnology","fn":"SS SPDR S&P Biotech","h":"EXAS,RVMD,RNA,INSM,NTRA,BBIO,REGN,MDGL,IONS,BIIB,AMGN,UTHR,INCY,ROIV,EXEL,VRTX,GILD,NBIX,ABBV,BMRN,CRSP,MRNA,PTCT,ALNY,KRYS"},
-    {"t":"SMH","n":"Semiconductors","fn":"SS SPDR S&P Semiconductr","h":"MU,INTC,RGTI,AMD,MRVL,MTSI,FSLR,RMBS,SITM,SMTC,MPWR,ADI,QCOM,CRUS,ON,AVGO,CRDO,LSCC,NVDA,QRVO,SLAB,TXN,NXPI,SWKS,OLED,TSEM,TSM,AMAT,ASML,LRCX,KLAC,CDNS,SNPS,TER,MCHP,STM","yt":"XSD"},
+    {"t":"SMH","n":"Semiconductors","fn":"VanEck:Semiconductor ETF","h":"MU,INTC,RGTI,AMD,MRVL,MTSI,FSLR,RMBS,SITM,SMTC,MPWR,ADI,QCOM,CRUS,ON,AVGO,CRDO,LSCC,NVDA,QRVO,SLAB,TXN,NXPI,SWKS,OLED,TSEM,TSM,AMAT,ASML,LRCX,KLAC,CDNS,SNPS,TER,MCHP,STM"},
     {"t":"ARKG","n":"Genomics","fn":"ARK Genomic Revolution","h":"TEM,CRSP,PSNL,GH,TWST,TXG,NTRA,BEAM,ILMN,VCYT,RXRX,ADPT,IONS,ABSI,CDNA,SDGR,NTLA,NRIX,PACB,WGS,BFLY,PRME,ARCT,AMGN"},
     {"t":"GBTC","n":"Bitcoin","fn":"GRAYSCALE BITCOIN TRUST","h":"IBIT,ETHA,MSTR,BMNR,SBET,COIN"},
     {"t":"IGV","n":"Software","fn":"iShares:Expand Tch-Sftwr","h":"ADBE,ADSK,AGYS,APP,APPN,BBAI,CDNS,CIFR,CLSK,CRM,CRNC,CRWD,CTSH,DDOG,EA,EPAM,FICO,FTNT,GDYN,HUT,IBM,IDCC,INTU,JAMF,MSFT,MSTR,NOW,ORCL,PANW,PATH,PLTR,PRO,PTC,QBTS,ROP,SEMR,SNPS,TDC,TEAM,TTWO,WDAY,WK,WULF,ZM,ZS"},
@@ -304,6 +306,172 @@ def load_dynamic_holdings():
     return {}
 
 
+# ─── Intraday overlay helpers ────────────────────────────────────────────────
+
+def fetch_live_quote(ticker):
+    """Fetch live (intraday) quote for a single ticker via fast_info.
+    Returns (last_price, prev_close) or (None, None) on failure.
+    """
+    try:
+        ti = yf.Ticker(ticker, session=_session) if _session else yf.Ticker(ticker)
+        fi = ti.fast_info
+        last = fi.get("lastPrice", fi.get("last_price"))
+        prev = fi.get("previousClose", fi.get("previous_close"))
+        last = float(last) if last not in (None, 0) else None
+        prev = float(prev) if prev not in (None, 0) else None
+        return last, prev
+    except Exception:
+        return None, None
+
+
+def fetch_live_quotes_bulk(tickers, max_workers=20):
+    """Parallel-fetch live quotes for many tickers. Returns {ticker: (last, prev)}."""
+    out = {}
+    if not tickers:
+        return out
+    with ThreadPoolExecutor(max_workers=max_workers) as ex:
+        futs = {ex.submit(fetch_live_quote, t): t for t in tickers}
+        for fut in as_completed(futs):
+            tk = futs[fut]
+            try:
+                last, prev = fut.result(timeout=15)
+                if last is not None and prev is not None:
+                    out[tk] = (last, prev)
+            except Exception:
+                pass
+    return out
+
+
+def is_us_market_open():
+    """Return True if US equity market is currently in regular session.
+    Uses naive ET wall clock (UTC-4 EDT approx); GitHub workflow already gates by ET hour.
+    """
+    try:
+        from datetime import timezone
+        now_utc = datetime.now(timezone.utc)
+        et_hour = (now_utc.hour - 4) % 24
+        et_min  = now_utc.minute
+        et_min_of_day = et_hour * 60 + et_min
+        if now_utc.weekday() >= 5:
+            return False
+        # 9:30am = 570 min; 4:00pm = 960 min
+        return 570 <= et_min_of_day <= 960
+    except Exception:
+        return False
+
+
+def _overlay_one(entry, live, prev_close):
+    """Apply live price to a single result entry, recomputing ch/c5/c20/ytd/p."""
+    if live is None or live <= 0 or prev_close is None or prev_close <= 0:
+        return False
+    eod = entry.get("p")
+    if eod and (live > eod * 1.5 or live < eod * 0.5):
+        # Sanity check — reject suspicious live values
+        return False
+    entry["p"] = round(live, 2)
+    entry["ch"] = round((live / prev_close - 1) * 100, 2)
+    if entry.get("_5b") and entry["_5b"] > 0:
+        entry["c5"] = round((live / entry["_5b"] - 1) * 100, 2)
+    if entry.get("_20b") and entry["_20b"] > 0:
+        entry["c20"] = round((live / entry["_20b"] - 1) * 100, 2)
+    if entry.get("_yb") and entry["_yb"] > 0:
+        entry["ytd"] = round((live / entry["_yb"] - 1) * 100, 2)
+    return True
+
+
+def apply_intraday_overlay_to_etfs(results, component_metrics):
+    """Refresh ch/c5/c20/ytd/p in `results` so they reflect live intraday prices.
+
+    Two paths:
+      - Regular ETFs (yt or t ticker): fetch live quote for the ETF ticker itself
+      - Custom baskets (no real ticker): re-average from live-refreshed component_metrics
+
+    Only runs during US market hours. RS / VARS are NOT recomputed (anchored to EOD).
+    """
+    if not is_us_market_open():
+        print("  [Intraday overlay] Skipping — US market not open.")
+        return
+
+    # ---- 1. Refresh component (holding) metrics with live quotes ----
+    component_tickers = list(component_metrics.keys())
+    print(f"  [Intraday overlay] Fetching live quotes for {len(component_tickers)} basket components...")
+    t0 = time.time()
+    comp_quotes = fetch_live_quotes_bulk(component_tickers)
+    print(f"  [Intraday overlay] Got {len(comp_quotes)} component quotes in {time.time()-t0:.1f}s")
+    comp_refreshed = 0
+    for tk, m in component_metrics.items():
+        q = comp_quotes.get(tk)
+        if not q:
+            continue
+        if _overlay_one(m, q[0], q[1]):
+            comp_refreshed += 1
+    print(f"  [Intraday overlay] Refreshed {comp_refreshed}/{len(component_metrics)} components")
+
+    # ---- 2. Identify ETF tickers to refresh (the ones in results that have prices) ----
+    etf_tickers = []
+    etf_lookup = {}
+    for r in results:
+        if r.get("p") is None:
+            # Custom basket — no own price to fetch; will be recomputed by averaging components
+            continue
+        # Use yt override if present (matches what was downloaded for the daily df)
+        tk = r.get("yt") or r.get("t")
+        etf_tickers.append(tk)
+        etf_lookup.setdefault(tk, []).append(r)
+
+    print(f"  [Intraday overlay] Fetching live quotes for {len(etf_tickers)} ETFs...")
+    t0 = time.time()
+    etf_quotes = fetch_live_quotes_bulk(etf_tickers)
+    print(f"  [Intraday overlay] Got {len(etf_quotes)} ETF quotes in {time.time()-t0:.1f}s")
+    etf_refreshed = 0
+    for tk, entries in etf_lookup.items():
+        q = etf_quotes.get(tk)
+        if not q:
+            continue
+        for r in entries:
+            if _overlay_one(r, q[0], q[1]):
+                etf_refreshed += 1
+    print(f"  [Intraday overlay] Refreshed {etf_refreshed}/{len(etf_tickers)} ETF entries")
+
+    # ---- 3. Re-average basket entries from refreshed components ----
+    basket_refreshed = 0
+    for r in results:
+        if r.get("p") is not None:
+            continue  # not a basket
+        holdings_str = r.get("h", "")
+        if not holdings_str:
+            continue
+        holdings = [h.strip() for h in holdings_str.split(",") if h.strip()]
+        valid = [h for h in holdings if h in component_metrics]
+        if not valid:
+            continue
+        for key in ("ch", "c5", "c20", "ytd"):
+            vals = [component_metrics[h][key] for h in valid if component_metrics[h].get(key) is not None]
+            if vals:
+                r[key] = round(float(np.mean(vals)), 2)
+        basket_refreshed += 1
+    print(f"  [Intraday overlay] Re-averaged {basket_refreshed} custom baskets from live components")
+
+
+def strip_internal_fields_etfs(results, *extra_dicts):
+    """Remove _-prefixed internal fields and the `h` (holdings string) before serializing.
+
+    `extra_dicts` is a tuple of dicts (e.g. component_metrics) whose values are also
+    cleaned, even though they aren't written directly — defensive in case anything
+    serializes them later.
+    """
+    for r in results:
+        for k in list(r.keys()):
+            if k.startswith("_"):
+                del r[k]
+    for d in extra_dicts:
+        for v in d.values():
+            if isinstance(v, dict):
+                for k in list(v.keys()):
+                    if k.startswith("_"):
+                        del v[k]
+
+
 # ─── Main ───────────────────────────────────────────────────────────────────
 
 def main():
@@ -444,20 +612,41 @@ def main():
         from datetime import date as _date
         current_year = _date.today().year
         ytd = None
+        ytd_base = None
         try:
             for i, ts in enumerate(df.index):
                 bar_year = ts.year if hasattr(ts, 'year') else int(str(ts)[:4])
                 if bar_year >= current_year:
                     if i > 0 and c[i - 1] is not None and c[-1] is not None and c[i - 1] != 0:
                         # Standard case: use the last bar of the previous year as baseline
-                        ytd = (c[-1] / c[i - 1] - 1) * 100
+                        ytd_base = float(c[i - 1])
+                        ytd = (c[-1] / ytd_base - 1) * 100
                     elif c[i] is not None and c[-1] is not None and c[i] != 0:
                         # Fallback: data series begins in current year (IPO or insufficient lookback).
                         # Use the first available bar of this year as baseline.
-                        ytd = (c[-1] / c[i] - 1) * 100
+                        ytd_base = float(c[i])
+                        ytd = (c[-1] / ytd_base - 1) * 100
                     break
         except Exception:
             ytd = None
+            ytd_base = None
+
+        # ─── Intraday overlay baseline selection ───────────────────────
+        # During the overlay, `live` is substituted as "today's price". We want the 5/20-trading-day
+        # baselines to span the conventional distance from TODAY, not from c[-1].
+        #   • If c[-1] is today's (possibly partial) bar: overlay replaces c[-1] → 5d back = c[-6]
+        #   • If c[-1] is yesterday (df not yet updated): overlay adds today via live → 5d back = c[-5]
+        try:
+            from datetime import timezone as _tz
+            _now_utc = datetime.now(_tz.utc)
+            _today_et = (_now_utc - timedelta(hours=4)).date()
+            _last_ts = df.index[-1]
+            _last_date = _last_ts.date() if hasattr(_last_ts, 'date') else None
+            _c1_is_today = (_last_date == _today_et)
+        except Exception:
+            _c1_is_today = True
+        _b5_off  = 6  if _c1_is_today else 5
+        _b20_off = 21 if _c1_is_today else 20
 
         atr = compute_atr(h, l, c, ATR_PERIOD)
         valid_c = [x for x in c if x is not None]
@@ -492,6 +681,11 @@ def main():
                 "ytd": round(ytd, 2) if ytd is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2),
                 "fr": None, "vs": None,
+                # Internal baselines for intraday overlay (stripped before output)
+                "_pc": float(c[-2]) if length >= 2 else None,
+                "_5b": float(c[-_b5_off]) if length >= _b5_off else None,
+                "_20b": float(c[-_b20_off]) if length >= _b20_off else None,
+                "_yb": ytd_base,
             }
 
         etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
@@ -543,6 +737,11 @@ def main():
             "p": round(price, 2),
             "fr": round(final_rs, 4),
             "vs": vs_series,
+            # Internal baselines for intraday overlay (stripped before output)
+            "_pc": float(c[-2]) if length >= 2 else None,
+            "_5b": float(c[-_b5_off]) if length >= _b5_off else None,
+            "_20b": float(c[-_b20_off]) if length >= _b20_off else None,
+            "_yb": ytd_base,
         }
 
     def process_ticker_weekly(ticker, df_w):
@@ -755,6 +954,12 @@ def main():
             "w_vs": w_avg_vs,
         })
 
+    # ─── Intraday overlay: replace EOD price with live quote when market is open ──
+    # Updates p / ch / c5 / c20 / ytd to reflect the current intraday move. RS scores
+    # remain anchored to the last completed daily bar (recomputing intraday would require
+    # re-running the full VARS pipeline, which is expensive).
+    apply_intraday_overlay_to_etfs(results, component_metrics)
+
     # Sort: RS desc, then Change desc (daily ranks)
     results.sort(key=lambda x: (x["rs"] if x["rs"] is not None else -1,
                                  x["ch"] if x["ch"] is not None else -999), reverse=True)
@@ -894,6 +1099,10 @@ def main():
         "breadth": breadth_status,
         "rh": {"d": rh_d, "w": rh_w},
     }
+
+    # Strip internal _-prefixed baseline fields used by the intraday overlay so they
+    # don't bloat the output JSON.
+    strip_internal_fields_etfs(results, component_metrics)
 
     with open("data.json", "w") as f:
         json.dump(data, f, separators=(",", ":"))
