@@ -1249,12 +1249,18 @@ def main():
 
     # ─── Bulk download prices for entire universe (chunked) ──
     # yfinance's bulk download silently fails for many tickers when given >500 at once.
-    # Chunk into batches of 200 with retries.
+    # Chunk into batches of 200 with retries. After the main pass, re-attempt any tickers
+    # that didn't come back (transient rate-limits / batch errors) with progressively
+    # smaller batch sizes — this is what keeps us reliably at ~1000+ tickers per run
+    # instead of silently dropping to 800-ish.
     print(f"\nDownloading daily data for {len(all_tickers)} tickers (chunked)...")
     import pandas as pd
 
     def chunked_download(tickers, **kwargs):
-        """Download in chunks of 200 with proper MultiIndex handling for yfinance 1.0+."""
+        """Download in chunks of 200 with proper MultiIndex handling for yfinance 1.0+.
+        Retries missing tickers in progressively smaller batches (50, then 10) so a single
+        workflow run reliably covers the full universe.
+        """
         CHUNK = 200
         all_dfs = {}
 
@@ -1319,6 +1325,71 @@ def main():
                     print(f"    Batch error: {e}, retrying...")
                     attempt += 1; time.sleep(5)
             time.sleep(1)
+
+        # ─── Recovery passes for tickers that didn't come back ───────
+        # Pass 1: smaller batches (50 at a time), longer backoff
+        missing = [t for t in tickers if t not in all_dfs]
+        if missing:
+            print(f"  Recovery pass 1: retrying {len(missing)} missing tickers in batches of 50...")
+            SMALL = 50
+            for i in range(0, len(missing), SMALL):
+                batch = missing[i:i+SMALL]
+                attempt = 0
+                while attempt < 3:
+                    try:
+                        df = yf.download(batch, group_by="ticker", auto_adjust=False,
+                                         session=_session, threads=False, progress=False, **kwargs)
+                        if df.empty:
+                            attempt += 1; time.sleep(8); continue
+                        if len(batch) == 1:
+                            flat = flatten_single(df.copy()).dropna(subset=['Close'])
+                            if not flat.empty:
+                                all_dfs[batch[0]] = flat
+                        else:
+                            for tk in batch:
+                                tk_df = extract_ticker(df, tk)
+                                if tk_df is not None and not tk_df.empty:
+                                    all_dfs[tk] = tk_df
+                        break
+                    except Exception as e:
+                        print(f"    Recovery batch error: {e}, retrying...")
+                        attempt += 1; time.sleep(8)
+                time.sleep(2)
+
+        # Pass 2: very small batches (10 at a time) for anything still missing
+        missing = [t for t in tickers if t not in all_dfs]
+        if missing:
+            print(f"  Recovery pass 2: retrying {len(missing)} still-missing tickers in batches of 10...")
+            TINY = 10
+            for i in range(0, len(missing), TINY):
+                batch = missing[i:i+TINY]
+                attempt = 0
+                while attempt < 2:
+                    try:
+                        df = yf.download(batch, group_by="ticker", auto_adjust=False,
+                                         session=_session, threads=False, progress=False, **kwargs)
+                        if df.empty:
+                            attempt += 1; time.sleep(10); continue
+                        if len(batch) == 1:
+                            flat = flatten_single(df.copy()).dropna(subset=['Close'])
+                            if not flat.empty:
+                                all_dfs[batch[0]] = flat
+                        else:
+                            for tk in batch:
+                                tk_df = extract_ticker(df, tk)
+                                if tk_df is not None and not tk_df.empty:
+                                    all_dfs[tk] = tk_df
+                        break
+                    except Exception:
+                        attempt += 1; time.sleep(10)
+                time.sleep(3)
+
+        missing = [t for t in tickers if t not in all_dfs]
+        if missing:
+            print(f"  {len(missing)} tickers still missing after recovery (will retry next run)")
+        else:
+            print(f"  All {len(tickers)} tickers successfully fetched")
+
         return all_dfs
 
 
