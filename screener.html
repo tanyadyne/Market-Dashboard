@@ -552,6 +552,26 @@ function matchesSearch(e,f){
   return false;
 }
 
+// Bubble ticker matches to the top of a result list. Ordering within the priority bands
+// preserves the input order (so the caller's rank-based sort still controls tiebreaks).
+//   1. Exact ticker match (e.g. search "NET" → Cloudflare first)
+//   2. Ticker starts with search term
+//   3. Ticker contains search term
+//   4. Everything else (matched via name / theme / description / basket / alias)
+function prioritizeTickerMatches(items, f){
+  if(!f)return items;
+  const fl=f.toLowerCase();
+  const exact=[], prefix=[], contains=[], rest=[];
+  for(const e of items){
+    const tk=(e.t||'').toLowerCase();
+    if(tk===fl) exact.push(e);
+    else if(tk.startsWith(fl)) prefix.push(e);
+    else if(tk.includes(fl)) contains.push(e);
+    else rest.push(e);
+  }
+  return [...exact, ...prefix, ...contains, ...rest];
+}
+
 function render(){
   if(!DATA)return;
   const isW=currentTab==='weekly';
@@ -571,6 +591,8 @@ function render(){
     const sk=dk(sortKey);
     items=[...items].sort((a,b)=>{if(sortKey==='rk')return sortDir*(a.rk-b.rk);const av=a[sk]??(typeof a[sk]==='string'?'':-Infinity),bv=b[sk]??(typeof b[sk]==='string'?'':-Infinity);return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av>bv?1:av<bv?-1:0);});
   }
+  // Bubble ticker matches to the top (after user's sort — overrides the sort for exact/prefix ticker hits)
+  items=prioritizeTickerMatches(items, f);
 
   const total=items.length;
   const totalPages=Math.ceil(total/PAGE_SIZE);
@@ -632,6 +654,8 @@ function renderChartView(){
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
   // Sort by rank ascending (top stocks first)
   items.sort((a,b)=>(isW?(a.w_rk||9999)-(b.w_rk||9999):(a.rk||9999)-(b.rk||9999)));
+  // Bubble ticker matches to the top (after rank sort)
+  items=prioritizeTickerMatches(items, f);
 
   const total=items.length;
   const totalPages=Math.max(1,Math.ceil(total/CHART_PAGE_SIZE));
