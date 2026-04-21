@@ -332,7 +332,9 @@ def main():
     print(f"Fetching data for {len(all_download)} tickers ({len(regular_tickers)} ETFs + {len(basket_components)} basket components)...")
 
     end = datetime.now() + timedelta(days=1)
-    start = end - timedelta(days=91)
+    # Need enough bars to (1) compute 21-day change/ATR/etc. and (2) include the last bar of the
+    # previous calendar year so YTD can be computed. 140 days covers Jan 1 with a comfortable buffer.
+    start = end - timedelta(days=140)
 
     raw = yf.download(
         all_download,
@@ -436,7 +438,9 @@ def main():
         c5 = (c[-1] / c[-6] - 1) * 100 if length >= 6 else None
         c20 = (c[-1] / c[-21] - 1) * 100 if length >= 21 else None
 
-        # YTD: price vs last bar of previous year
+        # YTD: price change vs last bar of previous calendar year.
+        # Falls back to the first available bar of the current year if the data series
+        # doesn't extend into the prior year (e.g. very recent IPOs).
         from datetime import date as _date
         current_year = _date.today().year
         ytd = None
@@ -445,7 +449,12 @@ def main():
                 bar_year = ts.year if hasattr(ts, 'year') else int(str(ts)[:4])
                 if bar_year >= current_year:
                     if i > 0 and c[i - 1] is not None and c[-1] is not None and c[i - 1] != 0:
+                        # Standard case: use the last bar of the previous year as baseline
                         ytd = (c[-1] / c[i - 1] - 1) * 100
+                    elif c[i] is not None and c[-1] is not None and c[i] != 0:
+                        # Fallback: data series begins in current year (IPO or insufficient lookback).
+                        # Use the first available bar of this year as baseline.
+                        ytd = (c[-1] / c[i] - 1) * 100
                     break
         except Exception:
             ytd = None
