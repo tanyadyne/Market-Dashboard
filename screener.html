@@ -64,6 +64,10 @@ tr:hover{background:var(--bg3)}
 .rd{text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;white-space:nowrap}
 .rd-up{color:var(--g)}.rd-dn{color:var(--r)}.rd-flat{color:var(--t4)}.rd-num{color:var(--t2);font-weight:500}
 .tk{font-weight:700;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.5px}
+.tk-link{cursor:pointer;transition:color .15s}
+.tk-link:hover{color:var(--t1);text-decoration:underline;text-underline-offset:3px}
+[data-theme="light"] .tk-link:hover{color:#2563eb}
+[data-theme="dark"] .tk-link:hover{color:#60a5fa}
 .sc2{color:var(--t2);font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cp{color:var(--g)}.cn{color:var(--r)}.cz{color:var(--t3)}
 .rs{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
@@ -236,6 +240,14 @@ function toggleTheme(){
 (function(){try{const t=localStorage.getItem('dashboardTheme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 
 // ─── View toggle (list vs chart) ──────────────────────────────
+function openProfile(ticker){
+  if(!ticker)return;
+  // Switch to Individual Profile tab and populate the search input
+  switchTab('search');
+  const si=document.getElementById('searchInput');
+  if(si){si.value=ticker;searchStock();}
+}
+
 function switchView(view){
   currentView=view;
   chartPage=1;
@@ -251,10 +263,10 @@ function switchView(view){
     document.getElementById('chartPagination').style.display='';
     renderChartView();
   }else{
-    document.getElementById('tw').style.display='';
+    document.getElementById('tw').style.display='block';
     document.getElementById('chartGrid').style.display='none';
     document.getElementById('chartPagination').style.display='none';
-    render();
+    buildHeader();render();
   }
 }
 
@@ -462,7 +474,7 @@ function render(){
     const cellMap={
       rk:`<td class="rk">${rank}</td>`,
       rd:rankDelta(e.t),
-      t:`<td class="tk">${esc(e.t)}</td>`,
+      t:`<td class="tk tk-link" onclick="openProfile('${esc(e.t)}')" title="View ${esc(e.t)} profile">${esc(e.t)}</td>`,
       n:`<td class="sc2" title="${esc(e.n||'')}">${esc(e.n||'—')}</td>`,
       th:`<td class="sc2" title="${esc(e.th||'')}">${esc(e.th||'—')}</td>`,
       rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>`,
@@ -519,7 +531,7 @@ function renderChartView(){
     card.className='chart-card';
     card.innerHTML=`
       <div class="chart-card-hdr">
-        <div><span class="chart-card-rk">#${rk||'—'}</span><span class="chart-card-tk">${esc(e.t)}</span></div>
+        <div><span class="chart-card-rk">#${rk||'—'}</span><span class="chart-card-tk tk-link" onclick="openProfile('${esc(e.t)}')" title="View ${esc(e.t)} profile">${esc(e.t)}</span></div>
         <span class="chart-card-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span>
       </div>
       <div class="chart-card-body tv-chart" id="svc-${e.t}"></div>`;
