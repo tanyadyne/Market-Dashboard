@@ -1763,6 +1763,33 @@ def main():
     # re-running the full VARS pipeline, which is expensive).
     apply_intraday_overlay(results)
 
+    # ─── Load previous day's trend zone per ticker (for transition bonus/penalty) ──
+    # Read from leaders_score_history.json if it exists; each ticker's "tz" array holds
+    # the tz string as-of each historical date. Used in the scoring loop below.
+    prev_tz_map = {}
+    try:
+        if os.path.exists("leaders_score_history.json"):
+            with open("leaders_score_history.json") as _hf:
+                _hist = json.load(_hf)
+            _hist_dates = _hist.get("dates", [])
+            _hist_d = _hist.get("d", {})
+            # "Previous day" = the last date in history that is NOT today's date.
+            _today_str_check = date.today().isoformat()
+            _prev_idx = None
+            for _i in range(len(_hist_dates) - 1, -1, -1):
+                if _hist_dates[_i] != _today_str_check:
+                    _prev_idx = _i
+                    break
+            if _prev_idx is not None:
+                for _tk, _entry in _hist_d.items():
+                    _tz_arr = _entry.get("tz") if isinstance(_entry, dict) else None
+                    if _tz_arr and len(_tz_arr) > _prev_idx:
+                        _v = _tz_arr[_prev_idx]
+                        if _v:
+                            prev_tz_map[_tk] = _v
+    except Exception:
+        prev_tz_map = {}
+
     # ─── Cross-sectional percentrank (compare each stock vs ALL others) ──
     all_d_rs = [r["fr"] for r in results if r.get("fr") is not None]
     all_w_rs = [r.get("w_fr") for r in results if r.get("w_fr") is not None]
@@ -1785,6 +1812,15 @@ def main():
                 "bull_strong": 1.10,
             }.get(tz, 1.0)
             adjusted = max(0, min(100, adjusted * tz_mult))
+            # Trend-zone transition bonus/penalty:
+            #   bull_strong → bull_light  ⇒ −2 points (momentum weakening)
+            #   bull_light  → bull_strong ⇒ +2 points (momentum strengthening)
+            #   All other transitions ⇒ no change
+            prev_tz = prev_tz_map.get(r["t"])
+            if prev_tz == "bull_strong" and tz == "bull_light":
+                adjusted = max(0, adjusted - 2)
+            elif prev_tz == "bull_light" and tz == "bull_strong":
+                adjusted = min(100, adjusted + 2)
             r["rs"] = round(adjusted)
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
             r["w_rs"] = round(percentrank_inc(all_w_rs, r["w_fr"]) * 100)
@@ -1846,32 +1882,46 @@ def main():
         for r in results:
             tk = r["t"]
             if tk not in scores:
-                scores[tk] = {"s": [], "r": [], "wr": []}
+                scores[tk] = {"s": [], "r": [], "wr": [], "tz": []}
+            # Backfill tz array if this ticker was seen before the tz field existed
+            if "tz" not in scores[tk]:
+                scores[tk]["tz"] = [None] * len(scores[tk].get("s", []))
             scores[tk]["s"].append(r.get("rs"))
             scores[tk]["r"].append(r.get("rk"))
             scores[tk]["wr"].append(r.get("w_rk"))
+            scores[tk]["tz"].append(r.get("tz"))
         # Trim to MAX_HISTORY_DAYS
         if len(dates) > MAX_HISTORY_DAYS:
             trim = len(dates) - MAX_HISTORY_DAYS
             dates = dates[trim:]
             for tk in scores:
-                for key in ["s", "r", "wr"]:
-                    if len(scores[tk][key]) > MAX_HISTORY_DAYS:
+                for key in ["s", "r", "wr", "tz"]:
+                    if key in scores[tk] and len(scores[tk][key]) > MAX_HISTORY_DAYS:
                         scores[tk][key] = scores[tk][key][trim:]
     else:
         # Update today's entry
         for r in results:
             tk = r["t"]
             if tk not in scores:
-                scores[tk] = {"s": [], "r": [], "wr": []}
+                scores[tk] = {"s": [], "r": [], "wr": [], "tz": []}
+            if "tz" not in scores[tk]:
+                scores[tk]["tz"] = [None] * len(scores[tk].get("s", []))
             if len(scores[tk]["s"]) == len(dates):
                 scores[tk]["s"][-1] = r.get("rs")
                 scores[tk]["r"][-1] = r.get("rk")
                 scores[tk]["wr"][-1] = r.get("w_rk")
+                if len(scores[tk]["tz"]) == len(dates):
+                    scores[tk]["tz"][-1] = r.get("tz")
+                else:
+                    # tz array shorter than dates — pad then set
+                    while len(scores[tk]["tz"]) < len(dates) - 1:
+                        scores[tk]["tz"].append(None)
+                    scores[tk]["tz"].append(r.get("tz"))
             else:
                 scores[tk]["s"].append(r.get("rs"))
                 scores[tk]["r"].append(r.get("rk"))
                 scores[tk]["wr"].append(r.get("w_rk"))
+                scores[tk]["tz"].append(r.get("tz"))
 
     score_history = {"dates": dates, "d": scores}
     with open("leaders_score_history.json", "w") as f:
