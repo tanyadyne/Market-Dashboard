@@ -8,8 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0a;color:#e8e8e8;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
-body[data-theme="light"]{background:#f7f7f8;color:#111827}
+body{background:#f7f7f8;color:#111827;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
+body[data-theme="dark"]{background:#0a0a0a;color:#e8e8e8}
 .top-fixed{position:sticky;top:0;z-index:50;background:inherit}
 .hdr{padding:18px 20px 14px;border-bottom:1px solid #141414;display:flex;align-items:center;gap:10px;background:inherit}
 body[data-theme="light"] .hdr{border-bottom-color:#e5e7eb}
@@ -91,12 +91,12 @@ function setTheme(theme){
   try{localStorage.setItem('dashboardTheme',theme);}catch(e){}
 }
 function toggleTheme(){
-  const current=document.body.getAttribute('data-theme')||'dark';
+  const current=document.body.getAttribute('data-theme')||'light';
   setTheme(current==='dark'?'light':'dark');
   // Re-inject charts so the TradingView widgets pick up the new theme
   if(typeof injectAllCharts==='function')injectAllCharts();
 }
-(function(){try{const t=localStorage.getItem('dashboardTheme')||'dark';setTheme(t);}catch(e){}})();
+(function(){try{const t=localStorage.getItem('dashboardTheme')||'light';setTheme(t);}catch(e){}})();
 </script>
 <div class="content">
   <div class="chart-row">
@@ -138,7 +138,7 @@ function injectChart(containerId, symbol, interval){
   const el=document.getElementById(containerId);
   if(!el)return;
   el.innerHTML='';
-  const isDark=(document.body.getAttribute('data-theme')||'dark')==='dark';
+  const isDark=(document.body.getAttribute('data-theme')||'light')==='dark';
   const theme=isDark?'dark':'light';
   const bgColor=isDark?'#111111':'#ffffff';
   const gridColor=isDark?'rgba(242, 242, 242, 0.06)':'rgba(0, 0, 0, 0.06)';
