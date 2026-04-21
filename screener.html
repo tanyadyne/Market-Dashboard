@@ -480,14 +480,15 @@ function render(){
   const rvKey=isW?'w_rv':'rv',amKey=isW?'w_am':'am',rsKey=isW?'w_rs':'rs',vsKey=isW?'w_vs':'vs';
   const mxRV=Math.max(...DATA.e.map(e=>e[rvKey]||0)),mxAM=Math.max(...DATA.e.map(e=>e[amKey]||0));
 
-  let html='';let rank=start;
+  let html='';
   for(const e of pageItems){
-    rank++;
+    // Use the original rank stored on the stock object (preserved across filters/searches)
+    const origRank=isW?(e.w_rk||'—'):(e.rk||'—');
     const rv=e[rvKey],am=e[amKey],rs=e[rsKey],vs=e[vsKey];
     const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
     const amP=am!=null?Math.min(am/mxAM*100,100):0;
     const cellMap={
-      rk:`<td class="rk">${rank}</td>`,
+      rk:`<td class="rk">${origRank}</td>`,
       rd:rankDelta(e.t),
       t:`<td class="tk tk-link" onclick="openProfile('${esc(e.t)}')" title="View ${esc(e.t)} profile">${esc(e.t)}</td>`,
       n:`<td class="sc2" title="${esc(e.n||'')}">${esc(e.n||'—')}</td>`,
