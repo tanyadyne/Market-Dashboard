@@ -462,6 +462,14 @@ const SEARCH_ALIASES={
   GLXY: ['crypto','bitcoin'],
 };
 
+// Per-ticker search exclusions: keywords that should NEVER match this stock, even if they
+// appear in its description/theme. Useful for stocks whose summary contains a keyword
+// in a tangential way (e.g. RMBS mentions "cryptography" in a security IP context).
+const SEARCH_EXCLUSIONS={
+  RMBS: ['crypto','bitcoin'],
+  BAH:  ['crypto','bitcoin'],
+};
+
 // Cache of {searchTerm -> Set of tickers} for ETF basket lookups. Built lazily and cleared
 // when ETF_DATA changes (i.e. after a new fetch).
 let _basketCache=Object.create(null), _basketCacheETFs=null;
@@ -485,8 +493,13 @@ function getTickersInMatchingBaskets(f){
 
 function matchesSearch(e,f){
   if(!f)return true;
+  // Hard exclusion: if this ticker has the search term in its exclusion list, never match
+  // (even if the term appears in description / basket / theme). Ticker/name still match.
+  const exc=SEARCH_EXCLUSIONS[e.t];
+  const isExcluded=exc && exc.some(x=>x===f||x.includes(f));
   if(e.t.toLowerCase().includes(f))return true;
   if((e.n||'').toLowerCase().includes(f))return true;
+  if(isExcluded)return false;
   if((e.th||'').toLowerCase().includes(f))return true;
   // Match against the long business description so e.g. searching "bitcoin" picks up
   // any miner / treasury company whose summary mentions it (MARA, RIOT, CLSK, etc.).
