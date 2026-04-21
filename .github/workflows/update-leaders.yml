@@ -2,9 +2,31 @@ name: Update Liquid Leaders
 
 on:
   schedule:
-    # Every 15 minutes during US market hours (UTC)
+    # Primary cadence: every 15 minutes during extended market hours (covers EDT + EST).
+    # UTC 13:00–21:00 → ET 9:00–17:00 (summer) / 8:00–16:00 (winter). The Python market-hours
+    # check below narrows to 9:30–4:05 ET.
     - cron: '*/15 13-21 * * 1-5'
+    # Redundant explicit triggers at the milestones the user specifically wants covered.
+    # GitHub Actions scheduled crons can be delayed or dropped under load; having multiple
+    # separate cron entries increases the probability that at least one fires.
+    # 15 min after US open (9:45 ET) — covers both EDT (13:45 UTC) and EST (14:45 UTC)
+    - cron: '45 13,14 * * 1-5'
+    # 1 hour after open (10:30 ET)
+    - cron: '30 14,15 * * 1-5'
+    # 2 hours after open (11:30 ET)
+    - cron: '30 15,16 * * 1-5'
+    # 30 min before close (3:30 ET) — catches the closing-moves leg
+    - cron: '30 19,20 * * 1-5'
+    # Final post-close snapshot (4:05 ET = 20:05 UTC EDT / 21:05 UTC EST)
+    - cron: '5 20,21 * * 1-5'
   workflow_dispatch:
+
+# Don't let overlapping scheduled triggers stomp on each other. If one run is still in
+# flight when the next fires, the second waits for the first to finish rather than being
+# cancelled. This protects commits/pushes.
+concurrency:
+  group: update-leaders
+  cancel-in-progress: false
 
 jobs:
   update-leaders:
@@ -44,7 +66,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.market_check.outputs.skip != 'true'
-        run: pip install yfinance numpy requests curl_cffi
+        run: pip install --retries 5 --timeout 60 yfinance numpy requests curl_cffi
 
       - name: Fetch Liquid Leaders data
         if: steps.market_check.outputs.skip != 'true'
