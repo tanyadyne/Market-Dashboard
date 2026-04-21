@@ -510,8 +510,13 @@ function matchesSearch(e,f){
   if(aliases && aliases.some(a=>a.includes(f)))return true;
   // ETF basket match: if the search term matches any ETF basket's display or full name
   // (e.g. "photonics", "robotics", "mag seven"), include every holding of that basket.
-  const basketTickers=getTickersInMatchingBaskets(f);
-  if(basketTickers && basketTickers.has(e.t))return true;
+  // Skip "software" — the IGV basket is literally named "Software" but holds many
+  // non-software names (crypto miners like WULF/HUT/CIFR), so basket-matching produces
+  // false positives. "software" should only match via ticker / name / theme / aliases.
+  if(f!=='software'){
+    const basketTickers=getTickersInMatchingBaskets(f);
+    if(basketTickers && basketTickers.has(e.t))return true;
+  }
   return false;
 }
 
