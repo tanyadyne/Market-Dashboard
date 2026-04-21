@@ -461,6 +461,28 @@ const SEARCH_ALIASES={
   COIN: ['crypto','bitcoin'],
   GLXY: ['crypto','bitcoin'],
 };
+
+// Cache of {searchTerm -> Set of tickers} for ETF basket lookups. Built lazily and cleared
+// when ETF_DATA changes (i.e. after a new fetch).
+let _basketCache=Object.create(null), _basketCacheETFs=null;
+function getTickersInMatchingBaskets(f){
+  if(!ETF_DATA||!ETF_DATA.e)return null;
+  // Invalidate cache if ETF_DATA reference changed
+  if(_basketCacheETFs!==ETF_DATA){_basketCache=Object.create(null);_basketCacheETFs=ETF_DATA;}
+  if(_basketCache[f])return _basketCache[f];
+  const set=new Set();
+  for(const etf of ETF_DATA.e){
+    const name=(etf.n||'').toLowerCase();
+    const fullName=(etf.fn||'').toLowerCase();
+    if(name.includes(f)||fullName.includes(f)){
+      const holdings=(etf.h||'').split(',').map(s=>s.trim()).filter(Boolean);
+      for(const tk of holdings)set.add(tk);
+    }
+  }
+  _basketCache[f]=set;
+  return set;
+}
+
 function matchesSearch(e,f){
   if(!f)return true;
   if(e.t.toLowerCase().includes(f))return true;
@@ -468,9 +490,15 @@ function matchesSearch(e,f){
   if((e.th||'').toLowerCase().includes(f))return true;
   // Match against the long business description so e.g. searching "bitcoin" picks up
   // any miner / treasury company whose summary mentions it (MARA, RIOT, CLSK, etc.).
-  if((e.d||'').toLowerCase().includes(f))return true;
+  // Exclude "software" — too many companies casually mention software in their summary,
+  // so that keyword should only match via ticker / name / theme / explicit aliases.
+  if(f!=='software' && (e.d||'').toLowerCase().includes(f))return true;
   const aliases=SEARCH_ALIASES[e.t];
   if(aliases && aliases.some(a=>a.includes(f)))return true;
+  // ETF basket match: if the search term matches any ETF basket's display or full name
+  // (e.g. "photonics", "robotics", "mag seven"), include every holding of that basket.
+  const basketTickers=getTickersInMatchingBaskets(f);
+  if(basketTickers && basketTickers.has(e.t))return true;
   return false;
 }
 
