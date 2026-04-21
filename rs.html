@@ -23,6 +23,9 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .btn-a{border-color:#1e3a1e;background:transparent;color:var(--g)}.btn-a.on{background:var(--gbg)}
 .btn-d{border-color:#3a1e1e;background:transparent;color:var(--r)}.btn-d.on{background:var(--rbg)}
 .btn-t{border-color:var(--bdr2);background:var(--bg3);color:var(--t2)}.btn-t:hover{background:var(--bg4)}
+.btn-back{padding:4px 16px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);text-decoration:none;transition:.15s;font-family:inherit;letter-spacing:1px;display:inline-block}
+[data-theme="light"] .btn-back{background:#fff;border-color:#e5e7eb;color:#4b5563;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+.btn-back:hover{background:var(--bg3);color:var(--t1)}
 .pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#000;transition:background .25s ease;flex-shrink:0}
 [data-theme="light"] .pill-toggle{background:#e0e0e0;border-color:#cbd5e1}
 .pill-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.3);left:32px}
@@ -179,7 +182,7 @@ html[data-view="mobile"]{overflow-x:hidden}
 <body>
 <div class="hdr">
   <div class="hdr-l">
-    <a href="index.html" class="btn btn-t" style="text-decoration:none;font-size:13px;padding:4px 16px;letter-spacing:1px" title="Back to Market Dashboard">←</a>
+    <a href="index.html" class="btn-back" title="Back to Market Dashboard">←</a>
     <div class="hdr-t" style="font-size:15px;letter-spacing:1.5px;text-transform:uppercase">Theme Tracker</div>
   </div>
   <div class="hdr-r">
