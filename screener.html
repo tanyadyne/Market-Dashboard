@@ -472,6 +472,7 @@ const SEARCH_EXCLUSIONS={
   NVDA: ['crypto','bitcoin'],
   CACI: ['photonics'],
   QUBT: ['photonics'],
+  ACN:  ['robotics'],
 };
 
 // Cache of {searchTerm -> Set of tickers} for ETF basket lookups. Built lazily and cleared
@@ -507,9 +508,13 @@ function matchesSearch(e,f){
   if((e.th||'').toLowerCase().includes(f))return true;
   // Match against the long business description so e.g. searching "bitcoin" picks up
   // any miner / treasury company whose summary mentions it (MARA, RIOT, CLSK, etc.).
-  // Exclude "software" — too many companies casually mention software in their summary,
-  // so that keyword should only match via ticker / name / theme / explicit aliases.
-  if(f!=='software' && (e.d||'').toLowerCase().includes(f))return true;
+  // Some terms are excluded from description-search to avoid false positives:
+  //   - "software" → too many companies casually mention software
+  //   - "oil"      → matches as a substring in many unrelated terms ("oil-free", company
+  //                  names like "ProShares", etc.) and gets non-energy stocks via
+  //                  tangential mentions in summaries
+  const SKIP_DESC=new Set(['software','oil']);
+  if(!SKIP_DESC.has(f) && (e.d||'').toLowerCase().includes(f))return true;
   const aliases=SEARCH_ALIASES[e.t];
   if(aliases && aliases.some(a=>a.includes(f)))return true;
   // ETF basket match: if the search term matches any ETF basket's display or full name
