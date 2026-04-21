@@ -456,7 +456,7 @@ function render(){
   const isW=currentTab==='weekly';
   const f=document.getElementById('si').value.toLowerCase();
   let items=DATA.e;
-  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.n||'').toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f)||(e.thm||'').toLowerCase().includes(f));
+  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.n||'').toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f));
   // Setup criteria filter (bitmask)
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
 
@@ -527,7 +527,7 @@ function renderChartView(){
 
   // Filter and sort by rank (use adjusted RS for daily, w_rs for weekly)
   let items=DATA.e.slice();
-  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.n||'').toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f)||(e.thm||'').toLowerCase().includes(f));
+  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.n||'').toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f));
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
   // Sort by rank ascending (top stocks first)
   items.sort((a,b)=>(isW?(a.w_rk||9999)-(b.w_rk||9999):(a.rk||9999)-(b.rk||9999)));
