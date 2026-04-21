@@ -363,12 +363,12 @@ def fetch_live_quotes_bulk(tickers, max_workers=20):
 
 
 def is_us_market_open():
-    """Return True if US session is open OR has closed today.
-    Broader than the strict market-hours check: we run the intraday overlay during the
-    regular session AND for ~4 hours after close, because yfinance's daily bar can lag
-    several minutes after the 4:00pm close while fast_info.lastPrice is immediate. Without
-    this broader window, the post-close workflow produces stale 1D values.
-    Returns False pre-open and on weekends.
+    """Return True only during US regular session (9:30am–3:55pm ET, Mon–Fri).
+
+    IMPORTANT: Post-close, return False. fast_info.lastPrice and fast_info.previousClose
+    are unreliable outside regular hours — they can reflect after-hours activity or
+    the wrong reference close, corrupting 1D calculations. Post-close, the daily df from
+    yf.download is the canonical source of truth.
     """
     try:
         from datetime import timezone
@@ -378,23 +378,29 @@ def is_us_market_open():
         et_min_of_day = et_hour * 60 + et_min
         if now_utc.weekday() >= 5:
             return False
-        # 9:30am = 570 min; 8:00pm = 1200 min — includes the post-close window when
-        # fast_info.lastPrice has today's close but the daily df may still be lagging.
-        return 570 <= et_min_of_day <= 1200
+        # 9:30am (570) to 3:55pm (955) ET — stop 5 min early so the 4:00pm scheduled
+        # run uses the EOD df values instead.
+        return 570 <= et_min_of_day <= 955
     except Exception:
         return False
 
 
 def _overlay_one(entry, live, prev_close):
-    """Apply live price to a single result entry, recomputing ch/c5/c20/ytd/p."""
+    """Apply live price to a single result entry, recomputing ch/c5/c20/ytd/p.
+    Returns False and leaves entry untouched if values are missing or suspicious.
+    """
     if live is None or live <= 0 or prev_close is None or prev_close <= 0:
         return False
     eod = entry.get("p")
     if eod and (live > eod * 1.5 or live < eod * 0.5):
-        # Sanity check — reject suspicious live values
+        # Sanity check — reject suspicious live values vs EOD snapshot
+        return False
+    candidate_ch = (live / prev_close - 1) * 100
+    if candidate_ch > 75 or candidate_ch < -75:
+        # Reject implausible 1D — usually indicates fast_info returned a stale reference close
         return False
     entry["p"] = round(live, 2)
-    entry["ch"] = round((live / prev_close - 1) * 100, 2)
+    entry["ch"] = round(candidate_ch, 2)
     if entry.get("_5b") and entry["_5b"] > 0:
         entry["c5"] = round((live / entry["_5b"] - 1) * 100, 2)
     if entry.get("_20b") and entry["_20b"] > 0:
