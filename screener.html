@@ -66,6 +66,9 @@ tr:hover{background:var(--bg3)}
 .rk{text-align:center;color:var(--t4);font-family:'JetBrains Mono',monospace;font-size:11px}
 .rd{text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;white-space:nowrap}
 .rd-up{color:var(--g)}.rd-dn{color:var(--r)}.rd-flat{color:var(--t4)}.rd-num{color:var(--t2);font-weight:500}
+/* Mobile: hide directional arrows in the rank-change column to save horizontal space */
+[data-view="mobile"] .rd .rd-up,[data-view="mobile"] .rd .rd-dn,[data-view="mobile"] .rd .rd-flat{display:none}
+[data-view="mobile"] .rd .rd-num{font-weight:600}
 .tk{font-weight:700;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.5px}
 .tk-link{cursor:pointer;transition:color .15s}
 .tk-link:hover{color:var(--t1);text-decoration:underline;text-underline-offset:3px}
@@ -350,9 +353,9 @@ function getRankDeltaVal(ticker){
 function rankDelta(ticker){
   const d=getRankDeltaVal(ticker);
   if(d==null)return'<td class="rd rd-flat">—</td>';
-  if(d>0)return`<td class="rd"><span class="rd-up">▲</span>&nbsp;&nbsp;<span class="rd-num">(+${d})</span></td>`;
-  if(d<0)return`<td class="rd"><span class="rd-dn">▼</span>&nbsp;&nbsp;<span class="rd-num">(${d})</span></td>`;
-  return'<td class="rd"><span class="rd-flat">–</span>&nbsp;&nbsp;<span class="rd-num">(0)</span></td>';
+  if(d>0)return`<td class="rd"><span class="rd-up">▲&nbsp;&nbsp;</span><span class="rd-num">(+${d})</span></td>`;
+  if(d<0)return`<td class="rd"><span class="rd-dn">▼&nbsp;&nbsp;</span><span class="rd-num">(${d})</span></td>`;
+  return'<td class="rd"><span class="rd-flat">–&nbsp;&nbsp;</span><span class="rd-num">(0)</span></td>';
 }
 
 function switchTab(tab){
