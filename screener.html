@@ -625,11 +625,10 @@ function searchStock(){
   const total=DATA.e.length;
   const pos=getPosition(stock.rk,total);
   const ts=stock.ts||'Mid-Range';
-  const rsStatus=getPosition(stock.rk,total);  // Leader/Neutral/Laggard based on daily rank
-  // Simplify to Leader/Neutral/Laggard label for the RS SCORE box
-  let rsLabel='Mid-Range';
-  if(rsStatus==='Strong Leader'||rsStatus==='Moderate Leader')rsLabel='Leader';
-  else if(rsStatus==='Moderate Laggard'||rsStatus==='Deep Laggard')rsLabel='Laggard';
+  // Use the full 5-tier position label (Strong Leader / Moderate Leader / Mid-Range /
+  // Moderate Laggard / Deep Laggard) so the RS Score box matches the Position column in
+  // the history table below.
+  const rsLabel=getPosition(stock.rk,total);
 
   // Theme info (mapped sector with rank among ETFs)
   const mappedSector=stock.thm||stock.th||'';
@@ -643,7 +642,7 @@ function searchStock(){
 
   // Info boxes (4)
   let html=`<div class="info-boxes">
-    <div class="info-box"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.rs)}">${stock.rs!=null?stock.rs+'%':'—'}</div><div class="sub"><span class="${themeTag(rsLabel)}">${rsLabel}</span></div></div>
+    <div class="info-box"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.rs)}">${stock.rs!=null?stock.rs+'%':'—'}</div><div class="sub"><span class="${posClass(rsLabel)}">${rsLabel}</span></div></div>
     <div class="info-box"><div class="lbl">Daily Rank</div><div class="val">#${stock.rk}</div><div class="sub">of ${total}</div></div>
     <div class="info-box"><div class="lbl">Weekly Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">of ${total}</div></div>
     <div class="info-box"><div class="lbl">Theme</div><div class="val" style="font-size:14px">${esc(mappedSector||'—')}</div><div class="sub">${themeSubline}</div></div>
