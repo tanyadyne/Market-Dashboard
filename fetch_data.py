@@ -306,6 +306,26 @@ def load_dynamic_holdings():
     return {}
 
 
+def close_on_or_before(df_index, closes, target_date):
+    """Find the close of the most recent trading day at or before target_date.
+    Returns a float or None. Used for calendar-based 1W/1M baselines that match
+    MarketWatch / Yahoo / TradingView conventions.
+    """
+    for i in range(len(df_index) - 1, -1, -1):
+        ts = df_index[i]
+        d = ts.date() if hasattr(ts, 'date') else None
+        if d is None:
+            continue
+        if d <= target_date:
+            v = closes[i]
+            if v is not None:
+                try:
+                    return float(v)
+                except Exception:
+                    return None
+    return None
+
+
 # ─── Intraday overlay helpers ────────────────────────────────────────────────
 
 def fetch_live_quote(ticker):
@@ -607,8 +627,31 @@ def main():
 
         price = float(c[-1])
         change = (c[-1] / c[-2] - 1) * 100 if length >= 2 else 0
-        c5 = (c[-1] / c[-6] - 1) * 100 if length >= 6 else None
-        c20 = (c[-1] / c[-21] - 1) * 100 if length >= 21 else None
+
+        # ─── 1W / 1M via CALENDAR-date lookback ─────────────────────────
+        # Matches MarketWatch / Yahoo / TradingView convention: "close closest to N calendar
+        # days ago", with reference = next business day after the last completed session so
+        # the week-ago baseline advances when a session closes.
+        try:
+            _last_ts = df.index[-1]
+            _last_date = _last_ts.date() if hasattr(_last_ts, 'date') else None
+        except Exception:
+            _last_date = None
+        if _last_date is not None:
+            try:
+                import pandas as _pd
+                _today_ref = (_last_ts + _pd.offsets.BDay(1)).date()
+            except Exception:
+                _today_ref = _last_date + timedelta(days=1)
+        else:
+            from datetime import date as _d
+            _today_ref = _d.today()
+        _w_target = _today_ref - timedelta(days=7)
+        _m_target = _today_ref - timedelta(days=30)
+        w_base = close_on_or_before(df.index, c, _w_target)
+        m_base = close_on_or_before(df.index, c, _m_target)
+        c5  = ((c[-1] / w_base) - 1) * 100 if (w_base and w_base > 0) else None
+        c20 = ((c[-1] / m_base) - 1) * 100 if (m_base and m_base > 0) else None
 
         # YTD: price change vs last bar of previous calendar year.
         # Falls back to the first available bar of the current year if the data series
@@ -634,23 +677,6 @@ def main():
         except Exception:
             ytd = None
             ytd_base = None
-
-        # ─── Intraday overlay baseline selection ───────────────────────
-        # During the overlay, `live` is substituted as "today's price". We want the 5/20-trading-day
-        # baselines to span the conventional distance from TODAY, not from c[-1].
-        #   • If c[-1] is today's (possibly partial) bar: overlay replaces c[-1] → 5d back = c[-6]
-        #   • If c[-1] is yesterday (df not yet updated): overlay adds today via live → 5d back = c[-5]
-        try:
-            from datetime import timezone as _tz
-            _now_utc = datetime.now(_tz.utc)
-            _today_et = (_now_utc - timedelta(hours=4)).date()
-            _last_ts = df.index[-1]
-            _last_date = _last_ts.date() if hasattr(_last_ts, 'date') else None
-            _c1_is_today = (_last_date == _today_et)
-        except Exception:
-            _c1_is_today = True
-        _b5_off  = 6  if _c1_is_today else 5
-        _b20_off = 21 if _c1_is_today else 20
 
         atr = compute_atr(h, l, c, ATR_PERIOD)
         valid_c = [x for x in c if x is not None]
@@ -687,8 +713,8 @@ def main():
                 "fr": None, "vs": None,
                 # Internal baselines for intraday overlay (stripped before output)
                 "_pc": float(c[-2]) if length >= 2 else None,
-                "_5b": float(c[-_b5_off]) if length >= _b5_off else None,
-                "_20b": float(c[-_b20_off]) if length >= _b20_off else None,
+                "_5b": w_base,
+                "_20b": m_base,
                 "_yb": ytd_base,
             }
 
@@ -743,8 +769,8 @@ def main():
             "vs": vs_series,
             # Internal baselines for intraday overlay (stripped before output)
             "_pc": float(c[-2]) if length >= 2 else None,
-            "_5b": float(c[-_b5_off]) if length >= _b5_off else None,
-            "_20b": float(c[-_b20_off]) if length >= _b20_off else None,
+            "_5b": w_base,
+            "_20b": m_base,
             "_yb": ytd_base,
         }
 
