@@ -468,6 +468,8 @@ const SEARCH_ALIASES={
 const SEARCH_EXCLUSIONS={
   RMBS: ['crypto','bitcoin'],
   BAH:  ['crypto','bitcoin'],
+  CACI: ['photonics'],
+  QUBT: ['photonics'],
 };
 
 // Cache of {searchTerm -> Set of tickers} for ETF basket lookups. Built lazily and cleared
@@ -510,10 +512,13 @@ function matchesSearch(e,f){
   if(aliases && aliases.some(a=>a.includes(f)))return true;
   // ETF basket match: if the search term matches any ETF basket's display or full name
   // (e.g. "photonics", "robotics", "mag seven"), include every holding of that basket.
-  // Skip "software" — the IGV basket is literally named "Software" but holds many
-  // non-software names (crypto miners like WULF/HUT/CIFR), so basket-matching produces
-  // false positives. "software" should only match via ticker / name / theme / aliases.
-  if(f!=='software'){
+  // Skip certain broad keywords where basket-matching produces false positives:
+  //   - "software" → IGV holds many non-software names (WULF, HUT, CIFR, CLSK)
+  //   - "crypto"   → WGMI ("Crypto Miners / Data Centers") holds NVDA, TSM (chip suppliers)
+  //   - "bitcoin"  → similar issue with mining ETFs holding chip suppliers
+  // For these terms, match only via ticker / name / theme / description / aliases.
+  const SKIP_BASKET=new Set(['software','crypto','bitcoin']);
+  if(!SKIP_BASKET.has(f)){
     const basketTickers=getTickersInMatchingBaskets(f);
     if(basketTickers && basketTickers.has(e.t))return true;
   }
