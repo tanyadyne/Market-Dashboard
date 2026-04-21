@@ -1105,25 +1105,40 @@ def fetch_live_quotes_bulk(tickers, max_workers=20):
     return out
 
 
-def is_us_market_open():
-    """Return True if US equity market is currently in regular session (9:30am–4:00pm ET, Mon–Fri).
-    Uses naive ET wall clock; ignores holidays (the script's GitHub workflow already gates on
-    market hours, so this is just a defensive check for the overlay step).
+def is_us_market_open_or_recently_closed():
+    """Return True if US equity session is open OR has closed today.
+    We apply the intraday-overlay in both cases:
+      • Market open   → fast_info.lastPrice is live intraday price
+      • Just closed   → fast_info.lastPrice is today's official close (Yahoo updates it
+                        within seconds of 4:00pm ET). The daily df, by contrast, can lag
+                        by several minutes after close, so the overlay gives us more
+                        accurate 1D values than the df alone.
+    Returns False pre-open (≤9:30 ET) and on weekends — in those windows fast_info.lastPrice
+    can legitimately be yesterday's or pre-market NEXT-day's value, which would corrupt 1D.
     """
     try:
         from datetime import timezone
-        # Approximate ET as UTC-4 (EDT). Workflow already gates by ET hour, so close-enough.
         now_utc = datetime.now(timezone.utc)
+        # ET offset: use -4 for EDT (approx — the workflow already gates by UTC hour so
+        # in practice both EDT and EST routes through this function during market hours).
         et_hour = (now_utc.hour - 4) % 24
         et_min  = now_utc.minute
         et_min_of_day = et_hour * 60 + et_min
-        # Mon=0..Sun=6
         if now_utc.weekday() >= 5:
             return False
-        # 9:30am = 570 min; 4:00pm = 960 min
-        return 570 <= et_min_of_day <= 960
+        # Window: 9:30am (570) through 8:00pm (1200) ET — covers regular session + the
+        # post-close window when yfinance's daily bar may not yet reflect today's close
+        # but fast_info.lastPrice already does. We intentionally DO NOT run the overlay
+        # pre-open (would replace today's c[-1] = yesterday's close with today's pre-market
+        # bid, breaking yesterday's 1D display).
+        return 570 <= et_min_of_day <= 1200
     except Exception:
         return False
+
+
+# Back-compat alias (older code calls this name)
+def is_us_market_open():
+    return is_us_market_open_or_recently_closed()
 
 
 def apply_intraday_overlay(results):
