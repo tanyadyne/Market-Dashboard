@@ -9,6 +9,7 @@ import json, os, sys, time, io
 import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta, date
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
     import requests
@@ -781,15 +782,22 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     # YTD: find the last bar of the previous year (= first bar of current year - 1)
     current_year = date.today().year
     ytd = None
+    ytd_base = None  # baseline close (last bar of previous year, or first of current year)
     try:
         for i, ts in enumerate(df.index):
             bar_year = ts.year if hasattr(ts, 'year') else int(str(ts)[:4])
             if bar_year >= current_year:
                 if i > 0 and c[i - 1] is not None and c[-1] is not None and c[i - 1] != 0:
-                    ytd = (c[-1] / c[i - 1] - 1) * 100
+                    ytd_base = float(c[i - 1])
+                    ytd = (c[-1] / ytd_base - 1) * 100
+                elif c[i] is not None and c[-1] is not None and c[i] != 0:
+                    # Fallback: data starts in current year (IPO etc.) — use first available bar
+                    ytd_base = float(c[i])
+                    ytd = (c[-1] / ytd_base - 1) * 100
                 break
     except Exception:
         ytd = None
+        ytd_base = None
 
     # ATR Ext = gainPct / atrPct (matches Pine Script exactly)
     # gainPct = (price - sma50) / sma50 * 100
@@ -836,7 +844,12 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "c20": round(c20, 2) if c20 is not None else None,
                 "ytd": round(ytd, 2) if ytd is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
-                "sa": _sa, "sf": _sf, "tz": "neutral"}
+                "sa": _sa, "sf": _sf, "tz": "neutral",
+                # Internal baselines for intraday overlay (stripped before output)
+                "_pc": float(c[-2]) if n >= 2 else None,
+                "_5b": float(c[-6]) if n >= 6 else None,
+                "_20b": float(c[-21]) if n >= 21 else None,
+                "_yb": ytd_base}
 
     # Handle IPOs with <252 bars: use actual bar count (mirrors Pine's "n63/n126/n189/n252" logic)
     avail = len(common)
@@ -933,6 +946,11 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "rf": dec_streak, "ra": adv_streak,
         "p": round(price, 2), "fr": round(final_rs, 4), "vs": sma_series,
         "sa": setup_adj, "sf": setup_flags, "tz": trend_zone,
+        # Internal baselines for intraday overlay (stripped before output)
+        "_pc": float(c[-2]) if n >= 2 else None,
+        "_5b": float(c[-6]) if n >= 6 else None,
+        "_20b": float(c[-21]) if n >= 21 else None,
+        "_yb": ytd_base,
     }
 
 
@@ -1008,6 +1026,116 @@ def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_
         "w_rs": None,  # Set cross-sectionally in main()
         "w_rf": dec_streak, "w_ra": adv_streak, "w_vs": sma_series, "w_fr": round(final_rs, 4),
     }
+
+
+def fetch_live_quote(ticker):
+    """Fetch live (intraday) quote for a single ticker via fast_info.
+    Returns (last_price, prev_close) or (None, None) on failure.
+    """
+    try:
+        ti = yf.Ticker(ticker, session=_session)
+        fi = ti.fast_info
+        last = fi.get("lastPrice", fi.get("last_price"))
+        prev = fi.get("previousClose", fi.get("previous_close"))
+        last = float(last) if last not in (None, 0) else None
+        prev = float(prev) if prev not in (None, 0) else None
+        return last, prev
+    except Exception:
+        return None, None
+
+
+def fetch_live_quotes_bulk(tickers, max_workers=20):
+    """Parallel-fetch live quotes for many tickers. Returns {ticker: (last, prev)}."""
+    out = {}
+    if not tickers:
+        return out
+    with ThreadPoolExecutor(max_workers=max_workers) as ex:
+        futs = {ex.submit(fetch_live_quote, t): t for t in tickers}
+        for fut in as_completed(futs):
+            tk = futs[fut]
+            try:
+                last, prev = fut.result(timeout=15)
+                if last is not None and prev is not None:
+                    out[tk] = (last, prev)
+            except Exception:
+                pass
+    return out
+
+
+def is_us_market_open():
+    """Return True if US equity market is currently in regular session (9:30am–4:00pm ET, Mon–Fri).
+    Uses naive ET wall clock; ignores holidays (the script's GitHub workflow already gates on
+    market hours, so this is just a defensive check for the overlay step).
+    """
+    try:
+        from datetime import timezone
+        # Approximate ET as UTC-4 (EDT). Workflow already gates by ET hour, so close-enough.
+        now_utc = datetime.now(timezone.utc)
+        et_hour = (now_utc.hour - 4) % 24
+        et_min  = now_utc.minute
+        et_min_of_day = et_hour * 60 + et_min
+        # Mon=0..Sun=6
+        if now_utc.weekday() >= 5:
+            return False
+        # 9:30am = 570 min; 4:00pm = 960 min
+        return 570 <= et_min_of_day <= 960
+    except Exception:
+        return False
+
+
+def apply_intraday_overlay(results):
+    """For each result, fetch live price via fast_info and recompute ch/c5/c20/ytd/p so the
+    output reflects the current intraday move (not just the last completed daily bar).
+
+    Only runs if US market is open. RS scores are NOT recomputed (they remain anchored to
+    the last EOD bar — recomputing intraday would require re-running the full VARS pipeline).
+
+    Each result must carry internal baseline fields (_pc, _5b, _20b, _yb) which were set
+    by process_stock(); these are stripped before output.
+    """
+    if not is_us_market_open():
+        print("  [Intraday overlay] Skipping — US market not open.")
+        return
+    tickers = [r["t"] for r in results]
+    print(f"  [Intraday overlay] Fetching live quotes for {len(tickers)} stocks...")
+    t0 = time.time()
+    quotes = fetch_live_quotes_bulk(tickers)
+    print(f"  [Intraday overlay] Got {len(quotes)} live quotes in {time.time()-t0:.1f}s")
+    refreshed = 0
+    for r in results:
+        q = quotes.get(r["t"])
+        if not q:
+            continue
+        live, prev_close = q
+        if live <= 0 or prev_close <= 0:
+            continue
+        # Sanity check: live should be within ±50% of the EOD close. Reject wild values
+        # (could be a stale fast_info or ticker mismatch).
+        eod = r.get("p")
+        if eod and (live > eod * 1.5 or live < eod * 0.5):
+            continue
+        # Apply overlay
+        r["p"] = round(live, 2)
+        # 1D change uses live's own previousClose for accuracy (handles dividends/splits
+        # adjustments yfinance applies to fast_info)
+        r["ch"] = round((live / prev_close - 1) * 100, 2)
+        # 1W/1M/YTD: substitute live for the "current" leg, keep historical baselines
+        if r.get("_5b") and r["_5b"] > 0:
+            r["c5"] = round((live / r["_5b"] - 1) * 100, 2)
+        if r.get("_20b") and r["_20b"] > 0:
+            r["c20"] = round((live / r["_20b"] - 1) * 100, 2)
+        if r.get("_yb") and r["_yb"] > 0:
+            r["ytd"] = round((live / r["_yb"] - 1) * 100, 2)
+        refreshed += 1
+    print(f"  [Intraday overlay] Refreshed {refreshed}/{len(results)} entries with live prices")
+
+
+def strip_internal_fields(results):
+    """Remove _-prefixed internal fields before serializing to leaders.json."""
+    for r in results:
+        for k in list(r.keys()):
+            if k.startswith("_"):
+                del r[k]
 
 
 def get_position_label(rank, total):
@@ -1497,6 +1625,12 @@ def main():
 
     print(f"  Processed: {processed}/{len(all_tickers)}")
 
+    # ─── Intraday overlay: replace EOD price with live quote when market is open ──
+    # Updates p / ch / c5 / c20 / ytd to reflect the current intraday move. RS scores
+    # remain anchored to the last completed daily bar (recomputing intraday would require
+    # re-running the full VARS pipeline, which is expensive).
+    apply_intraday_overlay(results)
+
     # ─── Cross-sectional percentrank (compare each stock vs ALL others) ──
     all_d_rs = [r["fr"] for r in results if r.get("fr") is not None]
     all_w_rs = [r.get("w_fr") for r in results if r.get("w_fr") is not None]
@@ -1637,6 +1771,10 @@ def main():
     rh_w = [snap.get("w", {}) for snap in weeks[:-1]]
 
     # ─── Output leaders.json ──────────────────────────────────
+    # Strip internal _-prefixed baseline fields used by the intraday overlay so they
+    # don't bloat the output JSON.
+    strip_internal_fields(results)
+
     data = {
         "e": results,
         "meta": {
