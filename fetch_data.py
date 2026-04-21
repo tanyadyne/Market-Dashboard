@@ -363,8 +363,12 @@ def fetch_live_quotes_bulk(tickers, max_workers=20):
 
 
 def is_us_market_open():
-    """Return True if US equity market is currently in regular session.
-    Uses naive ET wall clock (UTC-4 EDT approx); GitHub workflow already gates by ET hour.
+    """Return True if US session is open OR has closed today.
+    Broader than the strict market-hours check: we run the intraday overlay during the
+    regular session AND for ~4 hours after close, because yfinance's daily bar can lag
+    several minutes after the 4:00pm close while fast_info.lastPrice is immediate. Without
+    this broader window, the post-close workflow produces stale 1D values.
+    Returns False pre-open and on weekends.
     """
     try:
         from datetime import timezone
@@ -374,8 +378,9 @@ def is_us_market_open():
         et_min_of_day = et_hour * 60 + et_min
         if now_utc.weekday() >= 5:
             return False
-        # 9:30am = 570 min; 4:00pm = 960 min
-        return 570 <= et_min_of_day <= 960
+        # 9:30am = 570 min; 8:00pm = 1200 min — includes the post-close window when
+        # fast_info.lastPrice has today's close but the daily df may still be lagging.
+        return 570 <= et_min_of_day <= 1200
     except Exception:
         return False
 
