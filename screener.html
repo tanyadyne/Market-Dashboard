@@ -451,12 +451,27 @@ function drawSparkline(canvas,series){
   ctx.strokeStyle=isDark?'#c084fc':'#9333ea';ctx.lineWidth=1.5;ctx.stroke();
 }
 
+// Per-ticker search aliases: extra keywords that make a stock match a search even though
+// the keyword doesn't appear in its ticker/name/theme. Add lowercase entries.
+const SEARCH_ALIASES={
+  CRCL:['software','blockchain','crypto'],
+};
+function matchesSearch(e,f){
+  if(!f)return true;
+  if(e.t.toLowerCase().includes(f))return true;
+  if((e.n||'').toLowerCase().includes(f))return true;
+  if((e.th||'').toLowerCase().includes(f))return true;
+  const aliases=SEARCH_ALIASES[e.t];
+  if(aliases && aliases.some(a=>a.includes(f)))return true;
+  return false;
+}
+
 function render(){
   if(!DATA)return;
   const isW=currentTab==='weekly';
   const f=document.getElementById('si').value.toLowerCase();
   let items=DATA.e;
-  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.n||'').toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f));
+  if(f)items=items.filter(e=>matchesSearch(e,f));
   // Setup criteria filter (bitmask)
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
 
@@ -527,7 +542,7 @@ function renderChartView(){
 
   // Filter and sort by rank (use adjusted RS for daily, w_rs for weekly)
   let items=DATA.e.slice();
-  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||(e.n||'').toLowerCase().includes(f)||(e.th||'').toLowerCase().includes(f));
+  if(f)items=items.filter(e=>matchesSearch(e,f));
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
   // Sort by rank ascending (top stocks first)
   items.sort((a,b)=>(isW?(a.w_rk||9999)-(b.w_rk||9999):(a.rk||9999)-(b.rk||9999)));
