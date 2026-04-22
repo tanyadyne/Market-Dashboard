@@ -109,14 +109,16 @@ tr:hover{background:var(--bg3)}
 .hist-table td{padding:5px 6px;font-family:'JetBrains Mono',monospace;font-size:11px}
 .tag-leader{color:#4ade80;font-weight:600}.tag-neutral{color:#94a3b8;font-weight:600}.tag-laggard{color:#f87171;font-weight:600}
 /* 5-tier variants used in the Individual Profile history table only.
-   Strong = deeper/more saturated, Moderate = lighter/paler. */
-.tag-leader-strong{color:#16a34a;font-weight:700}
-.tag-leader-mod{color:#86efac;font-weight:600}
-.tag-laggard-deep{color:#b91c1c;font-weight:700}
-.tag-laggard-mod{color:#fca5a5;font-weight:600}
-/* Dark theme: deeper shades become hard to read on near-black bg → bump them up */
+   Strong = deep saturated color, Moderate = noticeably lighter/desaturated. */
+.tag-leader-strong{color:#15803d;font-weight:700}
+.tag-leader-mod{color:#4ade80;font-weight:500}
+.tag-laggard-deep{color:#991b1b;font-weight:700}
+.tag-laggard-mod{color:#f87171;font-weight:500}
+/* Dark theme: deep shades become hard to read on near-black bg → bump to brighter saturated */
 [data-theme="dark"] .tag-leader-strong{color:#22c55e}
+[data-theme="dark"] .tag-leader-mod{color:#86efac}
 [data-theme="dark"] .tag-laggard-deep{color:#ef4444}
+[data-theme="dark"] .tag-laggard-mod{color:#fca5a5}
 .streak-sel{padding:1px 4px;border-radius:3px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer}
 /* Chart view grid */
 .chart-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}
