@@ -592,11 +592,15 @@ function render(){
   const dk=k=>{if(!isW)return k;const m={rv:'w_rv',am:'w_am',rs:'w_rs',vs:'w_vs'};return m[k]||k;};
   if(sortKey==='rd'){
     items=[...items].sort((a,b)=>{const av=getRankDeltaVal(a.t)??-Infinity,bv=getRankDeltaVal(b.t)??-Infinity;return sortDir*(av>bv?1:av<bv?-1:0);});
-  }else if(isW&&sortKey==='rk'){
-    items=[...items].sort((a,b)=>{const ar=a.w_rs??-Infinity,br=b.w_rs??-Infinity;if(ar!==br)return br-ar;return(b.c5??-Infinity)-(a.c5??-Infinity);});
+  }else if(sortKey==='rk'){
+    // Sort by the backend-computed rank directly. For weekly tab, w_rk was assigned using
+    // raw w_fr (tiebreak c5), so sorting by w_rk here guarantees the # column is in ascending
+    // order — sorting by w_rs instead would diverge on ties (many stocks share w_rs=100).
+    const rkKey=isW?'w_rk':'rk';
+    items=[...items].sort((a,b)=>sortDir*((a[rkKey]??9999)-(b[rkKey]??9999)));
   }else{
     const sk=dk(sortKey);
-    items=[...items].sort((a,b)=>{if(sortKey==='rk')return sortDir*(a.rk-b.rk);const av=a[sk]??(typeof a[sk]==='string'?'':-Infinity),bv=b[sk]??(typeof b[sk]==='string'?'':-Infinity);return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av>bv?1:av<bv?-1:0);});
+    items=[...items].sort((a,b)=>{const av=a[sk]??(typeof a[sk]==='string'?'':-Infinity),bv=b[sk]??(typeof b[sk]==='string'?'':-Infinity);return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av>bv?1:av<bv?-1:0);});
   }
   // Bubble ticker matches to the top (after user's sort — overrides the sort for exact/prefix ticker hits)
   items=prioritizeTickerMatches(items, f);
