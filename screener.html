@@ -129,7 +129,7 @@ tr:hover{background:var(--bg3)}
 .hist-delta .up{color:var(--g)}
 .hist-delta .dn{color:var(--r)}
 .hist-delta .fl{color:var(--t4)}
-@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{flex-direction:column}.tab-btn{padding:8px 18px;font-size:11px}.chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.chart-card-body{height:200px}}
+@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px}.info-box{min-width:0}.info-boxes .info-box:nth-child(1){order:1}.info-boxes .info-box:nth-child(4){order:2}.info-boxes .info-box:nth-child(2){order:3}.info-boxes .info-box:nth-child(3){order:4}.tab-btn{padding:8px 18px;font-size:11px}.chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.chart-card-body{height:200px}}
 
 /* Mobile layout toggle (controlled by data-view="mobile") */
 [data-view="mobile"] table{table-layout:fixed;width:100%;max-width:100vw}
@@ -341,13 +341,19 @@ function posClass(pos){if(pos.includes('Leader'))return'tag-leader';if(pos.inclu
 function themeTag(status){if(status==='Leader')return'tag-leader';if(status==='Laggard')return'tag-laggard';return'tag-neutral';}
 
 function getRankDeltaVal(ticker){
-  if(!DATA||!DATA.rh)return null;
+  // Use HISTORY (per-day rank snapshots from leaders_score_history.json).
+  // rankLookback = number of TRADING DAYS back (1 = yesterday, 2 = two trading days ago, etc).
+  if(!HISTORY||!HISTORY.dates||!HISTORY.d||!HISTORY.d[ticker])return null;
   const isW=currentTab==='weekly';
-  const hist=isW?DATA.rh.w:DATA.rh.d;
-  const idx=hist.length-rankLookback;
-  if(idx<0||idx>=hist.length)return null;
-  const prevRk=hist[idx][ticker];if(prevRk==null)return null;
-  const etf=DATA.e.find(e=>e.t===ticker);if(!etf)return null;
+  const key=isW?'wr':'r';
+  const arr=HISTORY.d[ticker][key];
+  if(!arr||!arr.length)return null;
+  // The most recent entry in arr corresponds to today's rank (dates[-1]).
+  // Going `rankLookback` trading days back means index = arr.length - 1 - rankLookback.
+  const idx=arr.length-1-rankLookback;
+  if(idx<0||idx>=arr.length)return null;
+  const prevRk=arr[idx];if(prevRk==null)return null;
+  const etf=DATA&&DATA.e&&DATA.e.find(e=>e.t===ticker);if(!etf)return null;
   const curRk=isW?etf.w_rk:etf.rk;if(curRk==null)return null;
   return prevRk-curRk;
 }
@@ -426,7 +432,7 @@ function buildHeader(){
     th.className=col.al==='l'?'l':'c';
     th.style.width=col.w;
     if(col.key==='rd'){
-      const opts=[1,2,3,4,5,6,7,8].map(v=>`<option value="${v}"${v===rankLookback?' selected':''}>${v}W</option>`).join('');
+      const opts=[1,2,3,4,5,6,7,8,9,10].map(v=>`<option value="${v}"${v===rankLookback?' selected':''}>${v}D</option>`).join('');
       th.innerHTML=`Δ <select class="streak-sel" onchange="event.stopPropagation();rankLookback=parseInt(this.value);render();" style="font-size:9px;padding:1px 2px">${opts}</select>`;
     }else{th.textContent=col.label;}
     th.addEventListener('click',e=>{if(e.target.tagName==='SELECT'||e.target.tagName==='OPTION')return;
