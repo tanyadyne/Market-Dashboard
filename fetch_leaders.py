@@ -8,7 +8,7 @@ Outputs leaders.json (current snapshot) and leaders_history.json (rolling 30-day
 import json, os, sys, time, io
 import numpy as np
 import yfinance as yf
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
@@ -1839,7 +1839,17 @@ def main():
         r["w_rk"] = w_rank_map.get(r["t"], len(results))
 
     # ─── Rank history (rolling weekly snapshots) ──────────────
-    today_str = date.today().isoformat()
+    # IMPORTANT: use US EASTERN date, not UTC date. The market trades on ET, and this
+    # script's purpose is to track daily rank changes tied to trading sessions. If we
+    # used date.today() (UTC), any run between 8pm ET and midnight ET would write an
+    # entry labeled "tomorrow" — producing a ghost duplicate of today's data that would
+    # zero out the 1D delta (since arr[-1] and arr[-2] would both hold today's EOD ranks).
+    _now_utc = datetime.now(timezone.utc)
+    # Approx ET as UTC-4 (EDT). Workflow only runs on weekdays so DST precision doesn't matter;
+    # both EDT and EST map post-close (4pm ET = 20:00 UTC EDT / 21:00 UTC EST) to the same
+    # calendar day in ET, and this offset avoids the UTC date-flip issue.
+    _et_now = _now_utc.astimezone(timezone(timedelta(hours=-4)))
+    today_str = _et_now.date().isoformat()
 
     # ─── Score history (rolling daily snapshots for search) ───
     score_history = {"dates": [], "d": {}}
