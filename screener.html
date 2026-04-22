@@ -69,6 +69,11 @@ tr:hover{background:var(--bg3)}
 /* Mobile: hide directional arrows in the rank-change column to save horizontal space */
 [data-view="mobile"] .rd .rd-up,[data-view="mobile"] .rd .rd-dn,[data-view="mobile"] .rd .rd-flat{display:none}
 [data-view="mobile"] .rd .rd-num{font-weight:600}
+/* Mobile-only: color the (+N) / (-N) / (0) value by direction since the arrow is hidden */
+[data-view="mobile"] .rd .rd-up+.rd-num{color:var(--g)}
+[data-view="mobile"] .rd .rd-dn+.rd-num{color:var(--r)}
+[data-view="mobile"] .rd .rd-flat+.rd-num{color:var(--t4)}
+[data-view="mobile"] .rd.rd-flat{color:var(--t4)}
 .tk{font-weight:700;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.5px}
 .tk-link{cursor:pointer;transition:color .15s}
 .tk-link:hover{color:var(--t1);text-decoration:underline;text-underline-offset:3px}
