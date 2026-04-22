@@ -323,6 +323,30 @@ function toggleTheme(){
   if(t)document.documentElement.setAttribute('data-theme',t);
 }catch(e){}})();
 
+// Auto-detect mobile layout on every page load (no persistence — manual toggle is
+// session-only, refresh re-runs detection).
+// Phone UA → mobile. Narrow viewport (≤820px) → mobile. Otherwise → desktop.
+// iPad portrait gets mobile, iPad landscape gets desktop, phones always mobile.
+function detectIsMobile(){
+  try{
+    const ua=navigator.userAgent||'';
+    const phoneUA=/Mobi|Android.*Mobile|iPhone|iPod/i.test(ua);
+    if(phoneUA)return true;
+    return window.innerWidth<=820;
+  }catch(e){return false;}
+}
+(function(){try{
+  const useMobile=detectIsMobile();
+  document.documentElement.setAttribute('data-view',useMobile?'mobile':'desktop');
+  // setView() needs ALL_COLUMNS defined, so defer to DOMContentLoaded where we can call it
+  window.__autoMobile=useMobile;
+}catch(e){}})();
+document.addEventListener('DOMContentLoaded',()=>{
+  if(typeof setView==='function'&&window.__autoMobile!==undefined){
+    setView(window.__autoMobile);
+  }
+});
+
 (function initResize(){
   document.addEventListener('mousedown',e=>{
     if(!e.target.classList.contains('rh'))return;
