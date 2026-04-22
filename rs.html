@@ -335,17 +335,27 @@ function detectIsMobile(){
     return window.innerWidth<=820;
   }catch(e){return false;}
 }
+// Apply the detected layout synchronously BEFORE buildHeader()/loadData() run further down
+// the script. We can't use DOMContentLoaded here — in most browsers this script executes
+// AFTER the DOM is parsed (DOMContentLoaded has already fired), so the listener would
+// never run. Instead, configure isMobile + colVisible directly and let the buttons
+// get toggled via the DOMContentLoaded callback (which still works for button state).
 (function(){try{
   const useMobile=detectIsMobile();
   document.documentElement.setAttribute('data-view',useMobile?'mobile':'desktop');
-  // setView() needs ALL_COLUMNS defined, so defer to DOMContentLoaded where we can call it
-  window.__autoMobile=useMobile;
+  isMobile=useMobile;
+  if(useMobile){ALL_COLUMNS.forEach(c=>{colVisible[c.key]=c.mob;});}
 }catch(e){}})();
-document.addEventListener('DOMContentLoaded',()=>{
-  if(typeof setView==='function'&&window.__autoMobile!==undefined){
-    setView(window.__autoMobile);
-  }
-});
+// When the DOM is ready, sync the Desktop/Mobile button state to match the detected layout.
+// If the DOM is already ready (script at end of body), run immediately.
+(function(){
+  const syncButtons=()=>{
+    const bd=document.getElementById('btnDesktop'),bm=document.getElementById('btnMobile');
+    if(bd&&bm){bd.classList.toggle('on',!isMobile);bm.classList.toggle('on',isMobile);}
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',syncButtons);
+  else syncButtons();
+})();
 
 (function initResize(){
   document.addEventListener('mousedown',e=>{
