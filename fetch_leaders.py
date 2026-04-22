@@ -1840,30 +1840,6 @@ def main():
 
     # ─── Rank history (rolling weekly snapshots) ──────────────
     today_str = date.today().isoformat()
-    today_week = date.today().isocalendar()
-    week_key = f"{today_week[0]}-W{today_week[1]:02d}"
-
-    rank_history = {"weeks": []}
-    if os.path.exists("leaders_rank_history.json"):
-        try:
-            with open("leaders_rank_history.json") as f:
-                rank_history = json.load(f)
-        except Exception:
-            rank_history = {"weeks": []}
-
-    current_d_ranks = {r["t"]: r["rk"] for r in results}
-    current_w_ranks = {r["t"]: r["w_rk"] for r in results}
-    weeks = rank_history.get("weeks", [])
-    if weeks and weeks[-1].get("wk") == week_key:
-        weeks[-1] = {"wk": week_key, "date": today_str, "d": current_d_ranks, "w": current_w_ranks}
-    else:
-        weeks.append({"wk": week_key, "date": today_str, "d": current_d_ranks, "w": current_w_ranks})
-    if len(weeks) > 9:
-        weeks = weeks[-9:]
-    rank_history["weeks"] = weeks
-
-    with open("leaders_rank_history.json", "w") as f:
-        json.dump(rank_history, f, separators=(",", ":"))
 
     # ─── Score history (rolling daily snapshots for search) ───
     score_history = {"dates": [], "d": {}}
@@ -1948,10 +1924,6 @@ def main():
     for r in results:
         r["ts"] = theme_status.get(r.get("thm", ""), "Neutral")
 
-    # ─── Prepare rank history for frontend ────────────────────
-    rh_d = [snap.get("d", {}) for snap in weeks[:-1]]
-    rh_w = [snap.get("w", {}) for snap in weeks[:-1]]
-
     # ─── Output leaders.json ──────────────────────────────────
     # Strip internal _-prefixed baseline fields used by the intraday overlay so they
     # don't bloat the output JSON.
@@ -1964,14 +1936,12 @@ def main():
             "count": len(results),
             "universe": len(all_tickers),
         },
-        "rh": {"d": rh_d, "w": rh_w},
     }
 
     with open("leaders.json", "w") as f:
         json.dump(data, f, separators=(",", ":"))
 
     print(f"\nOutput: leaders.json ({len(results)} stocks)")
-    print(f"  leaders_rank_history.json ({len(weeks)} weekly snapshots)")
     print(f"  leaders_score_history.json ({len(dates)} daily snapshots)")
 
 
