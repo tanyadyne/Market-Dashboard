@@ -260,6 +260,29 @@ function toggleTheme(){
 // Init theme on load
 (function(){try{const t=localStorage.getItem('dashboardTheme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 
+// Auto-detect mobile vs desktop layout on every page load.
+// The manual toggle only affects the current session — refreshing re-runs the detector.
+//
+// Rules (in this order):
+//   - Phone UA → mobile (iPhone always gets mobile regardless of zoom/rotation)
+//   - Narrow viewport (≤820px) → mobile (covers iPad portrait, narrow desktop windows)
+//   - Otherwise → desktop (iPad landscape, laptops, full-screen browsers all qualify)
+function detectIsMobile(){
+  try{
+    const ua=navigator.userAgent||'';
+    const phoneUA=/Mobi|Android.*Mobile|iPhone|iPod/i.test(ua);
+    if(phoneUA)return true;
+    const narrow=window.innerWidth<=820;
+    return narrow;
+  }catch(e){return false;}
+}
+(function(){
+  try{
+    const useMobile=detectIsMobile();
+    document.documentElement.setAttribute('data-view', useMobile?'mobile':'desktop');
+  }catch(e){}
+})();
+
 // ─── View toggle (list vs chart) ──────────────────────────────
 function openProfile(ticker){
   if(!ticker)return;
@@ -409,6 +432,8 @@ function setLayout(mobile){
   document.getElementById('btnDesktop').classList.toggle('on',!mobile);
   document.getElementById('btnMobile').classList.toggle('on',mobile);
   document.documentElement.setAttribute('data-view',mobile?'mobile':'desktop');
+  // Note: the manual toggle only affects the current session. On refresh, detectIsMobile()
+  // re-runs and picks the layout based on current viewport/UA.
   if(currentTab!=='search'){
     if(currentView==='chart'){
       // chart-grid reflows via CSS, but re-render so the count-per-row matches
@@ -419,6 +444,19 @@ function setLayout(mobile){
   }
   if(typeof syncTopHeight==='function')syncTopHeight();
 }
+
+// Sync isMobile variable + button state to whatever the IIFE set on the <html> tag
+(function(){
+  const attr=document.documentElement.getAttribute('data-view');
+  isMobile=(attr==='mobile');
+  // Defer button class toggling until DOM is ready
+  const applyBtnState=()=>{
+    const bd=document.getElementById('btnDesktop'),bm=document.getElementById('btnMobile');
+    if(bd&&bm){bd.classList.toggle('on',!isMobile);bm.classList.toggle('on',isMobile);}
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyBtnState);
+  else applyBtnState();
+})();
 
 function buildHeader(){
   const isW=currentTab==='weekly';
