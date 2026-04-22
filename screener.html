@@ -108,6 +108,15 @@ tr:hover{background:var(--bg3)}
 .hist-table th{font-size:9px;padding:6px}
 .hist-table td{padding:5px 6px;font-family:'JetBrains Mono',monospace;font-size:11px}
 .tag-leader{color:#4ade80;font-weight:600}.tag-neutral{color:#94a3b8;font-weight:600}.tag-laggard{color:#f87171;font-weight:600}
+/* 5-tier variants used in the Individual Profile history table only.
+   Strong = deeper/more saturated, Moderate = lighter/paler. */
+.tag-leader-strong{color:#16a34a;font-weight:700}
+.tag-leader-mod{color:#86efac;font-weight:600}
+.tag-laggard-deep{color:#b91c1c;font-weight:700}
+.tag-laggard-mod{color:#fca5a5;font-weight:600}
+/* Dark theme: deeper shades become hard to read on near-black bg → bump them up */
+[data-theme="dark"] .tag-leader-strong{color:#22c55e}
+[data-theme="dark"] .tag-laggard-deep{color:#ef4444}
 .streak-sel{padding:1px 4px;border-radius:3px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer}
 /* Chart view grid */
 .chart-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}
@@ -263,6 +272,15 @@ function toggleTheme(){
 // Auto-detect mobile vs desktop layout on every page load.
 // The manual toggle only affects the current session — refreshing re-runs the detector.
 //
+// Rules:
+//   - Phone UA → mobile (iPhone, Android phones, including OPPO/Huawei/Xiaomi/etc)
+//   - Narrow viewport (≤820px) → mobile (covers iPad portrait, narrow desktop windows)
+//   - Coarse pointer + narrow-ish viewport → mobile (catches devices running in "Desktop
+//     site" mode where the UA lies but the touch interface is still there)
+//   - Otherwise → desktop (iPad landscape, laptops, full-screen browsers all qualify)
+// Auto-detect mobile vs desktop layout on every page load.
+// The manual toggle only affects the current session — refreshing re-runs the detector.
+//
 // Rules (in this order):
 //   - Phone UA → mobile (iPhone always gets mobile regardless of zoom/rotation)
 //   - Narrow viewport (≤820px) → mobile (covers iPad portrait, narrow desktop windows)
@@ -366,6 +384,15 @@ function atrExtBars(val){
 }
 function getPosition(rank,total){if(rank<=100)return'Strong Leader';if(rank<=200)return'Moderate Leader';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Moderate Laggard';return'Deep Laggard';}
 function posClass(pos){if(pos.includes('Leader'))return'tag-leader';if(pos.includes('Laggard'))return'tag-laggard';return'tag-neutral';}
+// Used in the Individual Profile history table where the full 5-tier label is shown.
+// Splits Leader/Laggard into Strong vs Moderate visual treatments.
+function posClassFull(pos){
+  if(pos==='Strong Leader')return'tag-leader-strong';
+  if(pos==='Moderate Leader')return'tag-leader-mod';
+  if(pos==='Deep Laggard')return'tag-laggard-deep';
+  if(pos==='Moderate Laggard')return'tag-laggard-mod';
+  return'tag-neutral';
+}
 function themeTag(status){if(status==='Leader')return'tag-leader';if(status==='Laggard')return'tag-laggard';return'tag-neutral';}
 
 function getRankDeltaVal(ticker){
@@ -876,7 +903,7 @@ function searchStock(){
         <td class="c"><span class="rs" style="background:${getRSBg(score)};color:${getRSCol(score)}">${score!=null?score+'%':'—'}</span></td>
         <td class="c">${dr!=null?'#'+dr:'—'}</td>
         <td class="hist-delta">${deltaHtml}</td>
-        <td class="c"><span class="${posClass(p)}">${p}</span></td>
+        <td class="c"><span class="${posClassFull(p)}">${p}</span></td>
         <td class="l">${themeCell}</td>
       </tr>`;
     }
