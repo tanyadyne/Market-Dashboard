@@ -978,6 +978,49 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     # Trend zone (from Pine Script CMI "smooth_trend" — used as multiplier on RS)
     trend_zone = compute_trend_zone(c, h, l, spy_closes, spy_ts_map, df.index)
 
+    # ─── Weekly-RS penalty detection ───────────────────────────────
+    # These flags are read in main() to multiply w_rs by penalty factors, catching
+    # stocks whose smoothed weekly RS would otherwise fail to reflect a recent trend
+    # breakdown (e.g. CAR dropping 70% from its high in two sessions).
+    #
+    # Signal 1: bearish engulfing on the most recent daily candle
+    #   yesterday green, today red, today's body fully engulfs yesterday's body
+    pen_engulf = False
+    try:
+        if n >= 2:
+            o_today  = float(df["Open"].values[-1])
+            c_today  = float(c[-1])
+            o_yest   = float(df["Open"].values[-2])
+            c_yest   = float(c[-2])
+            yest_green = c_yest > o_yest
+            today_red  = c_today < o_today
+            engulfs = (o_today >= c_yest) and (c_today <= o_yest)
+            if yest_green and today_red and engulfs:
+                pen_engulf = True
+    except Exception:
+        pen_engulf = False
+
+    # Signal 2: close > 1×ATR below the 21EMA (trend break through the mid-term MA)
+    pen_ema21 = False
+    try:
+        if ema21 is not None and atr and atr > 0:
+            if c[-1] < (ema21 - atr):
+                pen_ema21 = True
+    except Exception:
+        pen_ema21 = False
+
+    # Signal 3: close > 20% below the 5-day high (catches parabolic-blow-off edge cases
+    # like CAR, where price collapses from recent peaks without yet breaking EMAs)
+    pen_crash5 = False
+    try:
+        if n >= 5:
+            # Highest close of the last 5 sessions including today
+            recent_high = max(float(x) for x in c[-5:] if x is not None)
+            if recent_high > 0 and c[-1] / recent_high - 1 < -0.20:
+                pen_crash5 = True
+    except Exception:
+        pen_crash5 = False
+
     return {
         "rv": round(rvol * 100) if rvol else None,
         "am": round(atr_mult * 100), "ax": round(atr_ext * 100),
@@ -989,6 +1032,10 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "rf": dec_streak, "ra": adv_streak,
         "p": round(price, 2), "fr": round(final_rs, 4), "vs": sma_series,
         "sa": setup_adj, "sf": setup_flags, "tz": trend_zone,
+        # Internal scoring-only fields (stripped before output)
+        "w_pen_engulf": pen_engulf,
+        "w_pen_ema21": pen_ema21,
+        "w_pen_crash5": pen_crash5,
         # Internal baselines for intraday overlay (stripped before output)
         "_pc": float(c[-2]) if n >= 2 else None,
         "_5b": w_base,
@@ -1043,15 +1090,28 @@ def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_
         rrs = (stock_chg - expected) / stock_atr
         deltas.append(rrs)
 
-    # SMA of deltas
+    # Recency-weighted rolling average of deltas (instead of flat SMA).
+    # Weights for an 8-week window (most recent first): [0.30, 0.20, 0.15, 0.10, 0.08, 0.07, 0.05, 0.05]
+    # sum = 1.0. Biased heavily toward recent weeks so a sudden bad week moves the score.
+    WEEKLY_WEIGHTS = [0.30, 0.20, 0.15, 0.10, 0.08, 0.07, 0.05, 0.05]
+    def recency_weighted(window):
+        # window is oldest→newest. Apply weights oldest→newest in reverse so newest gets 0.30.
+        wts = WEEKLY_WEIGHTS[:len(window)]
+        wts_rev = list(reversed(wts))
+        total_w = sum(wts_rev)
+        if total_w == 0:
+            return 0.0
+        return sum(w * d for w, d in zip(wts_rev, window)) / total_w
+
     sma_series = []
     for i in range(MA_LENGTH_W - 1, len(deltas)):
         window = deltas[i - MA_LENGTH_W + 1:i + 1]
-        sma_series.append(round(np.mean(window), 4))
+        sma_series.append(round(recency_weighted(window), 4))
 
     if not sma_series:
         return {"w_rv": round(rvol * 100) if rvol else None, "w_am": round(atr_mult * 100),
-                "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None}
+                "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None,
+                "w_crash": False, "w_c5": week_change}
 
     final_rs = sma_series[-1]
 
@@ -1189,10 +1249,11 @@ def apply_intraday_overlay(results):
 
 
 def strip_internal_fields(results):
-    """Remove _-prefixed internal fields before serializing to leaders.json."""
+    """Remove _-prefixed internal fields + other scoring-only fields before serializing."""
+    INTERNAL_NON_UNDERSCORE = {"w_pen_engulf", "w_pen_ema21", "w_pen_crash5"}
     for r in results:
         for k in list(r.keys()):
-            if k.startswith("_"):
+            if k.startswith("_") or k in INTERNAL_NON_UNDERSCORE:
                 del r[k]
 
 
@@ -1823,7 +1884,23 @@ def main():
                 adjusted = min(100, adjusted + 2)
             r["rs"] = round(adjusted)
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
-            r["w_rs"] = round(percentrank_inc(all_w_rs, r["w_fr"]) * 100)
+            w_raw = round(percentrank_inc(all_w_rs, r["w_fr"]) * 100)
+            # Weekly-RS penalty system. Multiplicatively stacks three signals from the
+            # daily data (set in process_stock). Designed to reflect real trend damage
+            # that the 8-week smoothed RS would otherwise miss:
+            #   - Bearish engulfing        → ×0.85 (trend reversal signal)
+            #   - Close >1×ATR below 21EMA → ×0.65 (mid-term structure broken)
+            #   - Close >20% below 5-day   → ×0.50 (parabolic blow-off / crash, catches CAR)
+            # Example: a stock with all three triggered gets ×0.85 × 0.65 × 0.50 = ×0.28,
+            # so a 95%-ile weekly RS drops to 95 × 0.28 ≈ 27.
+            w_mult = 1.0
+            if r.get("w_pen_engulf"):
+                w_mult *= 0.85
+            if r.get("w_pen_ema21"):
+                w_mult *= 0.65
+            if r.get("w_pen_crash5"):
+                w_mult *= 0.50
+            r["w_rs"] = max(0, min(100, round(w_raw * w_mult)))
 
     # ─── Rank stocks (by adjusted RS score, then raw RS as tiebreak) ──
     results.sort(key=lambda x: (x["rs"] if x["rs"] is not None else -999,
@@ -1831,8 +1908,9 @@ def main():
     for i, r in enumerate(results):
         r["rk"] = i + 1
 
-    # Weekly rank (by raw weekly RS value desc, then c5 desc)
-    w_sorted = sorted(results, key=lambda x: (x.get("w_fr") if x.get("w_fr") is not None else -999,
+    # Weekly rank: sort by w_rs (post-crash-cap) desc, tiebreak on raw w_fr desc, then c5
+    w_sorted = sorted(results, key=lambda x: (x.get("w_rs") if x.get("w_rs") is not None else -999,
+                                                x.get("w_fr") if x.get("w_fr") is not None else -999,
                                                 x["c5"] if x["c5"] is not None else -999), reverse=True)
     w_rank_map = {r["t"]: i + 1 for i, r in enumerate(w_sorted)}
     for r in results:
