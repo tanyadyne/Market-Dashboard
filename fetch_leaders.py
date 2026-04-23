@@ -1887,19 +1887,21 @@ def main():
             w_raw = round(percentrank_inc(all_w_rs, r["w_fr"]) * 100)
             # Weekly-RS penalty system. Multiplicatively stacks three signals from the
             # daily data (set in process_stock). Designed to reflect real trend damage
-            # that the 8-week smoothed RS would otherwise miss:
-            #   - Bearish engulfing        → ×0.85 (trend reversal signal)
-            #   - Close >1×ATR below 21EMA → ×0.65 (mid-term structure broken)
-            #   - Close >20% below 5-day   → ×0.50 (parabolic blow-off / crash, catches CAR)
-            # Example: a stock with all three triggered gets ×0.85 × 0.65 × 0.50 = ×0.28,
-            # so a 95%-ile weekly RS drops to 95 × 0.28 ≈ 27.
+            # that the 8-week smoothed RS would otherwise miss. Multipliers are relatively
+            # lenient since this is a weekly (longer-horizon) view — single signals barely
+            # dent the score, but stocks hitting all three get significant penalty.
+            #   - Bearish engulfing        → ×0.90 (minor trend reversal signal)
+            #   - Close >1×ATR below 21EMA → ×0.75 (mid-term structure broken)
+            #   - Close >20% below 5-day   → ×0.60 (parabolic blow-off / crash, catches CAR)
+            # Worst case (all three): ×0.90 × 0.75 × 0.60 = ×0.405 → a 95%-ile score
+            # drops to 95 × 0.405 ≈ 38.
             w_mult = 1.0
             if r.get("w_pen_engulf"):
-                w_mult *= 0.85
+                w_mult *= 0.90
             if r.get("w_pen_ema21"):
-                w_mult *= 0.65
+                w_mult *= 0.75
             if r.get("w_pen_crash5"):
-                w_mult *= 0.50
+                w_mult *= 0.60
             r["w_rs"] = max(0, min(100, round(w_raw * w_mult)))
 
     # ─── Rank stocks (by adjusted RS score, then raw RS as tiebreak) ──
