@@ -39,11 +39,15 @@ jobs:
           export TZ="America/New_York"
           HOUR=$(date +%H)
           MIN=$(date +%M)
+          DOW=$(date +%u)  # 1=Mon ... 7=Sun
           TIME_MIN=$((HOUR * 60 + MIN))
           # Market: 9:30 AM (570) to 4:05 PM (965)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "$DOW" -ge 6 ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Weekend ($(date '+%A %H:%M %Z')) — skipping"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "skip=false" >> $GITHUB_OUTPUT
-            echo "Manual trigger — running regardless of market hours"
+            echo "Manual trigger on weekday — running regardless of time of day"
           elif [ $TIME_MIN -ge 570 ] && [ $TIME_MIN -le 965 ]; then
             echo "skip=false" >> $GITHUB_OUTPUT
             echo "Within market hours ($(date '+%H:%M %Z'))"
@@ -75,7 +79,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.json rank_history.json
+          git add data.json data_score_history.json
           git diff --staged --quiet || git commit -m "Update ETF data $(date -u '+%Y-%m-%d %H:%M UTC')"
           git pull --rebase
           git push
