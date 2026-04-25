@@ -258,7 +258,7 @@ html[data-view="mobile"]{overflow-x:hidden}
   </div>
 </div>
 <script>
-let DATA=null,sortKey='rk',sortDir=1,expandedTicker=null;
+let DATA=null,HISTORY=null,sortKey='rk',sortDir=1,expandedTicker=null;
 let multiSort=[],useMultiSort=false,isMobile=false,isWeekly=false;
 
 const ALL_COLUMNS=[
@@ -384,7 +384,7 @@ function buildHeader(){
     th.dataset.key=col.key;
     if(!isMobile)th.style.width=col.width;
     if(col.key==='rd'){
-      const opts=[];for(let i=1;i<=8;i++)opts.push(`<option value="${i}"${i===rankLookback?' selected':''}>${i}W</option>`);
+      const opts=[];for(let i=1;i<=10;i++)opts.push(`<option value="${i}"${i===rankLookback?' selected':''}>${i}D</option>`);
       th.innerHTML=`Δ <select class="streak-sel" id="rdSel" onchange="event.stopPropagation();rankLookback=parseInt(this.value);render();" style="font-size:9px;padding:1px 2px">${opts.join('')}</select>`+(isMobile?'':'<div class="rh"></div>');
     }else{
       th.innerHTML=col.label+(isMobile?'':'<div class="rh"></div>');
@@ -454,13 +454,15 @@ async function copyAll(){
 let NAMES={};
 async function loadData(){
   try{
-    const [dataRes,namesRes]=await Promise.all([
+    const [dataRes,namesRes,histRes]=await Promise.all([
       fetch('data.json?_='+Date.now()),
-      fetch('names.json?_='+Date.now()).catch(()=>null)
+      fetch('names.json?_='+Date.now()).catch(()=>null),
+      fetch('data_score_history.json?_='+Date.now()).catch(()=>null)
     ]);
     if(!dataRes.ok)throw new Error('data.json not found');
     DATA=await dataRes.json();
     if(namesRes&&namesRes.ok){try{NAMES=await namesRes.json();}catch(e){}}
+    if(histRes&&histRes.ok){try{HISTORY=await histRes.json();}catch(e){HISTORY=null;}}
     onDataLoaded();
   }
   catch(err){document.getElementById('statusBar').innerHTML=`<span style="color:var(--r)">Error: ${esc(err.message)}</span>`;}
@@ -502,14 +504,20 @@ function drawSparkline(canvas,series){
   ctx.beginPath();ctx.arc(px(minIdx),py(minIdx),2.5,0,Math.PI*2);ctx.fillStyle=isDark?'#f87171':'#dc2626';ctx.fill();
 }
 
-let rankLookback = 1; // default: compare to 1 week ago
+let rankLookback = 1; // default: compare to 1 trading day ago
 
 function getRankDeltaVal(ticker){
-  if(!DATA||!DATA.rh) return null;
-  const hist = isWeekly ? DATA.rh.w : DATA.rh.d;
-  const idx = hist.length - rankLookback;
-  if(idx < 0 || idx >= hist.length) return null;
-  const prevRk = hist[idx][ticker];
+  // Use HISTORY (per-trading-day rank snapshots from data_score_history.json).
+  // rankLookback = number of TRADING DAYS back (1 = yesterday, 2 = two trading days ago, etc).
+  if(!HISTORY||!HISTORY.dates||!HISTORY.d||!HISTORY.d[ticker])return null;
+  const key = isWeekly ? 'wr' : 'r';
+  const arr = HISTORY.d[ticker][key];
+  if(!arr || !arr.length) return null;
+  // The most recent entry in arr corresponds to today's rank (dates[-1]).
+  // Going `rankLookback` trading days back means index = arr.length - 1 - rankLookback.
+  const idx = arr.length - 1 - rankLookback;
+  if(idx < 0 || idx >= arr.length) return null;
+  const prevRk = arr[idx];
   if(prevRk == null) return null;
   const etf = DATA.e.find(e=>e.t===ticker);
   if(!etf) return null;
