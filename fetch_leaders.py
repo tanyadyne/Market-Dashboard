@@ -1091,10 +1091,11 @@ def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_
         deltas.append(rrs)
 
     # Recency-weighted rolling average of deltas (instead of flat SMA).
-    # Weights for an 8-week window (most recent first): [0.26, 0.22, 0.16, 0.11, 0.08, 0.07, 0.05, 0.05]
-    # sum = 1.0. Biased toward recent weeks but slightly less aggressively than before so a
-    # single great or terrible week doesn't dominate the score.
-    WEEKLY_WEIGHTS = [0.26, 0.22, 0.16, 0.11, 0.08, 0.07, 0.05, 0.05]
+    # Weights for an 8-week window (most recent first): [0.20, 0.22, 0.16, 0.13, 0.12, 0.07, 0.05, 0.05]
+    # sum = 1.0. Note: the most-recent (current, still-forming) week is intentionally
+    # weighted LESS than week -2. This makes the score more stable mid-week — daily updates
+    # to the in-progress weekly bar have less influence than the most recently completed week.
+    WEEKLY_WEIGHTS = [0.20, 0.22, 0.16, 0.13, 0.12, 0.07, 0.05, 0.05]
     def recency_weighted(window):
         # window is oldest→newest. Apply weights oldest→newest in reverse so newest gets 0.30.
         wts = WEEKLY_WEIGHTS[:len(window)]
@@ -1858,10 +1859,10 @@ def main():
 
     for r in results:
         if r.get("fr") is not None and len(all_d_rs) > 1:
-            raw_pctrank = round(percentrank_inc(all_d_rs, r["fr"]) * 100)
+            raw_pctrank = percentrank_inc(all_d_rs, r["fr"]) * 100  # float, not rounded
             # Apply setup quality adjustment (bonus/penalty based on MA criteria)
             sa = r.get("sa", 0)
-            adjusted = max(0, min(100, raw_pctrank + sa))
+            adjusted = max(0.0, min(100.0, raw_pctrank + sa))
             # Apply trend-zone multiplier from Pine Script CMI smooth_trend
             # bear_strong → ×0.50, bear_light → ×0.75, neutral → ×1.00,
             # bull_light → ×1.05, bull_strong → ×1.10
@@ -1873,19 +1874,20 @@ def main():
                 "bull_light":  1.05,
                 "bull_strong": 1.10,
             }.get(tz, 1.0)
-            adjusted = max(0, min(100, adjusted * tz_mult))
+            adjusted = max(0.0, min(100.0, adjusted * tz_mult))
             # Trend-zone transition bonus/penalty:
             #   bull_strong → bull_light  ⇒ −2 points (momentum weakening)
             #   bull_light  → bull_strong ⇒ +2 points (momentum strengthening)
             #   All other transitions ⇒ no change
             prev_tz = prev_tz_map.get(r["t"])
             if prev_tz == "bull_strong" and tz == "bull_light":
-                adjusted = max(0, adjusted - 2)
+                adjusted = max(0.0, adjusted - 2)
             elif prev_tz == "bull_light" and tz == "bull_strong":
-                adjusted = min(100, adjusted + 2)
-            r["rs"] = round(adjusted)
+                adjusted = min(100.0, adjusted + 2)
+            r["rs"] = round(adjusted)              # display value (clean integer)
+            r["_d_rs_raw"] = adjusted              # full-precision value for ranking
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
-            w_raw = round(percentrank_inc(all_w_rs, r["w_fr"]) * 100)
+            w_raw = percentrank_inc(all_w_rs, r["w_fr"]) * 100  # float, not rounded
             # Weekly-RS penalty system. Multiplicatively stacks three signals from the
             # daily data (set in process_stock). Designed to reflect real trend damage
             # that the 8-week smoothed RS would otherwise miss. Multipliers are relatively
@@ -1903,16 +1905,22 @@ def main():
                 w_mult *= 0.75
             if r.get("w_pen_crash5"):
                 w_mult *= 0.60
-            r["w_rs"] = max(0, min(100, round(w_raw * w_mult)))
+            w_final = max(0.0, min(100.0, w_raw * w_mult))
+            r["w_rs"] = round(w_final)            # display value (clean integer)
+            r["_w_rs_raw"] = w_final              # full-precision value for ranking
 
-    # ─── Rank stocks (by adjusted RS score, then raw RS as tiebreak) ──
-    results.sort(key=lambda x: (x["rs"] if x["rs"] is not None else -999,
+    # ─── Rank stocks by full-precision _d_rs_raw to avoid tie-cluster jumps ──
+    results.sort(key=lambda x: (x.get("_d_rs_raw") if x.get("_d_rs_raw") is not None else -999,
                                  x["fr"] if x["fr"] is not None else -999), reverse=True)
     for i, r in enumerate(results):
         r["rk"] = i + 1
 
-    # Weekly rank: sort by w_rs (post-crash-cap) desc, tiebreak on raw w_fr desc, then c5
-    w_sorted = sorted(results, key=lambda x: (x.get("w_rs") if x.get("w_rs") is not None else -999,
+    # Weekly rank: sort by the FULL-PRECISION _w_rs_raw (rounded display value sits in
+    # w_rs, but ranking by the unrounded float eliminates the massive tie-clusters that
+    # would otherwise make rank movements jumpy. With ~1000 stocks crammed into 100
+    # display buckets, ties dominated tiebreaks; sorting by the underlying float means
+    # rank changes are smooth and proportional to actual w_fr changes.
+    w_sorted = sorted(results, key=lambda x: (x.get("_w_rs_raw") if x.get("_w_rs_raw") is not None else -999,
                                                 x.get("w_fr") if x.get("w_fr") is not None else -999,
                                                 x["c5"] if x["c5"] is not None else -999), reverse=True)
     w_rank_map = {r["t"]: i + 1 for i, r in enumerate(w_sorted)}
