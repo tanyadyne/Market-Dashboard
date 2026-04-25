@@ -159,14 +159,13 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] table{table-layout:fixed;width:100%;max-width:100vw}
 [data-view="mobile"] td{padding:6px 3px;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 [data-view="mobile"] thead th{padding:8px 3px;font-size:9.5px;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* Mobile column sizing: # | Δ Rank | Ticker | Sector (flex) | 1D | YTD | RS */
-[data-view="mobile"] th:nth-child(1),[data-view="mobile"] td:nth-child(1){width:7%}
-[data-view="mobile"] th:nth-child(2),[data-view="mobile"] td:nth-child(2){width:14%}
-[data-view="mobile"] th:nth-child(3),[data-view="mobile"] td:nth-child(3){width:14%}
-[data-view="mobile"] th:nth-child(4),[data-view="mobile"] td:nth-child(4){width:22%}
-[data-view="mobile"] th:nth-child(5),[data-view="mobile"] td:nth-child(5){width:14%}
-[data-view="mobile"] th:nth-child(6),[data-view="mobile"] td:nth-child(6){width:14%}
-[data-view="mobile"] th:nth-child(7),[data-view="mobile"] td:nth-child(7){width:15%}
+/* Mobile column sizing: # | Ticker | Sector (flex) | 1D | YTD | RS — Δ Rank hidden */
+[data-view="mobile"] th:nth-child(1),[data-view="mobile"] td:nth-child(1){width:8%}
+[data-view="mobile"] th:nth-child(2),[data-view="mobile"] td:nth-child(2){width:16%}
+[data-view="mobile"] th:nth-child(3),[data-view="mobile"] td:nth-child(3){width:28%}
+[data-view="mobile"] th:nth-child(4),[data-view="mobile"] td:nth-child(4){width:16%}
+[data-view="mobile"] th:nth-child(5),[data-view="mobile"] td:nth-child(5){width:16%}
+[data-view="mobile"] th:nth-child(6),[data-view="mobile"] td:nth-child(6){width:16%}
 [data-view="mobile"] .tk{font-size:11px}
 [data-view="mobile"] .tw{overflow-x:hidden}
 [data-view="mobile"] .pnl{padding:8px 12px}
@@ -263,7 +262,9 @@ let multiSort=[],useMultiSort=false,isMobile=false,isWeekly=false;
 
 const ALL_COLUMNS=[
   {key:'rk',label:'#',align:'c',width:'40px',mob:true},
-  {key:'rd',label:'Δ Rank',align:'c',width:'56px',mob:true},
+  // Δ Rank column hidden until data_score_history.json accumulates enough trading days
+  // to compute meaningful 1D-10D lookbacks. Re-enable by uncommenting the line below.
+  // {key:'rd',label:'Δ Rank',align:'c',width:'56px',mob:true},
   {key:'t',label:'Ticker',align:'l',width:'68px',mob:true},
   {key:'n',label:'Sector',align:'l',width:'160px',mob:true},
   {key:'rv',label:'R.Vol',align:'c',width:'80px',mob:false},
@@ -641,7 +642,7 @@ function injectTVCharts(){
     const widgetDiv=document.createElement('div');widgetDiv.className='tradingview-widget-container__widget';widgetDiv.style.cssText=`height:${widgetH}px;width:100%`;
     wrapper.appendChild(widgetDiv);el.appendChild(wrapper);
     const script=document.createElement('script');script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';script.type='text/javascript';script.async=true;
-    script.innerHTML=`{"allow_symbol_change":false,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":true,"hide_legend":true,"hide_volume":true,"hotlist":false,"interval":"D","range":"3M","locale":"en","save_image":false,"style":"1","symbol":"${tk}","theme":"${theme}","timezone":"Etc/UTC","backgroundColor":"${bgColor}","gridColor":"${gridColor}","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}`;
+    script.innerHTML=`{"allow_symbol_change":false,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":true,"hide_legend":true,"hide_volume":true,"hotlist":false,"interval":"D","range":"60","locale":"en","save_image":false,"style":"1","symbol":"${tk}","theme":"${theme}","timezone":"Etc/UTC","backgroundColor":"${bgColor}","gridColor":"${gridColor}","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}`;
     wrapper.appendChild(script);
   });
 }
