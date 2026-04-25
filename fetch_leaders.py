@@ -1091,9 +1091,10 @@ def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_
         deltas.append(rrs)
 
     # Recency-weighted rolling average of deltas (instead of flat SMA).
-    # Weights for an 8-week window (most recent first): [0.30, 0.20, 0.15, 0.10, 0.08, 0.07, 0.05, 0.05]
-    # sum = 1.0. Biased heavily toward recent weeks so a sudden bad week moves the score.
-    WEEKLY_WEIGHTS = [0.30, 0.20, 0.15, 0.10, 0.08, 0.07, 0.05, 0.05]
+    # Weights for an 8-week window (most recent first): [0.26, 0.22, 0.16, 0.11, 0.08, 0.07, 0.05, 0.05]
+    # sum = 1.0. Biased toward recent weeks but slightly less aggressively than before so a
+    # single great or terrible week doesn't dominate the score.
+    WEEKLY_WEIGHTS = [0.26, 0.22, 0.16, 0.11, 0.08, 0.07, 0.05, 0.05]
     def recency_weighted(window):
         # window is oldest→newest. Apply weights oldest→newest in reverse so newest gets 0.30.
         wts = WEEKLY_WEIGHTS[:len(window)]
