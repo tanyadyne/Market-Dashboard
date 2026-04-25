@@ -485,21 +485,26 @@ def apply_intraday_overlay_to_etfs(results, component_metrics):
 
 
 def strip_internal_fields_etfs(results, *extra_dicts):
-    """Remove _-prefixed internal fields and the `h` (holdings string) before serializing.
+    """Remove _-prefixed internal fields, `fr`/`w_fr` raw scoring values, and the `h`
+    (holdings string) before serializing.
+
+    `fr`/`w_fr` are raw VARS endpoints used internally for cross-sectional ranking;
+    the frontend only displays the percentile-ranked `rs`/`w_rs`.
 
     `extra_dicts` is a tuple of dicts (e.g. component_metrics) whose values are also
     cleaned, even though they aren't written directly — defensive in case anything
     serializes them later.
     """
+    INTERNAL_NON_UNDERSCORE = {"fr", "w_fr"}
     for r in results:
         for k in list(r.keys()):
-            if k.startswith("_"):
+            if k.startswith("_") or k in INTERNAL_NON_UNDERSCORE:
                 del r[k]
     for d in extra_dicts:
         for v in d.values():
             if isinstance(v, dict):
                 for k in list(v.keys()):
-                    if k.startswith("_"):
+                    if k.startswith("_") or k in INTERNAL_NON_UNDERSCORE:
                         del v[k]
 
 
@@ -772,7 +777,10 @@ def main():
             "c5": round(c5, 2) if c5 is not None else None,
             "c20": round(c20, 2) if c20 is not None else None,
             "ytd": round(ytd, 2) if ytd is not None else None,
-            "rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
+            # rs (final 0-100 percentile) is assigned cross-sectionally in main()
+            # so the score reflects this ETF's strength relative to the OTHER ETFs,
+            # not just relative to its own past values.
+            "rs": None,
             "rf": dec_streak,
             "ra": adv_streak,
             "p": round(price, 2),
@@ -788,7 +796,7 @@ def main():
     def process_ticker_weekly(ticker, df_w):
         """Process weekly data for a ticker — same VARS logic but on weekly bars."""
         if df_w is None or len(df_w) < 5:
-            return {"w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None}
+            return {"w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None}
 
         c = df_w["Close"].values
         h = df_w["High"].values
@@ -819,7 +827,7 @@ def main():
 
         if len(common) < LOOKBACK_W:
             return {"w_rv": round(rvol * 100) if rvol else None, "w_am": round(atr_mult * 100),
-                    "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None}
+                    "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None}
 
         etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
         extended = common[-(LOOKBACK_W + 1):]
@@ -858,10 +866,12 @@ def main():
         return {
             "w_rv": round(rvol * 100) if rvol else None,
             "w_am": round(atr_mult * 100),
-            "w_rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
+            # w_rs is assigned cross-sectionally in main() based on w_fr
+            "w_rs": None,
             "w_rf": dec_streak,
             "w_ra": adv_streak,
             "w_vs": vs_series,
+            "w_fr": round(final_rs, 4),
         }
 
     # ─── Process regular ETFs ──────────────────────────────
@@ -899,7 +909,8 @@ def main():
             results.append({**info, "rv": None, "am": None, "ax": None, "ch": None, "c5": None,
                             "c20": None, "ytd": None, "rs": None, "rf": 0, "ra": 0, "p": None,
                             "fr": None, "vs": None,
-                            "w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None})
+                            "w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None,
+                            "w_fr": None})
             continue
 
         # Average daily VARS series (equal-weighted)
@@ -931,6 +942,8 @@ def main():
             rs_pctrank = None
             adv_streak = 0
             dec_streak = 0
+            rs_series = []
+            final_rs = 0
 
         # Average weekly VARS series (equal-weighted)
         valid_w = [h for h in holdings if h in component_w_metrics]
@@ -962,6 +975,8 @@ def main():
             w_rs_pctrank = None
             w_adv_streak = 0
             w_dec_streak = 0
+            w_rs_series = []
+            w_final_rs = 0
 
         # Average scalar metrics
         def avg_metric(key):
@@ -981,7 +996,8 @@ def main():
             "c5": avg_metric("c5"),
             "c20": avg_metric("c20"),
             "ytd": avg_metric("ytd"),
-            "rs": round(rs_pctrank * 100) if rs_pctrank is not None else None,
+            # rs/w_rs assigned cross-sectionally in main() based on fr/w_fr
+            "rs": None,
             "rf": dec_streak,
             "ra": adv_streak,
             "p": None,
@@ -989,10 +1005,11 @@ def main():
             "vs": avg_vs,
             "w_rv": round(avg_w_metric("w_rv")) if avg_w_metric("w_rv") is not None else None,
             "w_am": round(avg_w_metric("w_am")) if avg_w_metric("w_am") is not None else None,
-            "w_rs": round(w_rs_pctrank * 100) if w_rs_pctrank is not None else None,
+            "w_rs": None,
             "w_rf": w_dec_streak,
             "w_ra": w_adv_streak,
             "w_vs": w_avg_vs,
+            "w_fr": round(w_final_rs, 4) if w_rs_series else None,
         })
 
     # ─── Intraday overlay: replace EOD price with live quote when market is open ──
@@ -1000,6 +1017,19 @@ def main():
     # remain anchored to the last completed daily bar (recomputing intraday would require
     # re-running the full VARS pipeline, which is expensive).
     apply_intraday_overlay_to_etfs(results, component_metrics)
+
+    # ─── Cross-sectional RS percentrank ─────────────────────────
+    # Each ETF's `fr` is its raw VARS endpoint — a directional value that's only meaningful
+    # when ranked against other ETFs. Compute percentile rank across the whole ETF universe
+    # so `rs` (0-100) reflects this ETF's strength RELATIVE TO OTHER ETFs, not relative to
+    # its own historical values. Same approach as the Stock Screener uses.
+    all_d_fr = [r["fr"] for r in results if r.get("fr") is not None]
+    all_w_fr = [r["w_fr"] for r in results if r.get("w_fr") is not None]
+    for r in results:
+        if r.get("fr") is not None and len(all_d_fr) > 1:
+            r["rs"] = round(percentrank_inc(all_d_fr, r["fr"]) * 100)
+        if r.get("w_fr") is not None and len(all_w_fr) > 1:
+            r["w_rs"] = round(percentrank_inc(all_w_fr, r["w_fr"]) * 100)
 
     # Sort: RS desc, then Change desc (daily ranks)
     results.sort(key=lambda x: (x["rs"] if x["rs"] is not None else -1,
