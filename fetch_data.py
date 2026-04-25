@@ -1046,57 +1046,74 @@ def main():
     for r in results:
         r["w_rk"] = w_rank_map.get(r["t"], len(results))
 
-    # ─── Rolling rank history (rank_history.json) ────────────
-    # Stores up to 8 weekly snapshots of daily and weekly ranks, one per calendar week.
-    # Structure: {"weeks": [{"date":"2026-03-14","d":{ticker:rank},"w":{ticker:rank}}, ...]}
-    # Most recent week is last in the list.
-    from datetime import date
-    today_str = date.today().isoformat()
-    # Determine ISO week key (year-week)
-    today_week = date.today().isocalendar()
-    week_key = f"{today_week[0]}-W{today_week[1]:02d}"
+    # ─── Daily rank history (data_score_history.json) ────────────
+    # Stores per-trading-day snapshots of daily and weekly ranks for each ETF, in the
+    # same shape as the Stock Screener's leaders_score_history.json. The frontend uses
+    # this to compute Δ ranks at lookbacks of 1-10 trading days.
+    # Structure: {"dates": ["2026-04-21", ...], "d": {"XSD": {"r": [...], "wr": [...]}, ...}}
+    from datetime import date, datetime as _dt, timezone as _tz, timedelta as _td
 
-    rank_history = {"weeks": []}
-    if os.path.exists("rank_history.json"):
+    # Use US Eastern date (UTC-4 EDT approximation), not UTC date — matches screener.
+    _et_now = _dt.now(_tz.utc).astimezone(_tz(_td(hours=-4)))
+    today_str = _et_now.date().isoformat()
+    _weekday = _et_now.weekday()  # Mon=0 ... Sun=6
+    skip_history_write = _weekday >= 5
+    if skip_history_write:
+        print(f"[history] Skipping ETF history write — {today_str} is a weekend in ET (weekday={_weekday})")
+
+    score_history = {"dates": [], "d": {}}
+    if os.path.exists("data_score_history.json"):
         try:
-            with open("rank_history.json") as rhf:
-                rank_history = json.load(rhf)
+            with open("data_score_history.json") as f:
+                score_history = json.load(f)
         except Exception:
-            rank_history = {"weeks": []}
+            score_history = {"dates": [], "d": {}}
 
-    # Current rank snapshot
-    current_d_ranks = {r["t"]: r["rk"] for r in results}
-    current_w_ranks = {r["t"]: r["w_rk"] for r in results}
+    dates_list = score_history.get("dates", [])
+    scores = score_history.get("d", {})
 
-    # Update or append this week's snapshot (overwrite if same week)
-    weeks = rank_history.get("weeks", [])
-    if weeks and weeks[-1].get("wk") == week_key:
-        # Update existing week entry
-        weeks[-1] = {"wk": week_key, "date": today_str, "d": current_d_ranks, "w": current_w_ranks}
+    if skip_history_write:
+        # Don't touch the history at all on weekends — preserve existing file.
+        pass
+    elif not dates_list or dates_list[-1] != today_str:
+        # New trading day → append a new entry to every ticker's r/wr arrays
+        dates_list.append(today_str)
+        for r in results:
+            tk = r["t"]
+            if tk not in scores:
+                # New ticker: pad with Nones for prior dates so array lengths align
+                scores[tk] = {"r": [None] * (len(dates_list) - 1), "wr": [None] * (len(dates_list) - 1)}
+            scores[tk]["r"].append(r.get("rk"))
+            scores[tk]["wr"].append(r.get("w_rk"))
+        # Also pad any tickers that were in history but not in today's results
+        for tk, rec in scores.items():
+            if len(rec.get("r", [])) < len(dates_list):
+                rec["r"].append(None)
+            if len(rec.get("wr", [])) < len(dates_list):
+                rec["wr"].append(None)
     else:
-        # New week — append
-        weeks.append({"wk": week_key, "date": today_str, "d": current_d_ranks, "w": current_w_ranks})
+        # Same trading day → update last entry in place (intraday refresh)
+        for r in results:
+            tk = r["t"]
+            if tk not in scores:
+                scores[tk] = {"r": [None] * len(dates_list), "wr": [None] * len(dates_list)}
+            scores[tk]["r"][-1] = r.get("rk")
+            scores[tk]["wr"][-1] = r.get("w_rk")
 
-    # Keep only last 9 weeks (current + 8 prior)
-    if len(weeks) > 9:
-        weeks = weeks[-9:]
-    rank_history["weeks"] = weeks
+    # Trim to last 30 trading days to keep the file lean (frontend lookback maxes at 10)
+    MAX_HISTORY = 30
+    if len(dates_list) > MAX_HISTORY:
+        excess = len(dates_list) - MAX_HISTORY
+        dates_list = dates_list[excess:]
+        for tk, rec in scores.items():
+            if "r" in rec: rec["r"] = rec["r"][excess:]
+            if "wr" in rec: rec["wr"] = rec["wr"][excess:]
 
-    with open("rank_history.json", "w") as rhf:
-        json.dump(rank_history, rhf, separators=(",", ":"))
-    print(f"Rank history: {len(weeks)} weekly snapshots stored")
-
-    # ─── Attach rank history to data.json for frontend ────────
-    # Store the full rank history so the frontend can compute deltas for any N
-    # Format: rh_d = [[ticker, rank_N_weeks_ago], ...] for each week going back
-    # We send arrays of {ticker: rank} dicts, oldest first
-    rh_d = []  # daily rank snapshots, oldest to newest (excluding current)
-    rh_w = []  # weekly rank snapshots
-    for snap in weeks[:-1]:  # exclude current week
-        rh_d.append(snap.get("d", {}))
-        rh_w.append(snap.get("w", {}))
-
-    # Remove per-ETF rd/w_rd since frontend will compute them
+    score_history["dates"] = dates_list
+    score_history["d"] = scores
+    with open("data_score_history.json", "w") as shf:
+        json.dump(score_history, shf, separators=(",", ":"))
+    print(f"ETF score history: {len(dates_list)} trading days, {len(scores)} tickers")
 
     # ─── Load cached holding grades from grades.json ────────
     holding_grades = {}
@@ -1168,7 +1185,6 @@ def main():
             "spy_change": round(float(spy_chg), 2),
         },
         "breadth": breadth_status,
-        "rh": {"d": rh_d, "w": rh_w},
     }
 
     # Strip internal _-prefixed baseline fields used by the intraday overlay so they
