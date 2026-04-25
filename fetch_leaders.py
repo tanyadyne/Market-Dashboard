@@ -1829,6 +1829,13 @@ def main():
     # ─── Load previous day's trend zone per ticker (for transition bonus/penalty) ──
     # Read from leaders_score_history.json if it exists; each ticker's "tz" array holds
     # the tz string as-of each historical date. Used in the scoring loop below.
+    #
+    # For transition detection we need the trend zone from the trading day BEFORE the
+    # bar date currently being scored. This is normally "yesterday" but on weekend runs
+    # the bar date is Friday and we want Thursday's tz. If history's most recent entry
+    # equals today's bar date (e.g. resnap already ran or in-place update happened earlier
+    # today), we look one step further back. Otherwise the most recent history entry IS
+    # the previous day.
     prev_tz_map = {}
     try:
         if os.path.exists("leaders_score_history.json"):
@@ -1836,14 +1843,26 @@ def main():
                 _hist = json.load(_hf)
             _hist_dates = _hist.get("dates", [])
             _hist_d = _hist.get("d", {})
-            # "Previous day" = the last date in history that is NOT today's date.
-            _today_str_check = date.today().isoformat()
+            # Determine which history index represents the previous trading day.
+            # Bar date being scored = the most recent bar yfinance returned. We approximate
+            # this as today's ET date during weekday runs, or the most recent weekday on
+            # weekend runs (which yfinance will treat as Friday).
+            _et_today = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=-4))).date()
+            # Walk back from today to find the most recent weekday (Mon-Fri)
+            _bar_date = _et_today
+            while _bar_date.weekday() >= 5:
+                _bar_date = _bar_date - timedelta(days=1)
+            _bar_date_str = _bar_date.isoformat()
+            # Find the history entry that represents the day BEFORE the bar date.
+            # If history's last entry IS the bar date (resnap or in-place update happened),
+            # we want index -2. Otherwise -1.
             _prev_idx = None
-            for _i in range(len(_hist_dates) - 1, -1, -1):
-                if _hist_dates[_i] != _today_str_check:
-                    _prev_idx = _i
-                    break
-            if _prev_idx is not None:
+            if _hist_dates:
+                if _hist_dates[-1] == _bar_date_str and len(_hist_dates) >= 2:
+                    _prev_idx = len(_hist_dates) - 2
+                elif _hist_dates[-1] != _bar_date_str:
+                    _prev_idx = len(_hist_dates) - 1
+            if _prev_idx is not None and _prev_idx >= 0:
                 for _tk, _entry in _hist_d.items():
                     _tz_arr = _entry.get("tz") if isinstance(_entry, dict) else None
                     if _tz_arr and len(_tz_arr) > _prev_idx:
@@ -1876,31 +1895,28 @@ def main():
             }.get(tz, 1.0)
             adjusted = max(0.0, min(100.0, adjusted * tz_mult))
             # Trend-zone transition bonus/penalty:
-            #   bull_strong → bull_light  ⇒ −2 points (momentum weakening)
-            #   bull_light  → bull_strong ⇒ +2 points (momentum strengthening)
+            #   bull_strong → bull_light  ⇒ −5 points (momentum weakening — leadership cracking)
+            #   bull_light  → bull_strong ⇒ +5 points (momentum strengthening — leadership confirming)
             #   All other transitions ⇒ no change
             prev_tz = prev_tz_map.get(r["t"])
             if prev_tz == "bull_strong" and tz == "bull_light":
-                adjusted = max(0.0, adjusted - 2)
+                adjusted = max(0.0, adjusted - 5)
             elif prev_tz == "bull_light" and tz == "bull_strong":
-                adjusted = min(100.0, adjusted + 2)
-            # Daily-RS penalty system (half-strength version of weekly's penalties).
-            # Daily RS is a long-horizon score (Pine Script 4-quarter weighted ratio),
-            # so it shouldn't whipsaw on a single bad day — but it should still register
-            # real technical damage. Half-strength multipliers nudge ranks down when
-            # signals fire without overpowering the underlying multi-month picture.
-            #   - Bearish engulfing        → ×0.95 (subtle reversal hint)
-            #   - Close >1×ATR below 21EMA → ×0.85 (mid-term structure broken)
-            #   - Close >20% below 5-day   → ×0.75 (acute breakdown)
-            # Worst case (all three): ×0.95 × 0.85 × 0.75 = ×0.605 → a 100-score drops to ~60.
-            d_mult = 1.0
+                adjusted = min(100.0, adjusted + 5)
+            # Daily-RS penalty system (additive — subtracts points so penalties hit hard
+            # even at the top of the universe where multiplicative penalties get washed out).
+            # Daily RS measures multi-month leadership; these penalties register concrete
+            # technical damage that would otherwise be invisible in a long-horizon score.
+            #   - Bearish engulfing        → −5  points (subtle reversal hint)
+            #   - Close >1×ATR below 21EMA → −10 points (mid-term structure broken)
+            #   - Close >20% below 5-day   → −15 points (acute breakdown)
+            # Worst case (all three + transition): −35 points → a 100 drops to 65.
             if r.get("w_pen_engulf"):
-                d_mult *= 0.95
+                adjusted = max(0.0, adjusted - 5)
             if r.get("w_pen_ema21"):
-                d_mult *= 0.85
+                adjusted = max(0.0, adjusted - 10)
             if r.get("w_pen_crash5"):
-                d_mult *= 0.75
-            adjusted = max(0.0, min(100.0, adjusted * d_mult))
+                adjusted = max(0.0, adjusted - 15)
             r["rs"] = round(adjusted)              # display value (clean integer)
             r["_d_rs_raw"] = adjusted              # full-precision value for ranking
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
