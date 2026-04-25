@@ -1940,6 +1940,15 @@ def main():
     _et_now = _now_utc.astimezone(timezone(timedelta(hours=-4)))
     today_str = _et_now.date().isoformat()
 
+    # Defensive guard: never write history entries on weekend ET dates. The cron limits
+    # to weekdays and the workflow's market-hours check should also block, but a manual
+    # workflow_dispatch on Sat/Sun would otherwise create ghost entries that corrupt the
+    # 1D delta calculations. Skip history writes entirely on those days.
+    _weekday = _et_now.weekday()  # Mon=0 ... Sun=6
+    skip_history_write = _weekday >= 5
+    if skip_history_write:
+        print(f"[history] Skipping history write — {today_str} is a weekend in ET (weekday={_weekday})")
+
     # ─── Score history (rolling daily snapshots for search) ───
     score_history = {"dates": [], "d": {}}
     if os.path.exists("leaders_score_history.json"):
@@ -1952,7 +1961,10 @@ def main():
     dates = score_history.get("dates", [])
     scores = score_history.get("d", {})
 
-    if not dates or dates[-1] != today_str:
+    if skip_history_write:
+        # Don't touch the history at all on weekends — read & re-write the file unchanged.
+        pass
+    elif not dates or dates[-1] != today_str:
         dates.append(today_str)
         for r in results:
             tk = r["t"]
