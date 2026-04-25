@@ -31,7 +31,7 @@ from fetch_data import ETF_INFO, compute_atr, compute_atr_series, percentrank_in
 LOOKBACK = 50      # daily: compute deltas for last 50 bars
 MA_LENGTH = 20     # daily: SMA of deltas (smoothing)
 LOOKBACK_W = 20    # weekly: compute deltas for last 20 weeks
-MA_LENGTH_W = 8    # weekly: SMA of deltas (smoothing)
+MA_LENGTH_W = 12   # weekly: window length for recency-weighted average of deltas
 ATR_PERIOD = 14
 MAX_HISTORY_DAYS = 30
 
@@ -1090,14 +1090,14 @@ def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_
         rrs = (stock_chg - expected) / stock_atr
         deltas.append(rrs)
 
-    # Recency-weighted rolling average of deltas (instead of flat SMA).
-    # Weights for an 8-week window (most recent first): [0.20, 0.22, 0.16, 0.13, 0.12, 0.07, 0.05, 0.05]
-    # sum = 1.0. Note: the most-recent (current, still-forming) week is intentionally
-    # weighted LESS than week -2. This makes the score more stable mid-week — daily updates
-    # to the in-progress weekly bar have less influence than the most recently completed week.
-    WEEKLY_WEIGHTS = [0.20, 0.22, 0.16, 0.13, 0.12, 0.07, 0.05, 0.05]
+    # Recency-weighted rolling average of deltas across a 12-week window.
+    # Weights (most recent first): [0.12, 0.11, 0.10, 0.09, 0.08, 0.08, 0.08, 0.08, 0.07, 0.07, 0.06, 0.06]
+    # sum = 1.0. Deliberately FLAT — no week carries more than 12% of the score, so a
+    # single explosive week (e.g. earnings beat) can move the score meaningfully but can't
+    # dominate it. This produces the smooth, gradual rank changes that "weekly RS" implies.
+    WEEKLY_WEIGHTS = [0.12, 0.11, 0.10, 0.09, 0.08, 0.08, 0.08, 0.08, 0.07, 0.07, 0.06, 0.06]
     def recency_weighted(window):
-        # window is oldest→newest. Apply weights oldest→newest in reverse so newest gets 0.30.
+        # window is oldest→newest. Apply weights oldest→newest in reverse so newest gets the largest weight.
         wts = WEEKLY_WEIGHTS[:len(window)]
         wts_rev = list(reversed(wts))
         total_w = sum(wts_rev)
