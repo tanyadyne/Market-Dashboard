@@ -1884,6 +1884,23 @@ def main():
                 adjusted = max(0.0, adjusted - 2)
             elif prev_tz == "bull_light" and tz == "bull_strong":
                 adjusted = min(100.0, adjusted + 2)
+            # Daily-RS penalty system (half-strength version of weekly's penalties).
+            # Daily RS is a long-horizon score (Pine Script 4-quarter weighted ratio),
+            # so it shouldn't whipsaw on a single bad day — but it should still register
+            # real technical damage. Half-strength multipliers nudge ranks down when
+            # signals fire without overpowering the underlying multi-month picture.
+            #   - Bearish engulfing        → ×0.95 (subtle reversal hint)
+            #   - Close >1×ATR below 21EMA → ×0.85 (mid-term structure broken)
+            #   - Close >20% below 5-day   → ×0.75 (acute breakdown)
+            # Worst case (all three): ×0.95 × 0.85 × 0.75 = ×0.605 → a 100-score drops to ~60.
+            d_mult = 1.0
+            if r.get("w_pen_engulf"):
+                d_mult *= 0.95
+            if r.get("w_pen_ema21"):
+                d_mult *= 0.85
+            if r.get("w_pen_crash5"):
+                d_mult *= 0.75
+            adjusted = max(0.0, min(100.0, adjusted * d_mult))
             r["rs"] = round(adjusted)              # display value (clean integer)
             r["_d_rs_raw"] = adjusted              # full-precision value for ranking
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
