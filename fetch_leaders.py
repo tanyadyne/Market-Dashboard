@@ -985,9 +985,10 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     #
     # Signal 1: bearish engulfing on the most recent daily candle
     #   yesterday green, today red, today's body fully engulfs yesterday's body
+    #   AND both candles have meaningful bodies (filters out doji-engulfing-doji noise)
     pen_engulf = False
     try:
-        if n >= 2:
+        if n >= 2 and atr and atr > 0:
             o_today  = float(df["Open"].values[-1])
             c_today  = float(c[-1])
             o_yest   = float(df["Open"].values[-2])
@@ -995,7 +996,15 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
             yest_green = c_yest > o_yest
             today_red  = c_today < o_today
             engulfs = (o_today >= c_yest) and (c_today <= o_yest)
-            if yest_green and today_red and engulfs:
+            # Magnitude filters: ensure both candles represent real price action,
+            # not micro-doji patterns that geometrically satisfy "engulfing" but reflect
+            # essentially no selling pressure.
+            yest_body = abs(c_yest - o_yest)
+            today_body = abs(c_today - o_today)
+            yest_body_meaningful = yest_body >= 0.2 * atr   # ≥ 20% of ATR
+            today_body_meaningful = today_body >= 0.8 * atr  # ≥ 80% of ATR
+            if (yest_green and today_red and engulfs
+                and yest_body_meaningful and today_body_meaningful):
                 pen_engulf = True
     except Exception:
         pen_engulf = False
