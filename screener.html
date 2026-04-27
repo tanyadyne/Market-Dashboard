@@ -147,11 +147,19 @@ tr:hover{background:var(--bg3)}
 .hist-delta .fl{color:var(--t4)}
 @media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px}.info-box{min-width:0}.info-boxes .info-box:nth-child(1){order:1}.info-boxes .info-box:nth-child(4){order:2}.info-boxes .info-box:nth-child(2){order:3}.info-boxes .info-box:nth-child(3){order:4}.tab-btn{padding:8px 18px;font-size:11px}.chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.chart-card-body{height:200px}}
 
-/* Mobile layout toggle (controlled by data-view="mobile") */
-/* Use default table-layout:auto (same as desktop). Auto-layout lets the browser
-   intelligently shrink columns to fit the viewport — this is WHY desktop mode fits
-   perfectly on phones even with 10+ columns. Fixed-layout prevents shrinking and
-   causes overflow. The percentage widths below are HINTS, not hard constraints. */
+/* ─── MOBILE LAYOUT ─── */
+/* Master constraint: every direct child of body is clamped to viewport width.
+   This prevents ANY element (nav, tabs, table, etc.) from pushing the document wider. */
+[data-view="mobile"] body{width:100vw;max-width:100vw;overflow-x:hidden}
+html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
+[data-view="mobile"] .hdr,
+[data-view="mobile"] .tab-strip,
+[data-view="mobile"] .spy,
+[data-view="mobile"] .tw,
+[data-view="mobile"] .search-panel,
+[data-view="mobile"] .chart-grid,
+[data-view="mobile"] .pag,
+[data-view="mobile"] .status{max-width:100vw;box-sizing:border-box}
 [data-view="mobile"] table{width:100%}
 [data-view="mobile"] td{padding:6px 2px;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 [data-view="mobile"] th{padding:8px 2px;font-size:9.5px;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:static!important;top:auto!important}
@@ -170,13 +178,7 @@ tr:hover{background:var(--bg3)}
 [data-view="mobile"] .tk{font-size:11px}
 /* Compact RS pill on mobile so the column fits within its narrow allocation */
 [data-view="mobile"] .rs{padding:2px 4px;font-size:9.5px}
-/* Nuclear overflow prevention: no element can exceed viewport width on mobile.
-   This catches any element (nav, tab strip, table, etc.) that might push the document
-   wider than the screen, which on iOS Safari causes everything to shift right. */
-[data-view="mobile"] *{max-width:100vw}
-[data-view="mobile"] .tw{overflow-x:hidden}
-[data-view="mobile"] body{max-width:100vw;overflow-x:hidden}
-html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
+[data-view="mobile"] .tw{overflow-x:auto}
 /* Chart view: 2 per row on mobile */
 [data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}
 [data-view="mobile"] .chart-card-body{height:200px}
@@ -511,12 +513,12 @@ function buildHeader(){
   cols.forEach(col=>{
     const th=document.createElement('th');
     th.className=col.al==='l'?'l':'c';
-    // On mobile: use percentage widths so the table auto-fits any viewport.
-    // On desktop: use fixed pixel widths for precise alignment.
-    if(isMobile){
-      if(col.mw)th.style.width=col.mw;
-      // Theme column (no mw set) gets no explicit width → takes remaining space
-    }else{
+    // On mobile: set NO explicit width — let the browser's auto-layout engine
+    // distribute column widths based on content, exactly like desktop mode does.
+    // Desktop fits 10+ columns on the same phone screen because auto-layout
+    // intelligently compresses everything. Setting explicit widths (even percentages)
+    // prevents this compression and causes overflow.
+    if(!isMobile){
       th.style.width=col.w;
     }
     if(col.key==='rd'){
