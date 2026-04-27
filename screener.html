@@ -148,15 +148,15 @@ tr:hover{background:var(--bg3)}
 @media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px}.info-box{min-width:0}.info-boxes .info-box:nth-child(1){order:1}.info-boxes .info-box:nth-child(4){order:2}.info-boxes .info-box:nth-child(2){order:3}.info-boxes .info-box:nth-child(3){order:4}.tab-btn{padding:8px 18px;font-size:11px}.chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.chart-card-body{height:200px}}
 
 /* Mobile layout toggle (controlled by data-view="mobile") */
-[data-view="mobile"] table{table-layout:fixed;width:100%;max-width:100vw}
+/* Use default table-layout:auto (same as desktop). Auto-layout lets the browser
+   intelligently shrink columns to fit the viewport — this is WHY desktop mode fits
+   perfectly on phones even with 10+ columns. Fixed-layout prevents shrinking and
+   causes overflow. The percentage widths below are HINTS, not hard constraints. */
+[data-view="mobile"] table{width:100%}
 [data-view="mobile"] td{padding:6px 2px;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 [data-view="mobile"] th{padding:8px 2px;font-size:9.5px;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:static!important;top:auto!important}
-/* Force fixed-layout so column widths are honored exactly and content can't push the
-   table beyond the viewport. Combined with overflow:hidden on .tw this guarantees no
-   horizontal cutoff regardless of cell content. */
-[data-view="mobile"] table{table-layout:fixed;width:100%}
 /* Mobile column widths for the MAIN screener table: # | Δ | Ticker | Theme (flex) | 1D | YTD | RS
-   Use percentages so the table scales perfectly to any viewport (iPhone SE 320px → iPhone 15 Pro Max 430px). */
+   These are advisory widths — the browser's auto-layout will shrink them further if needed to fit. */
 [data-view="mobile"] #tw th:nth-child(1),[data-view="mobile"] #tw td:nth-child(1){width:7%}
 [data-view="mobile"] #tw th:nth-child(2),[data-view="mobile"] #tw td:nth-child(2){width:11%}
 [data-view="mobile"] #tw th:nth-child(3),[data-view="mobile"] #tw td:nth-child(3){width:14%}
