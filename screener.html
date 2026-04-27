@@ -155,15 +155,8 @@ tr:hover{background:var(--bg3)}
 [data-view="mobile"] table{width:100%}
 [data-view="mobile"] td{padding:6px 2px;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 [data-view="mobile"] th{padding:8px 2px;font-size:9.5px;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:static!important;top:auto!important}
-/* Mobile column widths for the MAIN screener table: # | Δ | Ticker | Theme (flex) | 1D | YTD | RS
-   These are advisory widths — the browser's auto-layout will shrink them further if needed to fit. */
-[data-view="mobile"] #tw th:nth-child(1),[data-view="mobile"] #tw td:nth-child(1){width:7%}
-[data-view="mobile"] #tw th:nth-child(2),[data-view="mobile"] #tw td:nth-child(2){width:11%}
-[data-view="mobile"] #tw th:nth-child(3),[data-view="mobile"] #tw td:nth-child(3){width:14%}
-[data-view="mobile"] #tw th:nth-child(4),[data-view="mobile"] #tw td:nth-child(4){width:auto}
-[data-view="mobile"] #tw th:nth-child(5),[data-view="mobile"] #tw td:nth-child(5){width:13%}
-[data-view="mobile"] #tw th:nth-child(6),[data-view="mobile"] #tw td:nth-child(6){width:13%}
-[data-view="mobile"] #tw th:nth-child(7),[data-view="mobile"] #tw td:nth-child(7){width:11%}
+/* Mobile column widths are set directly via JavaScript in buildHeader() using percentage
+   values (mw property). This avoids specificity conflicts with inline styles. */
 /* Mobile column widths for the HISTORY table (Individual Profile): Date | Score | Rank | Δ | Position | Theme */
 [data-view="mobile"] .hist-table th,[data-view="mobile"] .hist-table td{padding:5px 3px;font-size:10px;vertical-align:top}
 [data-view="mobile"] .hist-table th:nth-child(1),[data-view="mobile"] .hist-table td:nth-child(1){width:16%}
@@ -506,19 +499,26 @@ function setLayout(mobile){
 function buildHeader(){
   const isW=currentTab==='weekly';
   let cols=[
-    {key:'rk',label:'#',w:'36px'},{key:'rd',label:'Δ',w:'56px'},
-    {key:'t',label:'Ticker',w:'64px',al:'l'},{key:'n',label:'Company Name',w:'160px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l'},
+    {key:'rk',label:'#',w:'36px',mw:'7%'},{key:'rd',label:'Δ',w:'56px',mw:'11%'},
+    {key:'t',label:'Ticker',w:'64px',al:'l',mw:'14%'},{key:'n',label:'Company Name',w:'160px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l',mw:''},
     {key:'rv',label:isW?'R.Vol (W)':'R.Vol',w:'70px'},{key:'am',label:isW?'ATR M (W)':'ATR Mult',w:'70px'},
-    {key:'ax',label:'ATR Ext',w:'70px'},{key:'ch',label:'1D',w:'60px'},
-    {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},{key:'ytd',label:'YTD',w:'60px'},
-    {key:'rs',label:isW?'RS (W)':'RS (D)',w:'56px'}
+    {key:'ax',label:'ATR Ext',w:'70px'},{key:'ch',label:'1D',w:'60px',mw:'13%'},
+    {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},{key:'ytd',label:'YTD',w:'60px',mw:'13%'},
+    {key:'rs',label:isW?'RS (W)':'RS (D)',w:'56px',mw:'11%'}
   ];
   if(isMobile)cols=cols.filter(c=>MOBILE_COLS.has(c.key));
   const tr=document.getElementById('headerRow');tr.innerHTML='';
   cols.forEach(col=>{
     const th=document.createElement('th');
     th.className=col.al==='l'?'l':'c';
-    th.style.width=col.w;
+    // On mobile: use percentage widths so the table auto-fits any viewport.
+    // On desktop: use fixed pixel widths for precise alignment.
+    if(isMobile){
+      if(col.mw)th.style.width=col.mw;
+      // Theme column (no mw set) gets no explicit width → takes remaining space
+    }else{
+      th.style.width=col.w;
+    }
     if(col.key==='rd'){
       const opts=[1,2,3,4,5,6,7,8,9,10].map(v=>`<option value="${v}"${v===rankLookback?' selected':''}>${v}D</option>`).join('');
       th.innerHTML=`Δ <select class="streak-sel" onchange="event.stopPropagation();rankLookback=parseInt(this.value);render();" style="font-size:9px;padding:1px 2px">${opts}</select>`;
