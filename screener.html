@@ -177,16 +177,25 @@ tr:hover{background:var(--bg3)}
 [data-view="mobile"] .tk{font-size:11px}
 /* Compact RS pill on mobile so the column fits within its narrow allocation */
 [data-view="mobile"] .rs{padding:2px 4px;font-size:9.5px}
+/* Nuclear overflow prevention: no element can exceed viewport width on mobile.
+   This catches any element (nav, tab strip, table, etc.) that might push the document
+   wider than the screen, which on iOS Safari causes everything to shift right. */
+[data-view="mobile"] *{max-width:100vw}
 [data-view="mobile"] .tw{overflow-x:hidden}
 [data-view="mobile"] body{max-width:100vw;overflow-x:hidden}
-html[data-view="mobile"]{overflow-x:hidden}
+html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
 /* Chart view: 2 per row on mobile */
 [data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}
 [data-view="mobile"] .chart-card-body{height:200px}
 [data-view="mobile"] .hdr{padding:10px 12px;flex-wrap:wrap;gap:6px}
 [data-view="mobile"] .hdr-r{gap:6px;flex-wrap:wrap}
 [data-view="mobile"] .srch{width:100%;font-size:11px;padding:5px 8px;order:10}
-[data-view="mobile"] .tab-btn{padding:8px 14px;font-size:11px}
+/* Constrain tab strip to viewport: shrink button padding + font + allow wrapping */
+[data-view="mobile"] .tab-strip{padding:10px 8px 8px;gap:4px;flex-wrap:wrap}
+[data-view="mobile"] .tab-btn{padding:8px 12px;font-size:10px;letter-spacing:.3px}
+/* Shrink header toggle buttons on mobile */
+[data-view="mobile"] .seg-toggle button{padding:4px 7px;font-size:10px}
+[data-view="mobile"] .filter-btn{padding:4px 8px;font-size:10px}
 </style>
 </head>
 <body>
