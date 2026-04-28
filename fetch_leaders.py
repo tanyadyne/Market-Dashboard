@@ -2007,8 +2007,8 @@ def main():
     _bar_date_str = None
     for _r in results:
         _tk = _r.get("t")
-        if _tk and _tk in all_dfs and all_dfs[_tk] is not None and len(all_dfs[_tk]) > 0:
-            _last_bar_ts = all_dfs[_tk].index[-1]
+        if _tk and _tk in daily_data and daily_data[_tk] is not None and len(daily_data[_tk]) > 0:
+            _last_bar_ts = daily_data[_tk].index[-1]
             _bar_date_str = _last_bar_ts.date().isoformat() if hasattr(_last_bar_ts, 'date') else str(_last_bar_ts)[:10]
             break
     # Fallback to ET date if no bar date found
