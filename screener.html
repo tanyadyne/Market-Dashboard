@@ -107,6 +107,10 @@ tr:hover{background:var(--bg3)}
 .hist-table table{font-size:12px}
 .hist-table th{font-size:9px;padding:6px}
 .hist-table td{padding:5px 6px;font-family:'JetBrains Mono',monospace;font-size:11px}
+/* Excluded history rows — methodology change days etc. Visible for transparency
+   but visually de-emphasised, and ignored for Δ rank calculations. */
+.hist-row-excluded td{opacity:.35;font-style:italic}
+.hist-row-excluded td .rs{opacity:.7}
 .tag-leader{color:#4ade80;font-weight:600}.tag-neutral{color:#94a3b8;font-weight:600}.tag-laggard{color:#f87171;font-weight:600}
 /* 5-tier variants used in the Individual Profile history table only.
    Strong = deep saturated color, Moderate = noticeably lighter/desaturated. */
@@ -408,18 +412,33 @@ function posClassFull(pos){
 }
 function themeTag(status){if(status==='Leader')return'tag-leader';if(status==='Laggard')return'tag-laggard';return'tag-neutral';}
 
+// Dates whose data is considered unreliable (e.g. methodology change, bad snapshot).
+// These dates remain in the history table for transparency but are GREYED OUT and
+// excluded from all Δ rank calculations — comparisons skip past them to the next
+// valid trading day.
+const EXCLUDED_DATES = new Set(['2026-04-24']);
+
 function getRankDeltaVal(ticker){
   // Use HISTORY (per-day rank snapshots from leaders_score_history.json).
   // rankLookback = number of TRADING DAYS back (1 = yesterday, 2 = two trading days ago, etc).
+  // EXCLUDED_DATES are skipped entirely — they don't count toward the lookback distance,
+  // and they aren't valid comparison points themselves.
   if(!HISTORY||!HISTORY.dates||!HISTORY.d||!HISTORY.d[ticker])return null;
   const isW=currentTab==='weekly';
   const key=isW?'wr':'r';
   const arr=HISTORY.d[ticker][key];
+  const dates=HISTORY.dates;
   if(!arr||!arr.length)return null;
-  // The most recent entry in arr corresponds to today's rank (dates[-1]).
-  // Going `rankLookback` trading days back means index = arr.length - 1 - rankLookback.
-  const idx=arr.length-1-rankLookback;
-  if(idx<0||idx>=arr.length)return null;
+  // Walk backward from the most recent entry, skipping excluded dates, until we've
+  // counted `rankLookback` valid trading days back.
+  let stepsBack=0;
+  let idx=arr.length-1;
+  while(idx>=0 && stepsBack<rankLookback){
+    idx--;
+    if(idx<0)break;
+    if(!EXCLUDED_DATES.has(dates[idx]))stepsBack++;
+  }
+  if(idx<0||stepsBack<rankLookback)return null;
   const prevRk=arr[idx];if(prevRk==null)return null;
   const etf=DATA&&DATA.e&&DATA.e.find(e=>e.t===ticker);if(!etf)return null;
   const curRk=isW?etf.w_rk:etf.rk;if(curRk==null)return null;
@@ -900,11 +919,19 @@ function searchStock(){
       const dt=dates[i];const parts=dt.split('-');
       const fmtDate=parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:dt;
       const score=h.s[i];
-      // Delta: compare rank (not score) with previous day. Smaller rank = better, so improvement shown green.
+      const isExcluded=EXCLUDED_DATES.has(dt);
+      // Delta: compare rank (not score) with previous valid (non-excluded) day.
+      // Smaller rank = better, so improvement shown green.
       let deltaHtml='<span class="fl">—</span>';
       const dr=h.r?h.r[i]:null;
-      const drPrev=h.r&&i>0?h.r[i-1]:null;
-      if(dr!=null && drPrev!=null){
+      // Walk backward to find the most recent non-excluded prior date with a valid rank
+      let prevIdx=i-1;
+      while(prevIdx>=0 && (EXCLUDED_DATES.has(dates[prevIdx]) || h.r[prevIdx]==null)){
+        prevIdx--;
+      }
+      const drPrev=prevIdx>=0?h.r[prevIdx]:null;
+      // Don't show a Δ for excluded rows themselves (their data is being ignored).
+      if(!isExcluded && dr!=null && drPrev!=null){
         const diff=drPrev-dr; // positive = improved (rank went down)
         if(diff>0)deltaHtml=`<span class="up">▲ +${diff}</span>`;
         else if(diff<0)deltaHtml=`<span class="dn">▼ ${diff}</span>`;
@@ -918,8 +945,10 @@ function searchStock(){
       }else{
         themeCell+=` <span class="${themeTag(ts)}">(${ts})</span>`;
       }
-      html+=`<tr>
-        <td class="l">${fmtDate}</td>
+      const rowClass=isExcluded?' class="hist-row-excluded"':'';
+      const excludedNote=isExcluded?' <span style="font-size:9px;font-weight:400;font-style:italic">(excluded)</span>':'';
+      html+=`<tr${rowClass}>
+        <td class="l">${fmtDate}${excludedNote}</td>
         <td class="c"><span class="rs" style="background:${getRSBg(score)};color:${getRSCol(score)}">${score!=null?score+'%':'—'}</span></td>
         <td class="c">${dr!=null?'#'+dr:'—'}</td>
         <td class="hist-delta">${deltaHtml}</td>
