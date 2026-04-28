@@ -1991,20 +1991,33 @@ def main():
     # entry labeled "tomorrow" — producing a ghost duplicate of today's data that would
     # zero out the 1D delta (since arr[-1] and arr[-2] would both hold today's EOD ranks).
     _now_utc = datetime.now(timezone.utc)
-    # Approx ET as UTC-4 (EDT). Workflow only runs on weekdays so DST precision doesn't matter;
-    # both EDT and EST map post-close (4pm ET = 20:00 UTC EDT / 21:00 UTC EST) to the same
-    # calendar day in ET, and this offset avoids the UTC date-flip issue.
+    # Approx ET as UTC-4 (EDT). Used for weekend guard only.
     _et_now = _now_utc.astimezone(timezone(timedelta(hours=-4)))
-    today_str = _et_now.date().isoformat()
 
-    # Defensive guard: never write history entries on weekend ET dates. The cron limits
-    # to weekdays and the workflow's market-hours check should also block, but a manual
-    # workflow_dispatch on Sat/Sun would otherwise create ghost entries that corrupt the
-    # 1D delta calculations. Skip history writes entirely on those days.
+    # History date = the date of the most recent daily bar in yfinance's data.
+    # This is more reliable than using "today's ET date" because:
+    #   - After midnight ET but before market open, the ET clock says "April 28" but
+    #     the most recent bar is still April 27's EOD → we want "2026-04-27"
+    #   - On weekends, the last bar is Friday's → we want Friday's date (and the
+    #     weekend guard will skip the write anyway)
+    # We grab the bar date from the first stock in results that has valid data.
+    _bar_date_str = None
+    for _r in results:
+        _tk = _r.get("t")
+        if _tk and _tk in all_dfs and all_dfs[_tk] is not None and len(all_dfs[_tk]) > 0:
+            _last_bar_ts = all_dfs[_tk].index[-1]
+            _bar_date_str = _last_bar_ts.date().isoformat() if hasattr(_last_bar_ts, 'date') else str(_last_bar_ts)[:10]
+            break
+    # Fallback to ET date if no bar date found
+    if not _bar_date_str:
+        _bar_date_str = _et_now.date().isoformat()
+    today_str = _bar_date_str
+
+    # Defensive guard: never write history entries on weekend ET dates.
     _weekday = _et_now.weekday()  # Mon=0 ... Sun=6
     skip_history_write = _weekday >= 5
     if skip_history_write:
-        print(f"[history] Skipping history write — {today_str} is a weekend in ET (weekday={_weekday})")
+        print(f"[history] Skipping history write — ET weekday={_weekday}, bar date={today_str}")
 
     # ─── Score history (rolling daily snapshots for search) ───
     score_history = {"dates": [], "d": {}}
