@@ -1,21 +1,13 @@
 """
 One-off repair script for leaders_score_history.json.
 
-Problem: before the ET-date fix, the history file accumulated ghost entries —
-a Sunday (2026-04-19) from a run that interpreted UTC Saturday/Sunday as today,
-and a 2026-04-22 entry from a post-close run that crossed UTC midnight.
-
-This script:
-  1. Loads leaders_score_history.json
-  2. Keeps only dates that are weekdays (Monday–Friday)
-  3. For each ticker, keeps only the array positions corresponding to those dates
-  4. Additionally strips any date that's strictly in the future relative to US Eastern
-
-Run once from the repo root:
-    python repair_history.py
-Then commit the updated leaders_score_history.json.
+Modes:
+  python repair_history.py           — remove weekend/future ghost entries
+  python repair_history.py --strip-last  — remove the most recent entry (e.g. a ghost
+                                           date created by a post-midnight-ET run)
 """
 import json
+import sys
 from datetime import date, datetime, timezone, timedelta
 
 
@@ -27,32 +19,42 @@ def main():
     dates_old = h.get("dates", [])
     scores = h.get("d", {})
 
-    # Determine today in US Eastern (approx UTC-4; precision doesn't matter for date-level filter)
-    now_utc = datetime.now(timezone.utc)
-    et_now = now_utc.astimezone(timezone(timedelta(hours=-4)))
-    today_et = et_now.date()
+    strip_last = "--strip-last" in sys.argv
 
-    # Which indices to keep? Only weekdays, and not strictly after today-ET.
-    keep_idx = []
-    dates_new = []
-    for i, d in enumerate(dates_old):
-        try:
-            dt = date.fromisoformat(d)
-        except Exception:
-            print(f"  skipping unparseable date: {d}")
-            continue
-        if dt.weekday() >= 5:  # 5=Sat, 6=Sun
-            print(f"  removing weekend ghost: {d}")
-            continue
-        if dt > today_et:
-            print(f"  removing future ghost: {d}")
-            continue
-        keep_idx.append(i)
-        dates_new.append(d)
+    if strip_last:
+        if not dates_old:
+            print("History is empty — nothing to strip.")
+            return
+        removed = dates_old[-1]
+        dates_new = dates_old[:-1]
+        keep_idx = list(range(len(dates_new)))
+        print(f"  stripping last entry: {removed}")
+    else:
+        # Determine today in US Eastern (approx UTC-4)
+        now_utc = datetime.now(timezone.utc)
+        et_now = now_utc.astimezone(timezone(timedelta(hours=-4)))
+        today_et = et_now.date()
 
-    if len(keep_idx) == len(dates_old):
-        print("No changes needed — history is clean.")
-        return
+        keep_idx = []
+        dates_new = []
+        for i, d in enumerate(dates_old):
+            try:
+                dt = date.fromisoformat(d)
+            except Exception:
+                print(f"  skipping unparseable date: {d}")
+                continue
+            if dt.weekday() >= 5:
+                print(f"  removing weekend ghost: {d}")
+                continue
+            if dt > today_et:
+                print(f"  removing future ghost: {d}")
+                continue
+            keep_idx.append(i)
+            dates_new.append(d)
+
+        if len(keep_idx) == len(dates_old):
+            print("No changes needed — history is clean.")
+            return
 
     # Rebuild each ticker's arrays keeping only the positions in keep_idx
     for tk, entry in scores.items():
