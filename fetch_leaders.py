@@ -868,9 +868,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     rvol = (vols[-1] / np.mean(vols[:-1][-20:])) if len(vols) > 1 and np.mean(vols[:-1][-20:]) > 0 else None
 
     # ─── Pine Script RS calculation (4-quarter weighted performance vs SPY) ──
-    # Quarter weights heavily favour the most recent quarter to capture CURRENT momentum.
-    # Q1 (most recent 63 days) = 75%, Q2 = 10%, Q3 = 10%, Q4 = 5%
-    # rs_stock = 0.75*(px/px[-63]) + 0.10*(px/px[-126]) + 0.10*(px/px[-189]) + 0.05*(px/px[-252])
+    # Quarter weights: Q1 (most recent 63 days) = 50%, Q2 = 20%, Q3 = 15%, Q4 = 15%
+    # rs_stock = 0.50*(px/px[-63]) + 0.20*(px/px[-126]) + 0.15*(px/px[-189]) + 0.15*(px/px[-252])
     # rs_ref   = same for SPY
     # totalRsScore = (rs_stock / rs_ref) * 100
     # Align stock and SPY bars by timestamp
@@ -926,8 +925,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     perfS189 = spy_now / spy_at(n189) if spy_at(n189) else 1
     perfS252 = spy_now / spy_at(n252) if spy_at(n252) else 1
 
-    rs_stock = 0.75 * perfT63 + 0.10 * perfT126 + 0.10 * perfT189 + 0.05 * perfT252
-    rs_ref   = 0.75 * perfS63 + 0.10 * perfS126 + 0.10 * perfS189 + 0.05 * perfS252
+    rs_stock = 0.50 * perfT63 + 0.20 * perfT126 + 0.15 * perfT189 + 0.15 * perfT252
+    rs_ref   = 0.50 * perfS63 + 0.20 * perfS126 + 0.15 * perfS189 + 0.15 * perfS252
     final_rs = (rs_stock / rs_ref) * 100 if rs_ref > 0 else 100
 
     # ─── Distance-from-52-week-high penalty ────────────────────
@@ -935,13 +934,17 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     # This penalises stocks coasting on old trailing returns that have rolled over from
     # their peaks, while rewarding stocks still near highs (current leaders).
     # Uses the 14-period ATR as the ADR proxy (already computed above as `atr`).
-    high_52w = float(max(h[-min(252, n):])) if n >= 20 else float(max(h))
-    if high_52w > 0 and atr > 0:
-        distance_from_high = high_52w - float(stock_now)
-        adr_units_below = distance_from_high / atr
-        if adr_units_below > 0:
-            high_penalty = 0.5 * adr_units_below
-            final_rs = final_rs - high_penalty
+    try:
+        valid_highs = [float(x) for x in h[-min(252, n):] if x is not None and not (isinstance(x, float) and x != x)]
+        high_52w = max(valid_highs) if valid_highs else 0
+        if high_52w > 0 and atr and atr > 0:
+            distance_from_high = high_52w - float(stock_now)
+            adr_units_below = distance_from_high / atr
+            if adr_units_below > 0:
+                high_penalty = 0.5 * adr_units_below
+                final_rs = final_rs - high_penalty
+    except Exception:
+        pass  # Skip penalty if data is malformed
 
     # Build a lightweight VARS-like sparkline: rolling 20-bar weighted RS score
     # (for visual trend reference — kept for compatibility with frontend sparklines)
@@ -1968,7 +1971,7 @@ def main():
 
     # ─── Rank stocks by full-precision _d_rs_raw to avoid tie-cluster jumps ──
     results.sort(key=lambda x: (x.get("_d_rs_raw") if x.get("_d_rs_raw") is not None else -999,
-                                 x["fr"] if x["fr"] is not None else -999), reverse=True)
+                                 x.get("fr") if x.get("fr") is not None else -999), reverse=True)
     for i, r in enumerate(results):
         r["rk"] = i + 1
 
@@ -1979,7 +1982,7 @@ def main():
     # rank changes are smooth and proportional to actual w_fr changes.
     w_sorted = sorted(results, key=lambda x: (x.get("_w_rs_raw") if x.get("_w_rs_raw") is not None else -999,
                                                 x.get("w_fr") if x.get("w_fr") is not None else -999,
-                                                x["c5"] if x["c5"] is not None else -999), reverse=True)
+                                                x.get("c5") if x.get("c5") is not None else -999), reverse=True)
     w_rank_map = {r["t"]: i + 1 for i, r in enumerate(w_sorted)}
     for r in results:
         r["w_rk"] = w_rank_map.get(r["t"], len(results))
