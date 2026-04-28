@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Run repair script
-        run: python repair_history.py
+        run: python repair_history.py --strip-last
       - name: Commit cleaned history
         run: |
           git config user.name "github-actions[bot]"
