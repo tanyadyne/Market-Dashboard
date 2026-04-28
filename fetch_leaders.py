@@ -868,8 +868,9 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     rvol = (vols[-1] / np.mean(vols[:-1][-20:])) if len(vols) > 1 and np.mean(vols[:-1][-20:]) > 0 else None
 
     # ─── Pine Script RS calculation (4-quarter weighted performance vs SPY) ──
-    # Quarter 1 (most recent) = 40% weight, Q2/Q3/Q4 = 20% each
-    # rs_stock = 0.4*(px/px[-63]) + 0.2*(px/px[-126]) + 0.2*(px/px[-189]) + 0.2*(px/px[-252])
+    # Quarter weights heavily favour the most recent quarter to capture CURRENT momentum.
+    # Q1 (most recent 63 days) = 75%, Q2 = 10%, Q3 = 10%, Q4 = 5%
+    # rs_stock = 0.75*(px/px[-63]) + 0.10*(px/px[-126]) + 0.10*(px/px[-189]) + 0.05*(px/px[-252])
     # rs_ref   = same for SPY
     # totalRsScore = (rs_stock / rs_ref) * 100
     # Align stock and SPY bars by timestamp
@@ -888,6 +889,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "ytd": round(ytd, 2) if ytd is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
                 "sa": _sa, "sf": _sf, "tz": "neutral",
+                "w_pen_engulf": False, "w_pen_ema21": False, "w_pen_crash5": False,
                 # Internal baselines for intraday overlay (stripped before output)
                 "_pc": float(c[-2]) if n >= 2 else None,
                 "_5b": w_base,
@@ -924,9 +926,22 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     perfS189 = spy_now / spy_at(n189) if spy_at(n189) else 1
     perfS252 = spy_now / spy_at(n252) if spy_at(n252) else 1
 
-    rs_stock = 0.4 * perfT63 + 0.2 * perfT126 + 0.2 * perfT189 + 0.2 * perfT252
-    rs_ref   = 0.4 * perfS63 + 0.2 * perfS126 + 0.2 * perfS189 + 0.2 * perfS252
+    rs_stock = 0.75 * perfT63 + 0.10 * perfT126 + 0.10 * perfT189 + 0.05 * perfT252
+    rs_ref   = 0.75 * perfS63 + 0.10 * perfS126 + 0.10 * perfS189 + 0.05 * perfS252
     final_rs = (rs_stock / rs_ref) * 100 if rs_ref > 0 else 100
+
+    # ─── Distance-from-52-week-high penalty ────────────────────
+    # Deduct −0.5 raw RS points for every 1× ADR the stock is below its 52-week high.
+    # This penalises stocks coasting on old trailing returns that have rolled over from
+    # their peaks, while rewarding stocks still near highs (current leaders).
+    # Uses the 14-period ATR as the ADR proxy (already computed above as `atr`).
+    high_52w = float(max(h[-min(252, n):])) if n >= 20 else float(max(h))
+    if high_52w > 0 and atr > 0:
+        distance_from_high = high_52w - float(stock_now)
+        adr_units_below = distance_from_high / atr
+        if adr_units_below > 0:
+            high_penalty = 0.5 * adr_units_below
+            final_rs = final_rs - high_penalty
 
     # Build a lightweight VARS-like sparkline: rolling 20-bar weighted RS score
     # (for visual trend reference — kept for compatibility with frontend sparklines)
