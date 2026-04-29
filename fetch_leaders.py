@@ -1194,6 +1194,74 @@ def fetch_live_quotes_bulk(tickers, max_workers=20):
     return out
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# US MARKET HOLIDAYS
+# ──────────────────────────────────────────────────────────────────────────────
+# Hardcoded list of NYSE full-closure dates. Source:
+#   https://www.nyse.com/trade/hours-calendars
+# Each entry is the actual date markets are CLOSED (observed date, not nominal).
+# Early-close days (day after Thanksgiving, Christmas Eve) are NOT included —
+# markets are open those days, just close at 1pm ET. Workflow runs normally.
+# When this list is exhausted, please update from the NYSE calendar page.
+# Last updated: 2026-04-29 (covers through 2028).
+US_MARKET_HOLIDAYS = {
+    # 2026
+    "2026-01-01",  # New Year's Day
+    "2026-01-19",  # MLK Jr. Day
+    "2026-02-16",  # Washington's Birthday
+    "2026-04-03",  # Good Friday
+    "2026-05-25",  # Memorial Day
+    "2026-06-19",  # Juneteenth
+    "2026-07-03",  # Independence Day (observed — actual July 4 is Saturday)
+    "2026-09-07",  # Labor Day
+    "2026-11-26",  # Thanksgiving
+    "2026-12-25",  # Christmas Day
+    # 2027
+    "2027-01-01",  # New Year's Day
+    "2027-01-18",  # MLK Jr. Day
+    "2027-02-15",  # Washington's Birthday
+    "2027-03-26",  # Good Friday
+    "2027-05-31",  # Memorial Day
+    "2027-06-18",  # Juneteenth (observed — actual June 19 is Saturday)
+    "2027-07-05",  # Independence Day (observed — actual July 4 is Sunday)
+    "2027-09-06",  # Labor Day
+    "2027-11-25",  # Thanksgiving
+    "2027-12-24",  # Christmas Day (observed — actual Dec 25 is Saturday)
+    # 2028
+    # Note: New Year's Day 2028 falls on Saturday, so no observed holiday
+    "2028-01-17",  # MLK Jr. Day
+    "2028-02-21",  # Washington's Birthday
+    "2028-04-14",  # Good Friday
+    "2028-05-29",  # Memorial Day
+    "2028-06-19",  # Juneteenth
+    "2028-07-04",  # Independence Day
+    "2028-09-04",  # Labor Day
+    "2028-11-23",  # Thanksgiving
+    "2028-12-25",  # Christmas Day
+}
+# Year through which the holiday list is valid. After this, log a warning.
+US_HOLIDAYS_VALID_THROUGH = 2028
+
+
+def is_us_market_holiday(date_str=None):
+    """Check whether the given ET date string ('YYYY-MM-DD') is a US market holiday.
+    If date_str is None, uses today's ET date. Returns False for unknown years and
+    logs a warning so the holiday list can be updated."""
+    if date_str is None:
+        from datetime import datetime, timezone, timedelta
+        et_now = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=-4)))
+        date_str = et_now.date().isoformat()
+    try:
+        year = int(date_str[:4])
+        if year > US_HOLIDAYS_VALID_THROUGH:
+            print(f"  [WARNING] Holiday list expires after {US_HOLIDAYS_VALID_THROUGH}; "
+                  f"date {date_str} is unchecked. Please update US_MARKET_HOLIDAYS in fetch_leaders.py.")
+            return False
+    except Exception:
+        return False
+    return date_str in US_MARKET_HOLIDAYS
+
+
 def is_us_market_open_or_recently_closed():
     """Return True if US equity regular session is currently OPEN (9:30am–4:00pm ET, Mon–Fri).
 
@@ -1321,6 +1389,16 @@ def main():
     print("=" * 60)
     print("Liquid Leaders — Stock RS Tracker")
     print("=" * 60)
+
+    # ─── Holiday check ────────────────────────────────────────────
+    # If today (ET) is a US market holiday, exit cleanly without doing any work.
+    # No data is downloaded, no files are written, no commits are made. The next
+    # workflow run on the next trading day will pick up where we left off.
+    from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+    _et_today = _dt.now(_tz.utc).astimezone(_tz(_td(hours=-4))).date().isoformat()
+    if is_us_market_holiday(_et_today):
+        print(f"\n[holiday] {_et_today} is a US market holiday — exiting without changes.")
+        return
 
     all_tickers, stock_to_etfs = build_universe()
     print(f"Universe: {len(all_tickers)} stocks, {len(set(name for etfs in stock_to_etfs.values() for name, _ in etfs))} unique ETF themes")
