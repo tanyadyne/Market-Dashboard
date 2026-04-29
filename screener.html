@@ -412,25 +412,44 @@ function posClassFull(pos){
 }
 function themeTag(status){if(status==='Leader')return'tag-leader';if(status==='Laggard')return'tag-laggard';return'tag-neutral';}
 
-// Dates whose DAILY data is considered unreliable (e.g. methodology change, bad snapshot).
-// These dates remain in the history table for transparency but are GREYED OUT and
-// excluded from DAILY Δ rank calculations — comparisons skip past them to the next
-// valid trading day.
-// NOTE: Weekly rank exclusion is a separate set. Weekly rank moves slowly (12-week
-// rolling window) so single-day methodology blips don't distort it the way they do
-// daily ranks. Currently no weekly exclusions.
-const EXCLUDED_DATES_DAILY = new Set(['2026-04-24']);
-const EXCLUDED_DATES_WEEKLY = new Set();
+// ─── Excluded dates configuration ──────────────────────────────────────────
+// Some history entries are unreliable (methodology change days, bad snapshots).
+// Excluded entries remain in the history table for transparency but are GREYED OUT
+// and skipped during Δ rank lookbacks.
+//
+// GLOBAL default — applies to most stocks. April 24 was the methodology-change day,
+// so its ranks across the universe aren't comparable to subsequent days.
+const EXCLUDED_DATES_DAILY_GLOBAL = new Set(['2026-04-24']);
+const EXCLUDED_DATES_WEEKLY_GLOBAL = new Set();
+
+// PER-TICKER overrides — for stocks where a different date should be excluded.
+// Example: MXL/FORM/TER/GLW/BTSG had unreliable April 27 entries (not April 24),
+// so those tickers exclude April 27 instead. Add new tickers/dates as needed.
+const EXCLUDED_DATES_DAILY_BY_TICKER = {
+  'MXL':  new Set(['2026-04-27']),
+  'FORM': new Set(['2026-04-27']),
+  'TER':  new Set(['2026-04-27']),
+  'GLW':  new Set(['2026-04-27']),
+  'BTSG': new Set(['2026-04-27']),
+};
+const EXCLUDED_DATES_WEEKLY_BY_TICKER = {};
+
+function getExcludedDailyForTicker(ticker){
+  return EXCLUDED_DATES_DAILY_BY_TICKER[ticker] || EXCLUDED_DATES_DAILY_GLOBAL;
+}
+function getExcludedWeeklyForTicker(ticker){
+  return EXCLUDED_DATES_WEEKLY_BY_TICKER[ticker] || EXCLUDED_DATES_WEEKLY_GLOBAL;
+}
 
 function getRankDeltaVal(ticker){
   // Use HISTORY (per-day rank snapshots from leaders_score_history.json).
   // rankLookback = number of TRADING DAYS back (1 = yesterday, 2 = two trading days ago, etc).
-  // EXCLUDED dates (mode-specific) are skipped entirely — they don't count toward the
-  // lookback distance, and they aren't valid comparison points themselves.
+  // EXCLUDED dates (per-ticker if defined, else global) are skipped entirely — they
+  // don't count toward the lookback distance, and they aren't valid comparison points.
   if(!HISTORY||!HISTORY.dates||!HISTORY.d||!HISTORY.d[ticker])return null;
   const isW=currentTab==='weekly';
   const key=isW?'wr':'r';
-  const excluded=isW?EXCLUDED_DATES_WEEKLY:EXCLUDED_DATES_DAILY;
+  const excluded=isW?getExcludedWeeklyForTicker(ticker):getExcludedDailyForTicker(ticker);
   const arr=HISTORY.d[ticker][key];
   const dates=HISTORY.dates;
   if(!arr||!arr.length)return null;
@@ -438,6 +457,9 @@ function getRankDeltaVal(ticker){
   // counted `rankLookback` valid trading days back.
   let stepsBack=0;
   let idx=arr.length-1;
+  // First, if today's entry itself is excluded (rare), step back past it
+  while(idx>=0 && excluded.has(dates[idx]))idx--;
+  // Then walk back the requested number of valid days
   while(idx>=0 && stepsBack<rankLookback){
     idx--;
     if(idx<0)break;
@@ -919,20 +941,21 @@ function searchStock(){
     html+=`<div class="hist-table"><table><thead><tr>
       <th class="l">Date</th><th class="c">Score</th><th class="c">Rank</th><th class="c">Δ</th><th class="c">Position</th><th class="l">Theme</th>
     </tr></thead><tbody>`;
+    // History table shows the DAILY rank column, so use the per-ticker daily exclusion set.
+    const tickerExcluded=getExcludedDailyForTicker(input);
     // Show newest first
     for(let i=dates.length-1;i>=0;i--){
       const dt=dates[i];const parts=dt.split('-');
       const fmtDate=parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:dt;
       const score=h.s[i];
-      // History table shows the DAILY rank column, so use the daily exclusion set.
-      const isExcluded=EXCLUDED_DATES_DAILY.has(dt);
+      const isExcluded=tickerExcluded.has(dt);
       // Delta: compare rank (not score) with previous valid (non-excluded) day.
       // Smaller rank = better, so improvement shown green.
       let deltaHtml='<span class="fl">—</span>';
       const dr=h.r?h.r[i]:null;
       // Walk backward to find the most recent non-excluded prior date with a valid rank
       let prevIdx=i-1;
-      while(prevIdx>=0 && (EXCLUDED_DATES_DAILY.has(dates[prevIdx]) || h.r[prevIdx]==null)){
+      while(prevIdx>=0 && (tickerExcluded.has(dates[prevIdx]) || h.r[prevIdx]==null)){
         prevIdx--;
       }
       const drPrev=prevIdx>=0?h.r[prevIdx]:null;
