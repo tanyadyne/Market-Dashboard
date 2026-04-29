@@ -111,6 +111,8 @@ tr:hover{background:var(--bg3)}
    but visually de-emphasised, and ignored for Δ rank calculations. */
 .hist-row-excluded td{opacity:.35;font-style:italic}
 .hist-row-excluded td .rs{opacity:.7}
+/* Holiday placeholder rows — even more de-emphasised since there's no real data. */
+.hist-row-holiday td{opacity:.30;font-style:italic;color:var(--t3)}
 .tag-leader{color:#4ade80;font-weight:600}.tag-neutral{color:#94a3b8;font-weight:600}.tag-laggard{color:#f87171;font-weight:600}
 /* 5-tier variants used in the Individual Profile history table only.
    Strong = deep saturated color, Moderate = noticeably lighter/desaturated. */
@@ -411,6 +413,21 @@ function posClassFull(pos){
   return'tag-neutral';
 }
 function themeTag(status){if(status==='Leader')return'tag-leader';if(status==='Laggard')return'tag-laggard';return'tag-neutral';}
+
+// ─── US Market Holidays ────────────────────────────────────────────────────
+// Hardcoded list — must match the backend in fetch_leaders.py exactly.
+// Used for rendering "(holiday)" placeholder rows in the history table for
+// dates where no workflow run occurred (since the script exits early).
+// Source: https://www.nyse.com/trade/hours-calendars
+// Last updated: 2026-04-29 (covers through 2028).
+const US_MARKET_HOLIDAYS = new Set([
+  '2026-01-01','2026-01-19','2026-02-16','2026-04-03','2026-05-25',
+  '2026-06-19','2026-07-03','2026-09-07','2026-11-26','2026-12-25',
+  '2027-01-01','2027-01-18','2027-02-15','2027-03-26','2027-05-31',
+  '2027-06-18','2027-07-05','2027-09-06','2027-11-25','2027-12-24',
+  '2028-01-17','2028-02-21','2028-04-14','2028-05-29','2028-06-19',
+  '2028-07-04','2028-09-04','2028-11-23','2028-12-25',
+]);
 
 // ─── Excluded dates configuration ──────────────────────────────────────────
 // Some history entries are unreliable (methodology change days, bad snapshots).
@@ -943,22 +960,68 @@ function searchStock(){
   if(HISTORY&&HISTORY.dates&&HISTORY.d[input]){
     const h=HISTORY.d[input];
     const dates=HISTORY.dates;
+    // Build the full list of rows to render: actual history dates PLUS any holiday
+    // weekdays that fall between them (so users can see the gap was a holiday).
+    // Each entry is {date, isHoliday}. Sorted oldest → newest.
+    const rowsToRender = [];
+    if(dates.length > 0){
+      const firstDate = new Date(dates[0]);
+      const lastDate = new Date(dates[dates.length-1]);
+      const histSet = new Set(dates);
+      // Walk every calendar day from first to last; emit:
+      //   - actual data rows for entries in HISTORY.dates
+      //   - holiday rows for weekdays that are NYSE holidays but absent from HISTORY
+      const cursor = new Date(firstDate);
+      while(cursor <= lastDate){
+        const iso = cursor.toISOString().slice(0,10);
+        if(histSet.has(iso)){
+          rowsToRender.push({date:iso, isHoliday:false});
+        }else{
+          const dow = cursor.getUTCDay(); // 0=Sun, 6=Sat
+          if(dow !== 0 && dow !== 6 && US_MARKET_HOLIDAYS.has(iso)){
+            rowsToRender.push({date:iso, isHoliday:true});
+          }
+        }
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+      }
+    }
     html+=`<div class="hist-table"><table><thead><tr>
       <th class="l">Date</th><th class="c">Score</th><th class="c">Rank</th><th class="c">Δ</th><th class="c">Position</th><th class="l">Theme</th>
     </tr></thead><tbody>`;
     // History table shows the DAILY rank column, so use the per-ticker daily exclusion set.
     const tickerExcluded=getExcludedDailyForTicker(input);
+    // Build a map from date → index in HISTORY.dates for quick lookup
+    const dateToIdx = {};
+    dates.forEach((d,i)=>{dateToIdx[d]=i;});
     // Show newest first
-    for(let i=dates.length-1;i>=0;i--){
-      const dt=dates[i];const parts=dt.split('-');
+    for(let r=rowsToRender.length-1;r>=0;r--){
+      const row=rowsToRender[r];
+      const dt=row.date;
+      const parts=dt.split('-');
       const fmtDate=parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:dt;
+      // Holiday placeholder row — render greyed out with no data
+      if(row.isHoliday){
+        html+=`<tr class="hist-row-holiday">
+          <td class="l">${fmtDate} <span style="font-size:9px;font-weight:400;font-style:italic">(holiday)</span></td>
+          <td class="c">—</td>
+          <td class="c">—</td>
+          <td class="hist-delta">—</td>
+          <td class="c">—</td>
+          <td class="l">—</td>
+        </tr>`;
+        continue;
+      }
+      // Real history entry
+      const i=dateToIdx[dt];
       const score=h.s[i];
       const isExcluded=tickerExcluded.has(dt);
       // Delta: compare rank (not score) with previous valid (non-excluded) day.
       // Smaller rank = better, so improvement shown green.
       let deltaHtml='<span class="fl">—</span>';
       const dr=h.r?h.r[i]:null;
-      // Walk backward to find the most recent non-excluded prior date with a valid rank
+      // Walk backward through HISTORY.dates (NOT rowsToRender) to find the most recent
+      // non-excluded prior date with a valid rank. Holidays naturally aren't in
+      // HISTORY.dates so this lookup correctly skips them.
       let prevIdx=i-1;
       while(prevIdx>=0 && (tickerExcluded.has(dates[prevIdx]) || h.r[prevIdx]==null)){
         prevIdx--;
