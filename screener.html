@@ -197,6 +197,16 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 /* Shrink header toggle buttons on mobile */
 [data-view="mobile"] .seg-toggle button{padding:4px 7px;font-size:10px}
 [data-view="mobile"] .filter-btn{padding:4px 8px;font-size:10px}
+/* Filter popup on mobile: open downward + to the RIGHT of the button so it doesn't
+   get clipped off the left edge of the screen. Constrain width to viewport. */
+[data-view="mobile"] .filter-menu{
+  right:auto;
+  left:0;
+  min-width:220px;
+  max-width:calc(100vw - 24px);
+  max-height:calc(100vh - 120px);
+  overflow-y:auto;
+}
 </style>
 </head>
 <body>
