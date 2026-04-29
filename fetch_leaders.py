@@ -1522,8 +1522,25 @@ def main():
     # ─── Pre-filter: dollar volume + delisted + acquisition-limbo ──
     # Uses already-downloaded data — zero API cost.
     # Narrows universe before expensive mcap/industry lookups.
+    # Tiered threshold: small caps (< $5B) need higher dollar volume to qualify, since
+    # they're more prone to in/out churn near the standard $70M threshold.
+    # Note: market cap lookup happens later, but we use the CACHED market cap from the
+    # last successful run to apply the tiered threshold here. New/uncached tickers fall
+    # back to the standard threshold (they'll get classified properly on the next run).
     MIN_DOLLAR_VOL = 70_000_000
-    print(f"\nPre-filtering by liquidity (price × avg_vol_10d >= ${MIN_DOLLAR_VOL/1e6:.0f}M)...")
+    MIN_DOLLAR_VOL_SMALL_CAP = 100_000_000
+    SMALL_CAP_THRESHOLD = 5_000_000_000
+
+    # Load cached market caps for use in the tiered liquidity filter
+    _cached_mcaps = {}
+    if os.path.exists("leaders_mcap.json"):
+        try:
+            with open("leaders_mcap.json") as _mf:
+                _cached_mcaps = json.load(_mf).get("caps", {})
+        except Exception:
+            _cached_mcaps = {}
+
+    print(f"\nPre-filtering by liquidity (price × avg_vol_10d >= ${MIN_DOLLAR_VOL/1e6:.0f}M, or ${MIN_DOLLAR_VOL_SMALL_CAP/1e6:.0f}M for small caps < ${SMALL_CAP_THRESHOLD/1e9:.0f}B)...")
 
     # Tickers to log verbosely through each filter (for debugging why a stock is missing)
     DEBUG_TICKERS = {"RIG"}
@@ -1573,18 +1590,22 @@ def main():
                     if tk in DEBUG_TICKERS:
                         print(f"  [DEBUG] {tk}: EXCLUDED — acquisition-limbo (10d range {price_range_pct*100:.2f}%, std {return_std*100:.2f}%)")
                     continue
-        # Dollar volume check (price × avg_vol_10d)
+        # Dollar volume check (price × avg_vol_10d) with tiered threshold by market cap
         last_price = float(c[-1])
         avg_vol_10d = float(np.mean(v[-10:]))
         dollar_vol = last_price * avg_vol_10d
-        if dollar_vol < MIN_DOLLAR_VOL:
+        # Use cached market cap to choose the threshold. If unknown (new ticker), use
+        # the standard threshold and let the normal market cap filter handle it later.
+        cached_mcap = _cached_mcaps.get(tk)
+        threshold = MIN_DOLLAR_VOL_SMALL_CAP if (cached_mcap is not None and cached_mcap < SMALL_CAP_THRESHOLD) else MIN_DOLLAR_VOL
+        if dollar_vol < threshold:
             excluded["illiquid"] += 1
             if tk in DEBUG_TICKERS:
-                print(f"  [DEBUG] {tk}: EXCLUDED — illiquid (price ${last_price:.2f} × avg_vol_10d {avg_vol_10d/1e6:.2f}M = ${dollar_vol/1e6:.1f}M < ${MIN_DOLLAR_VOL/1e6:.0f}M)")
+                print(f"  [DEBUG] {tk}: EXCLUDED — illiquid (price ${last_price:.2f} × avg_vol_10d {avg_vol_10d/1e6:.2f}M = ${dollar_vol/1e6:.1f}M < ${threshold/1e6:.0f}M)")
             continue
         liquid_tickers.append(tk)
         if tk in DEBUG_TICKERS:
-            print(f"  [DEBUG] {tk}: PASSED pre-filter (price ${last_price:.2f}, dollar_vol ${dollar_vol/1e6:.1f}M)")
+            print(f"  [DEBUG] {tk}: PASSED pre-filter (price ${last_price:.2f}, dollar_vol ${dollar_vol/1e6:.1f}M, threshold ${threshold/1e6:.0f}M)")
     print(f"  Pre-filter: {len(all_tickers)} → {len(liquid_tickers)} (excluded: {excluded['no_data']} no data, {excluded['stale']} delisted, {excluded['flat']} acquisition-limbo, {excluded['illiquid']} illiquid)")
 
     # ─── Market cap + industry lookup (ONLY on liquid survivors) ──
