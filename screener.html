@@ -432,7 +432,12 @@ const EXCLUDED_DATES_DAILY_BY_TICKER = {
   'GLW':  new Set(['2026-04-27']),
   'BTSG': new Set(['2026-04-27']),
 };
-const EXCLUDED_DATES_WEEKLY_BY_TICKER = {};
+const EXCLUDED_DATES_WEEKLY_BY_TICKER = {
+  'MXL':  new Set(['2026-04-27']),
+  'FORM': new Set(['2026-04-27']),
+  'TER':  new Set(['2026-04-27']),
+  'GLW':  new Set(['2026-04-27']),
+};
 
 function getExcludedDailyForTicker(ticker){
   return EXCLUDED_DATES_DAILY_BY_TICKER[ticker] || EXCLUDED_DATES_DAILY_GLOBAL;
