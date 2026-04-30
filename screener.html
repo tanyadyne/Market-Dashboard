@@ -171,16 +171,15 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 [data-view="mobile"] th{padding:8px 2px;font-size:9.5px;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:static!important;top:auto!important}
 /* Mobile column widths are set directly via JavaScript in buildHeader() using percentage
    values (mw property). This avoids specificity conflicts with inline styles. */
-/* Mobile column widths for the HISTORY table (Individual Profile): Date | Score | Rank | Δ | Position | Theme */
+/* Mobile column widths for the HISTORY table (Individual Profile): Date | Rank | Δ | Position | Theme */
 [data-view="mobile"] .hist-table th,[data-view="mobile"] .hist-table td{padding:5px 3px;font-size:10px;vertical-align:top}
-[data-view="mobile"] .hist-table th:nth-child(1),[data-view="mobile"] .hist-table td:nth-child(1){width:16%}
+[data-view="mobile"] .hist-table th:nth-child(1),[data-view="mobile"] .hist-table td:nth-child(1){width:18%}
 [data-view="mobile"] .hist-table th:nth-child(2),[data-view="mobile"] .hist-table td:nth-child(2){width:11%}
-[data-view="mobile"] .hist-table th:nth-child(3),[data-view="mobile"] .hist-table td:nth-child(3){width:10%}
-[data-view="mobile"] .hist-table th:nth-child(4),[data-view="mobile"] .hist-table td:nth-child(4){width:12%}
-[data-view="mobile"] .hist-table th:nth-child(5),[data-view="mobile"] .hist-table td:nth-child(5){width:19%}
-[data-view="mobile"] .hist-table th:nth-child(6),[data-view="mobile"] .hist-table td:nth-child(6){width:32%}
+[data-view="mobile"] .hist-table th:nth-child(3),[data-view="mobile"] .hist-table td:nth-child(3){width:14%}
+[data-view="mobile"] .hist-table th:nth-child(4),[data-view="mobile"] .hist-table td:nth-child(4){width:21%}
+[data-view="mobile"] .hist-table th:nth-child(5),[data-view="mobile"] .hist-table td:nth-child(5){width:36%}
 /* Allow wrapping in Position and Theme cells so their content isn't truncated */
-[data-view="mobile"] .hist-table td:nth-child(5),[data-view="mobile"] .hist-table td:nth-child(6){white-space:normal;word-break:break-word;line-height:1.25;overflow:visible;text-overflow:clip}
+[data-view="mobile"] .hist-table td:nth-child(4),[data-view="mobile"] .hist-table td:nth-child(5){white-space:normal;word-break:break-word;line-height:1.25;overflow:visible;text-overflow:clip}
 [data-view="mobile"] .tk{font-size:11px}
 /* Compact RS pill on mobile so the column fits within its narrow allocation */
 [data-view="mobile"] .rs{padding:2px 4px;font-size:9.5px}
@@ -250,8 +249,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
   </div>
 </div>
 <div class="tab-strip" id="tabStrip">
-  <button class="tab-btn active" id="tabD" onclick="switchTab('daily')">Daily Rank</button>
-  <button class="tab-btn" id="tabW" onclick="switchTab('weekly')">Weekly Rank</button>
+  <button class="tab-btn active" id="tabW" onclick="switchTab('weekly')">RS Ranking</button>
   <button class="tab-btn" id="tabS" onclick="switchTab('search')">Individual Profile</button>
 </div>
 <div class="spy" id="spyBar" style="display:none">
@@ -272,7 +270,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
   <div id="searchResults"></div>
 </div>
 <script>
-let DATA=null,HISTORY=null,ETF_DATA=null,sortKey='rk',sortDir=1,currentTab='daily',currentPage=1;
+let DATA=null,HISTORY=null,ETF_DATA=null,sortKey='rk',sortDir=1,currentTab='weekly',currentPage=1;
 const PAGE_SIZE=200;
 const CHART_PAGE_SIZE=24;  // chart grid pagination
 let rankLookback=1;
@@ -440,25 +438,17 @@ const US_MARKET_HOLIDAYS = new Set([
 ]);
 
 // ─── Excluded dates configuration ──────────────────────────────────────────
-// Some history entries are unreliable (methodology change days, bad snapshots).
+// Some history entries are unreliable (bad snapshots, brief methodology blips).
 // Excluded entries remain in the history table for transparency but are GREYED OUT
 // and skipped during Δ rank lookbacks.
 //
-// GLOBAL default — applies to most stocks. April 24 was the methodology-change day,
-// so its ranks across the universe aren't comparable to subsequent days.
-const EXCLUDED_DATES_DAILY_GLOBAL = new Set(['2026-04-24']);
+// GLOBAL default — applies to most stocks. The weekly ranking is generally stable
+// so the global exclusion list is empty by default.
 const EXCLUDED_DATES_WEEKLY_GLOBAL = new Set();
 
-// PER-TICKER overrides — for stocks where a different date should be excluded.
-// Example: MXL/FORM/TER/GLW/BTSG had unreliable April 27 entries (not April 24),
-// so those tickers exclude April 27 instead. Add new tickers/dates as needed.
-const EXCLUDED_DATES_DAILY_BY_TICKER = {
-  'MXL':  new Set(['2026-04-27']),
-  'FORM': new Set(['2026-04-27']),
-  'TER':  new Set(['2026-04-27']),
-  'GLW':  new Set(['2026-04-27']),
-  'BTSG': new Set(['2026-04-27']),
-};
+// PER-TICKER overrides — for stocks where a specific date should be excluded.
+// Example: MXL/FORM/TER/GLW had unreliable April 27 weekly entries.
+// Add new tickers/dates as needed.
 const EXCLUDED_DATES_WEEKLY_BY_TICKER = {
   'MXL':  new Set(['2026-04-27']),
   'FORM': new Set(['2026-04-27']),
@@ -466,23 +456,18 @@ const EXCLUDED_DATES_WEEKLY_BY_TICKER = {
   'GLW':  new Set(['2026-04-27']),
 };
 
-function getExcludedDailyForTicker(ticker){
-  return EXCLUDED_DATES_DAILY_BY_TICKER[ticker] || EXCLUDED_DATES_DAILY_GLOBAL;
-}
 function getExcludedWeeklyForTicker(ticker){
   return EXCLUDED_DATES_WEEKLY_BY_TICKER[ticker] || EXCLUDED_DATES_WEEKLY_GLOBAL;
 }
 
 function getRankDeltaVal(ticker){
-  // Use HISTORY (per-day rank snapshots from leaders_score_history.json).
+  // Use HISTORY (per-day weekly rank snapshots from leaders_score_history.json).
   // rankLookback = number of TRADING DAYS back (1 = yesterday, 2 = two trading days ago, etc).
-  // EXCLUDED dates (per-ticker if defined, else global) are skipped entirely — they
-  // don't count toward the lookback distance, and they aren't valid comparison points.
+  // EXCLUDED dates (per-ticker) are skipped entirely — they don't count toward the
+  // lookback distance, and they aren't valid comparison points.
   if(!HISTORY||!HISTORY.dates||!HISTORY.d||!HISTORY.d[ticker])return null;
-  const isW=currentTab==='weekly';
-  const key=isW?'wr':'r';
-  const excluded=isW?getExcludedWeeklyForTicker(ticker):getExcludedDailyForTicker(ticker);
-  const arr=HISTORY.d[ticker][key];
+  const excluded=getExcludedWeeklyForTicker(ticker);
+  const arr=HISTORY.d[ticker]['wr'];
   const dates=HISTORY.dates;
   if(!arr||!arr.length)return null;
   // Walk backward from the most recent entry, skipping excluded dates, until we've
@@ -500,7 +485,7 @@ function getRankDeltaVal(ticker){
   if(idx<0||stepsBack<rankLookback)return null;
   const prevRk=arr[idx];if(prevRk==null)return null;
   const etf=DATA&&DATA.e&&DATA.e.find(e=>e.t===ticker);if(!etf)return null;
-  const curRk=isW?etf.w_rk:etf.rk;if(curRk==null)return null;
+  const curRk=etf.w_rk;if(curRk==null)return null;
   return prevRk-curRk;
 }
 function rankDelta(ticker){
@@ -514,7 +499,7 @@ function rankDelta(ticker){
 function switchTab(tab){
   currentTab=tab;currentPage=1;chartPage=1;sortKey='rk';sortDir=1;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById(tab==='daily'?'tabD':tab==='weekly'?'tabW':'tabS').classList.add('active');
+  document.getElementById(tab==='weekly'?'tabW':'tabS').classList.add('active');
   const viewToggle=document.getElementById('viewToggle');
   if(tab==='search'){
     document.getElementById('tw').style.display='none';
@@ -577,14 +562,14 @@ function setLayout(mobile){
 })();
 
 function buildHeader(){
-  const isW=currentTab==='weekly';
+  // currentTab is always 'weekly' or 'search'; the daily ranking has been retired.
   let cols=[
     {key:'rk',label:'#',w:'36px',mw:'7%'},{key:'rd',label:'Δ',w:'56px',mw:'11%'},
     {key:'t',label:'Ticker',w:'64px',al:'l',mw:'14%'},{key:'n',label:'Company Name',w:'160px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l',mw:''},
-    {key:'rv',label:isW?'R.Vol (W)':'R.Vol',w:'70px'},{key:'am',label:isW?'ATR M (W)':'ATR Mult',w:'70px'},
+    {key:'rv',label:'R.Vol',w:'70px'},{key:'am',label:'ATR Mult',w:'70px'},
     {key:'ax',label:'ATR Ext',w:'70px'},{key:'ch',label:'1D',w:'60px',mw:'13%'},
     {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},{key:'ytd',label:'YTD',w:'60px',mw:'13%'},
-    {key:'rs',label:isW?'RS (W)':'RS (D)',w:'56px',mw:'11%'}
+    {key:'rs',label:'RS',w:'56px',mw:'11%'}
   ];
   if(isMobile)cols=cols.filter(c=>MOBILE_COLS.has(c.key));
   const tr=document.getElementById('headerRow');tr.innerHTML='';
@@ -933,7 +918,7 @@ function searchStock(){
   // Use the full 5-tier position label (Strong Leader / Moderate Leader / Mid-Range /
   // Moderate Laggard / Deep Laggard) so the RS Score box matches the Position column in
   // the history table below.
-  const rsLabel=getPosition(stock.rk,total);
+  const rsLabel=getPosition(stock.w_rk,total);
 
   // Theme info (mapped sector with rank among ETFs)
   const mappedSector=stock.thm||stock.th||'';
@@ -945,11 +930,10 @@ function searchStock(){
     themeSubline=`<span class="${themeTag(ts)}">${ts}</span>`;
   }
 
-  // Info boxes (4)
+  // Info boxes (3): RS Score, RS Rank, Theme
   let html=`<div class="info-boxes">
-    <div class="info-box"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.rs)}">${stock.rs!=null?stock.rs+'%':'—'}</div><div class="sub"><span class="${posClass(rsLabel)}">${rsLabel}</span></div></div>
-    <div class="info-box"><div class="lbl">Daily Rank</div><div class="val">#${stock.rk}</div><div class="sub">of ${total}</div></div>
-    <div class="info-box"><div class="lbl">Weekly Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">of ${total}</div></div>
+    <div class="info-box"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.w_rs)}">${stock.w_rs!=null?stock.w_rs+'%':'—'}</div><div class="sub"><span class="${posClass(rsLabel)}">${rsLabel}</span></div></div>
+    <div class="info-box"><div class="lbl">RS Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">of ${total}</div></div>
     <div class="info-box"><div class="lbl">Theme</div><div class="val" style="font-size:14px">${esc(mappedSector||'—')}</div><div class="sub">${themeSubline}</div></div>
   </div>`;
 
@@ -996,10 +980,10 @@ function searchStock(){
       }
     }
     html+=`<div class="hist-table"><table><thead><tr>
-      <th class="l">Date</th><th class="c">Score</th><th class="c">Rank</th><th class="c">Δ</th><th class="c">Position</th><th class="l">Theme</th>
+      <th class="l">Date</th><th class="c">Rank</th><th class="c">Δ</th><th class="c">Position</th><th class="l">Theme</th>
     </tr></thead><tbody>`;
-    // History table shows the DAILY rank column, so use the per-ticker daily exclusion set.
-    const tickerExcluded=getExcludedDailyForTicker(input);
+    // History table shows the WEEKLY (RS) rank now — daily ranking has been retired.
+    const tickerExcluded=getExcludedWeeklyForTicker(input);
     // Build a map from date → index in HISTORY.dates for quick lookup
     const dateToIdx = {};
     dates.forEach((d,i)=>{dateToIdx[d]=i;});
@@ -1014,7 +998,6 @@ function searchStock(){
         html+=`<tr class="hist-row-holiday">
           <td class="l">${fmtDate} <span style="font-size:9px;font-weight:400;font-style:italic">(holiday)</span></td>
           <td class="c">—</td>
-          <td class="c">—</td>
           <td class="hist-delta">—</td>
           <td class="c">—</td>
           <td class="l">—</td>
@@ -1023,28 +1006,27 @@ function searchStock(){
       }
       // Real history entry
       const i=dateToIdx[dt];
-      const score=h.s[i];
       const isExcluded=tickerExcluded.has(dt);
-      // Delta: compare rank (not score) with previous valid (non-excluded) day.
+      // Delta: compare rank with previous valid (non-excluded) day.
       // Smaller rank = better, so improvement shown green.
       let deltaHtml='<span class="fl">—</span>';
-      const dr=h.r?h.r[i]:null;
+      const wr=h.wr?h.wr[i]:null;
       // Walk backward through HISTORY.dates (NOT rowsToRender) to find the most recent
       // non-excluded prior date with a valid rank. Holidays naturally aren't in
       // HISTORY.dates so this lookup correctly skips them.
       let prevIdx=i-1;
-      while(prevIdx>=0 && (tickerExcluded.has(dates[prevIdx]) || h.r[prevIdx]==null)){
+      while(prevIdx>=0 && (tickerExcluded.has(dates[prevIdx]) || (h.wr && h.wr[prevIdx]==null))){
         prevIdx--;
       }
-      const drPrev=prevIdx>=0?h.r[prevIdx]:null;
+      const wrPrev=prevIdx>=0 && h.wr ? h.wr[prevIdx] : null;
       // Don't show a Δ for excluded rows themselves (their data is being ignored).
-      if(!isExcluded && dr!=null && drPrev!=null){
-        const diff=drPrev-dr; // positive = improved (rank went down)
+      if(!isExcluded && wr!=null && wrPrev!=null){
+        const diff=wrPrev-wr; // positive = improved (rank went down)
         if(diff>0)deltaHtml=`<span class="up">▲ +${diff}</span>`;
         else if(diff<0)deltaHtml=`<span class="dn">▼ ${diff}</span>`;
         else deltaHtml='<span class="fl">–</span>';
       }
-      const p=dr!=null?getPosition(dr,total):'—';
+      const p=wr!=null?getPosition(wr,total):'—';
       // Theme column uses current theme status (history doesn't store per-day theme status)
       let themeCell=esc(mappedSector||'—');
       if(themeRankInfo){
@@ -1056,8 +1038,7 @@ function searchStock(){
       const excludedNote=isExcluded?' <span style="font-size:9px;font-weight:400;font-style:italic">(excluded)</span>':'';
       html+=`<tr${rowClass}>
         <td class="l">${fmtDate}${excludedNote}</td>
-        <td class="c"><span class="rs" style="background:${getRSBg(score)};color:${getRSCol(score)}">${score!=null?score+'%':'—'}</span></td>
-        <td class="c">${dr!=null?'#'+dr:'—'}</td>
+        <td class="c">${wr!=null?'#'+wr:'—'}</td>
         <td class="hist-delta">${deltaHtml}</td>
         <td class="c"><span class="${posClassFull(p)}">${p}</span></td>
         <td class="l">${themeCell}</td>
