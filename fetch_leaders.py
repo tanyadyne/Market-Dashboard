@@ -1036,14 +1036,16 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     except Exception:
         pen_ema21 = False
 
-    # Signal 3: close > 20% below the 5-day high (catches parabolic-blow-off edge cases
-    # like CAR, where price collapses from recent peaks without yet breaking EMAs)
+    # Signal 3: close > 2× ATR below the 3-day high (catches parabolic-blow-off edge
+    # cases like CAR, where price collapses from recent peaks without yet breaking EMAs).
+    # ATR-based threshold scales naturally with each stock's volatility — a high-ATR
+    # name needs a bigger absolute drop to trigger than a low-ATR utility.
     pen_crash5 = False
     try:
-        if n >= 5:
-            # Highest close of the last 5 sessions including today
-            recent_high = max(float(x) for x in c[-5:] if x is not None)
-            if recent_high > 0 and c[-1] / recent_high - 1 < -0.20:
+        if n >= 3 and atr and atr > 0:
+            # Highest close of the last 3 sessions including today
+            recent_high = max(float(x) for x in c[-3:] if x is not None)
+            if recent_high > 0 and (recent_high - c[-1]) > 2.0 * atr:
                 pen_crash5 = True
     except Exception:
         pen_crash5 = False
@@ -2049,24 +2051,24 @@ def main():
             r["_d_rs_raw"] = None
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
             w_raw = percentrank_inc(all_w_rs, r["w_fr"]) * 100  # float, not rounded
-            # Weekly-RS penalty system. Multiplicatively stacks three signals from the
-            # daily data (set in process_stock). Designed to reflect real trend damage
-            # that the 8-week smoothed RS would otherwise miss. Multipliers are relatively
-            # lenient since this is a weekly (longer-horizon) view — single signals barely
-            # dent the score, but stocks hitting all three get significant penalty.
-            #   - Bearish engulfing        → ×0.90 (minor trend reversal signal)
-            #   - Close >1×ATR below 21EMA → ×0.75 (mid-term structure broken)
-            #   - Close >20% below 5-day   → ×0.60 (parabolic blow-off / crash, catches CAR)
-            # Worst case (all three): ×0.90 × 0.75 × 0.60 = ×0.405 → a 95%-ile score
-            # drops to 95 × 0.405 ≈ 38.
-            w_mult = 1.0
+            # Weekly-RS penalty system. Additive deductions designed to gently demote
+            # stocks with technical damage without producing the dramatic rank
+            # whipsaws that multiplicative penalties caused (e.g. AXTI dropping
+            # 387 ranks in one day). These small per-signal deductions still produce
+            # visible rank movement at the top of the universe (where many stocks
+            # cluster at score 100) but cap the worst-case impact.
+            #   - Bearish engulfing        → −0.5 points (minor reversal signal)
+            #   - Close >1×ATR below 21EMA → −1   points (mid-term structure broken)
+            #   - Close >2×ATR below 3-day → −2   points (acute breakdown)
+            # Worst case (all three): −3.5 points.
+            w_pen = 0.0
             if r.get("w_pen_engulf"):
-                w_mult *= 0.90
+                w_pen += 0.5
             if r.get("w_pen_ema21"):
-                w_mult *= 0.75
+                w_pen += 1.0
             if r.get("w_pen_crash5"):
-                w_mult *= 0.60
-            w_final = max(0.0, min(100.0, w_raw * w_mult))
+                w_pen += 2.0
+            w_final = max(0.0, min(100.0, w_raw - w_pen))
             r["w_rs"] = round(w_final)            # display value (clean integer)
             r["_w_rs_raw"] = w_final              # full-precision value for ranking
 
