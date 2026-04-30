@@ -1036,15 +1036,42 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     except Exception:
         pen_ema21 = False
 
-    # Signal 3: close > 20% below the 5-day high (catches parabolic-blow-off edge cases
-    # like CAR, where price collapses from recent peaks without yet breaking EMAs)
+    # Signal 3: distance below 52-week high, in ATR units, with thresholds tiered by
+    # the stock's volatility class (ADR% = ATR / price). High-volatility stocks like
+    # CAR have noisy ATR-distances (a single normal-day move IS one ATR), so they
+    # need a smaller multiple to flag real damage. Low-volatility stocks need a bigger
+    # multiple. This catches CAR-style collapses while leaving healthy mid-trend
+    # pullbacks in normal-volatility leaders alone.
+    #
+    #   ADR% > 20%  → 2× ATR below 52w high
+    #   ADR% 10-20% → 3× ATR
+    #   ADR% 4-10%  → 4× ATR
+    #   ADR% < 4%   → 5× ATR
+    #
+    # Once triggered, the penalty applies day after day as long as the condition
+    # holds — but each day's score is computed from scratch (not stacked on yesterday's
+    # already-penalised score), so it acts as a steady-state demotion, not a
+    # death-spiral. Field name kept as `pen_crash5` for history/strip compatibility.
     pen_crash5 = False
     try:
-        if n >= 5:
-            # Highest close of the last 5 sessions including today
-            recent_high = max(float(x) for x in c[-5:] if x is not None)
-            if recent_high > 0 and c[-1] / recent_high - 1 < -0.20:
-                pen_crash5 = True
+        if n >= 1 and atr and atr > 0 and price > 0:
+            # 52-week high — use the daily HIGH series over the last ~252 bars
+            valid_highs = [float(x) for x in h[-min(252, n):] if x is not None and not (isinstance(x, float) and x != x)]
+            high_52w = max(valid_highs) if valid_highs else 0
+            if high_52w > 0:
+                adr_pct = (atr / price) * 100  # ATR as % of price
+                # Tiered ATR multiple based on ADR%
+                if adr_pct > 20:
+                    atr_mult_threshold = 2.0
+                elif adr_pct > 10:
+                    atr_mult_threshold = 3.0
+                elif adr_pct > 4:
+                    atr_mult_threshold = 4.0
+                else:
+                    atr_mult_threshold = 5.0
+                distance_from_high = high_52w - float(c[-1])
+                if distance_from_high > atr_mult_threshold * atr:
+                    pen_crash5 = True
     except Exception:
         pen_crash5 = False
 
@@ -2049,24 +2076,28 @@ def main():
             r["_d_rs_raw"] = None
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
             w_raw = percentrank_inc(all_w_rs, r["w_fr"]) * 100  # float, not rounded
-            # Weekly-RS penalty system. Multiplicatively stacks three signals from the
-            # daily data (set in process_stock). Designed to reflect real trend damage
-            # that the 8-week smoothed RS would otherwise miss. Multipliers are relatively
-            # lenient since this is a weekly (longer-horizon) view — single signals barely
-            # dent the score, but stocks hitting all three get significant penalty.
-            #   - Bearish engulfing        → ×0.90 (minor trend reversal signal)
-            #   - Close >1×ATR below 21EMA → ×0.75 (mid-term structure broken)
-            #   - Close >20% below 5-day   → ×0.60 (parabolic blow-off / crash, catches CAR)
-            # Worst case (all three): ×0.90 × 0.75 × 0.60 = ×0.405 → a 95%-ile score
-            # drops to 95 × 0.405 ≈ 38.
-            w_mult = 1.0
+            # Weekly-RS penalty system. Mixes additive and multiplicative:
+            #   - Bearish engulfing  → −2 raw RS points (additive)
+            #   - Off 52-week high   → ×0.70 multiplier (when ADR%-tiered ATR threshold met)
+            #
+            # Order of operations: subtract first, then multiply. This penalises the
+            # engulfing as a flat hit; the off-high multiplier compounds on top.
+            #
+            # The off-high penalty persists day after day as long as the stock remains
+            # below its 52w high by the threshold amount, but it does NOT cumulate —
+            # each day's score is computed fresh from w_raw, not stacked on yesterday's.
+            # This produces a steady-state demotion, not a death spiral.
+            #
+            # The EMA21 break signal is still detected (in process_stock) but no longer
+            # applied — the off-52w-high penalty subsumes its purpose.
+            #
+            # Worst case: (100 − 2) × 0.70 = 68.6 — meaningful but not catastrophic.
+            w_score = w_raw
             if r.get("w_pen_engulf"):
-                w_mult *= 0.90
-            if r.get("w_pen_ema21"):
-                w_mult *= 0.75
+                w_score = w_score - 2.0
             if r.get("w_pen_crash5"):
-                w_mult *= 0.60
-            w_final = max(0.0, min(100.0, w_raw * w_mult))
+                w_score = w_score * 0.70
+            w_final = max(0.0, min(100.0, w_score))
             r["w_rs"] = round(w_final)            # display value (clean integer)
             r["_w_rs_raw"] = w_final              # full-precision value for ranking
 
