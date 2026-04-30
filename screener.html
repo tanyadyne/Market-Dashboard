@@ -103,6 +103,11 @@ tr:hover{background:var(--bg3)}
 .info-box .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:4px}
 .info-box .val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .info-box .sub{font-size:10px;color:var(--t3);margin-top:2px}
+/* .info-pair: wraps RS Score + RS Rank so we can visually merge them on mobile.
+   On desktop, it's transparent (display:contents) — the two boxes flow as separate
+   siblings of the Theme box. On mobile, it becomes a single bordered container with
+   a divider line between the two halves. */
+.info-pair{display:contents}
 .hist-table{margin-top:16px}
 .hist-table table{font-size:12px}
 .hist-table th{font-size:9px;padding:6px}
@@ -151,7 +156,19 @@ tr:hover{background:var(--bg3)}
 .hist-delta .up{color:var(--g)}
 .hist-delta .dn{color:var(--r)}
 .hist-delta .fl{color:var(--t4)}
-@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.info-boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px}.info-box{min-width:0}.info-boxes .info-box:nth-child(1){order:1}.info-boxes .info-box:nth-child(4){order:2}.info-boxes .info-box:nth-child(2){order:3}.info-boxes .info-box:nth-child(3){order:4}.tab-btn{padding:8px 18px;font-size:11px}.chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.chart-card-body{height:200px}}
+@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.tab-btn{padding:8px 18px;font-size:11px}.chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.chart-card-body{height:200px}}
+/* Mobile info-box layout: RS Score + RS Rank in one merged box (wider, with vertical
+   divider), Theme in its own box. Both fit in a single row.
+   Grid columns: 1.7fr / 1fr  → left pair box is ~60% wider than the theme box. */
+[data-view="mobile"] .info-boxes{display:grid;grid-template-columns:1.7fr 1fr;gap:10px;flex-wrap:nowrap}
+[data-view="mobile"] .info-pair{display:flex;border:1px solid var(--bdr);border-radius:10px;background:var(--bg2);overflow:hidden}
+[data-theme="light"][data-view="mobile"] .info-pair{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+[data-view="mobile"] .info-box-pair-left,[data-view="mobile"] .info-box-pair-right{flex:1;min-width:0;border:none;border-radius:0;background:transparent;box-shadow:none;padding:10px 8px}
+[data-view="mobile"] .info-box-pair-left{border-right:1px solid var(--bdr)}
+[data-view="mobile"] .info-box{min-width:0;padding:10px 8px}
+[data-view="mobile"] .info-box .lbl{font-size:8px;letter-spacing:.6px}
+[data-view="mobile"] .info-box .val{font-size:18px}
+[data-view="mobile"] .info-box .sub{font-size:9px}
 
 /* ─── MOBILE LAYOUT ─── */
 /* Master constraint: every direct child of body is clamped to viewport width.
@@ -930,10 +947,15 @@ function searchStock(){
     themeSubline=`<span class="${themeTag(ts)}">${ts}</span>`;
   }
 
-  // Info boxes (3): RS Score, RS Rank, Theme
+  // Info boxes — desktop: 3 separate boxes (RS Score, RS Rank, Theme).
+  // Mobile: the RS Score + RS Rank pair share one combined box with a divider, while
+  // Theme gets its own box. Achieved via the .info-pair wrapper which is transparent
+  // on desktop (display:contents) and becomes a styled merged box on mobile.
   let html=`<div class="info-boxes">
-    <div class="info-box"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.w_rs)}">${stock.w_rs!=null?stock.w_rs+'%':'—'}</div><div class="sub"><span class="${posClass(rsLabel)}">${rsLabel}</span></div></div>
-    <div class="info-box"><div class="lbl">RS Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">of ${total}</div></div>
+    <div class="info-pair">
+      <div class="info-box info-box-pair-left"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.w_rs)}">${stock.w_rs!=null?stock.w_rs+'%':'—'}</div><div class="sub"><span class="${posClass(rsLabel)}">${rsLabel}</span></div></div>
+      <div class="info-box info-box-pair-right"><div class="lbl">RS Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">of ${total}</div></div>
+    </div>
     <div class="info-box"><div class="lbl">Theme</div><div class="val" style="font-size:14px">${esc(mappedSector||'—')}</div><div class="sub">${themeSubline}</div></div>
   </div>`;
 
