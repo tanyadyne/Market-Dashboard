@@ -2,9 +2,11 @@
 leaders_score_history.json with the current values from leaders.json.
 
 Use case: when the RS scoring methodology has changed and you want the most
-recent history entry to reflect the new logic (so the daily-rank list matches
-the top of the history table). Only touches the LAST entry — older history is
-preserved as-is.
+recent history entry to reflect the new logic. Only touches the LAST entry —
+older history is preserved as-is.
+
+The history file now stores ONLY the weekly rank (`wr`). Older daily fields
+(`s`, `r`, `tz`) are stripped automatically by fetch_leaders.py on each run.
 
 Run after a fresh run of fetch_leaders.py has produced an updated leaders.json.
 """
@@ -13,6 +15,9 @@ import os
 
 HIST_PATH = "leaders_score_history.json"
 LEADERS_PATH = "leaders.json"
+
+# Daily-RS fields removed from the dashboard. Strip on every resnap.
+OBSOLETE_HIST_KEYS = {"s", "r", "tz"}
 
 
 def main():
@@ -38,6 +43,17 @@ def main():
     last_date = dates[-1]
     print(f"Overwriting history entry for {last_date} with current leaders.json values...")
 
+    # Strip obsolete daily fields from existing history entries
+    stripped = 0
+    for tk, entry in scores.items():
+        if isinstance(entry, dict):
+            for k in OBSOLETE_HIST_KEYS:
+                if k in entry:
+                    del entry[k]
+                    stripped += 1
+    if stripped:
+        print(f"  Cleaned up {stripped} obsolete daily-RS field arrays.")
+
     # Build lookup from current leaders.json (key 'e' contains the stock list)
     leaders_list = leaders.get("e", [])
     if not leaders_list:
@@ -53,37 +69,29 @@ def main():
         if tk not in scores:
             # New ticker that wasn't in history before — add with Nones for prior dates
             scores[tk] = {
-                "s": [None] * (len(dates) - 1) + [r.get("rs")],
-                "r": [None] * (len(dates) - 1) + [r.get("rk")],
                 "wr": [None] * (len(dates) - 1) + [r.get("w_rk")],
-                "tz": [None] * (len(dates) - 1) + [r.get("tz")],
             }
             new_tickers += 1
             continue
 
         rec = scores[tk]
-        # Ensure every array exists and has the right length; pad if needed
-        for key, src in (("s", "rs"), ("r", "rk"), ("wr", "w_rk"), ("tz", "tz")):
-            arr = rec.get(key, [])
-            # Pad with None if shorter than dates array
-            while len(arr) < len(dates):
-                arr.append(None)
-            # Overwrite the last index
-            arr[-1] = r.get(src)
-            rec[key] = arr
+        wr_arr = rec.get("wr", [])
+        # Pad with None if shorter than dates array
+        while len(wr_arr) < len(dates):
+            wr_arr.append(None)
+        # Overwrite the last index
+        wr_arr[-1] = r.get("w_rk")
+        rec["wr"] = wr_arr
         updated += 1
 
-    # Trim entries for tickers no longer in leaders.json (data hygiene)
-    removed = 0
+    # Pad tickers no longer in leaders.json so their arrays stay aligned
     for tk in list(scores.keys()):
         if tk not in lookup:
-            # Just leave the existing data alone but still pad if needed; don't add a fresh value
             rec = scores[tk]
-            for key in ("s", "r", "wr", "tz"):
-                arr = rec.get(key, [])
-                while len(arr) < len(dates):
-                    arr.append(None)
-                rec[key] = arr
+            wr_arr = rec.get("wr", [])
+            while len(wr_arr) < len(dates):
+                wr_arr.append(None)
+            rec["wr"] = wr_arr
 
     hist["dates"] = dates
     hist["d"] = scores
