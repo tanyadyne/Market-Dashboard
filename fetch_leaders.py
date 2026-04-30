@@ -38,8 +38,17 @@ MAX_HISTORY_DAYS = 30
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
     "ACN","AEHR","ALAB","APO","ARES","ARM","AXTI","BIRD","BP","BRK-B","CAR",
-    "GOOG","LNG","NOK","NVO","OWL","RDDT","RIG","SMCI","SNAP","SNDK","STX","WDC",
+    "ENS","FPS","GOOG","LAC","LNG","NOK","NVO","OWL","RDDT","RIG","SMCI","SNAP","SNDK","STX","WDC",
 ]
+
+# MANUAL_INCLUDE — tickers that bypass all filtering (liquidity, market cap, pharma/biotech).
+# Use this to force-include stocks you want to track even if they don't meet the standard
+# universe criteria. They still need a working price feed; if yfinance returns no data
+# they'll be excluded for that reason. They must also appear in CSV_EXTRAS (or an ETF
+# holding) so they reach the universe in the first place.
+MANUAL_INCLUDE = {
+    "LAC", "FPS", "ENS",
+}
 
 # Yahoo Finance industry → our theme name mapping
 INDUSTRY_TO_THEME = {
@@ -1694,10 +1703,14 @@ def main():
                 # For comparison, even the lowest-vol utilities (e.g. SO, DUK) typically
                 # have 10-day ranges of 3-5% and return std of 0.7-1.2%.
                 if price_range_pct < 0.02 and return_std < 0.005:
-                    excluded["flat"] += 1
-                    if tk in DEBUG_TICKERS:
-                        print(f"  [DEBUG] {tk}: EXCLUDED — acquisition-limbo (10d range {price_range_pct*100:.2f}%, std {return_std*100:.2f}%)")
-                    continue
+                    if tk in MANUAL_INCLUDE:
+                        if tk in DEBUG_TICKERS:
+                            print(f"  [DEBUG] {tk}: bypassing acquisition-limbo filter (MANUAL_INCLUDE)")
+                    else:
+                        excluded["flat"] += 1
+                        if tk in DEBUG_TICKERS:
+                            print(f"  [DEBUG] {tk}: EXCLUDED — acquisition-limbo (10d range {price_range_pct*100:.2f}%, std {return_std*100:.2f}%)")
+                        continue
         # Dollar volume check (price × avg_vol_10d) with tiered threshold by market cap
         last_price = float(c[-1])
         avg_vol_10d = float(np.mean(v[-10:]))
@@ -1706,7 +1719,7 @@ def main():
         # the standard threshold and let the normal market cap filter handle it later.
         cached_mcap = _cached_mcaps.get(tk)
         threshold = MIN_DOLLAR_VOL_SMALL_CAP if (cached_mcap is not None and cached_mcap < SMALL_CAP_THRESHOLD) else MIN_DOLLAR_VOL
-        if dollar_vol < threshold:
+        if dollar_vol < threshold and tk not in MANUAL_INCLUDE:
             excluded["illiquid"] += 1
             if tk in DEBUG_TICKERS:
                 print(f"  [DEBUG] {tk}: EXCLUDED — illiquid (price ${last_price:.2f} × avg_vol_10d {avg_vol_10d/1e6:.2f}M = ${dollar_vol/1e6:.1f}M < ${threshold/1e6:.0f}M)")
@@ -1868,9 +1881,9 @@ def main():
         else:
             print(f"  Cache fully refreshed ({len(mcap_cache)} entries, version {CACHE_VERSION})")
 
-    # Final filter: market cap >= $2B (unknowns excluded)
+    # Final filter: market cap >= $2B (unknowns excluded). MANUAL_INCLUDE bypasses.
     all_tickers_before_mcap = list(liquid_tickers)
-    all_tickers = [t for t in liquid_tickers if mcap_cache.get(t, 0) >= MIN_MCAP]
+    all_tickers = [t for t in liquid_tickers if mcap_cache.get(t, 0) >= MIN_MCAP or t in MANUAL_INCLUDE]
     removed = len(liquid_tickers) - len(all_tickers)
     print(f"  Market cap filter: {removed} removed (< ${MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
     # Diagnostic: log DEBUG_TICKERS that got filtered here
@@ -1914,13 +1927,14 @@ def main():
                 general_count += 1
     print(f"  Theme mapping: {protected_count} protected, {yahoo_count} via Yahoo, {etf_count} via ETF, {general_count} general · {len(set(theme_map.values()))} active themes")
 
-    # ─── Pharma/biotech mcap filter: require >= $20B for these themes ──
+    # ─── Pharma/biotech mcap filter: require >= $20B for these themes (MANUAL_INCLUDE bypasses) ──
     PHARMA_BIOTECH_THEMES = {"Pharmaceuticals", "Biotechnology"}
     PHARMA_BIOTECH_MIN_MCAP = 20_000_000_000
     before = len(all_tickers)
     all_tickers = [
         t for t in all_tickers
-        if theme_map.get(t) not in PHARMA_BIOTECH_THEMES
+        if t in MANUAL_INCLUDE
+        or theme_map.get(t) not in PHARMA_BIOTECH_THEMES
         or mcap_cache.get(t, 0) >= PHARMA_BIOTECH_MIN_MCAP
     ]
     pharma_removed = before - len(all_tickers)
