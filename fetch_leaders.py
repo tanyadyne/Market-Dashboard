@@ -1348,9 +1348,12 @@ def apply_intraday_overlay(results):
 def strip_internal_fields(results):
     """Remove _-prefixed internal fields + other scoring-only fields before serializing."""
     INTERNAL_NON_UNDERSCORE = {"w_pen_engulf", "w_pen_ema21", "w_pen_crash5"}
+    # Daily-RS fields no longer surfaced in the dashboard. Removing them entirely keeps
+    # leaders.json clean and prevents accidental misuse on the frontend.
+    DAILY_RS_FIELDS = {"rs", "rk"}
     for r in results:
         for k in list(r.keys()):
-            if k.startswith("_") or k in INTERNAL_NON_UNDERSCORE:
+            if k.startswith("_") or k in INTERNAL_NON_UNDERSCORE or k in DAILY_RS_FIELDS:
                 del r[k]
 
 
@@ -2020,31 +2023,30 @@ def main():
                 "bull_strong": 1.10,
             }.get(tz, 1.0)
             adjusted = max(0.0, min(100.0, adjusted * tz_mult))
+            # ─── Daily RS pipeline DISABLED ───────────────────────────────
+            # Per design decision, the dashboard now uses only the weekly RS ranking.
+            # The daily Pine Script 4-quarter scoring still runs (via process_stock's
+            # final_rs / fr field) and may inform other features, but is no longer
+            # surfaced as a rank. The block below is preserved (commented) for easy
+            # rollback if the daily ranking is ever needed again.
+            #
             # Trend-zone transition bonus/penalty:
-            #   bull_strong → bull_light  ⇒ −5 points (momentum weakening — leadership cracking)
-            #   bull_light  → bull_strong ⇒ +5 points (momentum strengthening — leadership confirming)
-            #   All other transitions ⇒ no change
-            prev_tz = prev_tz_map.get(r["t"])
-            if prev_tz == "bull_strong" and tz == "bull_light":
-                adjusted = max(0.0, adjusted - 5)
-            elif prev_tz == "bull_light" and tz == "bull_strong":
-                adjusted = min(100.0, adjusted + 5)
-            # Daily-RS penalty system (additive — subtracts points so penalties hit hard
-            # even at the top of the universe where multiplicative penalties get washed out).
-            # Daily RS measures multi-month leadership; these penalties register concrete
-            # technical damage that would otherwise be invisible in a long-horizon score.
-            #   - Bearish engulfing        → −5  points (subtle reversal hint)
-            #   - Close >1×ATR below 21EMA → −10 points (mid-term structure broken)
-            #   - Close >20% below 5-day   → −15 points (acute breakdown)
-            # Worst case (all three + transition): −35 points → a 100 drops to 65.
-            if r.get("w_pen_engulf"):
-                adjusted = max(0.0, adjusted - 5)
-            if r.get("w_pen_ema21"):
-                adjusted = max(0.0, adjusted - 10)
-            if r.get("w_pen_crash5"):
-                adjusted = max(0.0, adjusted - 15)
-            r["rs"] = round(adjusted)              # display value (clean integer)
-            r["_d_rs_raw"] = adjusted              # full-precision value for ranking
+            #   bull_strong → bull_light  ⇒ −5 points
+            #   bull_light  → bull_strong ⇒ +5 points
+            # prev_tz = prev_tz_map.get(r["t"])
+            # if prev_tz == "bull_strong" and tz == "bull_light":
+            #     adjusted = max(0.0, adjusted - 5)
+            # elif prev_tz == "bull_light" and tz == "bull_strong":
+            #     adjusted = min(100.0, adjusted + 5)
+            # Daily-RS penalty system (additive):
+            # if r.get("w_pen_engulf"):   adjusted = max(0.0, adjusted - 5)
+            # if r.get("w_pen_ema21"):    adjusted = max(0.0, adjusted - 10)
+            # if r.get("w_pen_crash5"):   adjusted = max(0.0, adjusted - 15)
+            # r["rs"] = round(adjusted)
+            # r["_d_rs_raw"] = adjusted
+            # Mark daily fields as None — frontend ignores them, history won't store them.
+            r["rs"] = None
+            r["_d_rs_raw"] = None
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
             w_raw = percentrank_inc(all_w_rs, r["w_fr"]) * 100  # float, not rounded
             # Weekly-RS penalty system. Multiplicatively stacks three signals from the
@@ -2068,11 +2070,11 @@ def main():
             r["w_rs"] = round(w_final)            # display value (clean integer)
             r["_w_rs_raw"] = w_final              # full-precision value for ranking
 
-    # ─── Rank stocks by full-precision _d_rs_raw to avoid tie-cluster jumps ──
-    results.sort(key=lambda x: (x.get("_d_rs_raw") if x.get("_d_rs_raw") is not None else -999,
-                                 x.get("fr") if x.get("fr") is not None else -999), reverse=True)
-    for i, r in enumerate(results):
-        r["rk"] = i + 1
+    # ─── Daily ranking DISABLED ──────────────────────────────────────
+    # No longer assigning r["rk"] from a daily score. Frontend only uses w_rk now.
+    # Sort still happens by w_rs_raw below for the weekly rank assignment.
+    for r in results:
+        r["rk"] = None
 
     # Weekly rank: sort by the FULL-PRECISION _w_rs_raw (rounded display value sits in
     # w_rs, but ranking by the unrounded float eliminates the massive tie-clusters that
@@ -2133,6 +2135,17 @@ def main():
     dates = score_history.get("dates", [])
     scores = score_history.get("d", {})
 
+    # ─── One-time cleanup: strip daily-RS fields ('s', 'r') from existing history. ──
+    # The dashboard now uses only the weekly rank, so the daily score and rank arrays
+    # are dead weight. Removing them on each run keeps the history file lean. The 'tz'
+    # array is also no longer needed since the daily transition penalty has been retired.
+    OBSOLETE_HIST_KEYS = {"s", "r", "tz"}
+    for tk, entry in scores.items():
+        if isinstance(entry, dict):
+            for k in OBSOLETE_HIST_KEYS:
+                if k in entry:
+                    del entry[k]
+
     if skip_history_write:
         # Don't touch the history at all on weekends — read & re-write the file unchanged.
         pass
@@ -2141,46 +2154,35 @@ def main():
         for r in results:
             tk = r["t"]
             if tk not in scores:
-                scores[tk] = {"s": [], "r": [], "wr": [], "tz": []}
-            # Backfill tz array if this ticker was seen before the tz field existed
-            if "tz" not in scores[tk]:
-                scores[tk]["tz"] = [None] * len(scores[tk].get("s", []))
-            scores[tk]["s"].append(r.get("rs"))
-            scores[tk]["r"].append(r.get("rk"))
+                scores[tk] = {"wr": []}
+            if "wr" not in scores[tk]:
+                scores[tk]["wr"] = []
+            # Pad if this ticker is shorter than the dates array (joined the universe
+            # partway through the history window).
+            while len(scores[tk]["wr"]) < len(dates) - 1:
+                scores[tk]["wr"].append(None)
             scores[tk]["wr"].append(r.get("w_rk"))
-            scores[tk]["tz"].append(r.get("tz"))
         # Trim to MAX_HISTORY_DAYS
         if len(dates) > MAX_HISTORY_DAYS:
             trim = len(dates) - MAX_HISTORY_DAYS
             dates = dates[trim:]
             for tk in scores:
-                for key in ["s", "r", "wr", "tz"]:
-                    if key in scores[tk] and len(scores[tk][key]) > MAX_HISTORY_DAYS:
-                        scores[tk][key] = scores[tk][key][trim:]
+                if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
+                    scores[tk]["wr"] = scores[tk]["wr"][trim:]
     else:
-        # Update today's entry
+        # Update today's entry in place
         for r in results:
             tk = r["t"]
             if tk not in scores:
-                scores[tk] = {"s": [], "r": [], "wr": [], "tz": []}
-            if "tz" not in scores[tk]:
-                scores[tk]["tz"] = [None] * len(scores[tk].get("s", []))
-            if len(scores[tk]["s"]) == len(dates):
-                scores[tk]["s"][-1] = r.get("rs")
-                scores[tk]["r"][-1] = r.get("rk")
+                scores[tk] = {"wr": []}
+            if "wr" not in scores[tk]:
+                scores[tk]["wr"] = []
+            if len(scores[tk]["wr"]) == len(dates):
                 scores[tk]["wr"][-1] = r.get("w_rk")
-                if len(scores[tk]["tz"]) == len(dates):
-                    scores[tk]["tz"][-1] = r.get("tz")
-                else:
-                    # tz array shorter than dates — pad then set
-                    while len(scores[tk]["tz"]) < len(dates) - 1:
-                        scores[tk]["tz"].append(None)
-                    scores[tk]["tz"].append(r.get("tz"))
             else:
-                scores[tk]["s"].append(r.get("rs"))
-                scores[tk]["r"].append(r.get("rk"))
+                while len(scores[tk]["wr"]) < len(dates) - 1:
+                    scores[tk]["wr"].append(None)
                 scores[tk]["wr"].append(r.get("w_rk"))
-                scores[tk]["tz"].append(r.get("tz"))
 
     score_history = {"dates": dates, "d": scores}
     with open("leaders_score_history.json", "w") as f:
