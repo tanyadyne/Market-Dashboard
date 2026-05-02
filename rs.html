@@ -612,7 +612,7 @@ function render(){
       c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
       c20:`<td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>`,
       ytd:`<td class="c m ${chgClass(e.ytd)}">${chgText(e.ytd)}</td>`,
-      rs:`<td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span></td>`,
+      rs:`<td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span></td>`,
       vs:`<td class="c"><div class="spark-wrap"><canvas data-ticker="${e.t}" data-freq="${isWeekly?'w':'d'}" width="${sparkW}" height="28"></canvas></div></td>`
     };
     html+=`<tr class="${exp?'exp':''}" onclick="togRow('${e.t}')">`;
