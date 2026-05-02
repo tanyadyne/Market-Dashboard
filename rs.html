@@ -269,9 +269,7 @@ let multiSort=[],useMultiSort=false,isMobile=false,isWeekly=false;
 
 const ALL_COLUMNS=[
   {key:'rk',label:'#',align:'c',width:'40px',mob:true},
-  // Δ Rank column hidden until data_score_history.json accumulates enough trading days
-  // to compute meaningful 1D-10D lookbacks. Re-enable by uncommenting the line below.
-  // {key:'rd',label:'Δ Rank',align:'c',width:'56px',mob:true},
+  {key:'rd',label:'Δ',align:'c',width:'56px',mob:true},
   {key:'t',label:'Ticker',align:'l',width:'68px',mob:true},
   {key:'n',label:'Sector',align:'l',width:'160px',mob:true},
   {key:'rv',label:'R.Vol',align:'c',width:'80px',mob:false},
@@ -517,6 +515,9 @@ let rankLookback = 1; // default: compare to 1 trading day ago
 function getRankDeltaVal(ticker){
   // Use HISTORY (per-trading-day rank snapshots from data_score_history.json).
   // rankLookback = number of TRADING DAYS back (1 = yesterday, 2 = two trading days ago, etc).
+  // Δ tracks whichever rank is currently displayed in the # column: daily rank when
+  // in daily mode, weekly rank when in weekly mode. The lookback (1D / 3D / etc.)
+  // determines how many trading days back to compare today's rank to.
   if(!HISTORY||!HISTORY.dates||!HISTORY.d||!HISTORY.d[ticker])return null;
   const key = isWeekly ? 'wr' : 'r';
   const arr = HISTORY.d[ticker][key];
