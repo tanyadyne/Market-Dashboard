@@ -811,7 +811,7 @@ function render(){
       c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
       c20:`<td class="c m ${chgClass(e.c20)}">${chgText(e.c20)}</td>`,
       ytd:`<td class="c m ${chgClass(e.ytd)}">${chgText(e.ytd)}</td>`,
-      rs:`<td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span></td>`
+      rs:`<td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span></td>`
     };
     const rowKeys=isMobile?['rk','rd','t','th','ch','ytd','rs']:['rk','rd','t','n','th','rv','am','ax','ch','c5','c20','ytd','rs'];
     html+=`<tr>${rowKeys.map(k=>cellMap[k]||'').join('')}</tr>`;
@@ -861,7 +861,7 @@ function renderChartView(){
     card.innerHTML=`
       <div class="chart-card-hdr">
         <div><span class="chart-card-rk">#${rk||'—'}</span><span class="chart-card-tk tk-link" onclick="openProfile('${esc(e.t)}')" title="View ${esc(e.t)} profile">${esc(e.t)}</span></div>
-        <span class="chart-card-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs+'%':'—'}</span>
+        <span class="chart-card-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span>
       </div>
       <div class="chart-card-body tv-chart" id="svc-${e.t}"></div>`;
     grid.appendChild(card);
@@ -960,7 +960,7 @@ function searchStock(){
   // on desktop (display:contents) and becomes a single bordered container on mobile.
   let html=`<div class="info-boxes">
     <div class="info-pair">
-      <div class="info-box info-box-pair"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.w_rs)}">${stock.w_rs!=null?stock.w_rs+'%':'—'}</div><div class="sub"><span class="${posClass(rsLabel)}">${rsLabel}</span></div></div>
+      <div class="info-box info-box-pair"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.w_rs)}">${stock.w_rs!=null?stock.w_rs:'—'}</div><div class="sub"><span class="${posClass(rsLabel)}">${rsLabel}</span></div></div>
       <div class="info-box info-box-pair"><div class="lbl">RS Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">of ${total}</div></div>
       <div class="info-box info-box-pair info-box-theme"><div class="lbl">Theme</div><div class="val">${esc(mappedSector||'—')}</div><div class="sub">${themeSubline}</div></div>
     </div>
