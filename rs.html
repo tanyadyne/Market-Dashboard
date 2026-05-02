@@ -91,6 +91,7 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .bars.low .bar{background:var(--g)}
 .bars.mid .bar{background:#f59e0b}
 .bars.hi .bar{background:var(--r)}
+.bars.neg .bar{background:var(--t3)}
 .cp{color:var(--g);font-weight:600}.cn{color:var(--r);font-weight:600}.cz{color:var(--t3)}
 .rs{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;min-width:38px;text-align:center}
 .hr td{padding:10px 16px 14px 50px;background:var(--card)}
@@ -544,15 +545,22 @@ function rankDelta(ticker){
 function atrExtBars(val){
   if(val==null) return '<div class="bars low"><div class="bar" style="height:4px"></div></div>';
   const v=val/100; // stored as *100
+  // For NEGATIVE values: mirror the bar shape (tall→small) and use grey to indicate
+  // "below SMA". Same threshold tiers based on |val|, just reversed direction.
+  const isNeg=v<0;
+  const av=Math.abs(v);
   let cls='low',n=1;
-  if(v>=4){cls='hi';n=4;}
-  else if(v>=2){cls='mid';n=3;}
-  else if(v>=1){cls='low';n=2;}
+  if(av>=4){cls='hi';n=4;}
+  else if(av>=2){cls='mid';n=3;}
+  else if(av>=1){cls='low';n=2;}
   else{cls='low';n=1;}
-  const heights=[4,7,10,14];
+  if(isNeg)cls='neg';
+  // Heights: ascending [4,7,10,14] for positive, reversed [14,10,7,4] for negative.
+  const heights=isNeg?[14,10,7,4]:[4,7,10,14];
   let bars='';
   for(let i=0;i<4;i++){
-    const active=i<n;
+    // Lit bars: leftmost n for positive, rightmost n for negative — fully mirrored.
+    const active=isNeg?(i>=4-n):(i<n);
     bars+=`<div class="bar" style="height:${heights[i]}px;opacity:${active?1:0.2}"></div>`;
   }
   return `<div class="bars ${cls}">${bars}</div>`;
