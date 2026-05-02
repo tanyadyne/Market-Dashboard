@@ -148,11 +148,6 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .clip-empty{font-size:11px;color:var(--t4);font-style:italic}
 .clip-copied{color:var(--g);font-size:11px;font-weight:600;margin-left:8px;opacity:0;transition:opacity .3s}
 .clip-copied.show{opacity:1}
-.btn-refresh{border-color:#3b82f6;background:transparent;color:#60a5fa;transition:.15s}
-.btn-refresh:hover{background:#1e3a5f}
-.btn-refresh.loading{opacity:0.5;pointer-events:none}
-.btn-refresh.done{border-color:var(--g);color:var(--g)}
-.btn-refresh.fail{border-color:var(--r);color:var(--r)}
 [data-view="mobile"] .hdr{padding:10px 12px}
 [data-view="mobile"] .hdr-r{gap:4px;flex-wrap:wrap}
 /* Shrink header toggle buttons on mobile */
@@ -209,7 +204,6 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
     <button class="btn btn-t" onclick="openSortModal()" title="Multi-level sort">⇅ Sort</button>
     <button class="btn btn-t" onclick="openColModal()" title="Show/hide columns">⊞ Columns</button>
     <button class="btn btn-t" id="bClip" onclick="toggleClipboard()" title="Clipboard">📋 Clipboard <span id="clipCount"></span></button>
-    <button class="btn btn-refresh" id="bRefresh" onclick="triggerRefresh()" title="Trigger data refresh">⟳ Refresh</button>
     <div class="pill-toggle" id="bTheme" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
     <div class="seg-toggle">
       <button id="btnDesktop" class="on" onclick="setView(false)">Desktop</button>
@@ -663,18 +657,6 @@ function injectTVCharts(){
 }
 
 function togRow(t){expandedTicker=expandedTicker===t?null:t;render();}
-
-let ghToken=null;
-function getToken(){if(ghToken)return ghToken;const t=prompt('ghp_ imElyqEuO2Qov3E2v3m1X8dyp47irM1KEYvc');if(t&&t.trim()){ghToken=t.trim();return ghToken;}return null;}
-async function triggerRefresh(){
-  const token=getToken();if(!token)return;
-  const btn=document.getElementById('bRefresh');btn.className='btn btn-refresh loading';btn.textContent='⟳ Triggering...';
-  try{
-    const res=await fetch('https://api.github.com/repos/tanyadyne/Market-Dashboard/actions/workflows/update-data.yml/dispatches',{method:'POST',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({ref:'main'})});
-    if(res.status===204){btn.className='btn btn-refresh done';btn.textContent='⟳ Triggered!';setTimeout(()=>{loadData();btn.className='btn btn-refresh';btn.textContent='⟳ Refresh';},45000);}
-    else{if(res.status===401)ghToken=null;throw new Error('Status '+res.status);}
-  }catch(err){btn.className='btn btn-refresh fail';btn.textContent='⟳ Failed';setTimeout(()=>{btn.className='btn btn-refresh';btn.textContent='⟳ Refresh';},3000);}
-}
 
 buildHeader();loadData();setInterval(loadData,60000);
 </script>
