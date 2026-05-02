@@ -86,7 +86,7 @@ tr:hover{background:var(--bg3)}
 .bf{height:100%;border-radius:3px}.bf.i{background:#3b82f6}.bf.p{background:#a855f7}
 .bv{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--t2)}
 .bars{display:flex;align-items:flex-end;gap:1.5px;height:14px}
-.bars .bar{width:3px;border-radius:1px}.bars.low .bar{background:var(--g)}.bars.mid .bar{background:#f59e0b}.bars.hi .bar{background:var(--r)}
+.bars .bar{width:3px;border-radius:1px}.bars.low .bar{background:var(--g)}.bars.mid .bar{background:#f59e0b}.bars.hi .bar{background:var(--r)}.bars.neg .bar{background:var(--t3)}
 .spark-wrap{display:flex;align-items:center;justify-content:center}
 .status{padding:30px;text-align:center;color:var(--t3)}
 .tw{display:none}
@@ -422,15 +422,30 @@ function multText(v){return v!=null?(v/100).toFixed(2)+'x':'—';}
 function getRSBg(rs){if(rs==null)return'var(--bg4)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--gbg)';if(rs>=80)return d?'#1a3a2a':'#dcfce7';if(rs>=60)return'var(--bg4)';if(rs>=40)return d?'#292524':'#fef3c7';if(rs>=20)return d?'#2c1810':'#ffedd5';return'var(--rbg)';}
 function getRSCol(rs){if(rs==null)return'var(--t3)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--g)';if(rs>=80)return'var(--g2)';if(rs>=60)return'var(--t2)';if(rs>=40)return d?'#d4a373':'#92400e';if(rs>=20)return d?'#fb923c':'#c2410c';return'var(--r)';}
 function atrExtBars(val){
-  // New thresholds: green-1bar <=2, green-2bars >2, yellow >4, red >8
+  // Bar tiers based on |val|: 1 bar <=2, 2 bars >2, 3 bars >4, 4 bars >8.
+  // For POSITIVE values: bars ascend left-to-right (small→tall) with the standard
+  //   colour scheme (green/yellow/red). The taller the rightmost lit bar, the more
+  //   extended above the SMA.
+  // For NEGATIVE values: bars descend left-to-right (tall→small) — mirrored shape —
+  //   and rendered in grey. Indicates price is below the SMA (de-emphasised since
+  //   "extension below SMA" is a different concept than a momentum reading).
   if(val==null)return'<div class="bars low"><div class="bar" style="height:4px"></div></div>';
   const v=val/100;
+  const isNeg=v<0;
+  const av=Math.abs(v);
   let cls='low',n=1;
-  if(v>8){cls='hi';n=4;}
-  else if(v>4){cls='mid';n=3;}
-  else if(v>2){cls='low';n=2;}
+  if(av>8){cls='hi';n=4;}
+  else if(av>4){cls='mid';n=3;}
+  else if(av>2){cls='low';n=2;}
   else{cls='low';n=1;}
-  let bars='';for(let i=0;i<4;i++){bars+=`<div class="bar" style="height:${[4,7,10,14][i]}px;opacity:${i<n?1:0.2}"></div>`;}
+  if(isNeg)cls='neg';  // overrides colour to grey via CSS
+  // Heights: ascending [4,7,10,14] for positive, reversed [14,10,7,4] for negative.
+  const heights=isNeg?[14,10,7,4]:[4,7,10,14];
+  // Lit bars: leftmost n for positive (low value lights only the smallest bar),
+  // rightmost n for negative (low |value| lights only the smallest, which is now
+  // on the right). This produces a fully mirrored shape — same visual idea, just
+  // pointing the other way.
+  let bars='';for(let i=0;i<4;i++){const lit=isNeg?(i>=4-n):(i<n);bars+=`<div class="bar" style="height:${heights[i]}px;opacity:${lit?1:0.2}"></div>`;}
   return`<div class="bars ${cls}">${bars}</div>`;
 }
 function getPosition(rank,total){if(rank<=100)return'Strong Leader';if(rank<=200)return'Moderate Leader';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Moderate Laggard';return'Deep Laggard';}
