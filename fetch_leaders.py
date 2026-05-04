@@ -51,6 +51,14 @@ MANUAL_INCLUDE = {
     "LAC", "ENS","WOLF", "BB", "CRML",
 }
 
+# MANUAL_EXCLUDE — tickers dropped from the universe before any filtering or data
+# downloading. Use this for stocks that keep showing up via ETF holdings but you
+# don't want tracked (e.g. data-quality issues, recent IPOs without enough history,
+# or just personal preference).
+MANUAL_EXCLUDE = {
+    "FPS", "ARES",
+}
+
 # Yahoo Finance industry → our theme name mapping
 INDUSTRY_TO_THEME = {
     # Tech
@@ -1486,6 +1494,16 @@ def main():
         return
 
     all_tickers, stock_to_etfs = build_universe()
+    # Drop tickers in MANUAL_EXCLUDE before any further processing.
+    if MANUAL_EXCLUDE:
+        before_set = set(all_tickers)
+        all_tickers = [t for t in all_tickers if t not in MANUAL_EXCLUDE]
+        for t in list(stock_to_etfs.keys()):
+            if t in MANUAL_EXCLUDE:
+                del stock_to_etfs[t]
+        actually_removed = sorted(before_set & MANUAL_EXCLUDE)
+        if actually_removed:
+            print(f"  MANUAL_EXCLUDE: dropped {len(actually_removed)} ticker(s): {actually_removed}")
     print(f"Universe: {len(all_tickers)} stocks, {len(set(name for etfs in stock_to_etfs.values() for name, _ in etfs))} unique ETF themes")
 
     # ─── Download SPY (daily + weekly) ────────────────────────
