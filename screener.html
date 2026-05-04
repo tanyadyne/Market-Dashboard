@@ -111,32 +111,42 @@ tr:hover{background:var(--bg3)}
 .ov-body::-webkit-scrollbar{width:6px}
 .ov-body::-webkit-scrollbar-track{background:transparent}
 .ov-body::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
-.ov-row{display:grid;grid-template-columns:38px 64px 1fr auto auto;gap:8px;align-items:center;padding:7px 14px;border-bottom:1px solid var(--bdr2);font-size:12px;cursor:pointer;transition:background .15s}
-.ov-row.has-extras{grid-template-columns:38px 64px 1fr auto auto auto auto}
+.ov-row{display:grid;grid-template-columns:38px 64px 1fr 60px 56px 56px auto;gap:8px;align-items:center;padding:7px 14px;border-bottom:1px solid var(--bdr2);font-size:12px;cursor:pointer;transition:background .15s}
+.ov-row.has-extras{grid-template-columns:38px 64px 1fr 60px 56px 56px auto auto auto}
 .ov-row:hover{background:var(--bg3)}
 .ov-row:last-child{border-bottom:none}
-.ov-colhdr{display:grid;grid-template-columns:38px 64px 1fr auto auto;gap:8px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--bdr);background:var(--bg2);position:sticky;top:0;z-index:2;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3)}
-.ov-colhdr.has-extras{grid-template-columns:38px 64px 1fr auto auto auto auto}
+.ov-colhdr{display:grid;grid-template-columns:38px 64px 1fr 60px 56px 56px auto;gap:8px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--bdr);background:var(--bg2);position:sticky;top:0;z-index:2;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3)}
+.ov-colhdr.has-extras{grid-template-columns:38px 64px 1fr 60px 56px 56px auto auto auto}
 .ov-colhdr>span{white-space:nowrap;overflow:hidden;text-align:center}
 .ov-colhdr>span:nth-child(3){text-align:left}  /* Theme — keep left-aligned */
 .ov-colhdr .h-metric{min-width:54px}
-.ov-colhdr .h-medal{width:18px}
+.ov-colhdr .h-medal{width:60px}
 .ov-extra.pct-up{color:#22c55e}
 .ov-extra.pct-dn{color:#ef4444}
 .ov-rk{color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center}
 .ov-tk{font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1);text-align:center}
 .ov-th{color:var(--t2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ov-rs{padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;min-width:30px;text-align:center}
-.ov-medal{font-size:13px;line-height:1;display:inline-block;width:18px;text-align:center}
+.ov-medal{font-size:13px;line-height:1;display:inline-block;width:60px;text-align:center}
+.ov-1d,.ov-1w{font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center;min-width:56px}
 .ov-extra{font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center;min-width:54px}
 .ov-empty{padding:24px 16px;text-align:center;color:var(--t3);font-size:12px;font-style:italic}
+/* Tier pills (VCP setups) */
+.ov-pill{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;font-family:'DM Sans',sans-serif;width:auto;min-width:50px;display:inline-block}
+.ov-pill-gold{background:#f5b301;color:#3a2700}
+.ov-pill-silver{background:#9ca3af;color:#1a1c20}
+.ov-pill-bronze{background:#b45309;color:#fff5e8}
 @media(max-width:768px){
   .ov-grid{grid-template-columns:1fr;padding:10px;gap:10px}
   .ov-box{min-height:260px;max-height:360px}
+  /* Mobile: hide 1D/1W columns, collapse the grid back to compact form. */
+  .ov-1d,.ov-1w,.ov-colhdr .h-1d,.ov-colhdr .h-1w{display:none}
   .ov-row{grid-template-columns:30px 56px 1fr auto auto;gap:6px;padding:6px 10px;font-size:11px}
   .ov-row.has-extras{grid-template-columns:30px 50px 1fr auto auto auto auto;gap:4px}
   .ov-colhdr{grid-template-columns:30px 56px 1fr auto auto;gap:6px;padding:5px 10px;font-size:8px}
   .ov-colhdr.has-extras{grid-template-columns:30px 50px 1fr auto auto auto auto;gap:4px}
+  .ov-medal,.ov-colhdr .h-medal{width:auto;min-width:50px}
+  .ov-pill{font-size:9px;padding:2px 6px;min-width:42px}
   .ov-title{font-size:11px}
 }
 .info-boxes{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
@@ -679,11 +689,12 @@ function vcpMedal(sf){
   return 'bronze';
 }
 
-function medalIcon(m){
-  // Coloured-disc badge for compact display in Overview rows.
-  const map={gold:'#f5b301',silver:'#9ca3af',bronze:'#b45309'};
-  const c=map[m]||'transparent';
-  return `<span class="ov-medal" title="${m}" style="color:${c};font-size:14px">●</span>`;
+function medalPill(m){
+  // Tier pill for VCP setups — full word ("Gold"/"Silver"/"Bronze") on a coloured
+  // background. Used in both desktop and mobile overview rows.
+  if(!m)return '<span class="ov-medal"></span>';
+  const label=m.charAt(0).toUpperCase()+m.slice(1);
+  return `<span class="ov-medal ov-pill ov-pill-${m}" title="${label} tier">${label}</span>`;
 }
 
 function getTop20Stats(tk, currentPrice){
@@ -709,22 +720,30 @@ function getTop20Stats(tk, currentPrice){
 
 function renderOverviewRow(e, opts){
   // opts: {
-  //   medal:    'gold'|'silver'|'bronze' or null  → coloured-disc badge
+  //   medal:    'gold'|'silver'|'bronze' or null  → tier pill
   //   extra:    html-string for the right-most cell (e.g. RS badge or R.Vol)
-  //   preCells: html-string injected between medal and `extra` (used by Top 20 box
-  //             for Streak + % since added). When set, the row gets `.has-extras`
-  //             so the CSS grid widens to include the new cells.
+  //   preCells: html-string injected between the 1D/1W cells and `extra` (used by
+  //             Top 20 for Streak + % Since). When set, the row gets `.has-extras`
+  //             so the CSS grid widens.
   // }
+  // 1D and 1W price-change cells sit between the tier slot and any preCells/extra.
+  // They're hidden on mobile via CSS (.ov-1d / .ov-1w → display:none in the mobile
+  // breakpoint, with the grid template adjusted accordingly).
   const rk=e.w_rk||'—';
   const tk=esc(e.t);
   const th=esc(e.th||'—');
-  const medal=opts.medal?medalIcon(opts.medal):'<span class="ov-medal"></span>';
+  const medal=opts.medal?medalPill(opts.medal):'<span class="ov-medal"></span>';
+  const ch=e.ch,c5=e.c5;
+  const ch_html=`<span class="ov-1d ${chgClass(ch)}">${chgText(ch)}</span>`;
+  const c5_html=`<span class="ov-1w ${chgClass(c5)}">${chgText(c5)}</span>`;
   const cls=opts.preCells?'ov-row has-extras':'ov-row';
   return `<div class="${cls}" onclick="openProfile('${tk}')" title="${tk} — ${esc(e.n||'')}">
     <span class="ov-rk">#${rk}</span>
     <span class="ov-tk">${tk}</span>
     <span class="ov-th">${th}</span>
     ${medal}
+    ${ch_html}
+    ${c5_html}
     ${opts.preCells||''}
     ${opts.extra||''}
   </div>`;
@@ -843,16 +862,19 @@ function renderOverview(){
   const elVcp=document.getElementById('ovListVcp');
   const elUv =document.getElementById('ovListUv');
 
-  // Per-box column headers. The 5-col grid is shared by all boxes so the header
-  // structure mirrors the row structure. The medal slot is empty in non-VCP boxes.
-  // The Top 20 box uses an extended 7-col grid (`.has-extras`) that adds Streak
-  // and "% since added" columns between the medal slot and the metric.
+  // Per-box column headers. Default desktop grid is 7 cols (rank, ticker, theme,
+  // tier slot, 1D, 1W, metric). The Top 20 box uses an extended 9-col grid
+  // (`.has-extras`) that adds Streak and "% Since" columns before the metric.
+  // On mobile, the .ov-1d/.ov-1w/.h-1d/.h-1w cells are hidden via CSS and the
+  // grid template collapses back to 5/7 cols.
   const hdr=(metric,withMedal,withExtras)=>
     `<div class="ov-colhdr${withExtras?' has-extras':''}">
       <span class="h-rk">#</span>
       <span>Ticker</span>
       <span>Theme</span>
       <span class="h-medal">${withMedal?'Tier':''}</span>
+      <span class="h-metric h-1d">1D</span>
+      <span class="h-metric h-1w">1W</span>
       ${withExtras?'<span class="h-metric">Streak</span><span class="h-metric">% Since</span>':''}
       <span class="h-metric">${metric}</span>
     </div>`;
