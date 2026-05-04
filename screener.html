@@ -114,10 +114,10 @@ tr:hover{background:var(--bg3)}
 .ov-row:last-child{border-bottom:none}
 .ov-colhdr{display:grid;grid-template-columns:38px 64px 1fr auto auto;gap:8px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--bdr);background:var(--bg2);position:sticky;top:0;z-index:2;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3)}
 .ov-colhdr.has-extras{grid-template-columns:38px 64px 1fr auto auto auto auto}
-.ov-colhdr>span{white-space:nowrap;overflow:hidden}
-.ov-colhdr .h-rk{text-align:center}
-.ov-colhdr .h-metric{text-align:center;min-width:54px}
-.ov-colhdr .h-medal{text-align:center;width:18px}
+.ov-colhdr>span{white-space:nowrap;overflow:hidden;text-align:center}
+.ov-colhdr>span:nth-child(3){text-align:left}  /* Theme — keep left-aligned */
+.ov-colhdr .h-metric{min-width:54px}
+.ov-colhdr .h-medal{width:18px}
 .ov-extra.pct-up{color:#22c55e}
 .ov-extra.pct-dn{color:#ef4444}
 .ov-rk{color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center}
