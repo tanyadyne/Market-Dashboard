@@ -836,14 +836,25 @@ function renderOverview(){
   // Bottom 20 weakest — by w_rk descending
   const bot=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>b.w_rk-a.w_rk).slice(0,20);
 
-  // VCP setups: coiled EMAs + trend zone in {neutral, bull_light, bull_strong}, sorted by w_rk
+  // VCP setups: coiled EMAs + trend zone in {neutral, bull_light, bull_strong}
+  //             + w_rs >= 40 (filter out weakest names even if structurally coiled).
+  // Order: tier first (Gold → Silver → Bronze), then by w_rk ascending within tier.
+  // The medal/tier itself is NOT displayed in the row (Tier column removed) —
+  // it's only used to drive the sort order behind the scenes.
   const allowedZones=new Set(['neutral','bull_light','bull_strong']);
+  const VCP_MIN_RS=40;
+  const tierRank={gold:0,silver:1,bronze:2};
   const vcp=items
     .filter(e=>(e.sf||0)&SF_COILED)
     .filter(e=>allowedZones.has(e.tz))
+    .filter(e=>e.w_rs!=null && e.w_rs>=VCP_MIN_RS)
     .map(e=>({e,medal:vcpMedal(e.sf||0)}))
     .filter(x=>x.medal)
-    .sort((a,b)=>(a.e.w_rk||9999)-(b.e.w_rk||9999));
+    .sort((a,b)=>{
+      const t=tierRank[a.medal]-tierRank[b.medal];
+      if(t!==0)return t;
+      return (a.e.w_rk||9999)-(b.e.w_rk||9999);
+    });
 
   // Volume Spikes: t5_rv >= 1.5x, ax > 0, c5 > 0, w_rs >= 55
   // Sorted purely by trailing-5d R.Vol descending — the column shown in the box.
@@ -889,8 +900,8 @@ function renderOverview(){
   elBot.innerHTML=hdr('RS',false)+(bot.length
     ?bot.map(e=>renderOverviewRow(e,{extra:rsBadge(e.w_rs)})).join('')
     :'<div class="ov-empty">No data.</div>');
-  elVcp.innerHTML=hdr('RS',true)+(vcp.length
-    ?vcp.map(x=>renderOverviewRow(x.e,{medal:x.medal,extra:rsBadge(x.e.w_rs)})).join('')
+  elVcp.innerHTML=hdr('RS',false)+(vcp.length
+    ?vcp.map(x=>renderOverviewRow(x.e,{extra:rsBadge(x.e.w_rs)})).join('')
     :'<div class="ov-empty">No setups match right now.</div>');
   elUv.innerHTML=hdr('R.Vol',false)+(uv.length
     ?uv.map(e=>renderOverviewRow(e,{extra:rvolBadge(e.t5_rv)})).join('')
