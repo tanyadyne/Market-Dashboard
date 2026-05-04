@@ -97,6 +97,33 @@ tr:hover{background:var(--bg3)}
 .pag .pg:hover{background:var(--bg3)}.pag .pg.cur{background:#1e3a5f;border-color:#3b82f6;color:#60a5fa}
 .search-panel{display:none;padding:20px;max-width:900px;margin:0 auto}
 .search-input{width:100%;padding:10px 16px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:14px;font-family:inherit;margin-bottom:16px}
+/* ─── Overview tab ─── */
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 20px;max-width:1400px;margin:0 auto}
+.ov-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;display:flex;flex-direction:column;min-height:340px;max-height:calc(100vh - 240px);overflow:hidden}
+[data-theme="light"] .ov-box{box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.ov-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bdr);background:var(--bg3)}
+.ov-title{font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t1)}
+.ov-count{font-size:11px;color:var(--t3);font-family:'JetBrains Mono',monospace}
+.ov-body{flex:1;overflow-y:auto;padding:4px 0}
+.ov-body::-webkit-scrollbar{width:6px}
+.ov-body::-webkit-scrollbar-track{background:transparent}
+.ov-body::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+.ov-row{display:grid;grid-template-columns:38px 64px 1fr auto auto;gap:8px;align-items:center;padding:7px 14px;border-bottom:1px solid var(--bdr2);font-size:12px;cursor:pointer;transition:background .15s}
+.ov-row:hover{background:var(--bg3)}
+.ov-row:last-child{border-bottom:none}
+.ov-rk{color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:right}
+.ov-tk{font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1)}
+.ov-th{color:var(--t2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ov-rs{padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;min-width:30px;text-align:center}
+.ov-medal{font-size:13px;line-height:1;display:inline-block;width:18px;text-align:center}
+.ov-extra{font-family:'JetBrains Mono',monospace;font-size:11px;text-align:right;min-width:54px}
+.ov-empty{padding:24px 16px;text-align:center;color:var(--t3);font-size:12px;font-style:italic}
+@media(max-width:768px){
+  .ov-grid{grid-template-columns:1fr;padding:10px;gap:10px}
+  .ov-box{min-height:260px;max-height:none}
+  .ov-row{grid-template-columns:30px 56px 1fr auto auto;gap:6px;padding:6px 10px;font-size:11px}
+  .ov-title{font-size:11px}
+}
 .info-boxes{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .info-box{flex:1;min-width:140px;padding:12px 16px;border-radius:10px;border:1px solid var(--bdr);background:var(--bg2);text-align:center}
 [data-theme="light"] .info-box{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
@@ -273,7 +300,8 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
   </div>
 </div>
 <div class="tab-strip" id="tabStrip">
-  <button class="tab-btn active" id="tabW" onclick="switchTab('weekly')">RS Ranking</button>
+  <button class="tab-btn active" id="tabO" onclick="switchTab('overview')">Overview</button>
+  <button class="tab-btn" id="tabW" onclick="switchTab('weekly')">RS Ranking</button>
   <button class="tab-btn" id="tabS" onclick="switchTab('search')">Individual Profile</button>
 </div>
 <div class="spy" id="spyBar" style="display:none">
@@ -282,6 +310,24 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 </div>
 </div><!-- /.top-fixed -->
 <div class="status" id="statusBar">Loading data...</div>
+<div class="ov-grid" id="ovPanel" style="display:none">
+  <div class="ov-box">
+    <div class="ov-hdr"><span class="ov-title">VCP Setups</span><span class="ov-count" id="ovCountVcp">—</span></div>
+    <div class="ov-body" id="ovListVcp"></div>
+  </div>
+  <div class="ov-box">
+    <div class="ov-hdr"><span class="ov-title">Unusual Volume</span><span class="ov-count" id="ovCountUv">—</span></div>
+    <div class="ov-body" id="ovListUv"></div>
+  </div>
+  <div class="ov-box">
+    <div class="ov-hdr"><span class="ov-title">Top 20 Strongest</span><span class="ov-count" id="ovCountTop">—</span></div>
+    <div class="ov-body" id="ovListTop"></div>
+  </div>
+  <div class="ov-box">
+    <div class="ov-hdr"><span class="ov-title">Bottom 20 Weakest</span><span class="ov-count" id="ovCountBot">—</span></div>
+    <div class="ov-body" id="ovListBot"></div>
+  </div>
+</div>
 <div class="tw" id="tw" style="display:none">
   <table><thead><tr id="headerRow"></tr></thead><tbody id="tb"></tbody></table>
   <div class="pag" id="pagination"></div>
@@ -294,7 +340,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
   <div id="searchResults"></div>
 </div>
 <script>
-let DATA=null,HISTORY=null,ETF_DATA=null,sortKey='rk',sortDir=1,currentTab='weekly',currentPage=1;
+let DATA=null,HISTORY=null,ETF_DATA=null,sortKey='rk',sortDir=1,currentTab='overview',currentPage=1;
 const PAGE_SIZE=200;
 const CHART_PAGE_SIZE=24;  // chart grid pagination
 let rankLookback=1;
@@ -537,20 +583,42 @@ function rankDelta(ticker){
 
 function switchTab(tab){
   currentTab=tab;currentPage=1;chartPage=1;sortKey='rk';sortDir=1;
+  // Close the filter popup if open — it's anchored to the filter button which may
+  // be hidden when leaving the RS Ranking tab.
+  const fm=document.getElementById('filterMenu');
+  if(fm)fm.classList.remove('open');
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById(tab==='weekly'?'tabW':'tabS').classList.add('active');
+  document.getElementById(tab==='overview'?'tabO':tab==='weekly'?'tabW':'tabS').classList.add('active');
   const viewToggle=document.getElementById('viewToggle');
-  if(tab==='search'){
+  const ovPanel=document.getElementById('ovPanel');
+  if(tab==='overview'){
+    document.getElementById('tw').style.display='none';
+    document.getElementById('chartGrid').style.display='none';
+    document.getElementById('chartPagination').style.display='none';
+    document.getElementById('searchPanel').style.display='none';
+    document.getElementById('si').style.display='none';
+    if(viewToggle)viewToggle.style.display='none';
+    const filterBtn=document.getElementById('filterBtn');
+    if(filterBtn)filterBtn.style.display='none';
+    ovPanel.style.display='grid';
+    renderOverview();
+  }else if(tab==='search'){
+    ovPanel.style.display='none';
     document.getElementById('tw').style.display='none';
     document.getElementById('chartGrid').style.display='none';
     document.getElementById('chartPagination').style.display='none';
     document.getElementById('searchPanel').style.display='block';
     document.getElementById('si').style.display='none';
     viewToggle.style.display='none';  // view toggle hidden in search tab
+    const filterBtn=document.getElementById('filterBtn');
+    if(filterBtn)filterBtn.style.display='';
   }else{
+    ovPanel.style.display='none';
     document.getElementById('searchPanel').style.display='none';
     document.getElementById('si').style.display='';
     viewToggle.style.display='';
+    const filterBtn=document.getElementById('filterBtn');
+    if(filterBtn)filterBtn.style.display='';
     if(currentView==='chart'){
       document.getElementById('tw').style.display='none';
       document.getElementById('chartGrid').style.display='';
@@ -568,6 +636,131 @@ function switchTab(tab){
 
 // Columns to show when in mobile mode (default: #, Δ, Ticker, Theme, 1D, YTD, RS)
 const MOBILE_COLS=new Set(['rk','rd','t','th','ch','ytd','rs']);
+
+// ─── Overview tab ────────────────────────────────────────────────────────────
+// Bitmask layout (must stay in sync with compute_setup_adjustment in fetch_leaders.py):
+//   G1=1     EMA21>SMA50
+//   G2=2     Price>EMA21
+//   G3=4     Price>SMA50
+//   G4=8     SMA50 rising
+//   S1=16    Price>SMA100
+//   S2=32    SMA50>SMA100
+//   S3=64    SMA200 rising
+//   B1=128   EMA9/EMA21 coiled
+//   B2=256   Price>SMA200
+//   X1=512   Price>EMA9
+//   X2=1024  EMA9>EMA21
+//   X3=2048  SMA50>SMA200
+const SF_COILED=128;
+// Gold = SMA200 rising, SMA50 rising, Price>SMA200/SMA50/EMA21/EMA9, EMA9>EMA21>SMA50>SMA200
+const SF_GOLD = 64|8|256|4|2|512|1024|1|2048;   // = 3919
+// Silver = SMA200 rising, Price>SMA200/SMA100/EMA21, EMA9>EMA21
+const SF_SILVER = 64|256|16|2|1024;             // = 1362
+
+function vcpMedal(sf){
+  if((sf&SF_COILED)===0)return null;
+  if((sf&SF_GOLD)===SF_GOLD)return 'gold';
+  if((sf&SF_SILVER)===SF_SILVER)return 'silver';
+  return 'bronze';
+}
+
+function medalIcon(m){
+  // Coloured-disc badge for compact display in Overview rows.
+  const map={gold:'#f5b301',silver:'#9ca3af',bronze:'#b45309'};
+  const c=map[m]||'transparent';
+  return `<span class="ov-medal" title="${m}" style="color:${c};font-size:14px">●</span>`;
+}
+
+function renderOverviewRow(e, opts){
+  // opts: { extra: html-string for the right-most cell (e.g. RS badge or R.Vol multiplier) }
+  const rk=e.w_rk||'—';
+  const tk=esc(e.t);
+  const th=esc(e.th||'—');
+  const medal=opts.medal?medalIcon(opts.medal):'<span class="ov-medal"></span>';
+  return `<div class="ov-row" onclick="openProfile('${tk}')" title="${tk} — ${esc(e.n||'')}">
+    <span class="ov-rk">#${rk}</span>
+    <span class="ov-tk">${tk}</span>
+    <span class="ov-th">${th}</span>
+    ${medal}
+    ${opts.extra||''}
+  </div>`;
+}
+
+function rsBadge(rs){
+  return `<span class="ov-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span>`;
+}
+
+function rvolBadge(rv){
+  // R.Vol stored as percent (e.g. 280 = 2.80x). Show as "2.8x".
+  if(rv==null)return '<span class="ov-extra">—</span>';
+  return `<span class="ov-extra">${(rv/100).toFixed(2)}x</span>`;
+}
+
+function renderOverview(){
+  if(!DATA||!DATA.e){
+    ['ovListVcp','ovListUv','ovListTop','ovListBot'].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.innerHTML='<div class="ov-empty">Loading…</div>';
+    });
+    return;
+  }
+  const items=DATA.e;
+
+  // Top 20 strongest — by w_rk ascending
+  const top=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,20);
+  // Bottom 20 weakest — by w_rk descending
+  const bot=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>b.w_rk-a.w_rk).slice(0,20);
+
+  // VCP setups: coiled EMAs + trend zone in {neutral, bull_light, bull_strong}, sorted by w_rk
+  const allowedZones=new Set(['neutral','bull_light','bull_strong']);
+  const vcp=items
+    .filter(e=>(e.sf||0)&SF_COILED)
+    .filter(e=>allowedZones.has(e.tz))
+    .map(e=>({e,medal:vcpMedal(e.sf||0)}))
+    .filter(x=>x.medal)
+    .sort((a,b)=>(a.e.w_rk||9999)-(b.e.w_rk||9999));
+
+  // Unusual Volume: ax > 0, c5 > 0, w_rs > 40
+  // Sort by composite score that combines R.Vol with 1D weekly-rank improvement so
+  // a high-R.Vol stock with no rank movement (e.g. UMBF — vol up but going nowhere)
+  // ranks below a slightly-lower-R.Vol stock that actually jumped in the rankings.
+  // Negative rank deltas are clamped to 0 (they don't penalize — just don't add
+  // bonus weight). UV_RANK_WEIGHT controls how much positive rank-jumps boost
+  // priority: a +200 rank jump at weight=1.0 is worth 200 R.Vol points.
+  const UV_RANK_WEIGHT=1.0;
+  const uvScore=e=>{
+    const rv=e.w_rv||0;
+    const rd=getRankDeltaVal(e.t);
+    const bonus=(rd!=null && rd>0)?UV_RANK_WEIGHT*rd:0;
+    return rv+bonus;
+  };
+  const uv=items
+    .filter(e=>e.w_rv!=null && e.ax!=null && e.ax>0 && e.c5!=null && e.c5>0 && e.w_rs!=null && e.w_rs>40)
+    .sort((a,b)=>uvScore(b)-uvScore(a));
+
+  // Render each box
+  const elTop=document.getElementById('ovListTop');
+  const elBot=document.getElementById('ovListBot');
+  const elVcp=document.getElementById('ovListVcp');
+  const elUv =document.getElementById('ovListUv');
+
+  elTop.innerHTML=top.length
+    ?top.map(e=>renderOverviewRow(e,{extra:rsBadge(e.w_rs)})).join('')
+    :'<div class="ov-empty">No data.</div>';
+  elBot.innerHTML=bot.length
+    ?bot.map(e=>renderOverviewRow(e,{extra:rsBadge(e.w_rs)})).join('')
+    :'<div class="ov-empty">No data.</div>';
+  elVcp.innerHTML=vcp.length
+    ?vcp.map(x=>renderOverviewRow(x.e,{medal:x.medal,extra:rsBadge(x.e.w_rs)})).join('')
+    :'<div class="ov-empty">No setups match right now.</div>';
+  elUv.innerHTML=uv.length
+    ?uv.map(e=>renderOverviewRow(e,{extra:rvolBadge(e.w_rv)})).join('')
+    :'<div class="ov-empty">No unusual volume right now.</div>';
+
+  document.getElementById('ovCountTop').textContent=`${top.length}`;
+  document.getElementById('ovCountBot').textContent=`${bot.length}`;
+  document.getElementById('ovCountVcp').textContent=`${vcp.length}`;
+  document.getElementById('ovCountUv').textContent =`${uv.length}`;
+}
 
 function setLayout(mobile){
   isMobile=mobile;
@@ -1109,7 +1302,12 @@ async function loadData(){
     if(histRes&&histRes.ok){try{HISTORY=await histRes.json();}catch(e){}}
     if(etfRes&&etfRes.ok){try{ETF_DATA=await etfRes.json();}catch(e){}}
     document.getElementById('statusBar').style.display='none';
-    if(currentView==='chart'&&currentTab!=='search'){
+    if(currentTab==='overview'){
+      document.getElementById('ovPanel').style.display='grid';
+      document.getElementById('si').style.display='none';
+      const vt=document.getElementById('viewToggle');if(vt)vt.style.display='none';
+      const fb=document.getElementById('filterBtn');if(fb)fb.style.display='none';
+    }else if(currentView==='chart'&&currentTab!=='search'){
       document.getElementById('chartGrid').style.display='';
       document.getElementById('chartPagination').style.display='';
     }else if(currentTab!=='search'){
@@ -1121,7 +1319,8 @@ async function loadData(){
       document.getElementById('stockCount').textContent=DATA.meta.count;
     }
     buildHeader();
-    if(currentView==='chart'&&currentTab!=='search')renderChartView();
+    if(currentTab==='overview')renderOverview();
+    else if(currentView==='chart'&&currentTab!=='search')renderChartView();
     else render();
   }catch(err){
     document.getElementById('statusBar').innerHTML=`<span style="color:var(--r)">Error: ${esc(err.message)}. Run the "Update Liquid Leaders" workflow first.</span>`;
