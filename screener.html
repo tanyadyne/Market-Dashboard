@@ -111,6 +111,11 @@ tr:hover{background:var(--bg3)}
 .ov-row{display:grid;grid-template-columns:38px 64px 1fr auto auto;gap:8px;align-items:center;padding:7px 14px;border-bottom:1px solid var(--bdr2);font-size:12px;cursor:pointer;transition:background .15s}
 .ov-row:hover{background:var(--bg3)}
 .ov-row:last-child{border-bottom:none}
+.ov-colhdr{display:grid;grid-template-columns:38px 64px 1fr auto auto;gap:8px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--bdr);background:var(--bg2);position:sticky;top:0;z-index:2;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3)}
+.ov-colhdr>span{white-space:nowrap;overflow:hidden}
+.ov-colhdr .h-rk{text-align:right}
+.ov-colhdr .h-metric{text-align:right;min-width:54px}
+.ov-colhdr .h-medal{text-align:center;width:18px}
 .ov-rk{color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:right}
 .ov-tk{font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1)}
 .ov-th{color:var(--t2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -122,6 +127,7 @@ tr:hover{background:var(--bg3)}
   .ov-grid{grid-template-columns:1fr;padding:10px;gap:10px}
   .ov-box{min-height:260px;max-height:none}
   .ov-row{grid-template-columns:30px 56px 1fr auto auto;gap:6px;padding:6px 10px;font-size:11px}
+  .ov-colhdr{grid-template-columns:30px 56px 1fr auto auto;gap:6px;padding:5px 10px;font-size:8px}
   .ov-title{font-size:11px}
 }
 .info-boxes{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
@@ -743,18 +749,29 @@ function renderOverview(){
   const elVcp=document.getElementById('ovListVcp');
   const elUv =document.getElementById('ovListUv');
 
-  elTop.innerHTML=top.length
+  // Per-box column headers. The 5-col grid is shared by all boxes so the header
+  // structure mirrors the row structure. The medal slot is empty in non-VCP boxes.
+  const hdr=(metric,withMedal)=>
+    `<div class="ov-colhdr">
+      <span class="h-rk">#</span>
+      <span>Ticker</span>
+      <span>Theme</span>
+      <span class="h-medal">${withMedal?'Tier':''}</span>
+      <span class="h-metric">${metric}</span>
+    </div>`;
+
+  elTop.innerHTML=hdr('RS',false)+(top.length
     ?top.map(e=>renderOverviewRow(e,{extra:rsBadge(e.w_rs)})).join('')
-    :'<div class="ov-empty">No data.</div>';
-  elBot.innerHTML=bot.length
+    :'<div class="ov-empty">No data.</div>');
+  elBot.innerHTML=hdr('RS',false)+(bot.length
     ?bot.map(e=>renderOverviewRow(e,{extra:rsBadge(e.w_rs)})).join('')
-    :'<div class="ov-empty">No data.</div>';
-  elVcp.innerHTML=vcp.length
+    :'<div class="ov-empty">No data.</div>');
+  elVcp.innerHTML=hdr('RS',true)+(vcp.length
     ?vcp.map(x=>renderOverviewRow(x.e,{medal:x.medal,extra:rsBadge(x.e.w_rs)})).join('')
-    :'<div class="ov-empty">No setups match right now.</div>';
-  elUv.innerHTML=uv.length
+    :'<div class="ov-empty">No setups match right now.</div>');
+  elUv.innerHTML=hdr('R.Vol',false)+(uv.length
     ?uv.map(e=>renderOverviewRow(e,{extra:rvolBadge(e.w_rv)})).join('')
-    :'<div class="ov-empty">No unusual volume right now.</div>';
+    :'<div class="ov-empty">No unusual volume right now.</div>');
 
   document.getElementById('ovCountTop').textContent=`${top.length}`;
   document.getElementById('ovCountBot').textContent=`${bot.length}`;
