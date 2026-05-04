@@ -328,7 +328,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
     <div class="ov-body" id="ovListVcp"></div>
   </div>
   <div class="ov-box">
-    <div class="ov-hdr"><span class="ov-title">Unusual Volume</span><span class="ov-count" id="ovCountUv">—</span></div>
+    <div class="ov-hdr"><span class="ov-title">Volume Spikes</span><span class="ov-count" id="ovCountUv">—</span></div>
     <div class="ov-body" id="ovListUv"></div>
   </div>
   <div class="ov-box">
@@ -775,7 +775,7 @@ function renderOverview(){
     .filter(x=>x.medal)
     .sort((a,b)=>(a.e.w_rk||9999)-(b.e.w_rk||9999));
 
-  // Unusual Volume: ax > 0, c5 > 0, w_rs > 40
+  // Unusual Volume: t5_rv >= 1.5x, ax > 0, c5 > 0, w_rs > 40
   // Sort by composite score that combines trailing-5d R.Vol with 1D weekly-rank
   // improvement so a high-volume stock with no rank movement (e.g. UMBF — vol up but
   // going nowhere) ranks below a slightly-lower-volume stock that actually jumped in
@@ -785,6 +785,8 @@ function renderOverview(){
   //
   // Uses t5_rv (rolling trailing-5-session R.Vol) instead of w_rv (week-to-date,
   // which resets every Monday and is biased toward late-week comparisons).
+  // t5_rv is stored as percent × 100, so 150 = 1.5x.
+  const UV_MIN_RVOL=150;
   const UV_RANK_WEIGHT=1.0;
   const uvScore=e=>{
     const rv=e.t5_rv||0;
@@ -793,7 +795,7 @@ function renderOverview(){
     return rv+bonus;
   };
   const uv=items
-    .filter(e=>e.t5_rv!=null && e.ax!=null && e.ax>0 && e.c5!=null && e.c5>0 && e.w_rs!=null && e.w_rs>40)
+    .filter(e=>e.t5_rv!=null && e.t5_rv>=UV_MIN_RVOL && e.ax!=null && e.ax>0 && e.c5!=null && e.c5>0 && e.w_rs!=null && e.w_rs>40)
     .sort((a,b)=>uvScore(b)-uvScore(a));
 
   // Render each box
