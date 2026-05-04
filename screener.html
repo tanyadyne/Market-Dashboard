@@ -775,28 +775,15 @@ function renderOverview(){
     .filter(x=>x.medal)
     .sort((a,b)=>(a.e.w_rk||9999)-(b.e.w_rk||9999));
 
-  // Unusual Volume: t5_rv >= 1.5x, ax > 0, c5 > 0, w_rs > 40
-  // Sort by composite score that combines trailing-5d R.Vol with 1D weekly-rank
-  // improvement so a high-volume stock with no rank movement (e.g. UMBF — vol up but
-  // going nowhere) ranks below a slightly-lower-volume stock that actually jumped in
-  // the rankings. Negative rank deltas are clamped to 0 (they don't penalize — just
-  // don't add bonus weight). UV_RANK_WEIGHT controls how much positive rank-jumps
-  // boost priority: a +200 rank jump at weight=1.0 is worth 200 R.Vol points.
-  //
+  // Volume Spikes: t5_rv >= 1.5x, ax > 0, c5 > 0, w_rs > 40
+  // Sorted purely by trailing-5d R.Vol descending — the column shown in the box.
   // Uses t5_rv (rolling trailing-5-session R.Vol) instead of w_rv (week-to-date,
   // which resets every Monday and is biased toward late-week comparisons).
   // t5_rv is stored as percent × 100, so 150 = 1.5x.
   const UV_MIN_RVOL=150;
-  const UV_RANK_WEIGHT=1.0;
-  const uvScore=e=>{
-    const rv=e.t5_rv||0;
-    const rd=getRankDeltaVal(e.t);
-    const bonus=(rd!=null && rd>0)?UV_RANK_WEIGHT*rd:0;
-    return rv+bonus;
-  };
   const uv=items
     .filter(e=>e.t5_rv!=null && e.t5_rv>=UV_MIN_RVOL && e.ax!=null && e.ax>0 && e.c5!=null && e.c5>0 && e.w_rs!=null && e.w_rs>40)
-    .sort((a,b)=>uvScore(b)-uvScore(a));
+    .sort((a,b)=>(b.t5_rv||0)-(a.t5_rv||0));
 
   // Render each box
   const elTop=document.getElementById('ovListTop');
