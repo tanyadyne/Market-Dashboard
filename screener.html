@@ -775,14 +775,15 @@ function renderOverview(){
     .filter(x=>x.medal)
     .sort((a,b)=>(a.e.w_rk||9999)-(b.e.w_rk||9999));
 
-  // Volume Spikes: t5_rv >= 1.5x, ax > 0, c5 > 0, w_rs > 40
+  // Volume Spikes: t5_rv >= 1.5x, ax > 0, c5 > 0, w_rs >= 55
   // Sorted purely by trailing-5d R.Vol descending — the column shown in the box.
   // Uses t5_rv (rolling trailing-5-session R.Vol) instead of w_rv (week-to-date,
   // which resets every Monday and is biased toward late-week comparisons).
   // t5_rv is stored as percent × 100, so 150 = 1.5x.
   const UV_MIN_RVOL=150;
+  const UV_MIN_RS=55;
   const uv=items
-    .filter(e=>e.t5_rv!=null && e.t5_rv>=UV_MIN_RVOL && e.ax!=null && e.ax>0 && e.c5!=null && e.c5>0 && e.w_rs!=null && e.w_rs>40)
+    .filter(e=>e.t5_rv!=null && e.t5_rv>=UV_MIN_RVOL && e.ax!=null && e.ax>0 && e.c5!=null && e.c5>0 && e.w_rs!=null && e.w_rs>=UV_MIN_RS)
     .sort((a,b)=>(b.t5_rv||0)-(a.t5_rv||0));
 
   // Render each box
