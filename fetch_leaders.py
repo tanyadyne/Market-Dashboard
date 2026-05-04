@@ -705,7 +705,20 @@ def compute_setup_adjustment(c, h, l, n):
 
     # ─── Evaluate criteria ────────────────────────────────────
     adj = 0.0
-    flags = 0  # Bitmask: G1=1, G2=2, G3=4, G4=8, S1=16, S2=32, S3=64, B1=128, B2=256
+    # Bitmask:
+    #   G1=1   EMA21>SMA50
+    #   G2=2   Price>EMA21
+    #   G3=4   Price>SMA50
+    #   G4=8   SMA50 rising
+    #   S1=16  Price>SMA100
+    #   S2=32  SMA50>SMA100
+    #   S3=64  SMA200 rising
+    #   B1=128 EMA9/EMA21 coiled (|EMA9-EMA21| < 0.5*ADR)
+    #   B2=256 Price>SMA200
+    #   X1=512 Price>EMA9          (added for Overview-tab medal tier check)
+    #   X2=1024 EMA9>EMA21         (added for Overview-tab medal tier check)
+    #   X3=2048 SMA50>SMA200       (added for Overview-tab medal tier check)
+    flags = 0
 
     # Gold criteria
     GOLD_BONUS = 1.5
@@ -768,6 +781,17 @@ def compute_setup_adjustment(c, h, l, n):
         if price > sma200:
             adj += BRONZE_BONUS
             flags |= 256
+
+    # ─── Overview-tab medal-tier flags (no scoring impact) ─────
+    # X1: Price > EMA9
+    if price > ema9:
+        flags |= 512
+    # X2: EMA9 > EMA21
+    if ema9 > ema21:
+        flags |= 1024
+    # X3: SMA50 > SMA200
+    if sma200 is not None and sma50 > sma200:
+        flags |= 2048
 
     return round(adj, 2), flags
 
