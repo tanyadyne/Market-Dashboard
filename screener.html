@@ -109,13 +109,17 @@ tr:hover{background:var(--bg3)}
 .ov-body::-webkit-scrollbar-track{background:transparent}
 .ov-body::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
 .ov-row{display:grid;grid-template-columns:38px 64px 1fr auto auto;gap:8px;align-items:center;padding:7px 14px;border-bottom:1px solid var(--bdr2);font-size:12px;cursor:pointer;transition:background .15s}
+.ov-row.has-extras{grid-template-columns:38px 64px 1fr auto auto auto auto}
 .ov-row:hover{background:var(--bg3)}
 .ov-row:last-child{border-bottom:none}
 .ov-colhdr{display:grid;grid-template-columns:38px 64px 1fr auto auto;gap:8px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--bdr);background:var(--bg2);position:sticky;top:0;z-index:2;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3)}
+.ov-colhdr.has-extras{grid-template-columns:38px 64px 1fr auto auto auto auto}
 .ov-colhdr>span{white-space:nowrap;overflow:hidden}
 .ov-colhdr .h-rk{text-align:right}
 .ov-colhdr .h-metric{text-align:right;min-width:54px}
 .ov-colhdr .h-medal{text-align:center;width:18px}
+.ov-extra.pct-up{color:#22c55e}
+.ov-extra.pct-dn{color:#ef4444}
 .ov-rk{color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:right}
 .ov-tk{font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1)}
 .ov-th{color:var(--t2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -127,7 +131,9 @@ tr:hover{background:var(--bg3)}
   .ov-grid{grid-template-columns:1fr;padding:10px;gap:10px}
   .ov-box{min-height:260px;max-height:none}
   .ov-row{grid-template-columns:30px 56px 1fr auto auto;gap:6px;padding:6px 10px;font-size:11px}
+  .ov-row.has-extras{grid-template-columns:30px 50px 1fr auto auto auto auto;gap:4px}
   .ov-colhdr{grid-template-columns:30px 56px 1fr auto auto;gap:6px;padding:5px 10px;font-size:8px}
+  .ov-colhdr.has-extras{grid-template-columns:30px 50px 1fr auto auto auto auto;gap:4px}
   .ov-title{font-size:11px}
 }
 .info-boxes{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
@@ -677,17 +683,46 @@ function medalIcon(m){
   return `<span class="ov-medal" title="${m}" style="color:${c};font-size:14px">●</span>`;
 }
 
+function getTop20Stats(tk, currentPrice){
+  // Returns {streak, pctSince} from HISTORY['d'][tk]['te'].
+  // streak  = number of dates in HISTORY.dates >= entry date (= consecutive days
+  //           the ticker has been in top 20)
+  // pctSince = (currentPrice - entryPrice) / entryPrice * 100
+  // Returns {streak: null, pctSince: null} when no entry exists, when history is
+  // missing, or when prices are unusable.
+  if(!HISTORY||!HISTORY.d||!HISTORY.d[tk])return {streak:null,pctSince:null};
+  const te=HISTORY.d[tk].te;
+  if(!te||!te.d||te.p==null)return {streak:null,pctSince:null};
+  const dates=HISTORY.dates||[];
+  // Streak: count of dates >= entry date. dates is chronological asc.
+  let streak=0;
+  for(let i=dates.length-1;i>=0;i--){
+    if(dates[i]>=te.d)streak++;
+    else break;
+  }
+  const pct=(currentPrice!=null && te.p>0)?((currentPrice-te.p)/te.p*100):null;
+  return {streak,pctSince:pct};
+}
+
 function renderOverviewRow(e, opts){
-  // opts: { extra: html-string for the right-most cell (e.g. RS badge or R.Vol multiplier) }
+  // opts: {
+  //   medal:    'gold'|'silver'|'bronze' or null  → coloured-disc badge
+  //   extra:    html-string for the right-most cell (e.g. RS badge or R.Vol)
+  //   preCells: html-string injected between medal and `extra` (used by Top 20 box
+  //             for Streak + % since added). When set, the row gets `.has-extras`
+  //             so the CSS grid widens to include the new cells.
+  // }
   const rk=e.w_rk||'—';
   const tk=esc(e.t);
   const th=esc(e.th||'—');
   const medal=opts.medal?medalIcon(opts.medal):'<span class="ov-medal"></span>';
-  return `<div class="ov-row" onclick="openProfile('${tk}')" title="${tk} — ${esc(e.n||'')}">
+  const cls=opts.preCells?'ov-row has-extras':'ov-row';
+  return `<div class="${cls}" onclick="openProfile('${tk}')" title="${tk} — ${esc(e.n||'')}">
     <span class="ov-rk">#${rk}</span>
     <span class="ov-tk">${tk}</span>
     <span class="ov-th">${th}</span>
     ${medal}
+    ${opts.preCells||''}
     ${opts.extra||''}
   </div>`;
 }
@@ -700,6 +735,21 @@ function rvolBadge(rv){
   // R.Vol stored as percent (e.g. 280 = 2.80x). Show as "2.8x".
   if(rv==null)return '<span class="ov-extra">—</span>';
   return `<span class="ov-extra">${(rv/100).toFixed(2)}x</span>`;
+}
+
+function streakCell(n){
+  // Days in top 20. Display "—" if no entry, otherwise the count. The history
+  // file caps at MAX_HISTORY_DAYS (90) so theoretical max is 90 — well above
+  // realistic streaks for most stocks.
+  if(n==null||n<=0)return '<span class="ov-extra">—</span>';
+  return `<span class="ov-extra">${n}d</span>`;
+}
+
+function pctSinceCell(pct){
+  if(pct==null)return '<span class="ov-extra">—</span>';
+  const cls=pct>0?'pct-up':pct<0?'pct-dn':'';
+  const sign=pct>0?'+':'';
+  return `<span class="ov-extra ${cls}">${sign}${pct.toFixed(1)}%</span>`;
 }
 
 function renderOverview(){
@@ -726,21 +776,24 @@ function renderOverview(){
     .sort((a,b)=>(a.e.w_rk||9999)-(b.e.w_rk||9999));
 
   // Unusual Volume: ax > 0, c5 > 0, w_rs > 40
-  // Sort by composite score that combines R.Vol with 1D weekly-rank improvement so
-  // a high-R.Vol stock with no rank movement (e.g. UMBF — vol up but going nowhere)
-  // ranks below a slightly-lower-R.Vol stock that actually jumped in the rankings.
-  // Negative rank deltas are clamped to 0 (they don't penalize — just don't add
-  // bonus weight). UV_RANK_WEIGHT controls how much positive rank-jumps boost
-  // priority: a +200 rank jump at weight=1.0 is worth 200 R.Vol points.
+  // Sort by composite score that combines trailing-5d R.Vol with 1D weekly-rank
+  // improvement so a high-volume stock with no rank movement (e.g. UMBF — vol up but
+  // going nowhere) ranks below a slightly-lower-volume stock that actually jumped in
+  // the rankings. Negative rank deltas are clamped to 0 (they don't penalize — just
+  // don't add bonus weight). UV_RANK_WEIGHT controls how much positive rank-jumps
+  // boost priority: a +200 rank jump at weight=1.0 is worth 200 R.Vol points.
+  //
+  // Uses t5_rv (rolling trailing-5-session R.Vol) instead of w_rv (week-to-date,
+  // which resets every Monday and is biased toward late-week comparisons).
   const UV_RANK_WEIGHT=1.0;
   const uvScore=e=>{
-    const rv=e.w_rv||0;
+    const rv=e.t5_rv||0;
     const rd=getRankDeltaVal(e.t);
     const bonus=(rd!=null && rd>0)?UV_RANK_WEIGHT*rd:0;
     return rv+bonus;
   };
   const uv=items
-    .filter(e=>e.w_rv!=null && e.ax!=null && e.ax>0 && e.c5!=null && e.c5>0 && e.w_rs!=null && e.w_rs>40)
+    .filter(e=>e.t5_rv!=null && e.ax!=null && e.ax>0 && e.c5!=null && e.c5>0 && e.w_rs!=null && e.w_rs>40)
     .sort((a,b)=>uvScore(b)-uvScore(a));
 
   // Render each box
@@ -751,17 +804,24 @@ function renderOverview(){
 
   // Per-box column headers. The 5-col grid is shared by all boxes so the header
   // structure mirrors the row structure. The medal slot is empty in non-VCP boxes.
-  const hdr=(metric,withMedal)=>
-    `<div class="ov-colhdr">
+  // The Top 20 box uses an extended 7-col grid (`.has-extras`) that adds Streak
+  // and "% since added" columns between the medal slot and the metric.
+  const hdr=(metric,withMedal,withExtras)=>
+    `<div class="ov-colhdr${withExtras?' has-extras':''}">
       <span class="h-rk">#</span>
       <span>Ticker</span>
       <span>Theme</span>
       <span class="h-medal">${withMedal?'Tier':''}</span>
+      ${withExtras?'<span class="h-metric">Streak</span><span class="h-metric">% Since</span>':''}
       <span class="h-metric">${metric}</span>
     </div>`;
 
-  elTop.innerHTML=hdr('RS',false)+(top.length
-    ?top.map(e=>renderOverviewRow(e,{extra:rsBadge(e.w_rs)})).join('')
+  elTop.innerHTML=hdr('RS',false,true)+(top.length
+    ?top.map(e=>{
+      const stats=getTop20Stats(e.t,e.p);
+      const pre=streakCell(stats.streak)+pctSinceCell(stats.pctSince);
+      return renderOverviewRow(e,{extra:rsBadge(e.w_rs),preCells:pre});
+    }).join('')
     :'<div class="ov-empty">No data.</div>');
   elBot.innerHTML=hdr('RS',false)+(bot.length
     ?bot.map(e=>renderOverviewRow(e,{extra:rsBadge(e.w_rs)})).join('')
@@ -770,7 +830,7 @@ function renderOverview(){
     ?vcp.map(x=>renderOverviewRow(x.e,{medal:x.medal,extra:rsBadge(x.e.w_rs)})).join('')
     :'<div class="ov-empty">No setups match right now.</div>');
   elUv.innerHTML=hdr('R.Vol',false)+(uv.length
-    ?uv.map(e=>renderOverviewRow(e,{extra:rvolBadge(e.w_rv)})).join('')
+    ?uv.map(e=>renderOverviewRow(e,{extra:rvolBadge(e.t5_rv)})).join('')
     :'<div class="ov-empty">No unusual volume right now.</div>');
 
   document.getElementById('ovCountTop').textContent=`${top.length}`;
