@@ -831,7 +831,7 @@ function renderOverview(){
     :'<div class="ov-empty">No setups match right now.</div>');
   elUv.innerHTML=hdr('R.Vol',false)+(uv.length
     ?uv.map(e=>renderOverviewRow(e,{extra:rvolBadge(e.t5_rv)})).join('')
-    :'<div class="ov-empty">No unusual volume right now.</div>');
+    :'<div class="ov-empty">Coming soon...</div>');
 
   document.getElementById('ovCountTop').textContent=`${top.length}`;
   document.getElementById('ovCountBot').textContent=`${bot.length}`;
