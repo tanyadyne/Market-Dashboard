@@ -33,7 +33,7 @@ MA_LENGTH = 20     # daily: SMA of deltas (smoothing)
 LOOKBACK_W = 20    # weekly: compute deltas for last 20 weeks
 MA_LENGTH_W = 12   # weekly: window length for recency-weighted average of deltas
 ATR_PERIOD = 14
-MAX_HISTORY_DAYS = 30
+MAX_HISTORY_DAYS = 90
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
@@ -901,6 +901,24 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     vols = [x for x in v if x is not None and x > 0]
     rvol = (vols[-1] / np.mean(vols[:-1][-20:])) if len(vols) > 1 and np.mean(vols[:-1][-20:]) > 0 else None
 
+    # ─── Trailing 5-day R.Vol (rolling, week-of-day-agnostic) ────────────────
+    # Unlike `w_rv` (week-to-date, resets every Monday), this is a rolling 5-session
+    # measure suitable for ranking "unusual volume" without bias toward late-week days.
+    # Numerator: sum of last 5 sessions' volumes
+    # Denominator: mean of all 5-day rolling sums over the prior 50 trading days
+    # Stored as percent × 100 (same convention as `rv`/`w_rv`): 2.5x → 250.
+    t5_rvol = None
+    if len(vols) >= 55:
+        try:
+            current_5d_sum = float(sum(vols[-5:]))
+            # 50 overlapping 5-day windows ending immediately before the current window.
+            historical_sums = [float(sum(vols[i:i + 5])) for i in range(-55, -5)]
+            baseline = float(np.mean(historical_sums)) if historical_sums else 0.0
+            if baseline > 0:
+                t5_rvol = current_5d_sum / baseline
+        except Exception:
+            t5_rvol = None
+
     # ─── Pine Script RS calculation (4-quarter weighted performance vs SPY) ──
     # Quarter weights: Q1 (most recent 63 days) = 50%, Q2 = 20%, Q3 = 15%, Q4 = 15%
     # rs_stock = 0.50*(px/px[-63]) + 0.20*(px/px[-126]) + 0.15*(px/px[-189]) + 0.15*(px/px[-252])
@@ -915,7 +933,9 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     # Need at least 63 common bars for Q1 calculation
     if len(common) < 63:
         _sa, _sf = compute_setup_adjustment(c, h, l, n)
-        return {"rv": round(rvol * 100) if rvol else None, "am": round(atr_mult * 100),
+        return {"rv": round(rvol * 100) if rvol else None,
+                "t5_rv": round(t5_rvol * 100) if t5_rvol else None,
+                "am": round(atr_mult * 100),
                 "ax": round(atr_ext * 100), "ch": round(change, 2),
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
@@ -1111,6 +1131,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
 
     return {
         "rv": round(rvol * 100) if rvol else None,
+        "t5_rv": round(t5_rvol * 100) if t5_rvol else None,
         "am": round(atr_mult * 100), "ax": round(atr_ext * 100),
         "ch": round(change, 2),
         "c5": round(c5, 2) if c5 is not None else None,
@@ -2221,6 +2242,8 @@ def main():
         pass
     elif not dates or dates[-1] != today_str:
         dates.append(today_str)
+        # Map ticker → result row for quick lookup when we set top20_entry below.
+        results_by_tk = {r["t"]: r for r in results}
         for r in results:
             tk = r["t"]
             if tk not in scores:
@@ -2232,6 +2255,31 @@ def main():
             while len(scores[tk]["wr"]) < len(dates) - 1:
                 scores[tk]["wr"].append(None)
             scores[tk]["wr"].append(r.get("w_rk"))
+
+        # ─── top20_entry tracking ────────────────────────────────────
+        # Captures the entry price + entry date when a stock enters the top 20 (by w_rk),
+        # and clears it when the stock drops out. Used by the Overview tab's Top 20 box
+        # to display a "Streak" (consecutive days in top 20) and "% since added".
+        # Same-day reruns intentionally don't touch this field — daily granularity.
+        IN_TOP20 = lambda rk: rk is not None and rk <= 20
+        for tk, entry in list(scores.items()):
+            wr_arr = entry.get("wr", [])
+            today_rk = wr_arr[-1] if wr_arr else None
+            yest_rk = wr_arr[-2] if len(wr_arr) >= 2 else None
+            r = results_by_tk.get(tk)
+            today_in = IN_TOP20(today_rk)
+            yest_in  = IN_TOP20(yest_rk)
+            if today_in and not yest_in:
+                # Fresh entry — capture price + date. Skip if we don't have a price
+                # for this ticker in today's results (e.g., dropped from universe).
+                if r is not None and r.get("p") is not None:
+                    entry["te"] = {"d": today_str, "p": r["p"]}
+            elif not today_in:
+                # Dropped out — clear entry if present.
+                if "te" in entry:
+                    del entry["te"]
+            # else: still in top 20 — leave existing entry untouched.
+
         # Trim to MAX_HISTORY_DAYS
         if len(dates) > MAX_HISTORY_DAYS:
             trim = len(dates) - MAX_HISTORY_DAYS
@@ -2240,7 +2288,7 @@ def main():
                 if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
                     scores[tk]["wr"] = scores[tk]["wr"][trim:]
     else:
-        # Update today's entry in place
+        # Update today's entry in place — does NOT update top20_entry (daily granularity).
         for r in results:
             tk = r["t"]
             if tk not in scores:
