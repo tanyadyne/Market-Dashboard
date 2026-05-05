@@ -107,7 +107,7 @@ tr:hover{background:var(--bg3)}
 .ov-copy:hover{background:var(--bg4);color:var(--t1);border-color:var(--bdr2)}
 .ov-copy:active{transform:translateY(1px)}
 .ov-copy.copied{background:#16a34a;color:#fff;border-color:#16a34a}
-.ov-body{flex:1;overflow-y:auto;padding:4px 0}
+.ov-body{flex:1;overflow-y:auto;padding:0 0 4px 0}
 .ov-body::-webkit-scrollbar{width:6px}
 .ov-body::-webkit-scrollbar-track{background:transparent}
 .ov-body::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
@@ -759,12 +759,12 @@ function rvolBadge(rv){
 }
 
 function streakCell(n){
-  // Days in top 20. Display "—" if no entry, "NEW!" for first-day entrants
+  // Days in top 20. Display "—" if no entry, "NEW" for first-day entrants
   // (streak=1), and the day count otherwise. The history file caps at
   // MAX_HISTORY_DAYS (90) so theoretical max is 90 — well above realistic
   // streaks for most stocks.
   if(n==null||n<=0)return '<span class="ov-extra">—</span>';
-  if(n===1)return '<span class="ov-extra streak-new">NEW!</span>';
+  if(n===1)return '<span class="ov-extra streak-new">NEW</span>';
   return `<span class="ov-extra">${n}d</span>`;
 }
 
