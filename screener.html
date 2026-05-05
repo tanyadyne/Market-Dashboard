@@ -121,8 +121,6 @@ tr:hover{background:var(--bg3)}
 .ov-colhdr>span:nth-child(3){text-align:left}  /* Theme — keep left-aligned */
 .ov-colhdr .h-metric{min-width:54px}
 .ov-colhdr .h-medal{width:60px}
-.ov-extra.pct-up{color:#22c55e}
-.ov-extra.pct-dn{color:#ef4444}
 .ov-rk{color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center;display:block}
 .ov-tk{font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1);text-align:center;display:block}
 .ov-th{color:var(--t2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -136,6 +134,7 @@ tr:hover{background:var(--bg3)}
 .ov-pill-gold{background:#f5b301;color:#3a2700}
 .ov-pill-silver{background:#9ca3af;color:#1a1c20}
 .ov-pill-bronze{background:#b45309;color:#fff5e8}
+.streak-new{color:#3b82f6;font-weight:700;letter-spacing:.3px}
 @media(max-width:768px){
   .ov-grid{grid-template-columns:1fr;padding:10px;gap:10px}
   .ov-box{min-height:260px;max-height:360px}
@@ -760,18 +759,23 @@ function rvolBadge(rv){
 }
 
 function streakCell(n){
-  // Days in top 20. Display "—" if no entry, otherwise the count. The history
-  // file caps at MAX_HISTORY_DAYS (90) so theoretical max is 90 — well above
-  // realistic streaks for most stocks.
+  // Days in top 20. Display "—" if no entry, "NEW!" for first-day entrants
+  // (streak=1), and the day count otherwise. The history file caps at
+  // MAX_HISTORY_DAYS (90) so theoretical max is 90 — well above realistic
+  // streaks for most stocks.
   if(n==null||n<=0)return '<span class="ov-extra">—</span>';
+  if(n===1)return '<span class="ov-extra streak-new">NEW!</span>';
   return `<span class="ov-extra">${n}d</span>`;
 }
 
-function pctSinceCell(pct){
-  if(pct==null)return '<span class="ov-extra">—</span>';
-  const cls=pct>0?'pct-up':pct<0?'pct-dn':'';
+function pctSinceCell(pct, streak){
+  // Show "—" when null OR when this is the stock's first day in top 20 (streak=1).
+  // On day 1, entry price equals today's price by construction, so % Since is
+  // mechanically 0.0% — that conveys no information, so we suppress it until
+  // tomorrow when the value becomes meaningful.
+  if(pct==null||streak===1)return '<span class="ov-extra">—</span>';
   const sign=pct>0?'+':'';
-  return `<span class="ov-extra ${cls}">${sign}${pct.toFixed(1)}%</span>`;
+  return `<span class="ov-extra ${chgClass(pct)}">${sign}${pct.toFixed(1)}%</span>`;
 }
 
 // Module-level cache of rendered ticker lists per box. Populated by renderOverview()
@@ -893,7 +897,7 @@ function renderOverview(){
   elTop.innerHTML=hdr('RS',false,true)+(top.length
     ?top.map(e=>{
       const stats=getTop20Stats(e.t,e.p);
-      const pre=streakCell(stats.streak)+pctSinceCell(stats.pctSince);
+      const pre=streakCell(stats.streak)+pctSinceCell(stats.pctSince,stats.streak);
       return renderOverviewRow(e,{extra:rsBadge(e.w_rs),preCells:pre});
     }).join('')
     :'<div class="ov-empty">No data.</div>');
