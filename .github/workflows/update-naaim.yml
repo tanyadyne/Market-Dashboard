@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install deps
-        run: pip install --retries 5 --timeout 60 requests
+        run: pip install --retries 5 --timeout 60 requests openpyxl
       - name: Run fetch_naaim.py
         run: python fetch_naaim.py
       - name: Commit and push
