@@ -140,7 +140,7 @@ document.addEventListener('click',function(e){
   <div class="bottom-row">
     <div class="naaim-box">
       <div class="chart-header naaim-header">
-        <span class="naaim-title-wrap">NAAIM Exposure Index<span id="naaim-updated"></span></span>
+        <span class="naaim-title-wrap">NAAIM Exposure Index</span>
         <span class="info-tip" tabindex="0" role="button" aria-label="About the NAAIM Exposure Index" onclick="toggleInfoTip(this,event)">
           <span class="info-tip-icon">i</span>
           <span class="info-tip-bubble">The NAAIM Exposure Index reflects the actual equity exposure of professional institutional managers and is widely used as a contrarian sentiment indicator to gauge market overheating or panic. The index is compiled by the National Association of Active Investment Managers (NAAIM) through a weekly survey conducted every Wednesday, collecting members' reported US equity exposure levels. The index ranges from −200% (double short) to +200% (double long). Values are calculated as the arithmetic average of all responses and are released on Thursdays.</span>
@@ -264,11 +264,6 @@ function loadNaaim(){
       document.getElementById('naaim-summary').style.display='flex';
       document.getElementById('naaim-latest').textContent=fmtNum(data.latest);
       document.getElementById('naaim-q1avg').textContent=fmtNum(data.q1_avg);
-      // Updated label
-      if(data.updated){
-        const d=new Date(data.updated);
-        document.getElementById('naaim-updated').textContent=`Updated ${d.toLocaleDateString('en-GB')}`;
-      }
       // Table: show newest-first, cap at 15 rows for the visible panel
       const tableRows=rows.slice().reverse().slice(0,15);
       let html='<table class="naaim-table"><thead><tr>'+
