@@ -2258,27 +2258,54 @@ def main():
     if skip_history_write:
         # Don't touch the history at all on weekends — read & re-write the file unchanged.
         pass
-    elif not dates or dates[-1] != today_str:
-        dates.append(today_str)
-        # Map ticker → result row for quick lookup when we set top20_entry below.
+    else:
+        is_new_day = not dates or dates[-1] != today_str
         results_by_tk = {r["t"]: r for r in results}
-        for r in results:
-            tk = r["t"]
-            if tk not in scores:
-                scores[tk] = {"wr": []}
-            if "wr" not in scores[tk]:
-                scores[tk]["wr"] = []
-            # Pad if this ticker is shorter than the dates array (joined the universe
-            # partway through the history window).
-            while len(scores[tk]["wr"]) < len(dates) - 1:
-                scores[tk]["wr"].append(None)
-            scores[tk]["wr"].append(r.get("w_rk"))
+        if is_new_day:
+            dates.append(today_str)
+            for r in results:
+                tk = r["t"]
+                if tk not in scores:
+                    scores[tk] = {"wr": []}
+                if "wr" not in scores[tk]:
+                    scores[tk]["wr"] = []
+                # Pad if this ticker is shorter than the dates array (joined the universe
+                # partway through the history window).
+                while len(scores[tk]["wr"]) < len(dates) - 1:
+                    scores[tk]["wr"].append(None)
+                scores[tk]["wr"].append(r.get("w_rk"))
+            # Trim to MAX_HISTORY_DAYS
+            if len(dates) > MAX_HISTORY_DAYS:
+                trim = len(dates) - MAX_HISTORY_DAYS
+                dates = dates[trim:]
+                for tk in scores:
+                    if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
+                        scores[tk]["wr"] = scores[tk]["wr"][trim:]
+        else:
+            # Same-day update: refresh today's wr in place.
+            for r in results:
+                tk = r["t"]
+                if tk not in scores:
+                    scores[tk] = {"wr": []}
+                if "wr" not in scores[tk]:
+                    scores[tk]["wr"] = []
+                if len(scores[tk]["wr"]) == len(dates):
+                    scores[tk]["wr"][-1] = r.get("w_rk")
+                else:
+                    while len(scores[tk]["wr"]) < len(dates) - 1:
+                        scores[tk]["wr"].append(None)
+                    scores[tk]["wr"].append(r.get("w_rk"))
 
         # ─── top20_entry tracking ────────────────────────────────────
         # Captures the entry price + entry date when a stock enters the top 20 (by w_rk),
         # and clears it when the stock drops out. Used by the Overview tab's Top 20 box
         # to display a "Streak" (consecutive days in top 20) and "% since added".
-        # Same-day reruns intentionally don't touch this field — daily granularity.
+        #
+        # Runs after wr is updated in BOTH the new-day and same-day branches so that:
+        #   - Newly-deployed te-tracking populates entries even when the day's first
+        #     run already happened with older code (same-day branch).
+        #   - Same-day reruns keep `te` fresh if a stock crossed in/out of top 20
+        #     intraday.
         #
         # BACKFILL (Option C): when a stock is currently in top 20 but has no `te`
         # (e.g., this code is newly deployed and the stock has been in top 20 for a
@@ -2320,28 +2347,6 @@ def main():
                     streak_start_date = dates[streak_start_idx] if streak_start_idx < len(dates) else today_str
                     entry["te"] = {"d": streak_start_date, "p": r["p"]}
             # else: still in top 20 with an existing entry — leave untouched.
-
-        # Trim to MAX_HISTORY_DAYS
-        if len(dates) > MAX_HISTORY_DAYS:
-            trim = len(dates) - MAX_HISTORY_DAYS
-            dates = dates[trim:]
-            for tk in scores:
-                if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
-                    scores[tk]["wr"] = scores[tk]["wr"][trim:]
-    else:
-        # Update today's entry in place — does NOT update top20_entry (daily granularity).
-        for r in results:
-            tk = r["t"]
-            if tk not in scores:
-                scores[tk] = {"wr": []}
-            if "wr" not in scores[tk]:
-                scores[tk]["wr"] = []
-            if len(scores[tk]["wr"]) == len(dates):
-                scores[tk]["wr"][-1] = r.get("w_rk")
-            else:
-                while len(scores[tk]["wr"]) < len(dates) - 1:
-                    scores[tk]["wr"].append(None)
-                scores[tk]["wr"].append(r.get("w_rk"))
 
     score_history = {"dates": dates, "d": scores}
     with open("leaders_score_history.json", "w") as f:
