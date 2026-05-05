@@ -2190,12 +2190,24 @@ def main():
     # would otherwise make rank movements jumpy. With ~1000 stocks crammed into 100
     # display buckets, ties dominated tiebreaks; sorting by the underlying float means
     # rank changes are smooth and proportional to actual w_fr changes.
-    w_sorted = sorted(results, key=lambda x: (x.get("_w_rs_raw") if x.get("_w_rs_raw") is not None else -999,
+    #
+    # Stocks with w_rs == None (typically caused by yfinance returning no/empty weekly
+    # data for a specific ticker) are excluded from the ranking entirely and assigned
+    # w_rk = None. Otherwise their null score tiebreaks to the lowest possible value
+    # and pollutes the Bottom 20 list with stocks that are actually unranked.
+    rankable = [r for r in results if r.get("_w_rs_raw") is not None]
+    unrankable = [r for r in results if r.get("_w_rs_raw") is None]
+    w_sorted = sorted(rankable, key=lambda x: (x["_w_rs_raw"],
                                                 x.get("w_fr") if x.get("w_fr") is not None else -999,
                                                 x.get("c5") if x.get("c5") is not None else -999), reverse=True)
     w_rank_map = {r["t"]: i + 1 for i, r in enumerate(w_sorted)}
-    for r in results:
-        r["w_rk"] = w_rank_map.get(r["t"], len(results))
+    for r in rankable:
+        r["w_rk"] = w_rank_map[r["t"]]
+    for r in unrankable:
+        r["w_rk"] = None
+    if unrankable:
+        unranked_tks = sorted(r["t"] for r in unrankable)
+        print(f"  Weekly rank: {len(unrankable)} stock(s) unranked due to missing w_rs: {unranked_tks}")
 
     # ─── Rank history (rolling weekly snapshots) ──────────────
     # IMPORTANT: use US EASTERN date, not UTC date. The market trades on ET, and this
