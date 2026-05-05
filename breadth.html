@@ -39,10 +39,20 @@ body[data-theme="light"] .chart-box,body[data-theme="light"] .sheet-box{backgrou
 .sheet-embed{width:100%;height:600px;border:none;background:#fff;border-radius:0 0 10px 10px}
 .bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
 .bottom-row .sheet-box{margin-top:0}
-.placeholder-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-height:200px}
-.placeholder-body{flex:1;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase}
-body[data-theme="light"] .placeholder-box{background:#ffffff!important;border-color:#e5e7eb!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-body[data-theme="light"] .placeholder-body{color:#9ca3af!important}
+.naaim-chart-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.naaim-chart-header{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.naaim-chart-wrap{flex:1;padding:8px 12px 12px;min-height:0;display:flex}
+.naaim-chart{flex:1;width:100%;min-height:280px;position:relative}
+.naaim-chart svg{width:100%;height:100%;display:block}
+.yr-toggle{display:inline-flex;gap:2px;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:2px}
+.yr-btn{background:none;border:none;color:#666;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.5px;padding:4px 8px;border-radius:4px;cursor:pointer;transition:.15s;text-transform:none;line-height:1}
+.yr-btn:hover{color:#bbb}
+.yr-btn.active{background:#2a2a2a;color:#e8e8e8}
+body[data-theme="light"] .naaim-chart-box{background:#ffffff!important;border-color:#e5e7eb!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+body[data-theme="light"] .yr-toggle{background:#f3f4f6;border-color:#e5e7eb}
+body[data-theme="light"] .yr-btn{color:#6b7280}
+body[data-theme="light"] .yr-btn:hover{color:#374151}
+body[data-theme="light"] .yr-btn.active{background:#ffffff;color:#111827;box-shadow:0 1px 2px rgba(0,0,0,0.08)}
 .naaim-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 .naaim-summary{display:flex;gap:20px;padding:10px 16px 12px;border-bottom:1px solid #1f1f1f}
 .naaim-stat{display:flex;flex-direction:column;gap:2px}
@@ -160,9 +170,14 @@ document.addEventListener('click',function(e){
         <div id="naaim-content" class="naaim-placeholder">Loading NAAIM data...</div>
       </div>
     </div>
-    <div class="placeholder-box">
-      <div class="chart-header">Placeholder</div>
-      <div class="placeholder-body">TBD</div>
+    <div class="naaim-chart-box">
+      <div class="chart-header naaim-chart-header">
+        <span>NAAIM Number Over Time</span>
+        <div class="yr-toggle" id="naaim-yr-toggle"></div>
+      </div>
+      <div class="naaim-chart-wrap">
+        <div id="naaim-chart" class="naaim-chart"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -229,12 +244,22 @@ function fmtNum(n,d=2){
   if(n==null||isNaN(n))return'—';
   return Number(n).toFixed(d);
 }
+// ─── Year-range selector state ────────────────────────────
+let naaimRowsAll=[];
+let naaimYears=2;
+
 function loadNaaim(){
   fetch('naaim.json?_='+Date.now())
     .then(r=>r.ok?r.json():Promise.reject())
     .then(data=>{
       const rows=data.rows||[];
       if(!rows.length){document.getElementById('naaim-content').textContent='No NAAIM data available';return;}
+      // Normalize to oldest-first (the old fetcher returned newest-first; the new one returns oldest-first)
+      if(rows.length>=2){
+        const d0=parseNaaimDate(rows[0].date),d1=parseNaaimDate(rows[rows.length-1].date);
+        if(d0>d1)rows.reverse();
+      }
+      naaimRowsAll=rows;
       // Summary
       document.getElementById('naaim-summary').style.display='flex';
       document.getElementById('naaim-latest').textContent=fmtNum(data.latest);
@@ -244,11 +269,12 @@ function loadNaaim(){
         const d=new Date(data.updated);
         document.getElementById('naaim-updated').textContent=`Updated ${d.toLocaleDateString('en-GB')}`;
       }
-      // Build table
+      // Table: show newest-first, cap at 15 rows for the visible panel
+      const tableRows=rows.slice().reverse().slice(0,15);
       let html='<table class="naaim-table"><thead><tr>'+
         '<th>Date</th><th>Mean</th><th>Bear</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Bull</th><th>Dev</th>'+
         '</tr></thead><tbody>';
-      for(const r of rows){
+      for(const r of tableRows){
         html+=`<tr>
           <td>${r.date||'—'}</td>
           <td>${fmtNum(r.mean)}</td>
@@ -262,11 +288,156 @@ function loadNaaim(){
       }
       html+='</tbody></table>';
       document.getElementById('naaim-content').outerHTML=html;
+      // Build year toggle + chart
+      buildYearToggle();
+      renderNaaimChart();
     })
     .catch(()=>{
       document.getElementById('naaim-content').innerHTML='<div style="padding:20px;text-align:center;font-size:11px">NAAIM data not yet available.<br>Run the "Update NAAIM Exposure Index" workflow.</div>';
+      document.getElementById('naaim-chart').innerHTML='<div style="padding:40px 20px;text-align:center;font-size:11px;color:#666">No data</div>';
     });
 }
+
+// ─── Year-range toggle ────────────────────────────────────
+function buildYearToggle(){
+  const el=document.getElementById('naaim-yr-toggle');
+  if(!el||el.dataset.built)return;
+  const opts=[1,2,3,4,5];
+  el.innerHTML=opts.map(y=>`<button class="yr-btn${y===naaimYears?' active':''}" data-yr="${y}" onclick="setNaaimYears(${y})">${y}Y</button>`).join('');
+  el.dataset.built='1';
+}
+function setNaaimYears(y){
+  naaimYears=y;
+  document.querySelectorAll('#naaim-yr-toggle .yr-btn').forEach(b=>{
+    b.classList.toggle('active',Number(b.dataset.yr)===y);
+  });
+  renderNaaimChart();
+}
+
+// ─── NAAIM line chart (theme-aware SVG) ───────────────────
+function parseNaaimDate(s){
+  // "MM/DD/YYYY"
+  const p=s.split('/');
+  return new Date(Date.UTC(+p[2],+p[0]-1,+p[1]));
+}
+function renderNaaimChart(){
+  const host=document.getElementById('naaim-chart');
+  if(!host||!naaimRowsAll.length)return;
+  const isDark=(document.body.getAttribute('data-theme')||'light')==='dark';
+  const lineColor=isDark?'#5b9dff':'#2f6fed';
+  const axisColor=isDark?'#666':'#9ca3af';
+  const labelColor=isDark?'#888':'#4b5563';
+  const gridColor=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+  const refOver=isDark?'rgba(239,68,68,0.45)':'rgba(220,38,38,0.55)';
+  const refUnder=isDark?'rgba(34,197,94,0.45)':'rgba(22,163,74,0.55)';
+  const refLabel=isDark?'#999':'#6b7280';
+
+  // Filter by year window (inclusive of cutoff)
+  const lastDate=parseNaaimDate(naaimRowsAll[naaimRowsAll.length-1].date);
+  const cutoff=new Date(Date.UTC(lastDate.getUTCFullYear()-naaimYears,lastDate.getUTCMonth(),lastDate.getUTCDate()));
+  const data=naaimRowsAll.filter(r=>parseNaaimDate(r.date)>=cutoff && r.mean!=null);
+  if(data.length<2){host.innerHTML='<div style="padding:40px 20px;text-align:center;font-size:11px;color:#666">Not enough data</div>';return;}
+
+  // Determine viewport-driven dimensions
+  const W=host.clientWidth||600;
+  const H=Math.max(host.clientHeight||300,260);
+  const padL=38,padR=14,padT=14,padB=28;
+  const plotW=W-padL-padR;
+  const plotH=H-padT-padB;
+
+  // Y scale: pad around min/max, snap to nice 20s, include 0 and 120 minimums
+  let yMin=Math.min(...data.map(r=>r.mean));
+  let yMax=Math.max(...data.map(r=>r.mean));
+  yMin=Math.min(yMin,0);
+  yMax=Math.max(yMax,120);
+  // Round to nearest 20
+  yMin=Math.floor(yMin/20)*20;
+  yMax=Math.ceil(yMax/20)*20;
+  const yRange=yMax-yMin||1;
+
+  const xs=data.map(r=>parseNaaimDate(r.date).getTime());
+  const xMin=xs[0],xMax=xs[xs.length-1];
+  const xRange=xMax-xMin||1;
+  const xPx=t=>padL+((t-xMin)/xRange)*plotW;
+  const yPx=v=>padT+(1-(v-yMin)/yRange)*plotH;
+
+  // Build line path
+  let d='';
+  for(let i=0;i<data.length;i++){
+    const x=xPx(xs[i]).toFixed(2);
+    const y=yPx(data[i].mean).toFixed(2);
+    d+=(i===0?'M':'L')+x+' '+y+' ';
+  }
+
+  // Y-axis ticks at every 20
+  const yTicks=[];
+  for(let v=yMin;v<=yMax;v+=20)yTicks.push(v);
+
+  // X-axis ticks: one per Jan 1 within range, plus first and last if sparse
+  const months=['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const yrStart=new Date(xMin).getUTCFullYear();
+  const yrEnd=new Date(xMax).getUTCFullYear();
+  const xTicks=[];
+  // For ranges <=2y, mark every quarter; for 3-5y mark every 6 months; for >=4y, mark Jan only
+  let stepMonths;
+  if(naaimYears<=1)stepMonths=2;
+  else if(naaimYears<=2)stepMonths=3;
+  else if(naaimYears<=3)stepMonths=4;
+  else stepMonths=6;
+  for(let y=yrStart;y<=yrEnd;y++){
+    for(let m=0;m<12;m+=stepMonths){
+      const t=Date.UTC(y,m,1);
+      if(t>=xMin&&t<=xMax){
+        const isJan=(m===0);
+        xTicks.push({t,label:isJan?String(y):months[m]});
+      }
+    }
+  }
+
+  // Reference lines at 100 (overbought) and 40 (oversold) — only render if in range
+  const refLines=[];
+  if(100>=yMin&&100<=yMax)refLines.push({v:100,color:refOver,label:'100'});
+  if(40>=yMin&&40<=yMax)refLines.push({v:40,color:refUnder,label:'40'});
+
+  let svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">`;
+  // Y-axis grid + labels
+  for(const v of yTicks){
+    const y=yPx(v).toFixed(2);
+    svg+=`<line x1="${padL}" y1="${y}" x2="${padL+plotW}" y2="${y}" stroke="${gridColor}" stroke-width="1"/>`;
+    svg+=`<text x="${padL-6}" y="${(yPx(v)+3.5).toFixed(2)}" fill="${labelColor}" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="end">${v}</text>`;
+  }
+  // X-axis labels (no vertical gridlines, just baseline)
+  svg+=`<line x1="${padL}" y1="${padT+plotH}" x2="${padL+plotW}" y2="${padT+plotH}" stroke="${axisColor}" stroke-width="1" opacity="0.4"/>`;
+  // Dedupe x-tick labels by position (avoid overlap when many years compressed)
+  const seenX=new Set();
+  for(const tk of xTicks){
+    const x=xPx(tk.t);
+    const key=Math.round(x/30);
+    if(seenX.has(key))continue;
+    seenX.add(key);
+    svg+=`<text x="${x.toFixed(2)}" y="${(padT+plotH+15).toFixed(2)}" fill="${labelColor}" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="middle">${tk.label}</text>`;
+  }
+  // Reference lines
+  for(const rl of refLines){
+    const y=yPx(rl.v).toFixed(2);
+    svg+=`<line x1="${padL}" y1="${y}" x2="${padL+plotW}" y2="${y}" stroke="${rl.color}" stroke-width="1" stroke-dasharray="4 4"/>`;
+    svg+=`<text x="${padL+plotW-2}" y="${(yPx(rl.v)-3).toFixed(2)}" fill="${refLabel}" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="end" opacity="0.85">${rl.label}</text>`;
+  }
+  // Line
+  svg+=`<path d="${d}" fill="none" stroke="${lineColor}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+  svg+=`</svg>`;
+  host.innerHTML=svg;
+}
+
+// Re-render chart on theme change + window resize
+const _origToggleTheme=toggleTheme;
+toggleTheme=function(){_origToggleTheme();renderNaaimChart();};
+let _resizeTimer=null;
+window.addEventListener('resize',()=>{
+  clearTimeout(_resizeTimer);
+  _resizeTimer=setTimeout(renderNaaimChart,150);
+});
+
 loadNaaim();
 </script>
 </body>
