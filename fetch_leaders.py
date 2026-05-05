@@ -2279,6 +2279,15 @@ def main():
         # and clears it when the stock drops out. Used by the Overview tab's Top 20 box
         # to display a "Streak" (consecutive days in top 20) and "% since added".
         # Same-day reruns intentionally don't touch this field — daily granularity.
+        #
+        # BACKFILL (Option C): when a stock is currently in top 20 but has no `te`
+        # (e.g., this code is newly deployed and the stock has been in top 20 for a
+        # while), walk backwards through wr_arr to find the start of the unbroken
+        # streak of wr<=20 ending today, and seed `te.d` to that date. The price
+        # field is set to today's price — historical prices aren't stored, so % Since
+        # will start from 0 today and grow naturally going forward. (You can patch
+        # `te.p` to a true historical entry price by editing leaders_score_history.json
+        # directly if you want % Since accurate from day one.)
         IN_TOP20 = lambda rk: rk is not None and rk <= 20
         for tk, entry in list(scores.items()):
             wr_arr = entry.get("wr", [])
@@ -2296,7 +2305,21 @@ def main():
                 # Dropped out — clear entry if present.
                 if "te" in entry:
                     del entry["te"]
-            # else: still in top 20 — leave existing entry untouched.
+            elif "te" not in entry:
+                # In top 20, no entry recorded → backfill. Walk backwards through
+                # wr_arr to find the start of the current unbroken streak.
+                if r is not None and r.get("p") is not None:
+                    streak_start_idx = len(wr_arr) - 1
+                    for i in range(len(wr_arr) - 2, -1, -1):
+                        if IN_TOP20(wr_arr[i]):
+                            streak_start_idx = i
+                        else:
+                            break
+                    # streak_start_idx now points to the earliest known day this stock
+                    # has been continuously in top 20. Map to a date.
+                    streak_start_date = dates[streak_start_idx] if streak_start_idx < len(dates) else today_str
+                    entry["te"] = {"d": streak_start_date, "p": r["p"]}
+            # else: still in top 20 with an existing entry — leave untouched.
 
         # Trim to MAX_HISTORY_DAYS
         if len(dates) > MAX_HISTORY_DAYS:
