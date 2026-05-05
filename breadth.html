@@ -39,6 +39,10 @@ body[data-theme="light"] .chart-box,body[data-theme="light"] .sheet-box{backgrou
 .sheet-embed{width:100%;height:600px;border:none;background:#fff;border-radius:0 0 10px 10px}
 .bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
 .bottom-row .sheet-box{margin-top:0}
+.placeholder-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-height:200px}
+.placeholder-body{flex:1;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase}
+body[data-theme="light"] .placeholder-box{background:#ffffff!important;border-color:#e5e7eb!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+body[data-theme="light"] .placeholder-body{color:#9ca3af!important}
 .naaim-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 .naaim-summary{display:flex;gap:20px;padding:10px 16px 12px;border-bottom:1px solid #1f1f1f}
 .naaim-stat{display:flex;flex-direction:column;gap:2px}
@@ -116,10 +120,6 @@ function toggleTheme(){
     </div>
   </div>
   <div class="bottom-row">
-    <div class="sheet-box">
-      <div class="chart-header">Stockbee Market Monitor</div>
-      <iframe class="sheet-embed" src="https://docs.google.com/spreadsheet/pub?key=0Am_cU8NLIU20dEhiQnVHN3Nnc3B1S3J6eGhKZFo0N3c&output=html&widget=true" frameborder="0" scrolling="yes"></iframe>
-    </div>
     <div class="naaim-box">
       <div class="chart-header">NAAIM Exposure Index<span id="naaim-updated"></span></div>
       <div class="naaim-summary" id="naaim-summary" style="display:none">
@@ -129,6 +129,10 @@ function toggleTheme(){
       <div class="naaim-table-wrap">
         <div id="naaim-content" class="naaim-placeholder">Loading NAAIM data...</div>
       </div>
+    </div>
+    <div class="placeholder-box">
+      <div class="chart-header">Placeholder</div>
+      <div class="placeholder-body">TBD</div>
     </div>
   </div>
 </div>
