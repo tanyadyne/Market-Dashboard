@@ -37,7 +37,7 @@ body[data-theme="light"] .chart-box,body[data-theme="light"] .sheet-box{backgrou
 .chart-body-tall{height:420px;position:relative}
 .sheet-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden;margin-top:16px}
 .sheet-embed{width:100%;height:600px;border:none;background:#fff;border-radius:0 0 10px 10px}
-.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .bottom-row .sheet-box{margin-top:0}
 .naaim-chart-box{background:#111111;border:1px solid #1f1f1f;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 .naaim-chart-header{display:flex;align-items:center;gap:8px;justify-content:space-between}
@@ -58,9 +58,9 @@ body[data-theme="light"] .yr-btn.active{background:#ffffff;color:#111827;box-sha
 .naaim-stat{display:flex;flex-direction:column;gap:2px}
 .naaim-stat-label{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace}
 .naaim-stat-val{font-size:20px;font-weight:700;color:#e8e8e8;font-family:'JetBrains Mono',monospace}
-.naaim-table-wrap{overflow:auto;max-height:530px}
+.naaim-table-wrap{overflow:auto;max-height:530px;padding:0 14px 14px}
 .naaim-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px}
-.naaim-table th{position:sticky;top:0;background:#1a1a1a;color:#888;font-size:9px;text-transform:uppercase;letter-spacing:.8px;padding:8px 6px;text-align:right;font-weight:600;border-bottom:1px solid #2a2a2a;white-space:nowrap}
+.naaim-table th{position:sticky;top:0;background:#111111;color:#888;font-size:9px;text-transform:uppercase;letter-spacing:.8px;padding:10px 6px 8px;text-align:right;font-weight:600;border-bottom:1px solid #2a2a2a;white-space:nowrap}
 .naaim-table th:first-child{text-align:left}
 .naaim-table td{padding:7px 6px;border-bottom:1px solid #1a1a1a;text-align:right;color:#d0d0d0}
 .naaim-table td:first-child{text-align:left;color:#888;font-size:10px}
@@ -85,7 +85,7 @@ body[data-theme="light"] .sheet-box,body[data-theme="light"] .naaim-box{backgrou
 body[data-theme="light"] .naaim-summary{border-bottom-color:#eef0f3!important}
 body[data-theme="light"] .naaim-stat-label{color:#6b7280!important}
 body[data-theme="light"] .naaim-stat-val{color:#111827!important}
-body[data-theme="light"] .naaim-table th{background:#f3f4f6!important;color:#4b5563!important;border-bottom-color:#e5e7eb!important}
+body[data-theme="light"] .naaim-table th{background:#ffffff!important;color:#4b5563!important;border-bottom-color:#e5e7eb!important}
 body[data-theme="light"] .naaim-table td{color:#111827!important;border-bottom-color:#eef0f3!important}
 body[data-theme="light"] .naaim-table td:first-child{color:#6b7280!important}
 body[data-theme="light"] .naaim-table tbody tr:hover{background:#f9fafb!important}
@@ -137,22 +137,6 @@ document.addEventListener('click',function(e){
 });
 </script>
 <div class="content">
-  <div class="chart-row">
-    <div class="chart-box">
-      <div class="chart-header">Stocks above 5 SMA<span>Overbought: 90 · Oversold: 10</span></div>
-      <div class="chart-body" id="chart-s5fd"></div>
-    </div>
-    <div class="chart-box">
-      <div class="chart-header">Stocks above 50 SMA<span>Overbought: 70 · Oversold: 20</span></div>
-      <div class="chart-body" id="chart-mmfi"></div>
-    </div>
-  </div>
-  <div class="chart-full">
-    <div class="chart-box">
-      <div class="chart-header">Stocks above 200 SMA<span>Overbought: 70 · Oversold: 20</span></div>
-      <div class="chart-body-tall" id="chart-mmth"></div>
-    </div>
-  </div>
   <div class="bottom-row">
     <div class="naaim-box">
       <div class="chart-header naaim-header">
@@ -178,6 +162,22 @@ document.addEventListener('click',function(e){
       <div class="naaim-chart-wrap">
         <div id="naaim-chart" class="naaim-chart"></div>
       </div>
+    </div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-box">
+      <div class="chart-header">Stocks above 5 SMA<span>Overbought: 90 · Oversold: 10</span></div>
+      <div class="chart-body" id="chart-s5fd"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-header">Stocks above 50 SMA<span>Overbought: 70 · Oversold: 20</span></div>
+      <div class="chart-body" id="chart-mmfi"></div>
+    </div>
+  </div>
+  <div class="chart-full">
+    <div class="chart-box">
+      <div class="chart-header">Stocks above 200 SMA<span>Overbought: 70 · Oversold: 20</span></div>
+      <div class="chart-body-tall" id="chart-mmth"></div>
     </div>
   </div>
 </div>
