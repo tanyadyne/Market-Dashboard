@@ -69,12 +69,12 @@ body[data-theme="light"] .yr-btn.active{background:#ffffff;color:#111827;box-sha
 .naaim-header{display:flex;align-items:center;gap:8px}
 .naaim-title-wrap{flex:1;min-width:0}
 .info-tip{position:relative;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;cursor:help;outline:none}
-.info-tip-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid #3a3a3a;background:#1a1a1a;color:#888;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;font-style:italic;line-height:1;text-transform:none;letter-spacing:0;transition:.15s}
-.info-tip:hover .info-tip-icon,.info-tip:focus .info-tip-icon,.info-tip.open .info-tip-icon{background:#2a2a2a;color:#e8e8e8;border-color:#555}
+.info-tip-icon{display:block;width:16px;height:16px;color:#888;transition:color .15s}
+.info-tip:hover .info-tip-icon,.info-tip:focus .info-tip-icon,.info-tip.open .info-tip-icon{color:#e8e8e8}
 .info-tip-bubble{position:absolute;top:calc(100% + 8px);right:0;width:320px;max-width:min(320px,80vw);padding:12px 14px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;color:#d0d0d0;font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:400;letter-spacing:0;text-transform:none;line-height:1.5;text-align:left;box-shadow:0 8px 24px rgba(0,0,0,0.5);opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s;z-index:100;pointer-events:none}
 .info-tip:hover .info-tip-bubble,.info-tip:focus .info-tip-bubble,.info-tip.open .info-tip-bubble{opacity:1;visibility:visible;transform:translateY(0)}
-body[data-theme="light"] .info-tip-icon{background:#f3f4f6;border-color:#d1d5db;color:#6b7280}
-body[data-theme="light"] .info-tip:hover .info-tip-icon,body[data-theme="light"] .info-tip:focus .info-tip-icon,body[data-theme="light"] .info-tip.open .info-tip-icon{background:#e5e7eb;color:#111827;border-color:#9ca3af}
+body[data-theme="light"] .info-tip-icon{color:#374151}
+body[data-theme="light"] .info-tip:hover .info-tip-icon,body[data-theme="light"] .info-tip:focus .info-tip-icon,body[data-theme="light"] .info-tip.open .info-tip-icon{color:#000000}
 body[data-theme="light"] .info-tip-bubble{background:#ffffff;border-color:#e5e7eb;color:#374151;box-shadow:0 8px 24px rgba(0,0,0,0.12)}
 @media(hover:none){
   .info-tip{cursor:pointer}
@@ -142,7 +142,7 @@ document.addEventListener('click',function(e){
       <div class="chart-header naaim-header">
         <span class="naaim-title-wrap">NAAIM Exposure Index</span>
         <span class="info-tip" tabindex="0" role="button" aria-label="About the NAAIM Exposure Index" onclick="toggleInfoTip(this,event)">
-          <span class="info-tip-icon">i</span>
+          <svg class="info-tip-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.25"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></svg>
           <span class="info-tip-bubble">The NAAIM Exposure Index reflects the actual equity exposure of professional institutional managers and is widely used as a contrarian sentiment indicator to gauge market overheating or panic. The index is compiled by the National Association of Active Investment Managers (NAAIM) through a weekly survey conducted every Wednesday, collecting members' reported US equity exposure levels. The index ranges from −200% (double short) to +200% (double long). Values are calculated as the arithmetic average of all responses and are released on Thursdays.</span>
         </span>
       </div>
