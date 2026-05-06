@@ -39,7 +39,7 @@ MAX_HISTORY_DAYS = 90
 CSV_EXTRAS = [
     "ACN","AEHR","ALAB","APO","ARES","ARM","AXTI","BIRD","BP","BRK-B","CAR",
     "ENS","GOOG","LAC","LNG","NOK","NVO","OWL","RDDT","RIG","SMCI","SNAP","SNDK","STX","WDC",
-    "WOLF", "BB", "CRML", "OUST", "RCAT",
+    "WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM",
 ]
 
 # MANUAL_INCLUDE — tickers that bypass all filtering (liquidity, market cap, pharma/biotech).
@@ -48,7 +48,7 @@ CSV_EXTRAS = [
 # they'll be excluded for that reason. They must also appear in CSV_EXTRAS (or an ETF
 # holding) so they reach the universe in the first place.
 MANUAL_INCLUDE = {
-    "LAC", "ENS","WOLF", "BB", "CRML", "OUST", "RCAT",
+    "LAC", "ENS","WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM",
 }
 
 # MANUAL_EXCLUDE — tickers dropped from the universe before any filtering or data
