@@ -34,8 +34,10 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 [data-theme="light"] .tab-btn.active{background:#e5e7eb;color:#111827;border-color:#9ca3af}
 [data-view="mobile"] .tab-strip{padding:10px 8px 8px;gap:4px;flex-wrap:wrap}
 [data-view="mobile"] .tab-btn{padding:8px 18px;font-size:11px;letter-spacing:.3px}
-/* Overview tab content */
-.overview-wrap{padding:20px;max-width:1400px;margin:0 auto}
+/* Overview tab content. The body is height-locked (height:100vh; overflow:hidden) for
+   the table layout, so the Overview wrapper needs flex:1 + its own overflow-y:auto
+   to handle scrolling — same pattern as .tw uses for the RS Ranking table. */
+.overview-wrap{padding:20px;max-width:1400px;margin:0 auto;flex:1;min-height:0;overflow-y:auto;width:100%;box-sizing:border-box}
 .ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .ov-box{border:1px solid var(--bdr);border-radius:10px;background:var(--bg2);overflow:hidden}
 [data-theme="light"] .ov-box{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
