@@ -41,6 +41,10 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 [data-theme="light"] .ov-box{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .ov-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bdr2);background:var(--bg3)}
 .ov-title{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t2)}
+.ov-copy{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--t2);background:var(--bg2);border:1px solid var(--bdr);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:inherit;transition:all .15s}
+.ov-copy:hover{background:var(--bg4);color:var(--t1);border-color:var(--bdr2)}
+.ov-copy:active{transform:translateY(1px)}
+.ov-copy.copied{background:#16a34a;color:#fff;border-color:#16a34a}
 .ov-body{padding:6px 0;max-height:520px;overflow-y:auto}
 .ov-row{display:grid;grid-template-columns:34px 70px 1fr 56px 60px;gap:6px;padding:7px 14px;font-size:12px;align-items:center;border-bottom:1px solid var(--bdr2)}
 .ov-row:last-child{border-bottom:none}
@@ -55,6 +59,9 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .ov-empty{padding:20px;text-align:center;color:var(--t4);font-size:11px;font-style:italic}
 [data-view="mobile"] .ov-grid{grid-template-columns:1fr}
 [data-view="mobile"] .ov-row{grid-template-columns:30px 60px 1fr 50px 52px;font-size:11px;padding:6px 10px}
+/* Mobile: remove internal scroll on each ov-body so the whole page scrolls naturally
+   instead of the touch being trapped inside the cards. */
+[data-view="mobile"] .ov-body{max-height:none;overflow-y:visible}
 .pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#000;transition:background .25s ease;flex-shrink:0}
 [data-theme="light"] .pill-toggle{background:#e0e0e0;border-color:#cbd5e1}
 .pill-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.3);left:32px}
@@ -273,19 +280,19 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
 <div class="overview-wrap" id="overviewTab" style="display:none">
   <div class="ov-grid">
     <div class="ov-box">
-      <div class="ov-hdr"><span class="ov-title">Top 10 Themes (Daily)</span></div>
+      <div class="ov-hdr"><span class="ov-title">Top 10 Themes (Daily)</span><button class="ov-copy" onclick="copyOvList('topD',this)">Copy</button></div>
       <div class="ov-body" id="ovTopDaily"></div>
     </div>
     <div class="ov-box">
-      <div class="ov-hdr"><span class="ov-title">Top 10 Themes (Weekly)</span></div>
+      <div class="ov-hdr"><span class="ov-title">Top 10 Themes (Weekly)</span><button class="ov-copy" onclick="copyOvList('topW',this)">Copy</button></div>
       <div class="ov-body" id="ovTopWeekly"></div>
     </div>
     <div class="ov-box">
-      <div class="ov-hdr"><span class="ov-title">VCP Coil Setups</span></div>
+      <div class="ov-hdr"><span class="ov-title">VCP Coil Setups</span><button class="ov-copy" onclick="copyOvList('vcp',this)">Copy</button></div>
       <div class="ov-body" id="ovVcp"></div>
     </div>
     <div class="ov-box">
-      <div class="ov-hdr"><span class="ov-title">Accelerating Delta</span></div>
+      <div class="ov-hdr"><span class="ov-title">Accelerating Delta</span><button class="ov-copy" onclick="copyOvList('accel',this)">Copy</button></div>
       <div class="ov-body" id="ovAccel"></div>
     </div>
   </div>
@@ -355,6 +362,50 @@ function switchTab(tab){
 }
 
 // ─── Overview tab rendering ─────────────────────────────────────────────────
+// OV_LISTS holds the ticker arrays for each Overview box, populated by
+// renderOverview() and consumed by copyOvList() when the Copy button is clicked.
+let OV_LISTS={topD:[],topW:[],vcp:[],accel:[]};
+
+function copyOvList(boxKey, btn){
+  const list=OV_LISTS[boxKey]||[];
+  if(!list.length){
+    flashCopyBtn(btn,'No tickers');
+    return;
+  }
+  const text=list.join(', ');
+  const done=()=>flashCopyBtn(btn,'Copied!');
+  const fail=()=>flashCopyBtn(btn,'Copy failed');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text)?done():fail());
+  }else{
+    fallbackCopy(text)?done():fail();
+  }
+}
+function fallbackCopy(text){
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=text;
+    ta.style.position='fixed';ta.style.left='-9999px';ta.style.top='0';
+    document.body.appendChild(ta);
+    ta.focus();ta.select();
+    const ok=document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  }catch(e){return false;}
+}
+function flashCopyBtn(btn,msg){
+  if(!btn)return;
+  const original=btn.dataset.label||btn.textContent;
+  btn.dataset.label=original;
+  btn.textContent=msg;
+  btn.classList.add('copied');
+  clearTimeout(btn._flashT);
+  btn._flashT=setTimeout(()=>{
+    btn.textContent=btn.dataset.label||'Copy';
+    btn.classList.remove('copied');
+  },1400);
+}
+
 function ovDeltaCell(delta){
   if(delta == null) return '<span class="ov-delta fl">—</span>';
   if(delta > 0) return `<span class="ov-delta up">▲ +${delta}</span>`;
@@ -448,6 +499,14 @@ function renderOverview(){
   document.getElementById('ovAccel').innerHTML = accel.length
     ? accel.map(x=>ovRow(x.e,{rankSource:'d', deltaOverride:x.d})).join('')
     : '<div class="ov-empty">No rank improvements today</div>';
+
+  // Populate OV_LISTS for the Copy buttons.
+  OV_LISTS = {
+    topD:  topD.map(e=>e.t),
+    topW:  topW.map(e=>e.t),
+    vcp:   vcp.map(x=>x.e.t),
+    accel: accel.map(x=>x.e.t),
+  };
 }
 
 const ALL_COLUMNS=[
