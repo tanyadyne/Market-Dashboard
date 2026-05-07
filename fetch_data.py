@@ -175,6 +175,17 @@ def compute_ema_series(closes, period):
     return ema_out
 
 
+def compute_ema_value(closes, period):
+    """Compute a single endpoint EMA value (matches fetch_leaders.py implementation)."""
+    if len(closes) < period:
+        return None
+    k = 2.0 / (period + 1)
+    e = float(closes[0])
+    for v in closes[1:]:
+        e = float(v) * k + e * (1 - k)
+    return e
+
+
 def compute_sma_series(closes, period):
     """Compute full SMA series from closes array."""
     sma_out = [None] * len(closes)
@@ -207,6 +218,192 @@ def compute_ma_status(closes):
         "pos": [p_ema9, p_ema21, p_sma50],
         "slope": [s_ema9, s_ema21, s_sma50],
     }
+
+
+def compute_setup_adjustment(c, h, l, n):
+    """Evaluate technical setup criteria. Returns (adj, flags) tuple where adj is the
+    score adjustment in percentile points and flags is a bitmask of which criteria
+    are met. Ported from fetch_leaders.py — must match its bitmask exactly so the
+    Overview tab's vcpMedal() logic works on ETFs the same way it does on stocks.
+    """
+    if n < 50:
+        return 0.0, 0
+    price = float(c[-1])
+    ema9 = compute_ema_value(c, 9)
+    ema21 = compute_ema_value(c, 21)
+    if ema9 is None or ema21 is None:
+        return 0.0, 0
+    sma50 = float(np.mean(c[-50:])) if n >= 50 else float(np.mean(c))
+    sma100 = float(np.mean(c[-100:])) if n >= 100 else None
+    sma200 = float(np.mean(c[-200:])) if n >= 200 else None
+    sma50_prev = float(np.mean(c[-55:-5])) if n >= 55 else None
+    sma50_rising = (sma50 > sma50_prev) if sma50_prev is not None else None
+    sma200_prev = float(np.mean(c[-205:-5])) if n >= 205 else None
+    sma200_rising = (sma200 > sma200_prev) if sma200_prev is not None else None
+    adr = float(np.mean([h[i] - l[i] for i in range(max(0, n - 14), n)])) if n > 0 else 0
+
+    adj = 0.0
+    flags = 0
+
+    # Gold
+    GB, GP = 1.5, -2.0
+    g1 = ema21 > sma50; adj += GB if g1 else GP
+    if g1: flags |= 1
+    g2 = price > ema21; adj += GB if g2 else GP
+    if g2: flags |= 2
+    g3 = price > sma50; adj += GB if g3 else GP
+    if g3: flags |= 4
+    if sma50_rising is not None:
+        adj += GB if sma50_rising else GP
+        if sma50_rising: flags |= 8
+
+    # Silver
+    SB, SP = 0.75, -1.0
+    if sma100 is not None:
+        s1 = price > sma100; adj += SB if s1 else SP
+        if s1: flags |= 16
+        s2 = sma50 > sma100; adj += SB if s2 else SP
+        if s2: flags |= 32
+    if sma200_rising is not None:
+        adj += SB if sma200_rising else SP
+        if sma200_rising: flags |= 64
+
+    # Bronze (bonus only)
+    BB = 0.5
+    if adr > 0 and abs(ema9 - ema21) < (0.5 * adr):
+        adj += BB
+        flags |= 128
+    if sma200 is not None and price > sma200:
+        adj += BB
+        flags |= 256
+
+    # Overview-tab medal-tier flags (no scoring impact)
+    if price > ema9: flags |= 512
+    if ema9 > ema21: flags |= 1024
+    if sma200 is not None and sma50 > sma200: flags |= 2048
+
+    return round(adj, 2), flags
+
+
+def compute_trend_zone(c, h, l, spy_closes, spy_ts_map, df_index):
+    """Compute the smooth_trend zone label. Ported from fetch_leaders.py.
+    Returns one of: bull_strong / bull_light / neutral / bear_light / bear_strong.
+    """
+    c_arr = np.asarray([x for x in c if x is not None], dtype=float)
+    n = len(c_arr)
+    if n < 55:
+        return "neutral"
+
+    def _ema_series(arr, span):
+        if len(arr) < span:
+            return None
+        k = 2.0 / (span + 1)
+        out = [float(arr[0])]
+        for v in arr[1:]:
+            out.append(float(v) * k + out[-1] * (1 - k))
+        return np.array(out)
+
+    def _rsi_series(arr, length=14):
+        if len(arr) < length + 1:
+            return None
+        deltas = np.diff(arr)
+        gains = np.maximum(deltas, 0)
+        losses = np.maximum(-deltas, 0)
+        avg_gain = np.mean(gains[:length])
+        avg_loss = np.mean(losses[:length])
+        rsi_vals = [50.0] * length
+        rs = avg_gain / avg_loss if avg_loss > 0 else float('inf')
+        rsi_vals.append(100.0 - 100.0 / (1.0 + rs) if avg_loss > 0 else 100.0)
+        for i in range(length, len(deltas)):
+            avg_gain = (avg_gain * (length - 1) + gains[i]) / length
+            avg_loss = (avg_loss * (length - 1) + losses[i]) / length
+            if avg_loss == 0:
+                rsi_vals.append(100.0)
+            else:
+                rs = avg_gain / avg_loss
+                rsi_vals.append(100.0 - 100.0 / (1.0 + rs))
+        return np.array(rsi_vals)
+
+    WINDOW = 10
+    rsi_s = _rsi_series(c_arr, 14)
+    if rsi_s is None or len(rsi_s) < WINDOW:
+        return "neutral"
+
+    ema_f_intra_s = _ema_series(c_arr, 10)
+    ema_s_intra_s = _ema_series(c_arr, 21)
+    ema_f_day_s   = _ema_series(c_arr, 5)
+    ema_s_day_s   = _ema_series(c_arr, 20)
+    ema_f_wk_s    = _ema_series(c_arr, 15)
+    ema_s_wk_s    = _ema_series(c_arr, 50)
+    if ema_s_wk_s is None or ema_s_day_s is None or ema_s_intra_s is None:
+        return "neutral"
+
+    bb_len = 20
+    bb_mult = 2.0
+    bb_score_s = np.zeros(n)
+    for i in range(bb_len - 1, n):
+        window = c_arr[i - bb_len + 1:i + 1]
+        basis = np.mean(window)
+        std = np.std(window, ddof=0)
+        upper = basis + bb_mult * std
+        lower = basis - bb_mult * std
+        if upper - lower > 0:
+            pos = (c_arr[i] - lower) / (upper - lower) * 100
+            bb_score_s[i] = (pos - 50) * 2
+
+    rs_score_s = np.zeros(n)
+    for i, ts in enumerate(df_index):
+        if i < 1:
+            continue
+        stock_chg = (c[i] / c[i - 1] - 1) * 100 if c[i] is not None and c[i - 1] else 0
+        spy_chg = 0
+        if ts in spy_ts_map:
+            si = spy_ts_map[ts]
+            if si > 0 and spy_closes[si] and spy_closes[si - 1]:
+                spy_chg = (spy_closes[si] / spy_closes[si - 1] - 1) * 100
+        rs_score_s[i] = max(-100, min(100, (stock_chg - spy_chg) * 10))
+
+    trend_scores = []
+    for offset in range(WINDOW, 0, -1):
+        idx = n - offset
+        if idx < 50:
+            continue
+        rsi_val = rsi_s[idx] if idx < len(rsi_s) else 50
+        rsi_score = (rsi_val - 50) * 2
+        if ema_s_intra_s[idx] > 0:
+            md_intra = (ema_f_intra_s[idx] - ema_s_intra_s[idx]) / ema_s_intra_s[idx] * 100
+            ma_intra = max(-100, min(100, md_intra * 5))
+        else:
+            ma_intra = 0
+        if ema_s_day_s[idx] > 0:
+            md_day = (ema_f_day_s[idx] - ema_s_day_s[idx]) / ema_s_day_s[idx] * 100
+            ma_day = max(-100, min(100, md_day * 5))
+        else:
+            ma_day = 0
+        if ema_s_wk_s[idx] > 0:
+            md_wk = (ema_f_wk_s[idx] - ema_s_wk_s[idx]) / ema_s_wk_s[idx] * 100
+            ma_wk = max(-100, min(100, md_wk * 5))
+        else:
+            ma_wk = 0
+        ma_score = (ma_intra + ma_day + ma_wk) / 3
+        bb_score = bb_score_s[idx] if idx < len(bb_score_s) else 0
+        rs_score = rs_score_s[idx] if idx < len(rs_score_s) else 0
+        ts_score = (rsi_score * 0.25) + (ma_score * 0.35) + (bb_score * 0.20) + (rs_score * 0.20)
+        trend_scores.append(ts_score)
+
+    if not trend_scores:
+        return "neutral"
+
+    k = 2.0 / (5 + 1)
+    smooth = trend_scores[0]
+    for v in trend_scores[1:]:
+        smooth = v * k + smooth * (1 - k)
+
+    if smooth > 30:    return "bull_strong"
+    elif smooth > 10:  return "bull_light"
+    elif smooth < -30: return "bear_strong"
+    elif smooth < -10: return "bear_light"
+    else:              return "neutral"
 
 
 def compute_market_regime(closes):
@@ -778,6 +975,18 @@ def main():
         final_rs = rs_series[-1] if rs_series else 0
         rs_pctrank = percentrank_inc(rs_series, final_rs) if len(rs_series) > 1 else None
 
+        # ─── Setup flags + trend zone (for Overview tab VCP detection) ──
+        # Mirrors the stock screener's sf/tz pipeline so vcpMedal() can identify
+        # coiled ETFs the same way it identifies coiled stocks.
+        try:
+            _sa, _sf = compute_setup_adjustment(c, h, l, length)
+        except Exception:
+            _sa, _sf = 0.0, 0
+        try:
+            _tz = compute_trend_zone(c, h, l, spy_closes, spy_ts_map, df.index)
+        except Exception:
+            _tz = "neutral"
+
         adv_streak = 0
         for j in range(len(rs_series) - 1, 0, -1):
             if rs_series[j] > rs_series[j - 1]:
@@ -809,6 +1018,9 @@ def main():
             "p": round(price, 2),
             "fr": round(final_rs, 4),
             "vs": vs_series,
+            # Setup flags + trend zone for Overview-tab VCP detection
+            "sf": _sf,
+            "tz": _tz,
             # Internal baselines for intraday overlay (stripped before output)
             "_pc": float(c[-2]) if length >= 2 else None,
             "_5b": w_base,
@@ -907,7 +1119,7 @@ def main():
         if metrics is None:
             results.append({**info, "rv": None, "am": None, "ax": None, "ch": None, "c5": None,
                             "c20": None, "ytd": None, "rs": None, "rf": 0, "ra": 0, "p": None,
-                            "fr": None, "vs": None, **w_metrics})
+                            "fr": None, "vs": None, "sf": 0, "tz": "neutral", **w_metrics})
         else:
             results.append({**info, **metrics, **w_metrics})
 
@@ -931,7 +1143,7 @@ def main():
         if not valid:
             results.append({**info, "rv": None, "am": None, "ax": None, "ch": None, "c5": None,
                             "c20": None, "ytd": None, "rs": None, "rf": 0, "ra": 0, "p": None,
-                            "fr": None, "vs": None,
+                            "fr": None, "vs": None, "sf": 0, "tz": "neutral",
                             "w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None,
                             "w_fr": None})
             continue
@@ -1010,6 +1222,60 @@ def main():
             vals = [component_w_metrics[h][key] for h in valid_w if component_w_metrics[h].get(key) is not None]
             return round(np.mean(vals), 2) if vals else None
 
+        # ─── Build synthetic equal-weighted basket OHLC series for sf/tz computation ──
+        # Each component's daily Close/High/Low series is normalised to start at 100,
+        # then averaged across components to form a synthetic basket price series.
+        # We then run the standard setup/trend functions on this series as if it were
+        # a single ticker. Skipped for baskets with insufficient component history.
+        _basket_sf = 0
+        _basket_tz = "neutral"
+        try:
+            comp_dfs = []
+            for h in valid:
+                _df = get_df(h)
+                if _df is None or len(_df) < 50:
+                    continue
+                comp_dfs.append((h, _df))
+            if comp_dfs:
+                # Use the SHORTEST component series to avoid alignment issues.
+                # Synthetic series gets the last min_len bars of each component.
+                min_len = min(len(d) for _, d in comp_dfs)
+                if min_len >= 50:
+                    syn_c = np.zeros(min_len)
+                    syn_h = np.zeros(min_len)
+                    syn_l = np.zeros(min_len)
+                    n_components = 0
+                    for _, _df in comp_dfs:
+                        cv = _df["Close"].values[-min_len:]
+                        hv = _df["High"].values[-min_len:]
+                        lv = _df["Low"].values[-min_len:]
+                        if cv[0] is None or cv[0] <= 0:
+                            continue
+                        scale = 100.0 / float(cv[0])
+                        syn_c += np.array([float(x) * scale for x in cv])
+                        syn_h += np.array([float(x) * scale for x in hv])
+                        syn_l += np.array([float(x) * scale for x in lv])
+                        n_components += 1
+                    if n_components > 0:
+                        syn_c /= n_components
+                        syn_h /= n_components
+                        syn_l /= n_components
+                        # Use the FIRST valid component's DataFrame index for SPY alignment
+                        ref_df = comp_dfs[0][1]
+                        ref_index = ref_df.index[-min_len:]
+                        try:
+                            _, _basket_sf = compute_setup_adjustment(syn_c, syn_h, syn_l, min_len)
+                        except Exception:
+                            _basket_sf = 0
+                        try:
+                            _basket_tz = compute_trend_zone(syn_c, syn_h, syn_l, spy_closes, spy_ts_map, ref_index)
+                        except Exception:
+                            _basket_tz = "neutral"
+        except Exception as _e:
+            print(f"  [warn] Could not compute synthetic sf/tz for {info.get('t','?')}: {_e}")
+            _basket_sf = 0
+            _basket_tz = "neutral"
+
         results.append({
             **info,
             "rv": round(avg_metric("rv")) if avg_metric("rv") is not None else None,
@@ -1026,6 +1292,15 @@ def main():
             "p": None,
             "fr": round(final_rs, 4) if rs_series else None,
             "vs": avg_vs,
+            # Setup flags + trend zone for Overview-tab VCP detection.
+            # Built from a synthetic equal-weighted basket price series: each component's
+            # daily OHLC series is normalised to start at 100, then averaged across
+            # components to form a single synthetic price series. MA/EMA/setup logic is
+            # then run on this series as if it were a regular ticker. This is heavier
+            # than aggregating per-component flags but more accurately reflects the
+            # collective trend behaviour of the basket.
+            "sf": _basket_sf,
+            "tz": _basket_tz,
             "w_rv": round(avg_w_metric("w_rv")) if avg_w_metric("w_rv") is not None else None,
             "w_am": round(avg_w_metric("w_am")) if avg_w_metric("w_am") is not None else None,
             "w_rs": None,
