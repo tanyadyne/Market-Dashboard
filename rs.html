@@ -333,12 +333,15 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] .info-box .lbl{font-size:8px;letter-spacing:.6px}
 [data-view="mobile"] .info-box .val{font-size:18px}
 [data-view="mobile"] .info-box .sub{font-size:9px;line-height:1.2;word-break:break-word;white-space:normal}
-[data-view="mobile"] .profile-box{grid-template-columns:1fr;gap:12px;padding:12px;margin-bottom:14px}
+/* On mobile, ditch the grid and use flex-column so the chart and info naturally
+   stack with no extra row-sizing surprises. The grid layout was producing a tall
+   empty gap between the chart and the info section because of how grid-template
+   handled the row sizing — flex-column packs the children tightly. */
+[data-view="mobile"] .profile-box{display:flex;flex-direction:column;gap:12px;padding:12px;margin-bottom:14px}
 /* Mobile chart sized to a flat, sensible height — taller than the original 240px
    so it isn't squished, but not so tall that whitespace appears between the chart
-   and the ticker info below it. The 32px "attribution row" reservation is handled
-   inside injectProfileTVCharts() now. */
-[data-view="mobile"] .profile-chart{height:380px;min-height:380px;overflow:hidden}
+   and the ticker info below it. */
+[data-view="mobile"] .profile-chart{height:380px;min-height:380px;max-height:380px;overflow:hidden;flex:0 0 380px}
 [data-view="mobile"] .profile-tk{font-size:22px}
 [data-view="mobile"] .profile-price{font-size:16px}
 [data-view="mobile"] .profile-holdings{max-height:140px}
