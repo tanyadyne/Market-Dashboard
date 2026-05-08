@@ -248,6 +248,12 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .info-box .val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1)}
 .info-box .sub{font-size:10px;color:var(--t3);margin-top:2px}
 .info-box .sub.up{color:var(--g)}.info-box .sub.dn{color:var(--r)}.info-box .sub.fl{color:var(--t4)}
+/* .info-pair — wraps the three info-boxes so we can visually merge them on mobile.
+   On desktop it's transparent (display:contents), so the boxes flex normally inside
+   .info-boxes. On mobile-toggled view it becomes a single bordered container with
+   floating vertical dividers between each section, mirroring the stock screener
+   page's mobile profile look. */
+.info-pair{display:contents}
 /* Position tier labels (Strong Leader / Mid-Range / Deep Laggard etc.) used in
    the RS Score box sub-line. Same color scheme the stock screener uses. */
 .tag-leader{color:var(--g);font-weight:600}
@@ -304,11 +310,25 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .tk-link:hover{color:#3b82f6;text-decoration:underline}
 /* Mobile responsiveness — match screener mobile profile sizing */
 [data-view="mobile"] .profile-inner{padding:12px;max-width:100vw}
+/* Mobile info-box layout: all three sections (RS Score | Ranking | Rank Δ) merge
+   into one continuous bordered box with floating vertical dividers between them.
+   Mirrors the stock screener's mobile profile layout for cross-page consistency. */
 [data-view="mobile"] .info-boxes{display:block;margin-bottom:14px}
-[data-view="mobile"] .info-box{margin-bottom:8px;padding:10px 14px}
+[data-view="mobile"] .info-pair{display:flex;border:1px solid var(--bdr);border-radius:10px;background:var(--bg2);overflow:hidden;position:relative}
+[data-theme="light"][data-view="mobile"] .info-pair{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+/* Two floating vertical dividers — at 1/3 and 2/3 across the merged container. */
+[data-view="mobile"] .info-pair::before,[data-view="mobile"] .info-pair::after{content:"";position:absolute;top:14%;bottom:14%;width:1px;background:var(--bdr)}
+[data-view="mobile"] .info-pair::before{left:33.333%}
+[data-view="mobile"] .info-pair::after{left:66.666%}
+/* Each merged section: no individual border/radius/bg/shadow, equal flex width. */
+[data-view="mobile"] .info-box-pair{flex:1;min-width:0;border:none !important;border-radius:0;background:transparent;box-shadow:none;padding:10px 6px;text-align:center;margin-bottom:0 !important}
+[data-view="mobile"] .info-box .lbl{font-size:8px;letter-spacing:.6px}
 [data-view="mobile"] .info-box .val{font-size:18px}
+[data-view="mobile"] .info-box .sub{font-size:9px;line-height:1.2;word-break:break-word;white-space:normal}
 [data-view="mobile"] .profile-box{grid-template-columns:1fr;gap:12px;padding:12px;margin-bottom:14px}
-[data-view="mobile"] .profile-chart{height:240px;min-height:240px}
+/* Chart gets more vertical room on mobile — single-column layout means it spans
+   the full width, so we trade height-for-width and give it a more legible aspect. */
+[data-view="mobile"] .profile-chart{height:340px;min-height:340px}
 [data-view="mobile"] .profile-tk{font-size:22px}
 [data-view="mobile"] .profile-price{font-size:16px}
 [data-view="mobile"] .profile-holdings{max-height:140px}
@@ -1156,19 +1176,21 @@ function renderProfile(){
        :'tag-neutral')
     : 'tag-neutral';
   html+=`<div class="info-boxes">
-    <div class="info-box">
-      <div class="lbl">RS Score (${freqLabel})</div>
-      <div class="val" style="color:${rsCol}">${rsVal!=null?rsVal:'—'}</div>
-      <div class="sub"><span class="${posCls}">${posLabel||'—'}</span></div>
-    </div>
-    <div class="info-box">
-      <div class="lbl">Ranking (${freqLabel})</div>
-      <div class="val">#${rkVal||'—'}</div>
-      <div class="sub">of ${totalETFs} themes</div>
-    </div>
-    <div class="info-box">
-      <div class="lbl">Rank Change Δ</div>
-      ${rkDeltaCell}
+    <div class="info-pair">
+      <div class="info-box info-box-pair">
+        <div class="lbl">RS Score (${freqLabel})</div>
+        <div class="val" style="color:${rsCol}">${rsVal!=null?rsVal:'—'}</div>
+        <div class="sub"><span class="${posCls}">${posLabel||'—'}</span></div>
+      </div>
+      <div class="info-box info-box-pair">
+        <div class="lbl">Ranking (${freqLabel})</div>
+        <div class="val">#${rkVal||'—'}</div>
+        <div class="sub">of ${totalETFs} themes</div>
+      </div>
+      <div class="info-box info-box-pair">
+        <div class="lbl">Rank Change Δ</div>
+        ${rkDeltaCell}
+      </div>
     </div>
   </div>`;
 
