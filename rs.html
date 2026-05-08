@@ -311,7 +311,7 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .chart-card-tier.bronze{background:#9a6b3f;border:1px solid #7a5230}
 .chart-card-body{height:240px;width:100%;position:relative}
 .chart-card-body .tradingview-widget-container{height:100%!important;width:100%!important}
-.chart-card-body .tradingview-widget-container__widget{height:calc(100% - 32px)!important;width:100%!important}
+.chart-card-body .tradingview-widget-container__widget{height:100%!important;width:100%!important}
 .chart-empty{padding:30px 20px;text-align:center;color:var(--t4);font-size:11px;font-style:italic;border:1px dashed var(--bdr2);border-radius:10px}
 /* Profile-tab ticker link styling */
 .tk-link{cursor:pointer;color:var(--t1);transition:color .15s}
@@ -334,14 +334,11 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] .info-box .val{font-size:18px}
 [data-view="mobile"] .info-box .sub{font-size:9px;line-height:1.2;word-break:break-word;white-space:normal}
 [data-view="mobile"] .profile-box{grid-template-columns:1fr;gap:12px;padding:12px;margin-bottom:14px}
-/* Chart height on mobile — sized to feel proportionate to the box and viewport,
-   matching what the stock screener's mobile profile renders. The screener's chart
-   ends up roughly 60-70% of viewport height in practice, so we use vh units with
-   a sensible min/max via clamp(). Without this, the chart looked tiny and left a
-   large dead-space gap before the ticker info below. overflow:hidden is dropped
-   on mobile so the TradingView widget's natural sizing matches the container
-   instead of being clipped (matches the stock screener profile pattern). */
-[data-view="mobile"] .profile-chart{height:clamp(420px, 65vh, 600px);min-height:420px;overflow:visible}
+/* Mobile chart sized to a flat, sensible height — taller than the original 240px
+   so it isn't squished, but not so tall that whitespace appears between the chart
+   and the ticker info below it. The 32px "attribution row" reservation is handled
+   inside injectProfileTVCharts() now. */
+[data-view="mobile"] .profile-chart{height:380px;min-height:380px;overflow:hidden}
 [data-view="mobile"] .profile-tk{font-size:22px}
 [data-view="mobile"] .profile-price{font-size:16px}
 [data-view="mobile"] .profile-holdings{max-height:140px}
@@ -1372,7 +1369,10 @@ function injectProfileTVCharts(){
     wrapper.style.cssText='height:100%;width:100%';
     const widgetDiv=document.createElement('div');
     widgetDiv.className='tradingview-widget-container__widget';
-    widgetDiv.style.cssText='height:calc(100% - 32px);width:100%';
+    // Fill the wrapper completely — TradingView's autosize:true positions the
+    // attribution copyright row inside this box, so reserving extra space (e.g.
+    // calc(100% - 32px)) just creates dead whitespace below the candles.
+    widgetDiv.style.cssText='height:100%;width:100%';
     wrapper.appendChild(widgetDiv);
     el.appendChild(wrapper);
     const script=document.createElement('script');
