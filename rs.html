@@ -205,34 +205,43 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] th:nth-child(5),[data-view="mobile"] td:nth-child(5){width:16%}
 [data-view="mobile"] th:nth-child(6),[data-view="mobile"] td:nth-child(6){width:16%}
 /* ─── Individual Profile tab ──────────────────────────────────────────────── */
-.profile-wrap{padding:20px;max-width:1400px;margin:0 auto;flex:1;min-height:0;overflow-y:auto;width:100%;box-sizing:border-box}
+/* The wrap is the scrollable element (because body is height-locked at 100vh).
+   We deliberately do NOT cap its width or center it — that way the entire
+   viewport width is a valid scroll target, including the empty space to the
+   right of the centered content. Inner sections handle their own max-width. */
+.profile-wrap{flex:1;min-height:0;overflow-y:auto;width:100%;box-sizing:border-box}
 .profile-empty{padding:60px 20px;text-align:center;color:var(--t3);font-size:13px}
 .profile-empty-hint{margin-top:8px;font-size:11px;color:var(--t4)}
-.info-boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
-.info-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+/* Inner container for info-boxes + profile-box: max-width 1400px, centered (matches
+   screener's .ov-grid pattern). The chart-grid below sits OUTSIDE this so it can
+   span the full viewport like screener's chart view. */
+.profile-inner{max-width:1400px;margin:0 auto;padding:16px 20px 0}
+/* Info boxes — sized to match stock screener's .info-box exactly. */
+.info-boxes{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.info-box{flex:1;min-width:140px;padding:12px 16px;border-radius:10px;border:1px solid var(--bdr);background:var(--bg2);text-align:center}
 [data-theme="light"] .info-box{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-.info-box .lbl{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3)}
-.info-box .val{font-size:26px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1);line-height:1.1;margin-top:2px}
-.info-box .sub{font-size:11px;color:var(--t3);margin-top:2px}
+.info-box .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:4px}
+.info-box .val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1)}
+.info-box .sub{font-size:10px;color:var(--t3);margin-top:2px}
 .info-box .sub.up{color:var(--g)}.info-box .sub.dn{color:var(--r)}.info-box .sub.fl{color:var(--t4)}
-/* Profile box: chart on LHS, ETF info + holdings on RHS */
-.profile-box{display:grid;grid-template-columns:1fr 1fr;gap:18px;background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:18px}
+/* Profile box: chart on LHS, ETF info + holdings on RHS — matches screener */
+.profile-box{display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:20px}
 [data-theme="light"] .profile-box{box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-.profile-chart{height:340px;min-height:340px;border-radius:8px;overflow:hidden;border:1px solid var(--bdr2);background:var(--card)}
-.profile-info{display:flex;flex-direction:column;gap:6px;min-width:0;overflow:hidden}
-.profile-tk{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;letter-spacing:.5px;line-height:1.1;color:var(--t1)}
-.profile-name{font-size:13px;color:var(--t2);font-weight:500;line-height:1.3}
-.profile-fn{font-size:11px;color:var(--t3);font-weight:500;letter-spacing:.3px}
-.profile-price{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;margin-top:6px;color:var(--t1)}
-.profile-price .chg{font-size:13px;margin-left:8px;font-weight:600}
+.profile-chart{height:340px;min-height:340px;border-radius:8px;overflow:hidden}
+.profile-info{display:flex;flex-direction:column;gap:10px;overflow:hidden;min-width:0}
+.profile-tk{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;letter-spacing:.5px;line-height:1.1;color:var(--t1)}
+.profile-name{font-size:14px;color:var(--t2);font-weight:500;line-height:1.2}
+.profile-fn{font-size:12px;color:var(--t3);font-weight:500;line-height:1.3}
+.profile-price{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;margin-top:8px;color:var(--t1)}
+.profile-price .chg{font-size:13px;margin-left:8px;font-weight:500}
 .profile-price .chg.cp{color:var(--g)}.profile-price .chg.cn{color:var(--r)}.profile-price .chg.cz{color:var(--t3)}
-.profile-holdings-title{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3);margin-top:10px}
-.profile-holdings-counts{font-size:10px;color:var(--t3);margin-top:4px}
+.profile-holdings-title{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-top:8px}
+.profile-holdings-counts{font-size:10.5px;color:var(--t3);margin-top:2px}
 /* Holdings pill area must wrap inside the box and not spill out */
 .profile-holdings{display:flex;flex-wrap:wrap;gap:0;margin-top:6px;max-height:160px;overflow-y:auto;align-content:flex-start;width:100%;padding-right:4px;box-sizing:border-box}
 .profile-holdings .pill{font-size:10.5px;padding:2px 6px;margin:2px}
-/* Tier toggle (Gold/Silver/Bronze) — mirrors the .yr-toggle pattern from breadth */
-.tier-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+/* Tier toggle row — sits inside the chart-grid container so it aligns with the grid */
+.tier-row{display:flex;align-items:center;justify-content:space-between;padding:0 16px 12px;gap:10px;flex-wrap:wrap}
 .tier-row-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .tier-toggle{display:inline-flex;gap:2px;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:3px}
 .tier-btn{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;padding:6px 14px;border-radius:6px;cursor:pointer;transition:.15s;color:var(--t3);text-transform:uppercase;display:flex;align-items:center;gap:6px}
@@ -245,9 +254,9 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .tier-btn .dot.bronze{background:#9a6b3f;border:1px solid #7a5230}
 .tier-btn .ct{color:var(--t4);font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace}
 .tier-btn.active .ct{color:var(--t2)}
-.tier-section-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3)}
-/* Stock chart grid — 4/row desktop, 2/row mobile (same pattern as screener) */
-.chart-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tier-section-label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3)}
+/* Stock chart grid — full viewport width, matches screener exactly */
+.chart-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 16px 16px}
 .chart-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 [data-theme="light"] .chart-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .chart-card-hdr{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr2);gap:6px}
@@ -257,27 +266,29 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .chart-card-tier.gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);border:1px solid #d97706}
 .chart-card-tier.silver{background:linear-gradient(135deg,#b0b7c0,#7d8590);border:1px solid #4b5563}
 .chart-card-tier.bronze{background:#9a6b3f;border:1px solid #7a5230}
-.chart-card-body{height:240px;width:100%;position:relative}
+.chart-card-body{height:260px;width:100%;position:relative}
 .chart-card-body .tradingview-widget-container{height:100%!important;width:100%!important}
 .chart-card-body .tradingview-widget-container__widget{height:calc(100% - 32px)!important;width:100%!important}
-.chart-empty{padding:30px 20px;text-align:center;color:var(--t4);font-size:11px;font-style:italic;border:1px dashed var(--bdr2);border-radius:10px}
+.chart-empty{margin:0 16px 16px;padding:30px 20px;text-align:center;color:var(--t4);font-size:11px;font-style:italic;border:1px dashed var(--bdr2);border-radius:10px}
 /* Profile-tab ticker link styling */
 .tk-link{cursor:pointer;color:var(--t1);transition:color .15s}
 .tk-link:hover{color:#3b82f6;text-decoration:underline}
-/* Mobile responsiveness */
-[data-view="mobile"] .profile-wrap{padding:12px}
-[data-view="mobile"] .info-boxes{grid-template-columns:1fr;gap:8px;margin-bottom:12px}
-[data-view="mobile"] .info-box{padding:10px 14px}
-[data-view="mobile"] .info-box .val{font-size:20px}
+/* Mobile responsiveness — match screener mobile profile sizing */
+[data-view="mobile"] .profile-inner{padding:10px}
+[data-view="mobile"] .info-boxes{display:block;margin-bottom:14px}
+[data-view="mobile"] .info-box{margin-bottom:8px;padding:10px 14px}
+[data-view="mobile"] .info-box .val{font-size:18px}
 [data-view="mobile"] .profile-box{grid-template-columns:1fr;gap:12px;padding:12px;margin-bottom:14px}
 [data-view="mobile"] .profile-chart{height:240px;min-height:240px}
 [data-view="mobile"] .profile-tk{font-size:22px}
-[data-view="mobile"] .profile-price{font-size:17px}
+[data-view="mobile"] .profile-price{font-size:16px}
 [data-view="mobile"] .profile-holdings{max-height:140px}
-[data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-[data-view="mobile"] .chart-card-body{height:180px}
+[data-view="mobile"] .tier-row{padding:0 10px 10px}
+[data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:0 10px 10px}
+[data-view="mobile"] .chart-card-body{height:200px}
 [data-view="mobile"] .chart-card-tk{font-size:11px}
 [data-view="mobile"] .tier-btn{padding:5px 10px;font-size:10px;letter-spacing:.3px}
+[data-view="mobile"] .chart-empty{margin:0 10px 10px}
 [data-view="mobile"] .tk{font-size:11px}
 /* Nuclear overflow prevention: no element can exceed viewport width on mobile */
 [data-view="mobile"] *{max-width:100vw}
@@ -1060,14 +1071,24 @@ function renderProfile(){
 
   let html='';
 
-  // ─── Section 1: Three info boxes (RS Score | Ranking | Rank Change Δ) ───
+  // ─── Top section (centered, max-width 1400px): info boxes + profile box ───
+  html+='<div class="profile-inner">';
+
+  // Section 1: Three info boxes (RS Score | Ranking | Rank Change Δ).
+  // Sized to match stock screener's info boxes — small label, monospace val,
+  // tiny sub-line, all centered. Keeps the look consistent across pages.
   const rsBg=getRSBg(rsVal), rsCol=getRSCol(rsVal);
   const freqLabel=isWeekly?'Weekly':'Daily';
+  // Render the RS score as a colored pill inside the centered val container
+  // (matches the screener's "100 / Strong Leader" pattern with color coding).
+  const rsPill=rsVal!=null
+    ? `<span style="color:${rsCol};background:${rsBg};padding:2px 14px;border-radius:6px;display:inline-block">${rsVal}</span>`
+    : '—';
   html+=`<div class="info-boxes">
     <div class="info-box">
       <div class="lbl">RS Score (${freqLabel})</div>
-      <div class="val" style="color:${rsCol};background:${rsBg};display:inline-block;padding:2px 12px;border-radius:6px;width:fit-content">${rsVal!=null?rsVal:'—'}</div>
-      <div class="sub">Relative strength vs SPY</div>
+      <div class="val">${rsPill}</div>
+      <div class="sub">vs SPY</div>
     </div>
     <div class="info-box">
       <div class="lbl">Ranking (${freqLabel})</div>
@@ -1080,7 +1101,7 @@ function renderProfile(){
     </div>
   </div>`;
 
-  // ─── Section 2: Profile box (chart LHS + ETF info RHS) ─────────────────────
+  // Section 2: Profile box (chart LHS + ETF info RHS).
   // Holdings pills are wrapped inside the right column so they cannot spill out
   // (max-height + overflow-y on .profile-holdings handles long lists).
   html+=`<div class="profile-box">
@@ -1100,7 +1121,11 @@ function renderProfile(){
     </div>
   </div>`;
 
-  // ─── Section 3: Tier toggle (Gold / Silver / Bronze) ──────────────────────
+  html+='</div>'; // close .profile-inner
+
+  // ─── Bottom section (FULL viewport width, like screener's chart-grid) ────
+  // Tier toggle row + stock chart grid sit OUTSIDE .profile-inner so they span
+  // edge-to-edge — matching the stock screener page exactly.
   // If the currently-selected tier has no stocks, auto-fall-back to the first
   // tier that does, so the user sees something meaningful.
   const tierMap={gold:gs,silver:ss,bronze:bs};
