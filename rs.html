@@ -241,6 +241,11 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .info-box .val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1)}
 .info-box .sub{font-size:10px;color:var(--t3);margin-top:2px}
 .info-box .sub.up{color:var(--g)}.info-box .sub.dn{color:var(--r)}.info-box .sub.fl{color:var(--t4)}
+/* Position tier labels (Strong Leader / Mid-Range / Deep Laggard etc.) used in
+   the RS Score box sub-line. Same color scheme the stock screener uses. */
+.tag-leader{color:var(--g);font-weight:600}
+.tag-laggard{color:var(--r);font-weight:600}
+.tag-neutral{color:var(--t3);font-weight:600}
 /* Profile box: chart on LHS, ETF info + holdings on RHS — matches screener */
 .profile-box{display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:20px}
 [data-theme="light"] .profile-box{box-shadow:0 1px 3px rgba(0,0,0,0.06)}
@@ -1087,7 +1092,7 @@ function renderProfile(){
   if(rkDelta==null) rkDeltaCell='<div class="val" style="color:var(--t4)">—</div><div class="sub fl">No history</div>';
   else if(rkDelta>0) rkDeltaCell=`<div class="val" style="color:var(--g)">▲ +${rkDelta}</div><div class="sub up">vs ${rankLookback}D ago</div>`;
   else if(rkDelta<0) rkDeltaCell=`<div class="val" style="color:var(--r)">▼ ${rkDelta}</div><div class="sub dn">vs ${rankLookback}D ago</div>`;
-  else rkDeltaCell=`<div class="val" style="color:var(--t3)">– 0</div><div class="sub fl">vs ${rankLookback}D ago</div>`;
+  else rkDeltaCell=`<div class="val" style="color:var(--t3)">0</div><div class="sub fl">vs ${rankLookback}D ago</div>`;
 
   // ETF price + daily change line.
   const chgCls=chgClass(etf.ch);
@@ -1107,16 +1112,36 @@ function renderProfile(){
     : '<span class="clip-empty">No holdings data</span>';
 
   // Section 1: Three info boxes (RS Score | Ranking | Rank Change Δ).
-  const rsBg=getRSBg(rsVal), rsCol=getRSCol(rsVal);
+  // RS score is rendered as a plain colored number (no background pill) — matches
+  // the stock screener's "100 / Strong Leader" pattern. The sub-line replaces
+  // "vs SPY" with the position tier (Strong Leader / Moderate Leader / Mid-Range /
+  // Moderate Laggard / Deep Laggard), keeping the box height aligned with the
+  // other two info boxes and providing more useful context.
+  const rsCol=getRSCol(rsVal);
   const freqLabel=isWeekly?'Weekly':'Daily';
-  const rsPill=rsVal!=null
-    ? `<span style="color:${rsCol};background:${rsBg};padding:2px 14px;border-radius:6px;display:inline-block">${rsVal}</span>`
-    : '—';
+  // Position label thresholds mirror screener's getPosition(): top 100 = Strong
+  // Leader, top 200 = Moderate Leader, then percentage tiers. ETF universe is
+  // smaller than the stock universe, so the absolute thresholds (100/200) only
+  // really kick in for the very top ranks; most ETFs land in the percentage tiers.
+  function ovPosLabel(rk, total){
+    if(rk==null) return null;
+    if(rk<=Math.max(10, Math.round(total*0.1))) return 'Strong Leader';
+    if(rk<=Math.max(20, Math.round(total*0.25))) return 'Moderate Leader';
+    if(rk/total<=0.5) return 'Mid-Range';
+    if(rk/total<=0.75) return 'Moderate Laggard';
+    return 'Deep Laggard';
+  }
+  const posLabel=ovPosLabel(rkVal, totalETFs);
+  const posCls=posLabel
+    ? (posLabel.includes('Leader')?'tag-leader'
+       :posLabel.includes('Laggard')?'tag-laggard'
+       :'tag-neutral')
+    : 'tag-neutral';
   html+=`<div class="info-boxes">
     <div class="info-box">
       <div class="lbl">RS Score (${freqLabel})</div>
-      <div class="val">${rsPill}</div>
-      <div class="sub">vs SPY</div>
+      <div class="val" style="color:${rsCol}">${rsVal!=null?rsVal:'—'}</div>
+      <div class="sub"><span class="${posCls}">${posLabel||'—'}</span></div>
     </div>
     <div class="info-box">
       <div class="lbl">Ranking (${freqLabel})</div>
