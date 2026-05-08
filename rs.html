@@ -146,7 +146,7 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .tv-chart-wrap{border-radius:6px;overflow:hidden;border:1px solid var(--bdr2);background:#0F0F0F}
 /* .tv-chart is a marker class for "this element will host a TradingView widget".
    It deliberately has NO width/height of its own — the actual sizing comes from
-   the parent (.profile-chart sets 340px desktop / 380px mobile, .chart-card-body
+   the parent (.profile-chart sets 340px desktop / 240px mobile, .chart-card-body
    sets 240px). Hardcoded heights here used to override profile-chart and produced
    a tall whitespace gap below the chart. */
 .tv-chart{position:relative}
@@ -273,7 +273,7 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 /* Profile box: chart on LHS, ETF info + holdings on RHS — matches screener */
 .profile-box{display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:20px}
 [data-theme="light"] .profile-box{box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-.profile-chart{height:340px;min-height:340px;border-radius:8px;overflow:hidden}
+.profile-chart{height:340px;min-height:340px}
 .profile-info{display:flex;flex-direction:column;gap:10px;overflow:hidden;min-width:0}
 .profile-tk{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;letter-spacing:.5px;line-height:1.1;color:var(--t1)}
 .profile-name{font-size:14px;color:var(--t2);font-weight:500;line-height:1.2}
@@ -336,15 +336,11 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] .info-box .lbl{font-size:8px;letter-spacing:.6px}
 [data-view="mobile"] .info-box .val{font-size:18px}
 [data-view="mobile"] .info-box .sub{font-size:9px;line-height:1.2;word-break:break-word;white-space:normal}
-/* On mobile, ditch the grid and use flex-column so the chart and info naturally
-   stack with no extra row-sizing surprises. The grid layout was producing a tall
-   empty gap between the chart and the info section because of how grid-template
-   handled the row sizing — flex-column packs the children tightly. */
-[data-view="mobile"] .profile-box{display:flex;flex-direction:column;gap:12px;padding:12px;margin-bottom:14px}
-/* Mobile chart sized to a flat, sensible height — taller than the original 240px
-   so it isn't squished, but not so tall that whitespace appears between the chart
-   and the ticker info below it. */
-[data-view="mobile"] .profile-chart{height:380px;min-height:380px;max-height:380px;overflow:hidden;flex:0 0 380px}
+/* Mobile profile-box layout matches the stock screener exactly: collapse the
+   2-column grid into a single column so the chart spans full width and the info
+   section sits below. Chart height drops to 240px to match screener. */
+[data-view="mobile"] .profile-box{grid-template-columns:1fr;gap:12px;padding:12px;margin-bottom:14px}
+[data-view="mobile"] .profile-chart{height:240px;min-height:240px}
 [data-view="mobile"] .profile-tk{font-size:22px}
 [data-view="mobile"] .profile-price{font-size:16px}
 [data-view="mobile"] .profile-holdings{max-height:140px}
