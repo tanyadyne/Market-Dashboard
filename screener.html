@@ -97,6 +97,11 @@ tr:hover{background:var(--bg3)}
 .pag .pg:hover{background:var(--bg3)}.pag .pg.cur{background:#1e3a5f;border-color:#3b82f6;color:#60a5fa}
 .search-panel{display:none;padding:20px;max-width:900px;margin:0 auto}
 .search-input{width:100%;padding:10px 16px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:14px;font-family:inherit;margin-bottom:16px}
+/* Empty-state message shown in the Individual Profile tab when no stock has been
+   chosen yet (search box is empty). Styled to match the Theme Tracker's equivalent
+   empty state for cross-page consistency. */
+.profile-empty{padding:60px 20px;text-align:center;color:var(--t3);font-size:13px}
+.profile-empty-hint{margin-top:8px;font-size:11px;color:var(--t4)}
 /* ─── Overview tab ─── */
 .ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 20px;max-width:1400px;margin:0 auto}
 .ov-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;display:flex;flex-direction:column;min-height:340px;max-height:calc(100vh - 240px);overflow:hidden}
@@ -636,6 +641,10 @@ function switchTab(tab){
     viewToggle.style.display='none';  // view toggle hidden in search tab
     const filterBtn=document.getElementById('filterBtn');
     if(filterBtn)filterBtn.style.display='';
+    // Render empty-state message (or current search result) when entering this tab.
+    // Without this, the panel would show as blank on first navigation since the
+    // input is empty and no render was ever triggered.
+    searchStock();
   }else{
     ovPanel.style.display='none';
     document.getElementById('searchPanel').style.display='none';
@@ -1300,7 +1309,14 @@ function getThemeRankInfo(themeName){
 function searchStock(){
   const input=document.getElementById('searchInput').value.trim().toUpperCase();
   const box=document.getElementById('searchResults');
-  if(!input||!DATA){box.innerHTML='';return;}
+  // Empty input → show landing message instead of a blank panel. This is the
+  // default state when the user first opens the Individual Profile tab without
+  // having clicked a ticker from RS Ranking / Overview.
+  if(!input){
+    box.innerHTML='<div class="profile-empty">No stock selected.<div class="profile-empty-hint">Search above, or click any ticker on the RS Ranking or Overview tab to view its profile.</div></div>';
+    return;
+  }
+  if(!DATA){box.innerHTML='';return;}
 
   const stock=DATA.e.find(e=>e.t===input);
   if(!stock){box.innerHTML=`<div style="text-align:center;color:var(--t3);padding:20px">No data found for "${esc(input)}"</div>`;return;}
