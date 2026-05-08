@@ -208,14 +208,31 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 /* The wrap is the scrollable element (because body is height-locked at 100vh).
    We deliberately do NOT cap its width or center it — that way the entire
    viewport width is a valid scroll target, including the empty space to the
-   right of the centered content. Inner sections handle their own max-width. */
+   right of the centered content. The inner container (.profile-inner) does
+   the centering + width capping, and ALL profile content lives inside it
+   (search bar, info boxes, profile box, tier toggle, chart grid). This
+   matches the stock screener's narrow centered layout. */
 .profile-wrap{flex:1;min-height:0;overflow-y:auto;width:100%;box-sizing:border-box}
 .profile-empty{padding:60px 20px;text-align:center;color:var(--t3);font-size:13px}
 .profile-empty-hint{margin-top:8px;font-size:11px;color:var(--t4)}
-/* Inner container for info-boxes + profile-box: max-width 1400px, centered (matches
-   screener's .ov-grid pattern). The chart-grid below sits OUTSIDE this so it can
-   span the full viewport like screener's chart view. */
-.profile-inner{max-width:1400px;margin:0 auto;padding:16px 20px 0}
+/* Centered narrow container — matches stock screener .search-panel (max-width:900px,
+   margin:0 auto, padding:20px). Everything in the Profile tab lives inside this. */
+.profile-inner{max-width:900px;margin:0 auto;padding:20px}
+/* Search bar — mirrors screener's .search-input */
+.profile-search{width:100%;padding:10px 16px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:14px;font-family:inherit;margin-bottom:16px;outline:none;box-sizing:border-box}
+.profile-search:focus{border-color:#3b82f6}
+[data-theme="light"] .profile-search{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.profile-search-results{margin-bottom:16px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg2);max-height:280px;overflow-y:auto;display:none}
+[data-theme="light"] .profile-search-results{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.profile-search-results.show{display:block}
+.profile-search-row{display:grid;grid-template-columns:36px 70px 1fr 56px;gap:8px;padding:8px 14px;font-size:12px;align-items:center;border-bottom:1px solid var(--bdr2);cursor:pointer;transition:background .12s}
+.profile-search-row:last-child{border-bottom:none}
+.profile-search-row:hover{background:var(--hovbg)}
+.profile-search-row .ps-rk{font-family:'JetBrains Mono',monospace;color:var(--t4);font-size:11px;text-align:right}
+.profile-search-row .ps-tk{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--t1)}
+.profile-search-row .ps-name{color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profile-search-row .ps-rs{text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;border-radius:4px;padding:2px 0;font-size:11px}
+.profile-search-empty{padding:14px;text-align:center;color:var(--t4);font-size:11px;font-style:italic}
 /* Info boxes — sized to match stock screener's .info-box exactly. */
 .info-boxes{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .info-box{flex:1;min-width:140px;padding:12px 16px;border-radius:10px;border:1px solid var(--bdr);background:var(--bg2);text-align:center}
@@ -240,8 +257,8 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 /* Holdings pill area must wrap inside the box and not spill out */
 .profile-holdings{display:flex;flex-wrap:wrap;gap:0;margin-top:6px;max-height:160px;overflow-y:auto;align-content:flex-start;width:100%;padding-right:4px;box-sizing:border-box}
 .profile-holdings .pill{font-size:10.5px;padding:2px 6px;margin:2px}
-/* Tier toggle row — sits inside the chart-grid container so it aligns with the grid */
-.tier-row{display:flex;align-items:center;justify-content:space-between;padding:0 16px 12px;gap:10px;flex-wrap:wrap}
+/* Tier toggle row — sits inside .profile-inner (centered with the rest) */
+.tier-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
 .tier-row-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .tier-toggle{display:inline-flex;gap:2px;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:3px}
 .tier-btn{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;padding:6px 14px;border-radius:6px;cursor:pointer;transition:.15s;color:var(--t3);text-transform:uppercase;display:flex;align-items:center;gap:6px}
@@ -255,8 +272,8 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .tier-btn .ct{color:var(--t4);font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace}
 .tier-btn.active .ct{color:var(--t2)}
 .tier-section-label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3)}
-/* Stock chart grid — full viewport width, matches screener exactly */
-.chart-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 16px 16px}
+/* Stock chart grid — 3/row desktop (fits the 900px centered layout), 2/row mobile */
+.chart-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .chart-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 [data-theme="light"] .chart-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .chart-card-hdr{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr2);gap:6px}
@@ -266,15 +283,15 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .chart-card-tier.gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);border:1px solid #d97706}
 .chart-card-tier.silver{background:linear-gradient(135deg,#b0b7c0,#7d8590);border:1px solid #4b5563}
 .chart-card-tier.bronze{background:#9a6b3f;border:1px solid #7a5230}
-.chart-card-body{height:260px;width:100%;position:relative}
+.chart-card-body{height:240px;width:100%;position:relative}
 .chart-card-body .tradingview-widget-container{height:100%!important;width:100%!important}
 .chart-card-body .tradingview-widget-container__widget{height:calc(100% - 32px)!important;width:100%!important}
-.chart-empty{margin:0 16px 16px;padding:30px 20px;text-align:center;color:var(--t4);font-size:11px;font-style:italic;border:1px dashed var(--bdr2);border-radius:10px}
+.chart-empty{padding:30px 20px;text-align:center;color:var(--t4);font-size:11px;font-style:italic;border:1px dashed var(--bdr2);border-radius:10px}
 /* Profile-tab ticker link styling */
 .tk-link{cursor:pointer;color:var(--t1);transition:color .15s}
 .tk-link:hover{color:#3b82f6;text-decoration:underline}
 /* Mobile responsiveness — match screener mobile profile sizing */
-[data-view="mobile"] .profile-inner{padding:10px}
+[data-view="mobile"] .profile-inner{padding:12px;max-width:100vw}
 [data-view="mobile"] .info-boxes{display:block;margin-bottom:14px}
 [data-view="mobile"] .info-box{margin-bottom:8px;padding:10px 14px}
 [data-view="mobile"] .info-box .val{font-size:18px}
@@ -283,12 +300,12 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] .profile-tk{font-size:22px}
 [data-view="mobile"] .profile-price{font-size:16px}
 [data-view="mobile"] .profile-holdings{max-height:140px}
-[data-view="mobile"] .tier-row{padding:0 10px 10px}
-[data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:0 10px 10px}
+[data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px}
 [data-view="mobile"] .chart-card-body{height:200px}
 [data-view="mobile"] .chart-card-tk{font-size:11px}
 [data-view="mobile"] .tier-btn{padding:5px 10px;font-size:10px;letter-spacing:.3px}
-[data-view="mobile"] .chart-empty{margin:0 10px 10px}
+[data-view="mobile"] .profile-search{font-size:13px;padding:9px 14px}
+[data-view="mobile"] .profile-search-row{grid-template-columns:30px 60px 1fr 50px;font-size:11px;padding:7px 10px}
 [data-view="mobile"] .tk{font-size:11px}
 /* Nuclear overflow prevention: no element can exceed viewport width on mobile */
 [data-view="mobile"] *{max-width:100vw}
@@ -1017,25 +1034,47 @@ function render(){
 }
 
 // ─── Individual Profile tab rendering ──────────────────────────────────────
-// Renders the full Individual Profile view for the currently selected ETF
-// (profileTicker). The tab has four parts:
+// Renders the full Individual Profile view. The tab contains:
+//   0. Search bar (always shown — user can search ETFs by ticker/theme/holding)
 //   1. Three info boxes: RS Score | Ranking | Rank Change Δ
 //   2. Profile box: TradingView chart on left, ETF metadata + holdings pills on right
-//   3. Tier toggle: Gold / Silver / Bronze (mirrors .yr-toggle pattern from breadth)
-//   4. Stock chart grid for the selected tier (4 per row desktop, 2 per row mobile)
+//   3. Tier toggle: Gold / Silver / Bronze
+//   4. Stock chart grid for the selected tier (3 per row desktop, 2 per row mobile)
+// All sections live inside .profile-inner (max-width:900px, centered) — matches
+// the stock screener's narrow centered layout for a uniform look across pages.
 function renderProfile(){
   const root=document.getElementById('profileContent');
   if(!DATA||!DATA.e){
     root.innerHTML='<div class="profile-empty">Loading data...</div>';
     return;
   }
+
+  // Always-visible search bar at the top of the centered container. The bar
+  // and the (initially empty/hidden) results dropdown stay mounted across
+  // re-renders so the user's typed query and dropdown state are preserved.
+  // We look up #profileSearchInput before rebuilding to capture any in-flight
+  // input value, then re-apply it after innerHTML replace.
+  const prevSearchEl=document.getElementById('profileSearchInput');
+  const prevQuery=prevSearchEl?prevSearchEl.value:'';
+
+  let html='<div class="profile-inner">';
+  html+=`<input class="profile-search" id="profileSearchInput" placeholder="Search ETF ticker, theme name, or holding..." oninput="onProfileSearchInput()" autocomplete="off">`;
+  html+=`<div class="profile-search-results" id="profileSearchResults"></div>`;
+
+  // Empty state: no ETF picked yet — show search bar + hint, then close inner.
   if(!profileTicker){
-    root.innerHTML='<div class="profile-empty">No ETF selected.<div class="profile-empty-hint">Click any ticker on the RS Ranking or Overview tab to view its profile.</div></div>';
+    html+='<div class="profile-empty">No ETF selected.<div class="profile-empty-hint">Search above, or click any ticker on the RS Ranking or Overview tab to view its profile.</div></div>';
+    html+='</div>';
+    root.innerHTML=html;
+    if(prevSearchEl) document.getElementById('profileSearchInput').value=prevQuery;
     return;
   }
   const etf=DATA.e.find(e=>e.t===profileTicker);
   if(!etf){
-    root.innerHTML=`<div class="profile-empty">ETF "${esc(profileTicker)}" not found.</div>`;
+    html+=`<div class="profile-empty">ETF "${esc(profileTicker)}" not found.</div>`;
+    html+='</div>';
+    root.innerHTML=html;
+    if(prevSearchEl) document.getElementById('profileSearchInput').value=prevQuery;
     return;
   }
 
@@ -1055,9 +1094,7 @@ function renderProfile(){
   const chgTxt=etf.ch!=null?(etf.ch>=0?'+':'')+etf.ch.toFixed(2)+'%':'—';
   const priceTxt=etf.p!=null?'$'+etf.p.toFixed(2):'—';
 
-  // Holdings: split by tier and render pills in Gold → Silver → Bronze order so the
-  // box content matches the tier toggle order below. Pills use the same .pill-g/-s/-b
-  // styling as the RS Ranking expanded rows did.
+  // Holdings: split by tier and render pills in Gold → Silver → Bronze order.
   const hl=etf.h?etf.h.split(',').map(s=>s.trim()).filter(Boolean):[];
   const hg=etf.hg||{};
   const gs=hl.filter(h=>hg[h]==='g');
@@ -1069,18 +1106,9 @@ function renderProfile(){
     ? orderedHoldings.map(h=>`<span class="pill ${pillFor(h)}">${esc(h)}</span>`).join('')
     : '<span class="clip-empty">No holdings data</span>';
 
-  let html='';
-
-  // ─── Top section (centered, max-width 1400px): info boxes + profile box ───
-  html+='<div class="profile-inner">';
-
   // Section 1: Three info boxes (RS Score | Ranking | Rank Change Δ).
-  // Sized to match stock screener's info boxes — small label, monospace val,
-  // tiny sub-line, all centered. Keeps the look consistent across pages.
   const rsBg=getRSBg(rsVal), rsCol=getRSCol(rsVal);
   const freqLabel=isWeekly?'Weekly':'Daily';
-  // Render the RS score as a colored pill inside the centered val container
-  // (matches the screener's "100 / Strong Leader" pattern with color coding).
   const rsPill=rsVal!=null
     ? `<span style="color:${rsCol};background:${rsBg};padding:2px 14px;border-radius:6px;display:inline-block">${rsVal}</span>`
     : '—';
@@ -1102,8 +1130,6 @@ function renderProfile(){
   </div>`;
 
   // Section 2: Profile box (chart LHS + ETF info RHS).
-  // Holdings pills are wrapped inside the right column so they cannot spill out
-  // (max-height + overflow-y on .profile-holdings handles long lists).
   html+=`<div class="profile-box">
     <div class="profile-chart tv-chart" id="tvc-profile-${esc(etf.t)}"></div>
     <div class="profile-info">
@@ -1121,13 +1147,8 @@ function renderProfile(){
     </div>
   </div>`;
 
-  html+='</div>'; // close .profile-inner
-
-  // ─── Bottom section (FULL viewport width, like screener's chart-grid) ────
-  // Tier toggle row + stock chart grid sit OUTSIDE .profile-inner so they span
-  // edge-to-edge — matching the stock screener page exactly.
-  // If the currently-selected tier has no stocks, auto-fall-back to the first
-  // tier that does, so the user sees something meaningful.
+  // Section 3: Tier toggle. Auto-fall-back to a non-empty tier so the user
+  // always sees something meaningful when switching ETFs.
   const tierMap={gold:gs,silver:ss,bronze:bs};
   if(tierMap[profileTier].length===0){
     if(gs.length) profileTier='gold';
@@ -1145,7 +1166,7 @@ function renderProfile(){
     </div>
   </div>`;
 
-  // ─── Section 4: Stock chart grid for the selected tier ────────────────────
+  // Section 4: Stock chart grid for the selected tier.
   const tierStocks=tierMap[profileTier];
   if(tierStocks.length===0){
     html+=`<div class="chart-empty">No ${profileTier} stocks for this ETF.</div>`;
@@ -1162,9 +1183,89 @@ function renderProfile(){
     html+='</div>';
   }
 
+  html+='</div>'; // close .profile-inner
+
   root.innerHTML=html;
+  // Restore the search input value (if user was mid-typing during a re-render).
+  if(prevSearchEl){
+    const newInput=document.getElementById('profileSearchInput');
+    if(newInput) newInput.value=prevQuery;
+    // Also restore the dropdown contents if there was an active query
+    if(prevQuery) onProfileSearchInput();
+  }
   // Inject TradingView widgets for the ETF profile chart and all stock charts.
   requestAnimationFrame(()=>injectProfileTVCharts());
+}
+
+// Search handler — filters DATA.e by ticker / theme name / fund name / holdings
+// and renders matching ETFs as a clickable dropdown below the search input.
+// Mirrors the search behaviour from the RS Ranking table.
+function onProfileSearchInput(){
+  const inp=document.getElementById('profileSearchInput');
+  const box=document.getElementById('profileSearchResults');
+  if(!inp||!box) return;
+  const q=inp.value.trim().toLowerCase();
+  if(!q){
+    box.classList.remove('show');
+    box.innerHTML='';
+    return;
+  }
+  if(!DATA||!DATA.e){
+    box.innerHTML='<div class="profile-search-empty">Loading...</div>';
+    box.classList.add('show');
+    return;
+  }
+  // Match on ticker, theme name (n), fund name (fn), or any holding (h is a
+  // comma-separated string). Case-insensitive substring match across all fields.
+  const matches=DATA.e.filter(e=>{
+    if(e.t && e.t.toLowerCase().includes(q)) return true;
+    if(e.n && e.n.toLowerCase().includes(q)) return true;
+    if(e.fn && e.fn.toLowerCase().includes(q)) return true;
+    if(e.h && e.h.toLowerCase().includes(q)) return true;
+    return false;
+  });
+  // Sort matches: ticker prefix matches first, then ticker contains, then by rank.
+  // Gives the most "obvious" hit at the top when the user types e.g. "GD".
+  matches.sort((a,b)=>{
+    const at=a.t.toLowerCase(), bt=b.t.toLowerCase();
+    const aPrefix=at.startsWith(q)?0:1;
+    const bPrefix=bt.startsWith(q)?0:1;
+    if(aPrefix!==bPrefix) return aPrefix-bPrefix;
+    const aContains=at.includes(q)?0:1;
+    const bContains=bt.includes(q)?0:1;
+    if(aContains!==bContains) return aContains-bContains;
+    return (a.rk||9999)-(b.rk||9999);
+  });
+  // Limit to 25 to keep the dropdown manageable.
+  const top=matches.slice(0,25);
+  if(top.length===0){
+    box.innerHTML='<div class="profile-search-empty">No ETFs match this search.</div>';
+    box.classList.add('show');
+    return;
+  }
+  const rows=top.map(e=>{
+    const rk=isWeekly?e.w_rk:e.rk;
+    const rs=isWeekly?e.w_rs:e.rs;
+    return `<div class="profile-search-row" onclick="pickProfileSearchResult('${esc(e.t)}')">
+      <span class="ps-rk">#${rk||'—'}</span>
+      <span class="ps-tk">${esc(e.t)}</span>
+      <span class="ps-name" title="${esc(e.n||'')}">${esc(e.n||'')}</span>
+      <span class="ps-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span>
+    </div>`;
+  }).join('');
+  box.innerHTML=rows;
+  box.classList.add('show');
+}
+
+// User clicked a result row → switch the active ETF, clear the search box.
+function pickProfileSearchResult(ticker){
+  profileTicker=ticker;
+  profileTier='gold'; // reset tier when picking a new ETF
+  const inp=document.getElementById('profileSearchInput');
+  if(inp) inp.value='';
+  const box=document.getElementById('profileSearchResults');
+  if(box){box.classList.remove('show');box.innerHTML='';}
+  renderProfile();
 }
 
 function setProfileTier(tier){
@@ -1175,9 +1276,7 @@ function setProfileTier(tier){
 
 // Inject TradingView advanced-chart widgets into every .tv-chart in the profile tab.
 // Uses dataset.loaded as a guard so re-renders (e.g. when the user toggles tiers and
-// the same chart is still on screen) don't double-inject scripts. Heights vary:
-// the main ETF profile chart gets the full profile-chart height; stock cards get a
-// smaller fixed-height card body sized for the 4-up grid.
+// the same chart is still on screen) don't double-inject scripts.
 function injectProfileTVCharts(){
   const isDark=document.documentElement.getAttribute('data-theme')==='dark';
   const theme=isDark?'dark':'light';
