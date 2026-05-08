@@ -313,8 +313,6 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .chart-card-tier.silver{background:linear-gradient(135deg,#b0b7c0,#7d8590);border:1px solid #4b5563}
 .chart-card-tier.bronze{background:#9a6b3f;border:1px solid #7a5230}
 .chart-card-body{height:240px;width:100%;position:relative}
-.chart-card-body .tradingview-widget-container{height:100%!important;width:100%!important}
-.chart-card-body .tradingview-widget-container__widget{height:100%!important;width:100%!important}
 .chart-empty{padding:30px 20px;text-align:center;color:var(--t4);font-size:11px;font-style:italic;border:1px dashed var(--bdr2);border-radius:10px}
 /* Profile-tab ticker link styling */
 .tk-link{cursor:pointer;color:var(--t1);transition:color .15s}
@@ -1368,10 +1366,12 @@ function injectProfileTVCharts(){
     wrapper.style.cssText='height:100%;width:100%';
     const widgetDiv=document.createElement('div');
     widgetDiv.className='tradingview-widget-container__widget';
-    // Fill the wrapper completely — TradingView's autosize:true positions the
-    // attribution copyright row inside this box, so reserving extra space (e.g.
-    // calc(100% - 32px)) just creates dead whitespace below the candles.
-    widgetDiv.style.cssText='height:100%;width:100%';
+    // Reserve 32px for TradingView's attribution/copyright row that the widget
+    // appends below the chart. Without this, the chart's plot area extends to
+    // the container's bottom edge while the axis lines stop short of it,
+    // leaving a small visible gap in the bottom-right corner. Matches the
+    // stock screener's approach exactly.
+    widgetDiv.style.cssText='height:calc(100% - 32px);width:100%';
     wrapper.appendChild(widgetDiv);
     el.appendChild(wrapper);
     const script=document.createElement('script');
