@@ -70,9 +70,16 @@ INDUSTRY_TO_THEME = {
     "Software—Infrastructure": "Software",
     "Software - Infrastructure": "Software",
     "Information Technology Services": "Software",
-    "Computer Hardware": "Software",
+    # Storage/HDD/flash hardware vendors (WDC, SNDK, STX, NTAP, PSTG, DELL, HPQ,
+    # SMCI, IONQ, etc.) ride the same demand cycle as memory semis (Micron etc.),
+    # so bucket them with Semiconductors. Previously misclassified as Software.
+    "Computer Hardware": "Semiconductors",
     "Communication Equipment": "Telecom",
-    "Consumer Electronics": "Software",
+    # Generic consumer electronics fallback — small-cap CE names like GPRO/SONO/VZIO.
+    # AAPL is already pinned to "Magnificent Seven" via PROTECTED_BASKETS (Step 1
+    # of resolve_theme runs before this industry lookup), so this fallback only
+    # affects the long tail of CE tickers that aren't in any protected basket.
+    "Consumer Electronics": "Consumer Discretionary",
     "Scientific & Technical Instruments": "Semiconductors",
     "Electronic Gaming & Multimedia": "Esports & Gaming",
     # Aerospace/Defense
