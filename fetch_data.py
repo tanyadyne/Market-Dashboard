@@ -71,7 +71,6 @@ ETF_INFO = [
     {"t":"XPH","n":"Pharmaceuticals","fn":"SS SPDR S&P Pharm","h":"LQDA,MBX,OGN,AXSM,EWTX,ELAN,VTRS,AMLX,AMRX,MRK,CRNX,XERS,LGND,JNJ,LLY,PBH,BMY,PRGO,SUPN,RPRX,ZTS,JAZZ,AVDL,PFE"},
     {"t":"PBJ","n":"Food & Beverage","fn":"Invesco Food & Beverage","h":"MNST,HSY,KR,SYY,MDLZ,KHC,CTVA,DASH,HLF,UNFI,SEB,IMKTA,TSN,USFD,FDP,CART,CHEF,ADM,AGRO,TR,ACI,DPZ,POST,JBS,WMK"},
     {"t":"XLP","n":"Consumer Staples","fn":"Sel Sector:C SSS SPDR I","h":"ADM,CAG,CHD,CL,CLX,COST,CPB,DG,DLTR,EL,GIS,HRL,HSY,K,KDP,KHC,KMB,KO,KR,KVUE,MDLZ,MNST,MO,PEP,PG,PM,SJM,SYY,TGT,WMT"},
-    {"t":"QQQE","n":"Nasdaq-100 (EW)","fn":"Direxion:NASDAQ-100 EWI","h":"AAPL,ADI,AEP,AMAT,AMD,AMGN,ANET,ANSS,AVGO,AZN,BIIB,CDNS,CDW,CSCO,CTSH,DDOG,DELL,EA,FFIV,GILD,GLW,HPE,IDXX,INTC,ISRG,JBL,JNPR,KLAC,LRCX,MAR,MNST,MPWR,MRVL,MU,NVDA,PLTR,QCOM,REGN,ROST,SWKS,TDY,TER,TXN,VRSN,VRTX,WBD,XEL"},
     {"t":"ROBO","n":"Robotics & Automation","fn":"Robo Glbl Robots & Auto","h":"SYM,TER,ISRG,SERV,IRBT,COHR,ROK,ILMN,RR,ARBE,AUR,GMED,PRCT,NOVT,PDYN,IPGP,NDSN,EMR"},
     {"t":"ARKK","n":"Innovation / Growth","fn":"ARK Innovation","h":"TSLA,ROKU,COIN,TEM,CRSP,SHOP,HOOD,RBLX,AMD,PLTR,BEAM,TER,CRCL,BMNR,ACHR,TXG,TWST,ILMN,AMZN,VCYT,BLSH,NVDA,NTRA,META,DKNG"},
     {"t":"HYDR","n":"Hydrogen","fn":"Glbl X Hydrogen ETF","h":"BE,PLUG,BLDP,SLDP,FCEL,CMI,APD"},
@@ -90,7 +89,7 @@ ETF_INFO = [
     {"t":"PHO","n":"Water Infrastructure","fn":"Invesco Water Res","h":"WAT,FERG,ECL,ROP,AWK,MLI,IEX,WMS,XYL,PNR,VLTO,AOS,ACM,CNM,VMI,WTRG,BMI,TTEK,ITRI,WTS,ZWS,MWA,SBS,FELE,HWKN"},
     {"t":"BLOK","n":"Blockchain","fn":"Amplify Blockchain Tech","h":"BBBY,BITB,BKKT,BLK,CAN,CIFR,CLSK,CME,CMPO,COIN,CORZ,CRCL,FBTC,FIGR,GLXY,HOOD,HUT,IBIT,IBM,MELI,NU,OPRA,PYPL,RBLX,WULF,XYZ"},
     {"t":"WCLD","n":"Cloud Computing","fn":"WisdomTree:Cloud Cmptng","h":"FSLY,SEMR,MDB,DOCN,FROG,PATH,SNOW,BILL,DDOG,CFLT,WK,TWLO,CRWD,PCOR,AGYS,IOT,BRZE,QLYS,CWAN,BL,CLBT,PANW,SHOP,INTA,NET"},
-    {"t":"WGMI","n":"Crypto Miners / Data Centers","fn":"CoinShares Btc Mining","h":"APLD,BITF,BTBT,BTDR,CAN,CANG,CIFR,CLSK,CORZ,CRWV,GLXY,HIVE,HUT,IREN,MARA,NBIS,NVDA,RIOT,TSM,WULF,XYZ"},
+    {"t":"WGMI","n":"Crypto Miners / Data Centers","fn":"CoinShares Btc Mining","h":"APLD,BTBT,BTDR,CAN,CANG,CIFR,CLSK,CORZ,CRWV,GLXY,HIVE,HUT,IREN,MARA,NBIS,NVDA,RIOT,TSM,WULF,XYZ"},
     {"t":"IBUY","n":"Online Retail","fn":"Amplify Online Retail","h":"FIGS,LQDT,CVNA,UPWK,EXPE,CART,W,RVLV,CHWY,LYFT,MSM,EBAY,BKNG,AFRM,SPOT,TRIP,ABNB,PTON,UBER,AMZN,CPRT,PYPL,HIMS,SSTK,ETSY"},
     {"t":"TAN","n":"Solar Energy","fn":"Invesco Solar","h":"NXT,FSLR,RUN,ENPH,SEDG,HASI,CSIQ,CWEN,DQ,SHLS,ARRY,JKS"},
     {"t":"KCE","n":"Capital Markets","fn":"SS SPDR S&P Cap Mkts","h":"AMG,IVZ,MS,CBOE,BK,SF,CME,STT,HOOD,LPLA,GS,NTRS,IBKR,STEP,SCHW,MSCI,PIPR,JHG,TPG,MCO,EVR,TROW,GLXY,FHI,NDAQ"},
@@ -1227,8 +1226,13 @@ def main():
         # then averaged across components to form a synthetic basket price series.
         # We then run the standard setup/trend functions on this series as if it were
         # a single ticker. Skipped for baskets with insufficient component history.
+        # Also persist a trimmed close series + dates as `bp`/`bd` so the frontend can
+        # draw a custom price chart for the basket (real ETFs use TradingView, baskets
+        # use this since they have no listed ticker for TV to look up).
         _basket_sf = 0
         _basket_tz = "neutral"
+        _basket_price_series = None
+        _basket_dates = None
         try:
             comp_dfs = []
             for h in valid:
@@ -1271,10 +1275,26 @@ def main():
                             _basket_tz = compute_trend_zone(syn_c, syn_h, syn_l, spy_closes, spy_ts_map, ref_index)
                         except Exception:
                             _basket_tz = "neutral"
+                        # Persist the synthetic close series + matching dates for the frontend.
+                        # Trim to the last ~150 trading days (~7 months) — enough to give the
+                        # chart visual context without bloating data.json. Round to 2dp since
+                        # the series is normalised to start at 100 (small/scale-invariant).
+                        _BP_TRIM = 150
+                        _bp_full = [round(float(x), 2) for x in syn_c.tolist()]
+                        _bp_dates_full = [str(d.date()) if hasattr(d, "date") else str(d)[:10]
+                                          for d in ref_index]
+                        if len(_bp_full) > _BP_TRIM:
+                            _basket_price_series = _bp_full[-_BP_TRIM:]
+                            _basket_dates = _bp_dates_full[-_BP_TRIM:]
+                        else:
+                            _basket_price_series = _bp_full
+                            _basket_dates = _bp_dates_full
         except Exception as _e:
             print(f"  [warn] Could not compute synthetic sf/tz for {info.get('t','?')}: {_e}")
             _basket_sf = 0
             _basket_tz = "neutral"
+            _basket_price_series = None
+            _basket_dates = None
 
         results.append({
             **info,
@@ -1308,6 +1328,12 @@ def main():
             "w_ra": w_adv_streak,
             "w_vs": w_avg_vs,
             "w_fr": round(w_final_rs, 4) if w_rs_series else None,
+            # Synthetic basket close series + matching ISO dates, captured above.
+            # Frontend uses these to draw a custom price chart for baskets (since
+            # baskets have no listed ticker for TradingView). Both fields are None
+            # when component history was insufficient.
+            "bp": _basket_price_series,
+            "bd": _basket_dates,
         })
 
     # ─── Intraday overlay: replace EOD price with live quote when market is open ──
