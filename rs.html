@@ -204,6 +204,80 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] th:nth-child(4),[data-view="mobile"] td:nth-child(4){width:16%}
 [data-view="mobile"] th:nth-child(5),[data-view="mobile"] td:nth-child(5){width:16%}
 [data-view="mobile"] th:nth-child(6),[data-view="mobile"] td:nth-child(6){width:16%}
+/* ─── Individual Profile tab ──────────────────────────────────────────────── */
+.profile-wrap{padding:20px;max-width:1400px;margin:0 auto;flex:1;min-height:0;overflow-y:auto;width:100%;box-sizing:border-box}
+.profile-empty{padding:60px 20px;text-align:center;color:var(--t3);font-size:13px}
+.profile-empty-hint{margin-top:8px;font-size:11px;color:var(--t4)}
+.info-boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.info-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+[data-theme="light"] .info-box{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.info-box .lbl{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3)}
+.info-box .val{font-size:26px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t1);line-height:1.1;margin-top:2px}
+.info-box .sub{font-size:11px;color:var(--t3);margin-top:2px}
+.info-box .sub.up{color:var(--g)}.info-box .sub.dn{color:var(--r)}.info-box .sub.fl{color:var(--t4)}
+/* Profile box: chart on LHS, ETF info + holdings on RHS */
+.profile-box{display:grid;grid-template-columns:1fr 1fr;gap:18px;background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:18px}
+[data-theme="light"] .profile-box{box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.profile-chart{height:340px;min-height:340px;border-radius:8px;overflow:hidden;border:1px solid var(--bdr2);background:var(--card)}
+.profile-info{display:flex;flex-direction:column;gap:6px;min-width:0;overflow:hidden}
+.profile-tk{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;letter-spacing:.5px;line-height:1.1;color:var(--t1)}
+.profile-name{font-size:13px;color:var(--t2);font-weight:500;line-height:1.3}
+.profile-fn{font-size:11px;color:var(--t3);font-weight:500;letter-spacing:.3px}
+.profile-price{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;margin-top:6px;color:var(--t1)}
+.profile-price .chg{font-size:13px;margin-left:8px;font-weight:600}
+.profile-price .chg.cp{color:var(--g)}.profile-price .chg.cn{color:var(--r)}.profile-price .chg.cz{color:var(--t3)}
+.profile-holdings-title{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3);margin-top:10px}
+.profile-holdings-counts{font-size:10px;color:var(--t3);margin-top:4px}
+/* Holdings pill area must wrap inside the box and not spill out */
+.profile-holdings{display:flex;flex-wrap:wrap;gap:0;margin-top:6px;max-height:160px;overflow-y:auto;align-content:flex-start;width:100%;padding-right:4px;box-sizing:border-box}
+.profile-holdings .pill{font-size:10.5px;padding:2px 6px;margin:2px}
+/* Tier toggle (Gold/Silver/Bronze) — mirrors the .yr-toggle pattern from breadth */
+.tier-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.tier-row-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tier-toggle{display:inline-flex;gap:2px;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:3px}
+.tier-btn{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;padding:6px 14px;border-radius:6px;cursor:pointer;transition:.15s;color:var(--t3);text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.tier-btn:hover{color:var(--t1)}
+.tier-btn.active{background:var(--bg2);color:var(--t1);box-shadow:0 1px 2px rgba(0,0,0,0.08)}
+[data-theme="dark"] .tier-btn.active{background:#2a2a2a;color:#e8e8e8;box-shadow:none}
+.tier-btn .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.tier-btn .dot.gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);border:1px solid #d97706}
+.tier-btn .dot.silver{background:linear-gradient(135deg,#b0b7c0,#7d8590);border:1px solid #4b5563}
+.tier-btn .dot.bronze{background:#9a6b3f;border:1px solid #7a5230}
+.tier-btn .ct{color:var(--t4);font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.tier-btn.active .ct{color:var(--t2)}
+.tier-section-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3)}
+/* Stock chart grid — 4/row desktop, 2/row mobile (same pattern as screener) */
+.chart-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.chart-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+[data-theme="light"] .chart-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.chart-card-hdr{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr2);gap:6px}
+.chart-card-l{display:flex;align-items:center;gap:6px;min-width:0}
+.chart-card-tk{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.5px;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chart-card-tier{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.chart-card-tier.gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);border:1px solid #d97706}
+.chart-card-tier.silver{background:linear-gradient(135deg,#b0b7c0,#7d8590);border:1px solid #4b5563}
+.chart-card-tier.bronze{background:#9a6b3f;border:1px solid #7a5230}
+.chart-card-body{height:240px;width:100%;position:relative}
+.chart-card-body .tradingview-widget-container{height:100%!important;width:100%!important}
+.chart-card-body .tradingview-widget-container__widget{height:calc(100% - 32px)!important;width:100%!important}
+.chart-empty{padding:30px 20px;text-align:center;color:var(--t4);font-size:11px;font-style:italic;border:1px dashed var(--bdr2);border-radius:10px}
+/* Profile-tab ticker link styling */
+.tk-link{cursor:pointer;color:var(--t1);transition:color .15s}
+.tk-link:hover{color:#3b82f6;text-decoration:underline}
+/* Mobile responsiveness */
+[data-view="mobile"] .profile-wrap{padding:12px}
+[data-view="mobile"] .info-boxes{grid-template-columns:1fr;gap:8px;margin-bottom:12px}
+[data-view="mobile"] .info-box{padding:10px 14px}
+[data-view="mobile"] .info-box .val{font-size:20px}
+[data-view="mobile"] .profile-box{grid-template-columns:1fr;gap:12px;padding:12px;margin-bottom:14px}
+[data-view="mobile"] .profile-chart{height:240px;min-height:240px}
+[data-view="mobile"] .profile-tk{font-size:22px}
+[data-view="mobile"] .profile-price{font-size:17px}
+[data-view="mobile"] .profile-holdings{max-height:140px}
+[data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+[data-view="mobile"] .chart-card-body{height:180px}
+[data-view="mobile"] .chart-card-tk{font-size:11px}
+[data-view="mobile"] .tier-btn{padding:5px 10px;font-size:10px;letter-spacing:.3px}
 [data-view="mobile"] .tk{font-size:11px}
 /* Nuclear overflow prevention: no element can exceed viewport width on mobile */
 [data-view="mobile"] *{max-width:100vw}
@@ -234,7 +308,7 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
     <div class="hdr-t" style="font-size:15px;letter-spacing:1.5px;text-transform:uppercase">Theme Tracker</div>
   </div>
   <div class="hdr-r">
-    <div class="toggle-wrap rs-only-tool">
+    <div class="toggle-wrap rs-and-profile-tool">
       <span>Daily</span>
       <label class="toggle"><input type="checkbox" id="freqToggle" onchange="toggleFreq()"><span class="slider"></span></label>
       <span>Weekly</span>
@@ -243,7 +317,7 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
     <button class="btn btn-t rs-only-tool" onclick="openColModal()" title="Show/hide columns">⊞ Columns</button>
     <button class="btn btn-t rs-only-tool" id="bClip" onclick="toggleClipboard()" title="Clipboard">📋 Clipboard <span id="clipCount"></span></button>
     <div class="pill-toggle" id="bTheme" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
-    <div class="seg-toggle rs-only-tool">
+    <div class="seg-toggle rs-and-profile-tool">
       <button id="btnDesktop" class="on" onclick="setView(false)">Desktop</button>
       <button id="btnMobile" onclick="setView(true)">Mobile</button>
     </div>
@@ -253,6 +327,7 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
 <div class="tab-strip" id="tabStrip">
   <button class="tab-btn" id="tabOverview" onclick="switchTab('overview')">Overview</button>
   <button class="tab-btn active" id="tabRS" onclick="switchTab('rs')">RS Ranking</button>
+  <button class="tab-btn" id="tabProfile" onclick="switchTab('profile')">Individual Profile</button>
 </div>
 <div class="spy" id="spyBar" style="display:none">
   <span><b>SPY</b> <span class="m" id="spyP"></span> <span class="m" id="spyC" style="font-weight:600"></span></span>
@@ -299,6 +374,9 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
     </div>
   </div>
 </div>
+<div class="profile-wrap" id="profileTab" style="display:none">
+  <div id="profileContent"></div>
+</div>
 <div class="modal-overlay" id="sortModal">
   <div class="modal">
     <h3>⇅ Multi-Level Sort</h3>
@@ -320,9 +398,11 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
   </div>
 </div>
 <script>
-let DATA=null,HISTORY=null,sortKey='rk',sortDir=1,expandedTicker=null;
+let DATA=null,HISTORY=null,sortKey='rk',sortDir=1;
 let multiSort=[],useMultiSort=false,isMobile=false,isWeekly=false;
-let currentTab='rs'; // 'rs' = RS Ranking table, 'overview' = Overview placeholder
+let currentTab='rs'; // 'rs' | 'overview' | 'profile'
+let profileTicker=null; // ETF ticker currently shown in Individual Profile
+let profileTier='gold'; // 'gold' | 'silver' | 'bronze' — selected tier for the bottom chart grid
 
 // ─── VCP setup-flag bitmask (must match fetch_data.py + screener.html) ─────
 const SF_COILED  = 128;
@@ -341,26 +421,52 @@ function switchTab(tab){
   // Update tab buttons
   document.getElementById('tabRS').classList.toggle('active', tab==='rs');
   document.getElementById('tabOverview').classList.toggle('active', tab==='overview');
+  document.getElementById('tabProfile').classList.toggle('active', tab==='profile');
   // Toggle main content
   const tw=document.getElementById('tw');
   const overview=document.getElementById('overviewTab');
+  const profile=document.getElementById('profileTab');
   const status=document.getElementById('statusBar');
   const spy=document.getElementById('spyBar');
   const clip=document.getElementById('clipPanel');
   if(tab==='rs'){
     if(DATA) tw.style.display='block';
     overview.style.display='none';
+    profile.style.display='none';
     if(spy) spy.style.display='flex';
-    document.querySelectorAll('.rs-only-tool').forEach(el=>el.style.display='');
-  }else{
+    // RS Ranking shows everything: rs-only + rs-and-profile tools.
+    document.querySelectorAll('.rs-only-tool, .rs-and-profile-tool').forEach(el=>el.style.display='');
+  }else if(tab==='overview'){
     tw.style.display='none';
     overview.style.display='block';
+    profile.style.display='none';
     if(status) status.style.display='none';
     if(spy) spy.style.display='none';
     if(clip) clip.classList.remove('show');
-    document.querySelectorAll('.rs-only-tool').forEach(el=>el.style.display='none');
+    // Overview: hide everything except theme toggle (which has no "rs-only" class).
+    document.querySelectorAll('.rs-only-tool, .rs-and-profile-tool').forEach(el=>el.style.display='none');
     renderOverview();
+  }else{ // profile
+    tw.style.display='none';
+    overview.style.display='none';
+    profile.style.display='block';
+    if(status) status.style.display='none';
+    if(spy) spy.style.display='none';
+    if(clip) clip.classList.remove('show');
+    // Profile: hide RS-only tools (sort/columns/clipboard/search), but keep
+    // freq + view toggles visible since both are relevant on the profile too.
+    document.querySelectorAll('.rs-only-tool').forEach(el=>el.style.display='none');
+    document.querySelectorAll('.rs-and-profile-tool').forEach(el=>el.style.display='');
+    renderProfile();
   }
+}
+
+// Open the Individual Profile tab for a specific ETF ticker.
+// Wired to ticker clicks in the RS Ranking table and Overview rows.
+function openProfile(ticker){
+  profileTicker=ticker;
+  profileTier='gold'; // reset to gold each time a new ETF is opened
+  switchTab('profile');
 }
 
 // ─── Overview tab rendering ─────────────────────────────────────────────────
@@ -441,7 +547,9 @@ function ovRow(etf, opts){
   const delta = (opts.deltaOverride !== undefined)
     ? opts.deltaOverride
     : ovDeltaFor(etf.t, rankSource === 'w' ? 'wr' : 'r');
-  return `<div class="ov-row">
+  // Whole row is clickable — navigates to the Individual Profile tab. cursor:pointer
+  // is set inline so the affordance is obvious without extra CSS surface.
+  return `<div class="ov-row" onclick="openProfile('${esc(etf.t)}')" style="cursor:pointer" title="View ${esc(etf.t)} profile">
     <span class="ov-rk">#${rk != null ? rk : '—'}</span>
     <span class="ov-tk">${esc(etf.t)}</span>
     <span class="ov-name" title="${esc(etf.n||'')}">${esc(etf.n||'')}</span>
@@ -546,6 +654,7 @@ function toggleFreq(){
   sortDir=1;
   buildHeader();
   render();
+  if(currentTab==='profile') renderProfile();
 }
 
 // Map logical column keys to actual data keys based on frequency
@@ -566,6 +675,7 @@ function setView(mobile){
   if(isMobile){ALL_COLUMNS.forEach(c=>{colVisible[c.key]=c.mob;});}
   else{ALL_COLUMNS.forEach(c=>{colVisible[c.key]=true;});}
   buildHeader();render();
+  if(currentTab==='profile') renderProfile();
 }
 
 function toggleTheme(){
@@ -573,7 +683,10 @@ function toggleTheme(){
   const newTheme=d?'light':'dark';
   h.setAttribute('data-theme',newTheme);
   try{localStorage.setItem('dashboardTheme',newTheme);}catch(e){}
-  requestAnimationFrame(()=>render());
+  requestAnimationFrame(()=>{
+    render();
+    if(currentTab==='profile') renderProfile();
+  });
 }
 // Restore persisted theme on page load
 (function(){try{
@@ -735,11 +848,11 @@ function onDataLoaded(){
     sc.style.color=DATA.meta.spy_change>0?'var(--g)':DATA.meta.spy_change<0?'var(--r)':'var(--t3)';
     document.getElementById('ut').textContent='Updated: '+toSGT(DATA.meta.updated);
   }
-  if(expandedTicker&&document.querySelector('.tv-chart[data-loaded="1"]'))return;
   render();
-  // Refresh Overview tab content too — important for the 60s auto-refresh interval
-  // when the user is sitting on the Overview tab and DATA gets re-fetched.
+  // Refresh Overview/Profile tab content too — important for the 60s auto-refresh
+  // interval when the user is sitting on those tabs and DATA gets re-fetched.
   if(currentTab==='overview') renderOverview();
+  else if(currentTab==='profile') renderProfile();
 }
 
 function drawSparkline(canvas,series){
@@ -857,7 +970,6 @@ function render(){
   for(const e of items){
     // Use the original rank stored on the ETF object (preserved across filters/searches)
     const origRank=isWeekly?(e.w_rk||'—'):(e.rk||'—');
-    const exp=expandedTicker===e.t;
     const rf=e[rfKey]||0, ra=e[raKey]||0;
     const rv=e[rvKey], am=e[amKey], rs=e[rsKey], vs=e[vsKey];
     const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
@@ -865,7 +977,9 @@ function render(){
     const cellMap={
       rk:`<td class="rk">${origRank}</td>`,
       rd:rankDelta(e.t),
-      t:`<td class="tk">${esc(e.t)}</td>`,
+      // Ticker now navigates to the Individual Profile tab when clicked.
+      // event.stopPropagation() prevents the row's hover/click fallthrough from interfering.
+      t:`<td class="tk tk-link" onclick="event.stopPropagation();openProfile('${esc(e.t)}')" title="View ${esc(e.t)} profile">${esc(e.t)}</td>`,
       n:`<td class="sc2">${esc(e.n)}</td>`,
       rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>`,
       am:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(am)}</span></div></td>`,
@@ -877,18 +991,10 @@ function render(){
       rs:`<td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span></td>`,
       vs:`<td class="c"><div class="spark-wrap"><canvas data-ticker="${e.t}" data-freq="${isWeekly?'w':'d'}" width="${sparkW}" height="28"></canvas></div></td>`
     };
-    html+=`<tr class="${exp?'exp':''}" onclick="togRow('${e.t}')">`;
+    // Row click also opens the profile (matches old expand-on-click behaviour, but now navigates instead).
+    html+=`<tr onclick="openProfile('${esc(e.t)}')">`;
     visCols.forEach(c=>{html+=cellMap[c.key]||'';});
     html+=`</tr>`;
-    if(exp&&e.h){
-      const hl=e.h.split(',').map(s=>s.trim()).filter(Boolean),hg=e.hg||{};
-      const gc=h=>{const g=hg[h];return g==='g'?'pill-g':g==='s'?'pill-s':'pill-b';};
-      const gs=hl.filter(h=>hg[h]==='g'),ss=hl.filter(h=>hg[h]==='s'),bs=hl.filter(h=>hg[h]==='b');
-      let chartHtml='';
-      const chartStocks=[...gs,...ss];
-      if(chartStocks.length>0){chartHtml=`<div class="tv-grid">${chartStocks.map(tk=>{const isGold=gs.includes(tk);const sq=isGold?'<span style="color:#f59e0b;font-size:13px">🟨</span>':'<span style="color:#9ca3af;font-size:13px">⬜</span>';const nObj=NAMES[tk];const name=nObj?(typeof nObj==='string'?(' - '+esc(nObj)):nObj.n?(' - '+esc(nObj.n)):''):'';const desc=nObj&&typeof nObj==='object'&&nObj.d?esc(nObj.d):'';return `<div class="tv-chart-wrap"><div class="tv-label" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('show')">${sq}&nbsp;&nbsp;&nbsp;${esc(tk)}${name}</div><div class="tv-desc">${desc||'No description available.'}</div><div class="tv-chart" id="tvc-${esc(tk)}"></div></div>`;}).join('')}</div>`;}
-      html+=`<tr><td colspan="${colSpan}" class="hr"><div class="hl">${esc(e.fn)}</div><div class="hc">Holdings (${hl.length}): <span class="pill pill-g" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(gs).replace(/"/g,'&quot;')})" title="Click to add gold stocks to clipboard">● Gold ${gs.length}</span> <span class="pill pill-s" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(ss).replace(/"/g,'&quot;')})" title="Click to add silver stocks to clipboard">● Silver ${ss.length}</span> <span class="pill pill-b" style="font-size:9px;cursor:pointer" onclick="event.stopPropagation();addToClipboard(${JSON.stringify(bs).replace(/"/g,'&quot;')})" title="Click to add bronze stocks to clipboard">● Bronze ${bs.length}</span></div><div class="hw">${hl.map(h=>`<span class="pill ${gc(h)}">${esc(h)}</span>`).join('')}</div>${chartHtml}</td></tr>`;
-    }
   }
   document.getElementById('tb').innerHTML=html;
   document.getElementById('ft').textContent=`${items.length} ETFs · ${useMultiSort?'Multi-level sort active':'Sorted by '+sortKey}`;
@@ -896,26 +1002,185 @@ function render(){
     const etfMap={};DATA.e.forEach(e=>{etfMap[e.t]=e;});
     const vsKey=isWeekly?'w_vs':'vs';
     document.querySelectorAll('canvas[data-ticker]').forEach(c=>{const etf=etfMap[c.dataset.ticker];if(etf&&etf[vsKey])drawSparkline(c,etf[vsKey]);});
-    injectTVCharts();
   });
 }
 
-function injectTVCharts(){
-  const isDark=document.documentElement.getAttribute('data-theme')==='dark',theme=isDark?'dark':'light',bgColor=isDark?'#0F0F0F':'#FFFFFF',gridColor=isDark?'rgba(242, 242, 242, 0)':'rgba(0, 0, 0, 0)';
-  const mob=document.documentElement.getAttribute('data-view')==='mobile';
-  const wrapH=mob?180:300,widgetH=mob?148:268;
-  document.querySelectorAll('.tv-chart').forEach(el=>{
-    if(el.dataset.loaded)return;const tk=el.id.replace('tvc-','');if(!tk)return;el.dataset.loaded='1';
-    const wrapper=document.createElement('div');wrapper.className='tradingview-widget-container';wrapper.style.cssText=`height:${wrapH}px;width:100%`;
-    const widgetDiv=document.createElement('div');widgetDiv.className='tradingview-widget-container__widget';widgetDiv.style.cssText=`height:${widgetH}px;width:100%`;
-    wrapper.appendChild(widgetDiv);el.appendChild(wrapper);
-    const script=document.createElement('script');script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';script.type='text/javascript';script.async=true;
+// ─── Individual Profile tab rendering ──────────────────────────────────────
+// Renders the full Individual Profile view for the currently selected ETF
+// (profileTicker). The tab has four parts:
+//   1. Three info boxes: RS Score | Ranking | Rank Change Δ
+//   2. Profile box: TradingView chart on left, ETF metadata + holdings pills on right
+//   3. Tier toggle: Gold / Silver / Bronze (mirrors .yr-toggle pattern from breadth)
+//   4. Stock chart grid for the selected tier (4 per row desktop, 2 per row mobile)
+function renderProfile(){
+  const root=document.getElementById('profileContent');
+  if(!DATA||!DATA.e){
+    root.innerHTML='<div class="profile-empty">Loading data...</div>';
+    return;
+  }
+  if(!profileTicker){
+    root.innerHTML='<div class="profile-empty">No ETF selected.<div class="profile-empty-hint">Click any ticker on the RS Ranking or Overview tab to view its profile.</div></div>';
+    return;
+  }
+  const etf=DATA.e.find(e=>e.t===profileTicker);
+  if(!etf){
+    root.innerHTML=`<div class="profile-empty">ETF "${esc(profileTicker)}" not found.</div>`;
+    return;
+  }
+
+  // Use whichever frequency mode the user is in for RS/rank display.
+  const rsVal=isWeekly?etf.w_rs:etf.rs;
+  const rkVal=isWeekly?etf.w_rk:etf.rk;
+  const totalETFs=DATA.e.length;
+  const rkDelta=getRankDeltaVal(etf.t);
+  let rkDeltaCell;
+  if(rkDelta==null) rkDeltaCell='<div class="val" style="color:var(--t4)">—</div><div class="sub fl">No history</div>';
+  else if(rkDelta>0) rkDeltaCell=`<div class="val" style="color:var(--g)">▲ +${rkDelta}</div><div class="sub up">vs ${rankLookback}D ago</div>`;
+  else if(rkDelta<0) rkDeltaCell=`<div class="val" style="color:var(--r)">▼ ${rkDelta}</div><div class="sub dn">vs ${rankLookback}D ago</div>`;
+  else rkDeltaCell=`<div class="val" style="color:var(--t3)">– 0</div><div class="sub fl">vs ${rankLookback}D ago</div>`;
+
+  // ETF price + daily change line.
+  const chgCls=chgClass(etf.ch);
+  const chgTxt=etf.ch!=null?(etf.ch>=0?'+':'')+etf.ch.toFixed(2)+'%':'—';
+  const priceTxt=etf.p!=null?'$'+etf.p.toFixed(2):'—';
+
+  // Holdings: split by tier and render pills in Gold → Silver → Bronze order so the
+  // box content matches the tier toggle order below. Pills use the same .pill-g/-s/-b
+  // styling as the RS Ranking expanded rows did.
+  const hl=etf.h?etf.h.split(',').map(s=>s.trim()).filter(Boolean):[];
+  const hg=etf.hg||{};
+  const gs=hl.filter(h=>hg[h]==='g');
+  const ss=hl.filter(h=>hg[h]==='s');
+  const bs=hl.filter(h=>hg[h]==='b' || !hg[h]); // anything ungraded falls into bronze
+  const orderedHoldings=[...gs,...ss,...bs];
+  const pillFor=h=>{const g=hg[h];return g==='g'?'pill-g':g==='s'?'pill-s':'pill-b';};
+  const holdingsHtml=orderedHoldings.length
+    ? orderedHoldings.map(h=>`<span class="pill ${pillFor(h)}">${esc(h)}</span>`).join('')
+    : '<span class="clip-empty">No holdings data</span>';
+
+  let html='';
+
+  // ─── Section 1: Three info boxes (RS Score | Ranking | Rank Change Δ) ───
+  const rsBg=getRSBg(rsVal), rsCol=getRSCol(rsVal);
+  const freqLabel=isWeekly?'Weekly':'Daily';
+  html+=`<div class="info-boxes">
+    <div class="info-box">
+      <div class="lbl">RS Score (${freqLabel})</div>
+      <div class="val" style="color:${rsCol};background:${rsBg};display:inline-block;padding:2px 12px;border-radius:6px;width:fit-content">${rsVal!=null?rsVal:'—'}</div>
+      <div class="sub">Relative strength vs SPY</div>
+    </div>
+    <div class="info-box">
+      <div class="lbl">Ranking (${freqLabel})</div>
+      <div class="val">#${rkVal||'—'}</div>
+      <div class="sub">of ${totalETFs} themes</div>
+    </div>
+    <div class="info-box">
+      <div class="lbl">Rank Change Δ</div>
+      ${rkDeltaCell}
+    </div>
+  </div>`;
+
+  // ─── Section 2: Profile box (chart LHS + ETF info RHS) ─────────────────────
+  // Holdings pills are wrapped inside the right column so they cannot spill out
+  // (max-height + overflow-y on .profile-holdings handles long lists).
+  html+=`<div class="profile-box">
+    <div class="profile-chart tv-chart" id="tvc-profile-${esc(etf.t)}"></div>
+    <div class="profile-info">
+      <div class="profile-tk">${esc(etf.t)}</div>
+      <div class="profile-name">${esc(etf.n||'')}</div>
+      <div class="profile-fn">${esc(etf.fn||'')}</div>
+      <div class="profile-price">${priceTxt}<span class="chg ${chgCls}">${chgTxt}</span></div>
+      <div class="profile-holdings-title">Holdings (${hl.length})</div>
+      <div class="profile-holdings-counts">
+        <span style="color:#d97706">● Gold ${gs.length}</span> &nbsp;
+        <span style="color:var(--t3)">● Silver ${ss.length}</span> &nbsp;
+        <span style="color:var(--t4)">● Bronze ${bs.length}</span>
+      </div>
+      <div class="profile-holdings">${holdingsHtml}</div>
+    </div>
+  </div>`;
+
+  // ─── Section 3: Tier toggle (Gold / Silver / Bronze) ──────────────────────
+  // If the currently-selected tier has no stocks, auto-fall-back to the first
+  // tier that does, so the user sees something meaningful.
+  const tierMap={gold:gs,silver:ss,bronze:bs};
+  if(tierMap[profileTier].length===0){
+    if(gs.length) profileTier='gold';
+    else if(ss.length) profileTier='silver';
+    else if(bs.length) profileTier='bronze';
+  }
+  html+=`<div class="tier-row">
+    <div class="tier-row-l">
+      <span class="tier-section-label">Stock Charts</span>
+      <div class="tier-toggle">
+        <button class="tier-btn${profileTier==='gold'?' active':''}" onclick="setProfileTier('gold')"><span class="dot gold"></span>Gold<span class="ct">${gs.length}</span></button>
+        <button class="tier-btn${profileTier==='silver'?' active':''}" onclick="setProfileTier('silver')"><span class="dot silver"></span>Silver<span class="ct">${ss.length}</span></button>
+        <button class="tier-btn${profileTier==='bronze'?' active':''}" onclick="setProfileTier('bronze')"><span class="dot bronze"></span>Bronze<span class="ct">${bs.length}</span></button>
+      </div>
+    </div>
+  </div>`;
+
+  // ─── Section 4: Stock chart grid for the selected tier ────────────────────
+  const tierStocks=tierMap[profileTier];
+  if(tierStocks.length===0){
+    html+=`<div class="chart-empty">No ${profileTier} stocks for this ETF.</div>`;
+  }else{
+    html+='<div class="chart-grid">';
+    tierStocks.forEach(tk=>{
+      html+=`<div class="chart-card">
+        <div class="chart-card-hdr">
+          <div class="chart-card-l"><span class="chart-card-tier ${profileTier}"></span><span class="chart-card-tk">${esc(tk)}</span></div>
+        </div>
+        <div class="chart-card-body tv-chart" id="tvc-stk-${esc(tk)}"></div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+
+  root.innerHTML=html;
+  // Inject TradingView widgets for the ETF profile chart and all stock charts.
+  requestAnimationFrame(()=>injectProfileTVCharts());
+}
+
+function setProfileTier(tier){
+  if(profileTier===tier) return;
+  profileTier=tier;
+  renderProfile();
+}
+
+// Inject TradingView advanced-chart widgets into every .tv-chart in the profile tab.
+// Uses dataset.loaded as a guard so re-renders (e.g. when the user toggles tiers and
+// the same chart is still on screen) don't double-inject scripts. Heights vary:
+// the main ETF profile chart gets the full profile-chart height; stock cards get a
+// smaller fixed-height card body sized for the 4-up grid.
+function injectProfileTVCharts(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const theme=isDark?'dark':'light';
+  const bgColor=isDark?'#0F0F0F':'#FFFFFF';
+  const gridColor=isDark?'rgba(242, 242, 242, 0)':'rgba(0, 0, 0, 0)';
+  document.querySelectorAll('#profileTab .tv-chart').forEach(el=>{
+    if(el.dataset.loaded)return;
+    let tk=null;
+    if(el.id.startsWith('tvc-profile-')) tk=el.id.replace('tvc-profile-','');
+    else if(el.id.startsWith('tvc-stk-')) tk=el.id.replace('tvc-stk-','');
+    if(!tk)return;
+    el.dataset.loaded='1';
+    const wrapper=document.createElement('div');
+    wrapper.className='tradingview-widget-container';
+    wrapper.style.cssText='height:100%;width:100%';
+    const widgetDiv=document.createElement('div');
+    widgetDiv.className='tradingview-widget-container__widget';
+    widgetDiv.style.cssText='height:calc(100% - 32px);width:100%';
+    wrapper.appendChild(widgetDiv);
+    el.appendChild(wrapper);
+    const script=document.createElement('script');
+    script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.type='text/javascript';
+    script.async=true;
     script.innerHTML=`{"allow_symbol_change":false,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":true,"hide_legend":true,"hide_volume":true,"hotlist":false,"interval":"D","range":"80","locale":"en","save_image":false,"style":"1","symbol":"${tk}","theme":"${theme}","timezone":"Etc/UTC","backgroundColor":"${bgColor}","gridColor":"${gridColor}","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}`;
     wrapper.appendChild(script);
   });
 }
-
-function togRow(t){expandedTicker=expandedTicker===t?null:t;render();}
 
 buildHeader();loadData();setInterval(loadData,60000);
 </script>
