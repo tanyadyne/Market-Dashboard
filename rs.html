@@ -204,13 +204,21 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] thead th{padding:8px 2px;font-size:9.5px;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Compact RS pill on mobile so it fits the column allocation on narrow iPhones */
 [data-view="mobile"] .rs{padding:2px 4px;font-size:9.5px;min-width:0}
-/* Mobile column sizing: # | Ticker | Sector (flex) | 1D | YTD | RS — Δ Rank hidden */
-[data-view="mobile"] th:nth-child(1),[data-view="mobile"] td:nth-child(1){width:8%}
-[data-view="mobile"] th:nth-child(2),[data-view="mobile"] td:nth-child(2){width:16%}
-[data-view="mobile"] th:nth-child(3),[data-view="mobile"] td:nth-child(3){width:28%}
-[data-view="mobile"] th:nth-child(4),[data-view="mobile"] td:nth-child(4){width:16%}
-[data-view="mobile"] th:nth-child(5),[data-view="mobile"] td:nth-child(5){width:16%}
-[data-view="mobile"] th:nth-child(6),[data-view="mobile"] td:nth-child(6){width:16%}
+/* Mobile column sizing for the 7 default-visible columns:
+   # | Δ | Ticker | Sector | 1D | YTD | RS
+   Sector gets the largest share so theme names like "Magnificent Seven" or
+   "Crypto Miners / Data Centers" don't truncate prematurely. The numeric/pill
+   columns are sized to their content widths (e.g. YTD must fit "+131.25%").
+   Rules use nth-child so they're tied to render-order — if the user hides
+   columns via the Columns modal, the indices shift but table-layout:fixed
+   still gives sensible fallback distribution for remaining columns. */
+[data-view="mobile"] th:nth-child(1),[data-view="mobile"] td:nth-child(1){width:7%;padding-left:2px;padding-right:0}
+[data-view="mobile"] th:nth-child(2),[data-view="mobile"] td:nth-child(2){width:12%}
+[data-view="mobile"] th:nth-child(3),[data-view="mobile"] td:nth-child(3){width:13%}
+[data-view="mobile"] th:nth-child(4),[data-view="mobile"] td:nth-child(4){width:32%}
+[data-view="mobile"] th:nth-child(5),[data-view="mobile"] td:nth-child(5){width:12%}
+[data-view="mobile"] th:nth-child(6),[data-view="mobile"] td:nth-child(6){width:14%}
+[data-view="mobile"] th:nth-child(7),[data-view="mobile"] td:nth-child(7){width:10%}
 /* ─── Individual Profile tab ──────────────────────────────────────────────── */
 /* The wrap is the scrollable element (because body is height-locked at 100vh).
    We deliberately do NOT cap its width or center it — that way the entire
