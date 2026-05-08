@@ -50,6 +50,13 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .ov-body{padding:6px 0;max-height:520px;overflow-y:auto}
 .ov-row{display:grid;grid-template-columns:34px 70px 1fr 56px 60px;gap:6px;padding:7px 14px;font-size:12px;align-items:center;border-bottom:1px solid var(--bdr2)}
 .ov-row:last-child{border-bottom:none}
+/* Cross-list highlight — a theme that appears in BOTH Top 10 Daily and Top 10 Weekly
+   gets a subtle blue tint + left border. Helps the user spot themes leading on
+   both timeframes at a glance. The accent uses the existing --indigo brand color
+   so it stays consistent with the sparkline accents elsewhere. */
+.ov-row.both-top{background:rgba(99,102,241,0.08);border-left:3px solid var(--indigo);padding-left:11px}
+[data-theme="dark"] .ov-row.both-top{background:rgba(129,140,248,0.10)}
+.ov-row.both-top .ov-tk{color:var(--indigo)}
 .ov-row .ov-rk{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--t1);text-align:right}
 .ov-row .ov-tk{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--t1)}
 .ov-row .ov-name{color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -574,15 +581,21 @@ function ovRow(etf, opts){
   // Renders a single Overview list row.
   // opts.rankSource: 'd' (daily rk) or 'w' (weekly w_rk) — drives rank/RS/delta source.
   // opts.deltaOverride: optional pre-computed delta value (used by Accelerating Delta box).
+  // opts.highlight: if true, applies the .both-top class — used by Top 10 Daily/Weekly
+  //                 to flag themes appearing in BOTH lists.
   const rankSource = opts.rankSource || 'd';
   const rk = rankSource === 'w' ? etf.w_rk : etf.rk;
   const rs = rankSource === 'w' ? etf.w_rs : etf.rs;
   const delta = (opts.deltaOverride !== undefined)
     ? opts.deltaOverride
     : ovDeltaFor(etf.t, rankSource === 'w' ? 'wr' : 'r');
+  const cls = 'ov-row' + (opts.highlight ? ' both-top' : '');
+  const titleAttr = opts.highlight
+    ? `Also in Top 10 ${rankSource === 'w' ? 'Daily' : 'Weekly'} — click to view ${esc(etf.t)} profile`
+    : `View ${esc(etf.t)} profile`;
   // Whole row is clickable — navigates to the Individual Profile tab. cursor:pointer
   // is set inline so the affordance is obvious without extra CSS surface.
-  return `<div class="ov-row" onclick="openProfile('${esc(etf.t)}')" style="cursor:pointer" title="View ${esc(etf.t)} profile">
+  return `<div class="${cls}" onclick="openProfile('${esc(etf.t)}')" style="cursor:pointer" title="${titleAttr}">
     <span class="ov-rk">#${rk != null ? rk : '—'}</span>
     <span class="ov-tk">${esc(etf.t)}</span>
     <span class="ov-name" title="${esc(etf.n||'')}">${esc(etf.n||'')}</span>
@@ -601,14 +614,19 @@ function renderOverview(){
 
   // Top 10 Daily — by rk ascending
   const topD = [...items].filter(e=>e.rk!=null).sort((a,b)=>a.rk-b.rk).slice(0,10);
-  document.getElementById('ovTopDaily').innerHTML = topD.length
-    ? topD.map(e=>ovRow(e,{rankSource:'d'})).join('')
-    : '<div class="ov-empty">No data</div>';
-
   // Top 10 Weekly — by w_rk ascending
   const topW = [...items].filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,10);
+  // Intersection: ETFs appearing in BOTH Top 10 lists. These get visually flagged
+  // in both boxes so the user can spot strong themes across timeframes at a glance.
+  const topDSet = new Set(topD.map(e=>e.t));
+  const bothTopSet = new Set(topW.filter(e=>topDSet.has(e.t)).map(e=>e.t));
+
+  document.getElementById('ovTopDaily').innerHTML = topD.length
+    ? topD.map(e=>ovRow(e,{rankSource:'d', highlight:bothTopSet.has(e.t)})).join('')
+    : '<div class="ov-empty">No data</div>';
+
   document.getElementById('ovTopWeekly').innerHTML = topW.length
-    ? topW.map(e=>ovRow(e,{rankSource:'w'})).join('')
+    ? topW.map(e=>ovRow(e,{rankSource:'w', highlight:bothTopSet.has(e.t)})).join('')
     : '<div class="ov-empty">No data</div>';
 
   // VCP Coil Setups — same logic as screener: coiled + neutral/bull zones + w_rs >= 40
