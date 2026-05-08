@@ -1135,8 +1135,8 @@ function renderProfile(){
   const rkDelta=getRankDeltaVal(etf.t);
   let rkDeltaCell;
   if(rkDelta==null) rkDeltaCell='<div class="val" style="color:var(--t4)">—</div><div class="sub fl">No history</div>';
-  else if(rkDelta>0) rkDeltaCell=`<div class="val" style="color:var(--g)">▲ +${rkDelta}</div><div class="sub up">vs ${rankLookback}D ago</div>`;
-  else if(rkDelta<0) rkDeltaCell=`<div class="val" style="color:var(--r)">▼ ${rkDelta}</div><div class="sub dn">vs ${rankLookback}D ago</div>`;
+  else if(rkDelta>0) rkDeltaCell=`<div class="val" style="color:var(--g)">+${rkDelta}</div><div class="sub up">vs ${rankLookback}D ago</div>`;
+  else if(rkDelta<0) rkDeltaCell=`<div class="val" style="color:var(--r)">${rkDelta}</div><div class="sub dn">vs ${rankLookback}D ago</div>`;
   else rkDeltaCell=`<div class="val" style="color:var(--t3)">0</div><div class="sub fl">vs ${rankLookback}D ago</div>`;
 
   // ETF price + daily change line.
