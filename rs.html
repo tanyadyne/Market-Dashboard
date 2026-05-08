@@ -334,9 +334,14 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] .info-box .val{font-size:18px}
 [data-view="mobile"] .info-box .sub{font-size:9px;line-height:1.2;word-break:break-word;white-space:normal}
 [data-view="mobile"] .profile-box{grid-template-columns:1fr;gap:12px;padding:12px;margin-bottom:14px}
-/* Chart gets more vertical room on mobile — single-column layout means it spans
-   the full width, so we trade height-for-width and give it a more legible aspect. */
-[data-view="mobile"] .profile-chart{height:340px;min-height:340px}
+/* Chart height on mobile — sized to feel proportionate to the box and viewport,
+   matching what the stock screener's mobile profile renders. The screener's chart
+   ends up roughly 60-70% of viewport height in practice, so we use vh units with
+   a sensible min/max via clamp(). Without this, the chart looked tiny and left a
+   large dead-space gap before the ticker info below. overflow:hidden is dropped
+   on mobile so the TradingView widget's natural sizing matches the container
+   instead of being clipped (matches the stock screener profile pattern). */
+[data-view="mobile"] .profile-chart{height:clamp(420px, 65vh, 600px);min-height:420px;overflow:visible}
 [data-view="mobile"] .profile-tk{font-size:22px}
 [data-view="mobile"] .profile-price{font-size:16px}
 [data-view="mobile"] .profile-holdings{max-height:140px}
