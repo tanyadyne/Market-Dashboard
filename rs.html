@@ -1202,8 +1202,22 @@ function renderProfile(){
   </div>`;
 
   // Section 2: Profile box (chart LHS + ETF info RHS).
+  // For real ETFs, the chart container gets class `tv-chart` and is wired up to
+  // TradingView. For custom baskets (no listed ticker), it gets `basket-chart`
+  // with the synthetic price series serialised into a data attribute so the
+  // SVG renderer can pick it up.
+  const _isBasket=Array.isArray(etf.bp)&&etf.bp.length>0;
+  let _chartCellHtml;
+  if(_isBasket){
+    // Encode bp/bd as JSON in data-* attributes; simple and avoids global state.
+    const _bpJson=esc(JSON.stringify(etf.bp));
+    const _bdJson=esc(JSON.stringify(etf.bd||[]));
+    _chartCellHtml=`<div class="profile-chart basket-chart" id="bkc-profile-${esc(etf.t)}" data-bp='${_bpJson}' data-bd='${_bdJson}' data-ch="${etf.ch!=null?etf.ch:''}"></div>`;
+  }else{
+    _chartCellHtml=`<div class="profile-chart tv-chart" id="tvc-profile-${esc(etf.t)}"></div>`;
+  }
   html+=`<div class="profile-box">
-    <div class="profile-chart tv-chart" id="tvc-profile-${esc(etf.t)}"></div>
+    ${_chartCellHtml}
     <div class="profile-info">
       <div class="profile-tk">${esc(etf.t)}</div>
       <div class="profile-name">${esc(etf.n||'')}</div>
@@ -1266,7 +1280,7 @@ function renderProfile(){
     if(prevQuery) onProfileSearchInput();
   }
   // Inject TradingView widgets for the ETF profile chart and all stock charts.
-  requestAnimationFrame(()=>injectProfileTVCharts());
+  requestAnimationFrame(()=>{injectProfileTVCharts();renderBasketCharts();});
 }
 
 // Search handler — filters DATA.e by ticker / theme name / fund name / holdings
@@ -1380,6 +1394,94 @@ function injectProfileTVCharts(){
     script.async=true;
     script.innerHTML=`{"allow_symbol_change":false,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":true,"hide_legend":true,"hide_volume":true,"hotlist":false,"interval":"D","range":"80","locale":"en","save_image":false,"style":"1","symbol":"${tk}","theme":"${theme}","timezone":"Etc/UTC","backgroundColor":"${bgColor}","gridColor":"${gridColor}","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}`;
     wrapper.appendChild(script);
+  });
+}
+
+// ─── Custom basket chart renderer ────────────────────────────────────────────
+// Custom baskets (NURS, CHEMG, QNTM, etc.) have no listed ticker, so TradingView
+// can't chart them. Instead the backend persists a synthetic equal-weighted
+// price series (`bp`) + matching ISO dates (`bd`), normalised to start at 100.
+// We render an SVG line chart inline. Visual style intentionally simpler than
+// TV — no candles (the synthetic series doesn't have meaningful OHLC since each
+// component contributes Open/High/Low/Close averaged together), just a clean
+// price line with a couple of axis labels.
+function renderBasketCharts(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const bg=isDark?'#0F0F0F':'#FFFFFF';
+  const fg=isDark?'#888':'#6b7280';
+  const grid=isDark?'#1f1f1f':'#e5e7eb';
+  document.querySelectorAll('#profileTab .basket-chart').forEach(el=>{
+    if(el.dataset.loaded)return;
+    let bp,bd;
+    try{bp=JSON.parse(el.getAttribute('data-bp')||'[]');}catch(e){bp=[];}
+    try{bd=JSON.parse(el.getAttribute('data-bd')||'[]');}catch(e){bd=[];}
+    if(!Array.isArray(bp)||bp.length<2){
+      el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--t3);font-size:12px">No price history</div>';
+      el.dataset.loaded='1';return;
+    }
+    el.dataset.loaded='1';
+    // Layout — chart uses element's clientWidth/Height so it scales to the
+    // 340px desktop / 240px mobile container without hardcoding either.
+    const W=el.clientWidth||400, H=el.clientHeight||340;
+    // Margins: leave room for y-axis labels (right) and x-axis date labels (bottom).
+    const M={t:14,r:52,b:24,l:14};
+    const pw=W-M.l-M.r, ph=H-M.t-M.b;
+    const lo=Math.min(...bp), hi=Math.max(...bp);
+    // Pad the y-range by 2% on each end so the line doesn't touch the top/bottom.
+    const range=Math.max(hi-lo,0.01);
+    const yLo=lo-range*0.02, yHi=hi+range*0.02;
+    const yScale=v=>M.t+ph-((v-yLo)/(yHi-yLo))*ph;
+    const xScale=i=>M.l+(i/(bp.length-1))*pw;
+    // Determine line colour from period-over-period change (final vs first).
+    const periodChg=bp[bp.length-1]-bp[0];
+    const lineCol=periodChg>=0?'#22c55e':'#ef4444';
+    const fillCol=periodChg>=0?'rgba(34,197,94,0.08)':'rgba(239,68,68,0.08)';
+    // Build line path
+    let path='';
+    for(let i=0;i<bp.length;i++){
+      const x=xScale(i).toFixed(1),y=yScale(bp[i]).toFixed(1);
+      path+=(i===0?'M':'L')+x+' '+y+' ';
+    }
+    // Build fill path (line + line back along bottom)
+    const fillPath=path+'L'+xScale(bp.length-1).toFixed(1)+' '+(M.t+ph).toFixed(1)+
+                   ' L'+xScale(0).toFixed(1)+' '+(M.t+ph).toFixed(1)+' Z';
+    // Y-axis labels — show min, max, and a midpoint (3 ticks is plenty for a small chart)
+    const yMid=(yLo+yHi)/2;
+    const yTicks=[yHi,yMid,yLo].map(v=>{
+      const yp=yScale(v).toFixed(1);
+      return `<line x1="${M.l}" y1="${yp}" x2="${M.l+pw}" y2="${yp}" stroke="${grid}" stroke-width="1" stroke-dasharray="2,3"/>
+              <text x="${M.l+pw+6}" y="${yp}" fill="${fg}" font-size="11" font-family="JetBrains Mono,monospace" dominant-baseline="middle">${v.toFixed(2)}</text>`;
+    }).join('');
+    // X-axis labels — first, middle, last date (truncated to MMM DD format)
+    const fmtDate=s=>{
+      if(!s||typeof s!=='string')return '';
+      const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if(!m)return s.slice(0,7);
+      const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[parseInt(m[2])-1]+' '+parseInt(m[3]);
+    };
+    const xIdxs=bd.length>=3?[0,Math.floor(bd.length/2),bd.length-1]:[0,bd.length-1];
+    const xTicks=xIdxs.map(i=>{
+      const xp=xScale(i).toFixed(1);
+      const anchor=i===0?'start':(i===bd.length-1?'end':'middle');
+      return `<text x="${xp}" y="${H-6}" fill="${fg}" font-size="10" font-family="DM Sans,sans-serif" text-anchor="${anchor}">${fmtDate(bd[i])}</text>`;
+    }).join('');
+    // Last value badge — sits at the right edge near where the line ends
+    const lastY=yScale(bp[bp.length-1]).toFixed(1);
+    const lastTxt=bp[bp.length-1].toFixed(2);
+    // Header: "Equal-weighted basket index (rebased to 100)"
+    const svg=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="none" style="display:block">
+      <rect x="0" y="0" width="${W}" height="${H}" fill="${bg}"/>
+      ${yTicks}
+      <path d="${fillPath}" fill="${fillCol}" stroke="none"/>
+      <path d="${path}" fill="none" stroke="${lineCol}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${xScale(bp.length-1).toFixed(1)}" cy="${lastY}" r="2.5" fill="${lineCol}"/>
+      <rect x="${M.l+pw+2}" y="${parseFloat(lastY)-9}" width="46" height="18" fill="${lineCol}" rx="3"/>
+      <text x="${M.l+pw+25}" y="${lastY}" fill="#fff" font-size="11" font-family="JetBrains Mono,monospace" font-weight="600" text-anchor="middle" dominant-baseline="middle">${lastTxt}</text>
+      ${xTicks}
+      <text x="${M.l+4}" y="${M.t+12}" fill="${fg}" font-size="9" font-family="DM Sans,sans-serif" letter-spacing="0.5" text-transform="uppercase">EQUAL-WEIGHTED · REBASED TO 100</text>
+    </svg>`;
+    el.innerHTML=svg;
   });
 }
 
