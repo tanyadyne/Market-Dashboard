@@ -40,6 +40,7 @@ CSV_EXTRAS = [
     "ACN","AEHR","ALAB","APO","ARES","ARM","AXTI","BIRD","BP","BRK-B","CAR",
     "ENS","GOOG","LAC","LNG","NOK","NVO","OWL","RDDT","RIG","SMCI","SNAP","SNDK","STX","WDC",
     "WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM", "UMC",
+    "NVEC", "CAMT", "NLST", "SKYT", "POWI", "LWLG",
 ]
 
 # MANUAL_INCLUDE — tickers that bypass all filtering (liquidity, market cap, pharma/biotech).
@@ -49,6 +50,7 @@ CSV_EXTRAS = [
 # holding) so they reach the universe in the first place.
 MANUAL_INCLUDE = {
     "LAC", "ENS","WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM", "UMC",
+    "NVEC", "CAMT", "NLST", "SKYT", "POWI", "LWLG",
 }
 
 # MANUAL_EXCLUDE — tickers dropped from the universe before any filtering or data
