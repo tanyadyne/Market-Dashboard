@@ -176,6 +176,26 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 /* Empty-state label, e.g. "No holdings data" inside an expanded row. */
 .clip-empty{font-size:11px;color:var(--t4);font-style:italic}
 @media(max-width:768px){.hdr{padding:12px}.srch{width:140px}}
+/* ─── RS Ranking Charts view ──────────────────────────────────────────────
+   The top-level #chartGrid hosts a paginated grid of ETF chart cards on the
+   RS Ranking tab. Scoped by ID so the styling doesn't bleed into the Profile
+   tab's `.chart-grid` (which is a separate 2/3-col stock-chart grid). */
+#chartGrid{grid-template-columns:repeat(4,1fr);gap:12px;padding:16px;flex:1;overflow-y:auto;min-height:0}
+#chartGrid .chart-card-body{height:260px}
+[data-view="mobile"] #chartGrid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}
+[data-view="mobile"] #chartGrid .chart-card-body{height:200px}
+.chart-card-rs{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.chart-card-rk{font-family:'JetBrains Mono',monospace;color:var(--t3);font-size:10px;margin-right:6px}
+/* Chart-card ticker link styling: clickable to open Individual Profile */
+.chart-card-tk.tk-link{cursor:pointer;transition:color .15s}
+.chart-card-tk.tk-link:hover{color:#60a5fa}
+/* Pagination bar */
+.pg-bar{display:flex;justify-content:center;gap:4px;padding:12px 0;flex-wrap:wrap}
+.pg-bar:empty{display:none}
+.pg-bar .pg{padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);user-select:none}
+.pg-bar .pg:hover{background:var(--bg3);color:var(--t1)}
+.pg-bar .pg.cur{background:#1e3a5f;border-color:#3b82f6;color:#60a5fa}
+[data-theme="light"] .pg-bar .pg.cur{background:#dbeafe;border-color:#3b82f6;color:#1e40af}
 /* On mobile, .top-fixed becomes a flex column so we can use `order` on its
    children to put the filter-search-row BELOW the tab strip. */
 [data-view="mobile"] .top-fixed{display:flex;flex-direction:column}
@@ -377,6 +397,16 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
     <div class="hdr-t" style="font-size:15px;letter-spacing:1.5px;text-transform:uppercase">Theme Tracker</div>
   </div>
   <div class="hdr-r">
+    <div class="seg-toggle rs-only-tool" id="viewToggle">
+      <button id="viewList" class="on" onclick="switchView('list')" title="List view">
+        <span class="lbl-text">List</span>
+        <svg class="lbl-icon" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><rect x="2" y="3" width="12" height="1.6" rx="0.5"/><rect x="2" y="7.2" width="12" height="1.6" rx="0.5"/><rect x="2" y="11.4" width="12" height="1.6" rx="0.5"/></svg>
+      </button>
+      <button id="viewChart" onclick="switchView('chart')" title="Charts view">
+        <span class="lbl-text">Charts</span>
+        <svg class="lbl-icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2 L2.5 13.5 L14 13.5"/><path d="M4 11 L7 6.5 L9.5 9 L13 3.5"/></svg>
+      </button>
+    </div>
     <div class="seg-toggle rs-and-profile-tool" id="layoutToggle">
       <button id="btnDesktop" class="on" onclick="setView(false)" title="Desktop layout">
         <span class="lbl-text">Desktop</span>
@@ -406,7 +436,7 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
       <span class="lbl-icon">W</span>
     </button>
   </div>
-  <input class="srch rs-only-tool" id="si" placeholder="Search ticker, name, holding..." oninput="render()">
+  <input class="srch rs-only-tool" id="si" placeholder="Search ticker, name, holding..." oninput="onSearchInput()">
 </div>
 <div class="spy" id="spyBar" style="display:none">
   <span><b>SPY</b> <span class="m" id="spyP"></span> <span class="m" id="spyC" style="font-weight:600"></span></span>
@@ -421,6 +451,8 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
   </table>
   <div class="ft" id="ft"></div>
 </div>
+<div class="chart-grid" id="chartGrid" style="display:none"></div>
+<div class="pg-bar" id="chartPagination"></div>
 <div class="overview-wrap" id="overviewTab" style="display:none">
   <div class="ov-grid">
     <div class="ov-box">
@@ -447,6 +479,12 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
 <script>
 let DATA=null,HISTORY=null,sortKey='rk',sortDir=1;
 let isMobile=false,isWeekly=false;
+// Charts view state.
+// `currentView` controls List vs Charts on the RS Ranking tab. `chartPage` is the
+// 1-indexed page within the paginated chart grid (24 cards per page — that's the
+// practical ceiling for embedded TradingView iframes before mobile gets sluggish).
+let currentView='list',chartPage=1;
+const CHART_PAGE_SIZE=24;
 let currentTab='overview'; // 'rs' | 'overview' | 'profile' — Overview is the landing tab
 let profileTicker=null; // ETF ticker currently shown in Individual Profile
 let profileTier='gold'; // 'gold' | 'silver' | 'bronze' — selected tier for the bottom chart grid
@@ -463,6 +501,37 @@ function vcpMedal(sf){
   return 'bronze';
 }
 
+// Search-input handler. Resets chart pagination to page 1 (a new search means a
+// fresh result set; staying on page 5 from before doesn't make sense), then
+// delegates to the unified render() which dispatches to list or chart view.
+function onSearchInput(){
+  if(currentView==='chart') chartPage=1;
+  render();
+}
+
+// Toggle between the table (List) and the paginated chart grid (Charts) on the
+// RS Ranking tab. Resets pagination to page 1 to avoid the user landing on an
+// out-of-range page if the data has shrunk since they last viewed.
+function switchView(view){
+  currentView=view;
+  chartPage=1;
+  document.getElementById('viewList').classList.toggle('on',view==='list');
+  document.getElementById('viewChart').classList.toggle('on',view==='chart');
+  const tw=document.getElementById('tw');
+  const grid=document.getElementById('chartGrid');
+  const pag=document.getElementById('chartPagination');
+  if(view==='chart'){
+    if(tw) tw.style.display='none';
+    if(grid) grid.style.display='grid';
+    renderChartView();
+  }else{
+    if(grid) grid.style.display='none';
+    if(pag) pag.innerHTML='';
+    if(DATA && currentTab==='rs') tw.style.display='block';
+    render();
+  }
+}
+
 function switchTab(tab){
   currentTab=tab;
   // Update tab buttons
@@ -476,16 +545,29 @@ function switchTab(tab){
   const status=document.getElementById('statusBar');
   const spy=document.getElementById('spyBar');
   const fsRow=document.querySelector('.filter-search-row');
+  const chartGrid=document.getElementById('chartGrid');
+  const chartPag=document.getElementById('chartPagination');
   if(tab==='rs'){
-    if(DATA) tw.style.display='block';
     overview.style.display='none';
     profile.style.display='none';
     if(spy) spy.style.display='flex';
     // RS Ranking shows everything: rs-only + rs-and-profile tools.
     document.querySelectorAll('.rs-only-tool, .rs-and-profile-tool').forEach(el=>el.style.display='');
     if(fsRow) fsRow.style.display='';
+    // Restore whichever view the user last had selected for RS Ranking.
+    if(currentView==='chart'){
+      if(tw) tw.style.display='none';
+      if(chartGrid) chartGrid.style.display='grid';
+      renderChartView();
+    }else{
+      if(chartGrid) chartGrid.style.display='none';
+      if(chartPag) chartPag.innerHTML='';
+      if(DATA) tw.style.display='block';
+    }
   }else if(tab==='overview'){
     tw.style.display='none';
+    if(chartGrid) chartGrid.style.display='none';
+    if(chartPag) chartPag.innerHTML='';
     overview.style.display='block';
     profile.style.display='none';
     if(status) status.style.display='none';
@@ -497,12 +579,14 @@ function switchTab(tab){
     renderOverview();
   }else{ // profile
     tw.style.display='none';
+    if(chartGrid) chartGrid.style.display='none';
+    if(chartPag) chartPag.innerHTML='';
     overview.style.display='none';
     profile.style.display='block';
     if(status) status.style.display='none';
     if(spy) spy.style.display='none';
-    // Profile: hide RS-only tools (search), but keep freq + view toggles visible
-    // since both are relevant on the profile too.
+    // Profile: hide RS-only tools (search + List/Charts toggle), but keep freq +
+    // view toggles visible since both are relevant on the profile too.
     document.querySelectorAll('.rs-only-tool').forEach(el=>el.style.display='none');
     document.querySelectorAll('.rs-and-profile-tool').forEach(el=>el.style.display='');
     // Re-show the filter-search row so the visible Daily/Weekly button has a home.
@@ -713,8 +797,10 @@ function setFreq(weekly){
   updateColumnLabels();
   sortKey='rk';
   sortDir=1;
+  chartPage=1;  // reset chart pagination — daily and weekly may sort differently
   buildHeader();
   render();
+  if(currentTab==='rs' && currentView==='chart') renderChartView();
   if(currentTab==='profile') renderProfile();
 }
 
@@ -736,6 +822,8 @@ function setView(mobile){
   if(isMobile){ALL_COLUMNS.forEach(c=>{colVisible[c.key]=c.mob;});}
   else{ALL_COLUMNS.forEach(c=>{colVisible[c.key]=true;});}
   buildHeader();render();
+  // Chart view: re-render so chart count + sizing reflow for the new layout.
+  if(currentTab==='rs' && currentView==='chart') renderChartView();
   if(currentTab==='profile') renderProfile();
 }
 
@@ -744,6 +832,16 @@ function toggleTheme(){
   const newTheme=d?'light':'dark';
   h.setAttribute('data-theme',newTheme);
   try{localStorage.setItem('dashboardTheme',newTheme);}catch(e){}
+  // If the user is on the Charts view, the TradingView iframes + basket SVGs
+  // need to be rebuilt against the new theme. Drop the `loaded` guard so the
+  // injectors will re-run on the next render. We also clear inner content so
+  // basket SVGs don't double-stack; tv-chart wrappers get replaced as a whole.
+  if(currentTab==='rs' && currentView==='chart'){
+    document.querySelectorAll('#chartGrid .tv-chart, #chartGrid .basket-chart').forEach(el=>{
+      delete el.dataset.loaded;
+      el.innerHTML='';
+    });
+  }
   requestAnimationFrame(()=>{
     render();
     if(currentTab==='profile') renderProfile();
@@ -859,10 +957,14 @@ async function loadData(){
 
 function onDataLoaded(){
   document.getElementById('statusBar').style.display='none';
-  // Only show the table & SPY bar if we're actually on the RS Ranking tab.
-  // If the user has switched to Overview, leave them hidden.
+  // Only show the table/chart & SPY bar if we're actually on the RS Ranking tab.
+  // If the user has switched to Overview/Profile, leave them hidden.
   if(currentTab==='rs'){
-    document.getElementById('tw').style.display='block';
+    if(currentView==='chart'){
+      document.getElementById('chartGrid').style.display='grid';
+    }else{
+      document.getElementById('tw').style.display='block';
+    }
     if(DATA.meta){
       document.getElementById('spyBar').style.display='flex';
     }
@@ -961,6 +1063,15 @@ function atrExtBars(val){
 
 function render(){
   if(!DATA)return;
+  // Delegate to chart-view renderer when the user has Charts view active on the
+  // RS Ranking tab. This keeps the existing search input (`oninput="render()"`)
+  // and any other render() callers working without a separate code path.
+  // chartPage stays at its current value here — renderChartView() will clamp it
+  // to a valid page if pagination shrinks (e.g. data refresh or new filter).
+  if(currentTab==='rs' && currentView==='chart'){
+    renderChartView();
+    return;
+  }
   const f=document.getElementById('si').value.toLowerCase();
   let items=DATA.e;
   if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||e.n.toLowerCase().includes(f)||(e.h&&e.h.toLowerCase().includes(f)));
@@ -1026,6 +1137,180 @@ function render(){
     const etfMap={};DATA.e.forEach(e=>{etfMap[e.t]=e;});
     const vsKey=isWeekly?'w_vs':'vs';
     document.querySelectorAll('canvas[data-ticker]').forEach(c=>{const etf=etfMap[c.dataset.ticker];if(etf&&etf[vsKey])drawSparkline(c,etf[vsKey]);});
+  });
+}
+
+// ─── RS Ranking Charts view ──────────────────────────────────────────────
+// Builds the paginated chart grid (24 cards per page) shown when the user
+// flips to Charts view on the RS Ranking tab. Mirrors the stock screener's
+// chart-view behaviour. Card layout: rank # + ticker + RS pill in the header,
+// embedded TradingView advanced-chart in the body. For custom-basket ETFs
+// (no listed ticker — NURS, CHEMG, QNTM, etc.) we substitute a hand-drawn
+// SVG line chart using the basket-price (`bp`) and basket-date (`bd`) arrays
+// the backend persists for exactly this reason.
+function renderChartView(){
+  if(!DATA)return;
+  const isW=isWeekly;
+  const rsKey=isW?'w_rs':'rs';
+  const rkKey=isW?'w_rk':'rk';
+  const f=document.getElementById('si').value.toLowerCase();
+
+  // Filter by search (same fields as list view) then sort by rank ascending
+  // so the strongest themes appear first.
+  let items=DATA.e.slice();
+  if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||e.n.toLowerCase().includes(f)||(e.h&&e.h.toLowerCase().includes(f)));
+  items.sort((a,b)=>(a[rkKey]||9999)-(b[rkKey]||9999));
+
+  const total=items.length;
+  const totalPages=Math.max(1,Math.ceil(total/CHART_PAGE_SIZE));
+  if(chartPage>totalPages)chartPage=totalPages;
+  if(chartPage<1)chartPage=1;
+  const startIdx=(chartPage-1)*CHART_PAGE_SIZE;
+  const pageItems=items.slice(startIdx,startIdx+CHART_PAGE_SIZE);
+
+  const grid=document.getElementById('chartGrid');
+  // Empty state — search filter eliminated all rows
+  if(total===0){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3);font-size:13px">No themes match "'+esc(f)+'"</div>';
+    document.getElementById('chartPagination').innerHTML='';
+    return;
+  }
+
+  grid.innerHTML='';
+  pageItems.forEach(e=>{
+    const rs=e[rsKey];
+    const rk=e[rkKey];
+    const isBasket=Array.isArray(e.bp)&&e.bp.length>0;
+    // Pick the appropriate chart-body class: tv-chart for real ETFs (will get
+    // a TradingView iframe injected), basket-chart for custom baskets (will
+    // get a hand-drawn SVG line). IDs are namespaced to avoid colliding with
+    // the Profile tab's existing tvc-*/bkc-* elements when both happen to be
+    // in the DOM (e.g. user navigates back from Profile while widgets unload).
+    let bodyHtml;
+    if(isBasket){
+      const bpJson=esc(JSON.stringify(e.bp));
+      const bdJson=esc(JSON.stringify(e.bd||[]));
+      bodyHtml=`<div class="chart-card-body basket-chart" id="bkc-grid-${esc(e.t)}" data-bp='${bpJson}' data-bd='${bdJson}' data-ch="${e.ch!=null?e.ch:''}"></div>`;
+    }else{
+      bodyHtml=`<div class="chart-card-body tv-chart" id="tvc-grid-${esc(e.t)}"></div>`;
+    }
+    const card=document.createElement('div');
+    card.className='chart-card';
+    card.innerHTML=`
+      <div class="chart-card-hdr">
+        <div><span class="chart-card-rk">#${rk||'—'}</span><span class="chart-card-tk tk-link" onclick="openProfile('${esc(e.t)}')" title="View ${esc(e.t)} profile">${esc(e.t)}</span></div>
+        <span class="chart-card-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span>
+      </div>
+      ${bodyHtml}`;
+    grid.appendChild(card);
+  });
+
+  // Pagination bar — same pattern as screener: «‹ [windowed page numbers] ›»
+  let pagHtml='';
+  if(totalPages>1){
+    if(chartPage>1)pagHtml+=`<span class="pg" onclick="chartPage=1;renderChartView()">«</span><span class="pg" onclick="chartPage--;renderChartView()">‹</span>`;
+    const startP=Math.max(1,chartPage-3),endP=Math.min(totalPages,chartPage+3);
+    for(let p=startP;p<=endP;p++)pagHtml+=`<span class="pg${p===chartPage?' cur':''}" onclick="chartPage=${p};renderChartView()">${p}</span>`;
+    if(chartPage<totalPages)pagHtml+=`<span class="pg" onclick="chartPage++;renderChartView()">›</span><span class="pg" onclick="chartPage=${totalPages};renderChartView()">»</span>`;
+  }
+  document.getElementById('chartPagination').innerHTML=pagHtml;
+
+  // Inject chart widgets / SVGs. Both injectors use a dataset.loaded guard so
+  // re-renders for pagination don't duplicate work for cards already on screen,
+  // but pagination always builds a fresh grid (innerHTML='') so the guard is
+  // effectively a no-op here. Still cheap to keep.
+  injectGridTVCharts();
+  renderGridBasketCharts();
+}
+
+// Generalised TradingView injector for the RS Ranking chart grid. Mirrors
+// injectProfileTVCharts() but scoped to #chartGrid and using the tvc-grid- prefix.
+function injectGridTVCharts(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const theme=isDark?'dark':'light';
+  const bgColor=isDark?'#0F0F0F':'#FFFFFF';
+  const gridColor=isDark?'rgba(242,242,242,0)':'rgba(0,0,0,0)';
+  document.querySelectorAll('#chartGrid .tv-chart').forEach(el=>{
+    if(el.dataset.loaded)return;
+    const tk=el.id.replace('tvc-grid-','');
+    if(!tk)return;
+    el.dataset.loaded='1';
+    const wrapper=document.createElement('div');
+    wrapper.className='tradingview-widget-container';
+    wrapper.style.cssText='height:100%;width:100%';
+    const widgetDiv=document.createElement('div');
+    widgetDiv.className='tradingview-widget-container__widget';
+    // Reserve 32px for TradingView's attribution row (same fudge as profile tab).
+    widgetDiv.style.cssText='height:calc(100% - 32px);width:100%';
+    wrapper.appendChild(widgetDiv);
+    el.appendChild(wrapper);
+    const script=document.createElement('script');
+    script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.type='text/javascript';
+    script.async=true;
+    script.innerHTML=`{"allow_symbol_change":false,"calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":true,"hide_legend":true,"hide_volume":true,"hotlist":false,"interval":"D","range":"80","locale":"en","save_image":false,"style":"1","symbol":"${tk}","theme":"${theme}","timezone":"Etc/UTC","backgroundColor":"${bgColor}","gridColor":"${gridColor}","watchlist":[],"withdateranges":false,"compareSymbols":[],"studies":[],"autosize":true}`;
+    wrapper.appendChild(script);
+  });
+}
+
+// Basket-chart renderer for the RS Ranking chart grid. Mirrors renderBasketCharts()
+// but scoped to #chartGrid and using the bkc-grid- prefix. The SVG-drawing logic
+// is intentionally duplicated rather than refactored — keeping them separate means
+// either renderer can be tweaked independently (e.g. card-sized basket charts
+// could lose the EQUAL-WEIGHTED label if it gets cramped, without affecting
+// profile-tab baskets which have more room).
+function renderGridBasketCharts(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const bg=isDark?'#0F0F0F':'#FFFFFF';
+  const fg=isDark?'#888':'#6b7280';
+  const grid=isDark?'#1f1f1f':'#e5e7eb';
+  document.querySelectorAll('#chartGrid .basket-chart').forEach(el=>{
+    if(el.dataset.loaded)return;
+    let bp,bd;
+    try{bp=JSON.parse(el.getAttribute('data-bp')||'[]');}catch(e){bp=[];}
+    try{bd=JSON.parse(el.getAttribute('data-bd')||'[]');}catch(e){bd=[];}
+    if(!Array.isArray(bp)||bp.length<2){
+      el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--t3);font-size:12px">No price history</div>';
+      el.dataset.loaded='1';return;
+    }
+    el.dataset.loaded='1';
+    const W=el.clientWidth||400, H=el.clientHeight||260;
+    const M={t:14,r:46,b:20,l:8};
+    const pw=W-M.l-M.r, ph=H-M.t-M.b;
+    const lo=Math.min(...bp), hi=Math.max(...bp);
+    const range=Math.max(hi-lo,0.01);
+    const yLo=lo-range*0.02, yHi=hi+range*0.02;
+    const yScale=v=>M.t+ph-((v-yLo)/(yHi-yLo))*ph;
+    const xScale=i=>M.l+(i/(bp.length-1))*pw;
+    const periodChg=bp[bp.length-1]-bp[0];
+    const lineCol=periodChg>=0?'#22c55e':'#ef4444';
+    const fillCol=periodChg>=0?'rgba(34,197,94,0.08)':'rgba(239,68,68,0.08)';
+    let path='';
+    for(let i=0;i<bp.length;i++){
+      const x=xScale(i).toFixed(1),y=yScale(bp[i]).toFixed(1);
+      path+=(i===0?'M':'L')+x+' '+y+' ';
+    }
+    const fillPath=path+'L'+xScale(bp.length-1).toFixed(1)+' '+(M.t+ph).toFixed(1)+
+                   ' L'+xScale(0).toFixed(1)+' '+(M.t+ph).toFixed(1)+' Z';
+    // Just 2 y-ticks (top/bottom) — card is too cramped for 3.
+    const yTicks=[yHi,yLo].map(v=>{
+      const yp=yScale(v).toFixed(1);
+      return `<line x1="${M.l}" y1="${yp}" x2="${M.l+pw}" y2="${yp}" stroke="${grid}" stroke-width="1" stroke-dasharray="2,3"/>
+              <text x="${M.l+pw+4}" y="${yp}" fill="${fg}" font-size="10" font-family="JetBrains Mono,monospace" dominant-baseline="middle">${v.toFixed(2)}</text>`;
+    }).join('');
+    const lastY=yScale(bp[bp.length-1]).toFixed(1);
+    const lastTxt=bp[bp.length-1].toFixed(2);
+    const svg=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="none" style="display:block">
+      <rect x="0" y="0" width="${W}" height="${H}" fill="${bg}"/>
+      ${yTicks}
+      <path d="${fillPath}" fill="${fillCol}" stroke="none"/>
+      <path d="${path}" fill="none" stroke="${lineCol}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${xScale(bp.length-1).toFixed(1)}" cy="${lastY}" r="2.5" fill="${lineCol}"/>
+      <rect x="${M.l+pw+1}" y="${parseFloat(lastY)-8}" width="40" height="16" fill="${lineCol}" rx="3"/>
+      <text x="${M.l+pw+21}" y="${lastY}" fill="#fff" font-size="10" font-family="JetBrains Mono,monospace" font-weight="600" text-anchor="middle" dominant-baseline="middle">${lastTxt}</text>
+      <text x="${M.l+2}" y="${M.t+10}" fill="${fg}" font-size="8" font-family="DM Sans,sans-serif" letter-spacing="0.5" text-transform="uppercase">BASKET · BASE 100</text>
+    </svg>`;
+    el.innerHTML=svg;
   });
 }
 
