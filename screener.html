@@ -704,10 +704,11 @@ function switchTab(tab){
     document.getElementById('si').style.display='none';
     viewToggle.style.display='none';  // view toggle hidden in search tab
     const filterBtn=document.getElementById('filterBtn');
-    if(filterBtn)filterBtn.style.display='';
-    // Re-show the filter-search row (only filter button is visible on this tab).
+    if(filterBtn)filterBtn.style.display='none';
+    // Hide the whole filter-search row — both Filters and Search are hidden on
+    // Individual Profile, so the empty bar shouldn't take up space.
     const fsRow=document.querySelector('.filter-search-row');
-    if(fsRow)fsRow.style.display='';
+    if(fsRow)fsRow.style.display='none';
     // Render empty-state message (or current search result) when entering this tab.
     // Without this, the panel would show as blank on first navigation since the
     // input is empty and no render was ever triggered.
