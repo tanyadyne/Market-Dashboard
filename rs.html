@@ -179,10 +179,13 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .clip-empty{font-size:11px;color:var(--t4);font-style:italic}
 @media(max-width:768px){.hdr{padding:12px}.srch{width:140px}}
 /* ─── RS Ranking Charts view ──────────────────────────────────────────────
-   The top-level #chartGrid hosts a paginated grid of ETF chart cards on the
-   RS Ranking tab. Scoped by ID so the styling doesn't bleed into the Profile
-   tab's `.chart-grid` (which is a separate 2/3-col stock-chart grid). */
-#chartGrid{grid-template-columns:repeat(4,1fr);gap:12px;padding:16px;flex:1;overflow-y:auto;min-height:0}
+   Mirrors the stock screener's chart-view styling exactly. The grid sits inside
+   #chartView, a flex-grow scrollable wrapper (same pattern as .profile-wrap)
+   so it fits inside the viewport-height body without breaking the layout.
+   Card body height: 260px desktop, 200px mobile — matches screener. */
+#chartView{flex:1;min-height:0;overflow-y:auto;width:100%;box-sizing:border-box;display:none;flex-direction:column}
+#chartView.show{display:flex}
+#chartGrid{grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}
 #chartGrid .chart-card-body{height:260px}
 [data-view="mobile"] #chartGrid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}
 [data-view="mobile"] #chartGrid .chart-card-body{height:200px}
@@ -453,8 +456,10 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
   </table>
   <div class="ft" id="ft"></div>
 </div>
-<div class="chart-grid" id="chartGrid" style="display:none"></div>
-<div class="pg-bar" id="chartPagination"></div>
+<div id="chartView">
+  <div class="chart-grid" id="chartGrid"></div>
+  <div class="pg-bar" id="chartPagination"></div>
+</div>
 <div class="overview-wrap" id="overviewTab" style="display:none">
   <div class="ov-grid">
     <div class="ov-box">
@@ -520,14 +525,14 @@ function switchView(view){
   document.getElementById('viewList').classList.toggle('on',view==='list');
   document.getElementById('viewChart').classList.toggle('on',view==='chart');
   const tw=document.getElementById('tw');
-  const grid=document.getElementById('chartGrid');
+  const chartView=document.getElementById('chartView');
   const pag=document.getElementById('chartPagination');
   if(view==='chart'){
     if(tw) tw.style.display='none';
-    if(grid) grid.style.display='grid';
+    if(chartView) chartView.classList.add('show');
     renderChartView();
   }else{
-    if(grid) grid.style.display='none';
+    if(chartView) chartView.classList.remove('show');
     if(pag) pag.innerHTML='';
     if(DATA && currentTab==='rs') tw.style.display='block';
     render();
@@ -547,7 +552,7 @@ function switchTab(tab){
   const status=document.getElementById('statusBar');
   const spy=document.getElementById('spyBar');
   const fsRow=document.querySelector('.filter-search-row');
-  const chartGrid=document.getElementById('chartGrid');
+  const chartView=document.getElementById('chartView');
   const chartPag=document.getElementById('chartPagination');
   if(tab==='rs'){
     overview.style.display='none';
@@ -559,16 +564,16 @@ function switchTab(tab){
     // Restore whichever view the user last had selected for RS Ranking.
     if(currentView==='chart'){
       if(tw) tw.style.display='none';
-      if(chartGrid) chartGrid.style.display='grid';
+      if(chartView) chartView.classList.add('show');
       renderChartView();
     }else{
-      if(chartGrid) chartGrid.style.display='none';
+      if(chartView) chartView.classList.remove('show');
       if(chartPag) chartPag.innerHTML='';
       if(DATA) tw.style.display='block';
     }
   }else if(tab==='overview'){
     tw.style.display='none';
-    if(chartGrid) chartGrid.style.display='none';
+    if(chartView) chartView.classList.remove('show');
     if(chartPag) chartPag.innerHTML='';
     overview.style.display='block';
     profile.style.display='none';
@@ -581,7 +586,7 @@ function switchTab(tab){
     renderOverview();
   }else{ // profile
     tw.style.display='none';
-    if(chartGrid) chartGrid.style.display='none';
+    if(chartView) chartView.classList.remove('show');
     if(chartPag) chartPag.innerHTML='';
     overview.style.display='none';
     profile.style.display='block';
@@ -963,7 +968,7 @@ function onDataLoaded(){
   // If the user has switched to Overview/Profile, leave them hidden.
   if(currentTab==='rs'){
     if(currentView==='chart'){
-      document.getElementById('chartGrid').style.display='grid';
+      document.getElementById('chartView').classList.add('show');
     }else{
       document.getElementById('tw').style.display='block';
     }
