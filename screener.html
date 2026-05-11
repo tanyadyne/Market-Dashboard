@@ -343,7 +343,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 <div class="status" id="statusBar">Loading data...</div>
 <div class="ov-grid" id="ovPanel" style="display:none">
   <div class="ov-box">
-    <div class="ov-hdr"><span class="ov-title">Top 20 Strongest</span><button class="ov-copy" id="ovCopyTop" onclick="copyOvList('top',this)">Copy</button></div>
+    <div class="ov-hdr"><span class="ov-title">Top 40 Strongest</span><button class="ov-copy" id="ovCopyTop" onclick="copyOvList('top',this)">Copy</button></div>
     <div class="ov-body" id="ovListTop"></div>
   </div>
   <div class="ov-box">
@@ -707,10 +707,10 @@ function medalPill(m){
   return `<span class="ov-medal ov-pill ov-pill-${m}" title="${label} tier">${label}</span>`;
 }
 
-function getTop20Stats(tk, currentPrice){
+function getTop40Stats(tk, currentPrice){
   // Returns {streak, pctSince} from HISTORY['d'][tk]['te'].
   // streak  = number of dates in HISTORY.dates >= entry date (= consecutive days
-  //           the ticker has been in top 20)
+  //           the ticker has been in top 40)
   // pctSince = (currentPrice - entryPrice) / entryPrice * 100
   // Returns {streak: null, pctSince: null} when no entry exists, when history is
   // missing, or when prices are unusable.
@@ -733,7 +733,7 @@ function renderOverviewRow(e, opts){
   //   medal:    'gold'|'silver'|'bronze' or null  → tier pill
   //   extra:    html-string for the right-most cell (e.g. RS badge or R.Vol)
   //   preCells: html-string injected between the 1D/1W cells and `extra` (used by
-  //             Top 20 for Streak + % Since). When set, the row gets `.has-extras`
+  //             Top 40 for Streak + % Since). When set, the row gets `.has-extras`
   //             so the CSS grid widens.
   // }
   // 1D and 1W price-change cells sit between the tier slot and any preCells/extra.
@@ -770,7 +770,7 @@ function rvolBadge(rv){
 }
 
 function streakCell(n){
-  // Days in top 20. Display "—" if no entry, "NEW" for first-day entrants
+  // Days in top 40. Display "—" if no entry, "NEW" for first-day entrants
   // (streak=1), and the day count otherwise. The history file caps at
   // MAX_HISTORY_DAYS (90) so theoretical max is 90 — well above realistic
   // streaks for most stocks.
@@ -780,7 +780,7 @@ function streakCell(n){
 }
 
 function pctSinceCell(pct, streak){
-  // Show "—" when null OR when this is the stock's first day in top 20 (streak=1).
+  // Show "—" when null OR when this is the stock's first day in top 40 (streak=1).
   // On day 1, entry price equals today's price by construction, so % Since is
   // mechanically 0.0% — that conveys no information, so we suppress it until
   // tomorrow when the value becomes meaningful.
@@ -846,8 +846,8 @@ function renderOverview(){
   }
   const items=DATA.e;
 
-  // Top 20 strongest — by w_rk ascending
-  const top=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,20);
+  // Top 40 strongest — by w_rk ascending
+  const top=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,40);
   // Bottom 20 weakest — by w_rk descending
   const bot=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>b.w_rk-a.w_rk).slice(0,20);
 
@@ -889,7 +889,7 @@ function renderOverview(){
   const elUv =document.getElementById('ovListUv');
 
   // Per-box column headers. Default desktop grid is 7 cols (rank, ticker, theme,
-  // tier slot, 1D, 1W, metric). The Top 20 box uses an extended 9-col grid
+  // tier slot, 1D, 1W, metric). The Top 40 box uses an extended 9-col grid
   // (`.has-extras`) that adds Streak and "% Since" columns before the metric.
   // On mobile, the .ov-1d/.ov-1w/.h-1d/.h-1w cells are hidden via CSS and the
   // grid template collapses back to 5/7 cols.
@@ -907,7 +907,7 @@ function renderOverview(){
 
   elTop.innerHTML=hdr('RS',false,true)+(top.length
     ?top.map(e=>{
-      const stats=getTop20Stats(e.t,e.p);
+      const stats=getTop40Stats(e.t,e.p);
       const pre=streakCell(stats.streak)+pctSinceCell(stats.pctSince,stats.streak);
       return renderOverviewRow(e,{extra:rsBadge(e.w_rs),preCells:pre});
     }).join('')
