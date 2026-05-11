@@ -15,10 +15,22 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-size:13px}
 /* Fixed header wrapper */
-.top-fixed{position:sticky;top:0;z-index:50;background:var(--bg)}
+.top-fixed{position:sticky;top:0;z-index:50;background:var(--bg);display:flex;flex-direction:column}
 .hdr{padding:12px 20px;border-bottom:1px solid var(--bdr2);display:flex;align-items:center;justify-content:space-between;gap:8px}
 .hdr-l{display:flex;align-items:center;gap:10px}
-.hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* .hdr-r holds the header-right toggle buttons (List/Charts, Desktop/Mobile, Theme).
+   The right padding reserves space for the absolutely-positioned .filter-search-row
+   that overlays the right edge of the header on desktop — keeps these buttons from
+   sitting under it.  Mobile resets this padding (see further down). */
+.hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-right:300px}
+/* Filter + search row.
+   This row sits between the header and the tab strip in the DOM.
+   - Desktop: absolutely positioned into the top-right of .top-fixed so it sits
+     inline with the header controls (matching the original visual layout).
+   - Mobile: switched back to normal flow as a full-width row, then re-ordered (via
+     CSS `order`) to appear BELOW the tab strip — see the mobile rules further down. */
+.filter-search-row{position:absolute;top:12px;right:20px;display:flex;align-items:center;gap:8px;z-index:6}
+.filter-search-row .srch{margin:0}
 .btn-sm{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
 .btn-back{padding:4px 16px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);text-decoration:none;transition:.15s;font-family:inherit;letter-spacing:1px;display:inline-block}
 [data-theme="light"] .btn-back{background:#fff;border-color:#e5e7eb;color:#4b5563;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
@@ -270,8 +282,23 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 [data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}
 [data-view="mobile"] .chart-card-body{height:200px}
 [data-view="mobile"] .hdr{padding:10px 12px;flex-wrap:wrap;gap:6px}
-[data-view="mobile"] .hdr-r{gap:6px;flex-wrap:wrap}
+[data-view="mobile"] .hdr-r{gap:6px;flex-wrap:wrap;padding-right:0}
 [data-view="mobile"] .srch{width:100%;font-size:11px;padding:5px 8px;order:10}
+/* Mobile layout for the filter-search-row:
+   - Reset its desktop absolute positioning so it flows in normal order.
+   - Use flex `order` on .top-fixed's children to position it BELOW the tab strip:
+     .hdr (default order 0) → .tab-strip (order 1) → .filter-search-row (order 2) → .spy (order 3).
+   - Style it as a full-width row with the search input expanding to fill space. */
+[data-view="mobile"] .filter-search-row{
+  position:static;top:auto;right:auto;
+  padding:8px 12px;gap:6px;
+  border-bottom:1px solid var(--bdr2);
+  order:2;
+}
+[data-view="mobile"] .hdr{order:0}
+[data-view="mobile"] .tab-strip{order:1}
+[data-view="mobile"] .spy{order:3}
+[data-view="mobile"] .filter-search-row .srch{flex:1;width:auto;order:0}
 /* Constrain tab strip to viewport: shrink button padding + font + allow wrapping */
 [data-view="mobile"] .tab-strip{padding:10px 8px 8px;gap:4px;flex-wrap:wrap}
 [data-view="mobile"] .tab-btn{padding:8px 12px;font-size:10px;letter-spacing:.3px}
@@ -299,25 +326,6 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
     <div style="font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Stock Screener</div>
   </div>
   <div class="hdr-r">
-    <div class="filter-wrap">
-      <button class="filter-btn" id="filterBtn" onclick="toggleFilterMenu()">⚙ Filters</button>
-      <div class="filter-menu" id="filterMenu">
-        <div class="filter-menu-hdr">Gold Criteria</div>
-        <div class="filter-item" data-bit="1" onclick="toggleFilter(this)"><span class="dot gold"></span>21EMA &gt; 50SMA</div>
-        <div class="filter-item" data-bit="2" onclick="toggleFilter(this)"><span class="dot gold"></span>Price &gt; 21EMA</div>
-        <div class="filter-item" data-bit="4" onclick="toggleFilter(this)"><span class="dot gold"></span>Price &gt; 50SMA</div>
-        <div class="filter-item" data-bit="8" onclick="toggleFilter(this)"><span class="dot gold"></span>50SMA Rising</div>
-        <div class="filter-menu-hdr" style="margin-top:4px">Silver Criteria</div>
-        <div class="filter-item" data-bit="16" onclick="toggleFilter(this)"><span class="dot silver"></span>Price &gt; 100SMA</div>
-        <div class="filter-item" data-bit="32" onclick="toggleFilter(this)"><span class="dot silver"></span>50SMA &gt; 100SMA</div>
-        <div class="filter-item" data-bit="64" onclick="toggleFilter(this)"><span class="dot silver"></span>200SMA Rising</div>
-        <div class="filter-menu-hdr" style="margin-top:4px">Bronze Criteria</div>
-        <div class="filter-item" data-bit="128" onclick="toggleFilter(this)"><span class="dot bronze"></span>9/21 EMA Coiled</div>
-        <div class="filter-item" data-bit="256" onclick="toggleFilter(this)"><span class="dot bronze"></span>Price &gt; 200SMA</div>
-        <div style="border-top:1px solid var(--bdr);margin:6px 0"></div>
-        <div class="filter-item" onclick="clearFilters()" style="color:var(--t3);font-size:11px">Clear All Filters</div>
-      </div>
-    </div>
     <div class="seg-toggle" id="viewToggle">
       <button id="viewList" class="on" onclick="switchView('list')">List</button>
       <button id="viewChart" onclick="switchView('chart')">Charts</button>
@@ -327,8 +335,29 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
       <button id="btnMobile" onclick="setLayout(true)">Mobile</button>
     </div>
     <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
-    <input class="srch" id="si" placeholder="Search ticker, name, theme..." oninput="render()">
   </div>
+</div>
+<div class="filter-search-row">
+  <div class="filter-wrap">
+    <button class="filter-btn" id="filterBtn" onclick="toggleFilterMenu()">⚙ Filters</button>
+    <div class="filter-menu" id="filterMenu">
+      <div class="filter-menu-hdr">Gold Criteria</div>
+      <div class="filter-item" data-bit="1" onclick="toggleFilter(this)"><span class="dot gold"></span>21EMA &gt; 50SMA</div>
+      <div class="filter-item" data-bit="2" onclick="toggleFilter(this)"><span class="dot gold"></span>Price &gt; 21EMA</div>
+      <div class="filter-item" data-bit="4" onclick="toggleFilter(this)"><span class="dot gold"></span>Price &gt; 50SMA</div>
+      <div class="filter-item" data-bit="8" onclick="toggleFilter(this)"><span class="dot gold"></span>50SMA Rising</div>
+      <div class="filter-menu-hdr" style="margin-top:4px">Silver Criteria</div>
+      <div class="filter-item" data-bit="16" onclick="toggleFilter(this)"><span class="dot silver"></span>Price &gt; 100SMA</div>
+      <div class="filter-item" data-bit="32" onclick="toggleFilter(this)"><span class="dot silver"></span>50SMA &gt; 100SMA</div>
+      <div class="filter-item" data-bit="64" onclick="toggleFilter(this)"><span class="dot silver"></span>200SMA Rising</div>
+      <div class="filter-menu-hdr" style="margin-top:4px">Bronze Criteria</div>
+      <div class="filter-item" data-bit="128" onclick="toggleFilter(this)"><span class="dot bronze"></span>9/21 EMA Coiled</div>
+      <div class="filter-item" data-bit="256" onclick="toggleFilter(this)"><span class="dot bronze"></span>Price &gt; 200SMA</div>
+      <div style="border-top:1px solid var(--bdr);margin:6px 0"></div>
+      <div class="filter-item" onclick="clearFilters()" style="color:var(--t3);font-size:11px">Clear All Filters</div>
+    </div>
+  </div>
+  <input class="srch" id="si" placeholder="Search ticker, name, theme..." oninput="render()">
 </div>
 <div class="tab-strip" id="tabStrip">
   <button class="tab-btn active" id="tabO" onclick="switchTab('overview')">Overview</button>
@@ -631,6 +660,10 @@ function switchTab(tab){
     if(viewToggle)viewToggle.style.display='none';
     const filterBtn=document.getElementById('filterBtn');
     if(filterBtn)filterBtn.style.display='none';
+    // Hide the whole filter-search row since both of its controls (Filters + Search)
+    // are hidden on Overview — otherwise the empty bar still occupies space.
+    const fsRow=document.querySelector('.filter-search-row');
+    if(fsRow)fsRow.style.display='none';
     ovPanel.style.display='grid';
     renderOverview();
   }else if(tab==='search'){
@@ -643,6 +676,9 @@ function switchTab(tab){
     viewToggle.style.display='none';  // view toggle hidden in search tab
     const filterBtn=document.getElementById('filterBtn');
     if(filterBtn)filterBtn.style.display='';
+    // Re-show the filter-search row (only filter button is visible on this tab).
+    const fsRow=document.querySelector('.filter-search-row');
+    if(fsRow)fsRow.style.display='';
     // Render empty-state message (or current search result) when entering this tab.
     // Without this, the panel would show as blank on first navigation since the
     // input is empty and no render was ever triggered.
@@ -654,6 +690,9 @@ function switchTab(tab){
     viewToggle.style.display='';
     const filterBtn=document.getElementById('filterBtn');
     if(filterBtn)filterBtn.style.display='';
+    // Re-show the filter-search row (both Filters and Search are visible here).
+    const fsRow=document.querySelector('.filter-search-row');
+    if(fsRow)fsRow.style.display='';
     if(currentView==='chart'){
       document.getElementById('tw').style.display='none';
       document.getElementById('chartGrid').style.display='';
