@@ -2317,33 +2317,33 @@ def main():
                         scores[tk]["wr"].append(None)
                     scores[tk]["wr"].append(r.get("w_rk"))
 
-        # ─── top20_entry tracking ────────────────────────────────────
-        # Captures the entry price + entry date when a stock enters the top 20 (by w_rk),
-        # and clears it when the stock drops out. Used by the Overview tab's Top 20 box
-        # to display a "Streak" (consecutive days in top 20) and "% since added".
+        # ─── top40_entry tracking ────────────────────────────────────
+        # Captures the entry price + entry date when a stock enters the top 40 (by w_rk),
+        # and clears it when the stock drops out. Used by the Overview tab's Top 40 box
+        # to display a "Streak" (consecutive days in top 40) and "% since added".
         #
         # Runs after wr is updated in BOTH the new-day and same-day branches so that:
         #   - Newly-deployed te-tracking populates entries even when the day's first
         #     run already happened with older code (same-day branch).
-        #   - Same-day reruns keep `te` fresh if a stock crossed in/out of top 20
+        #   - Same-day reruns keep `te` fresh if a stock crossed in/out of top 40
         #     intraday.
         #
-        # BACKFILL (Option C): when a stock is currently in top 20 but has no `te`
-        # (e.g., this code is newly deployed and the stock has been in top 20 for a
+        # BACKFILL (Option C): when a stock is currently in top 40 but has no `te`
+        # (e.g., this code is newly deployed and the stock has been in top 40 for a
         # while), walk backwards through wr_arr to find the start of the unbroken
-        # streak of wr<=20 ending today, and seed `te.d` to that date. The price
+        # streak of wr<=40 ending today, and seed `te.d` to that date. The price
         # field is set to today's price — historical prices aren't stored, so % Since
         # will start from 0 today and grow naturally going forward. (You can patch
         # `te.p` to a true historical entry price by editing leaders_score_history.json
         # directly if you want % Since accurate from day one.)
-        IN_TOP20 = lambda rk: rk is not None and rk <= 20
+        IN_TOP40 = lambda rk: rk is not None and rk <= 40
         for tk, entry in list(scores.items()):
             wr_arr = entry.get("wr", [])
             today_rk = wr_arr[-1] if wr_arr else None
             yest_rk = wr_arr[-2] if len(wr_arr) >= 2 else None
             r = results_by_tk.get(tk)
-            today_in = IN_TOP20(today_rk)
-            yest_in  = IN_TOP20(yest_rk)
+            today_in = IN_TOP40(today_rk)
+            yest_in  = IN_TOP40(yest_rk)
             if today_in and not yest_in:
                 # Fresh entry — capture price + date. Skip if we don't have a price
                 # for this ticker in today's results (e.g., dropped from universe).
@@ -2354,20 +2354,20 @@ def main():
                 if "te" in entry:
                     del entry["te"]
             elif "te" not in entry:
-                # In top 20, no entry recorded → backfill. Walk backwards through
+                # In top 40, no entry recorded → backfill. Walk backwards through
                 # wr_arr to find the start of the current unbroken streak.
                 if r is not None and r.get("p") is not None:
                     streak_start_idx = len(wr_arr) - 1
                     for i in range(len(wr_arr) - 2, -1, -1):
-                        if IN_TOP20(wr_arr[i]):
+                        if IN_TOP40(wr_arr[i]):
                             streak_start_idx = i
                         else:
                             break
                     # streak_start_idx now points to the earliest known day this stock
-                    # has been continuously in top 20. Map to a date.
+                    # has been continuously in top 40. Map to a date.
                     streak_start_date = dates[streak_start_idx] if streak_start_idx < len(dates) else today_str
                     entry["te"] = {"d": streak_start_date, "p": r["p"]}
-            # else: still in top 20 with an existing entry — leave untouched.
+            # else: still in top 40 with an existing entry — leave untouched.
 
     score_history = {"dates": dates, "d": scores}
     with open("leaders_score_history.json", "w") as f:
