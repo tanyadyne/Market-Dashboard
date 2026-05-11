@@ -347,7 +347,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
     <div class="ov-body" id="ovListTop"></div>
   </div>
   <div class="ov-box">
-    <div class="ov-hdr"><span class="ov-title">Bottom 20 Weakest</span><button class="ov-copy" id="ovCopyBot" onclick="copyOvList('bot',this)">Copy</button></div>
+    <div class="ov-hdr"><span class="ov-title">Bottom 40 Weakest</span><button class="ov-copy" id="ovCopyBot" onclick="copyOvList('bot',this)">Copy</button></div>
     <div class="ov-body" id="ovListBot"></div>
   </div>
   <div class="ov-box">
@@ -848,8 +848,8 @@ function renderOverview(){
 
   // Top 40 strongest — by w_rk ascending
   const top=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,40);
-  // Bottom 20 weakest — by w_rk descending
-  const bot=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>b.w_rk-a.w_rk).slice(0,20);
+  // Bottom 40 weakest — by w_rk descending
+  const bot=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>b.w_rk-a.w_rk).slice(0,40);
 
   // VCP setups: coiled EMAs + trend zone in {neutral, bull_light, bull_strong}
   //             + w_rs >= 40 (filter out weakest names even if structurally coiled).
