@@ -15,6 +15,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;transition:background .2s,color .2s;display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .mono{font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
+.top-fixed{position:relative;background:var(--bg)}
 .hdr{padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .hdr-l{display:flex;align-items:center;gap:10px}
 .hdr-t{font-size:16px;font-weight:700;letter-spacing:-.3px}
@@ -78,17 +79,25 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .pill-toggle .knob::before{content:"🌙"}
 [data-theme="light"] .pill-toggle .knob::before{content:"☀"}
 .srch{padding:6px 12px;border-radius:5px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:12px;width:200px;outline:none;font-family:inherit}.srch:focus{border-color:#3b82f6}
-.toggle-wrap{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.toggle{position:relative;width:36px;height:20px;cursor:pointer}
-.toggle input{opacity:0;width:0;height:0}
-.toggle .slider{position:absolute;inset:0;background:var(--bg4);border-radius:10px;transition:.2s}
-.toggle .slider:before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:var(--t1);border-radius:50%;transition:.2s}
-.toggle input:checked+.slider{background:#3b82f6}
-.toggle input:checked+.slider:before{transform:translateX(16px)}
+/* Filter + search row.
+   This row sits between the tab strip and the spy bar in the DOM (on desktop it's
+   absolutely positioned into the top-right of .top-fixed so it appears inline with
+   the header controls). On mobile it becomes a full-width row directly below the
+   tab strip — see the mobile rules further down. */
+.filter-search-row{position:absolute;top:18px;right:20px;display:flex;align-items:center;gap:8px;z-index:6}
+.filter-search-row .srch{margin:0}
+/* Reserve right-side space on .hdr-r so the toggles don't slide under the
+   absolutely-positioned .filter-search-row on desktop. Adjust if .srch width changes. */
+.hdr-r{padding-right:300px}
 .seg-toggle{display:inline-flex;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;background:var(--bg2)}
-.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s}
+.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s;display:inline-flex;align-items:center;justify-content:center}
 .seg-toggle button.on{background:var(--bg4);color:var(--t1)}
 .seg-toggle button:hover:not(.on){color:var(--t1)}
+/* Icon vs text inside segmented toggles.
+   Desktop shows the word; mobile (data-view="mobile") swaps to a compact icon so
+   .hdr-r can fit on one line beside the back button + title. */
+.seg-toggle .lbl-icon{width:14px;height:14px;display:none;color:currentColor;font-size:11px;font-weight:700;line-height:14px;text-align:center}
+.seg-toggle .lbl-text{display:inline}
 .spy{padding:8px 20px;background:var(--bg2);border-bottom:1px solid var(--bdr);display:flex;gap:20px;font-size:11px;color:var(--t4);align-items:center;flex-wrap:wrap}
 .spy b{color:var(--t3);font-weight:700}
 .pnl{padding:10px 20px;border-bottom:1px solid var(--bdr2);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
@@ -164,44 +173,36 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .ft{padding:14px 20px;border-top:1px solid var(--bdr);text-align:center;font-size:10px;color:var(--t4)}
 .spark-wrap{display:flex;align-items:center;justify-content:center}
 .spark-wrap canvas{display:block}
-.modal-overlay{display:none;position:fixed;inset:0;background:var(--modal-bg);z-index:100;align-items:center;justify-content:center}
-.modal-overlay.show{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--bdr2);border-radius:10px;padding:20px;width:400px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
-.modal h3{font-size:14px;margin-bottom:14px;color:var(--t1)}
-.sort-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-.sort-row select{flex:1;padding:6px 8px;border-radius:5px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--t1);font-size:12px;font-family:inherit}
-.sort-row .remove-sort{background:none;border:none;color:var(--r);cursor:pointer;font-size:16px;padding:4px 8px}
-.modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
-.modal-actions .btn{padding:6px 16px;font-size:12px}
-.btn-primary{border-color:#3b82f6;background:#3b82f6;color:#fff}.btn-primary:hover{background:#2563eb}
-.btn-add{border:1px dashed var(--bdr2);background:transparent;color:var(--t3);width:100%;padding:6px;font-size:11px;border-radius:5px;cursor:pointer;margin-bottom:4px}
-.btn-add:hover{border-color:var(--t3);color:var(--t2)}
-.col-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
-.col-opt{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;padding:4px 6px;border-radius:4px;transition:.1s}
-.col-opt:hover{background:var(--bg3)}
-.col-opt input{accent-color:#3b82f6;cursor:pointer}
-@media(max-width:768px){.hdr{padding:12px}.srch{width:140px}}
-.clip-panel{display:none;padding:12px 20px;border-bottom:1px solid var(--bdr2);background:var(--bg2)}
-.clip-panel.show{display:block}
-.clip-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.clip-title{font-size:12px;font-weight:700;color:var(--t1)}
-.clip-actions{display:flex;gap:6px}
-.clip-actions .btn{padding:4px 10px;font-size:10px}
-.btn-copy{border-color:#3b82f6;background:#3b82f6;color:#fff}.btn-copy:hover{background:#2563eb}
-.btn-clear{border-color:var(--r);background:transparent;color:var(--r)}.btn-clear:hover{background:var(--rbg)}
-.clip-body{display:flex;flex-wrap:wrap;gap:4px;min-height:28px;align-items:center}
-.clip-body .pill{cursor:pointer;position:relative}
-.clip-body .pill:hover{opacity:0.7}
-.clip-body .pill .x{margin-left:4px;font-size:9px;opacity:0.6}
+/* Empty-state label, e.g. "No holdings data" inside an expanded row. */
 .clip-empty{font-size:11px;color:var(--t4);font-style:italic}
-.clip-copied{color:var(--g);font-size:11px;font-weight:600;margin-left:8px;opacity:0;transition:opacity .3s}
-.clip-copied.show{opacity:1}
-[data-view="mobile"] .hdr{padding:10px 12px}
-[data-view="mobile"] .hdr-r{gap:4px;flex-wrap:wrap}
-/* Shrink header toggle buttons on mobile */
+@media(max-width:768px){.hdr{padding:12px}.srch{width:140px}}
+/* On mobile, .top-fixed becomes a flex column so we can use `order` on its
+   children to put the filter-search-row BELOW the tab strip. */
+[data-view="mobile"] .top-fixed{display:flex;flex-direction:column}
+[data-view="mobile"] .hdr{order:0}
+[data-view="mobile"] .tab-strip{order:1}
+[data-view="mobile"] .filter-search-row{order:2}
+[data-view="mobile"] .spy{order:3}
+/* Mobile header: force everything onto a single row.
+   - flex-wrap:nowrap prevents .hdr-r from dropping to a new line.
+   - .hdr-l min-width:0 lets the title shrink/truncate so right-side toggles
+     are never pushed off-screen. */
+[data-view="mobile"] .hdr{padding:10px 12px;flex-wrap:nowrap;gap:6px;align-items:center}
+[data-view="mobile"] .hdr-l{min-width:0;flex:1 1 auto;overflow:hidden}
+[data-view="mobile"] .hdr-l .hdr-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px!important;letter-spacing:1px!important}
+[data-view="mobile"] .hdr-r{gap:4px;flex-wrap:nowrap;padding-right:0;flex-shrink:0}
+/* Shrink header toggle buttons on mobile + swap text labels for compact icons */
 [data-view="mobile"] .seg-toggle button{padding:4px 7px;font-size:10px}
+[data-view="mobile"] .seg-toggle .lbl-text{display:none}
+[data-view="mobile"] .seg-toggle .lbl-icon{display:inline-block}
 [data-view="mobile"] .btn{padding:4px 8px;font-size:10px}
-[data-view="mobile"] .srch{width:100px;font-size:11px;padding:5px 8px}
+/* Mobile filter-search-row: reset desktop absolute positioning, full-width row */
+[data-view="mobile"] .filter-search-row{
+  position:static;top:auto;right:auto;
+  padding:8px 12px;gap:6px;
+  border-bottom:1px solid var(--bdr2);
+}
+[data-view="mobile"] .filter-search-row .srch{flex:1;width:auto;font-size:11px;padding:5px 8px}
 [data-view="mobile"] table{width:100%}
 [data-view="mobile"] td{padding:6px 2px;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 [data-view="mobile"] thead th{padding:8px 2px;font-size:9.5px;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -369,26 +370,24 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
 </style>
 </head>
 <body>
+<div class="top-fixed">
 <div class="hdr">
   <div class="hdr-l">
     <a href="index.html" class="btn-back" title="Back to Market Dashboard">←</a>
     <div class="hdr-t" style="font-size:15px;letter-spacing:1.5px;text-transform:uppercase">Theme Tracker</div>
   </div>
   <div class="hdr-r">
-    <div class="toggle-wrap rs-and-profile-tool">
-      <span>Daily</span>
-      <label class="toggle"><input type="checkbox" id="freqToggle" onchange="toggleFreq()"><span class="slider"></span></label>
-      <span>Weekly</span>
+    <div class="seg-toggle rs-and-profile-tool" id="layoutToggle">
+      <button id="btnDesktop" class="on" onclick="setView(false)" title="Desktop layout">
+        <span class="lbl-text">Desktop</span>
+        <svg class="lbl-icon" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><rect x="1.5" y="2.5" width="13" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6" y="12.5" width="4" height="1.4" rx="0.3"/></svg>
+      </button>
+      <button id="btnMobile" onclick="setView(true)" title="Mobile layout">
+        <span class="lbl-text">Mobile</span>
+        <svg class="lbl-icon" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><rect x="4.5" y="1.5" width="7" height="13" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="7" y="12" width="2" height="1.2" rx="0.4"/></svg>
+      </button>
     </div>
-    <button class="btn btn-t rs-only-tool" onclick="openSortModal()" title="Multi-level sort">⇅ Sort</button>
-    <button class="btn btn-t rs-only-tool" onclick="openColModal()" title="Show/hide columns">⊞ Columns</button>
-    <button class="btn btn-t rs-only-tool" id="bClip" onclick="toggleClipboard()" title="Clipboard">📋 Clipboard <span id="clipCount"></span></button>
     <div class="pill-toggle" id="bTheme" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
-    <div class="seg-toggle rs-and-profile-tool">
-      <button id="btnDesktop" class="on" onclick="setView(false)">Desktop</button>
-      <button id="btnMobile" onclick="setView(true)">Mobile</button>
-    </div>
-    <input class="srch rs-only-tool" id="si" placeholder="Search ticker, name, holding..." oninput="render()">
   </div>
 </div>
 <div class="tab-strip" id="tabStrip">
@@ -396,23 +395,24 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
   <button class="tab-btn" id="tabRS" onclick="switchTab('rs')">RS Ranking</button>
   <button class="tab-btn" id="tabProfile" onclick="switchTab('profile')">Individual Profile</button>
 </div>
+<div class="filter-search-row">
+  <div class="seg-toggle rs-and-profile-tool" id="freqToggleGrp">
+    <button id="btnDaily" class="on" onclick="setFreq(false)" title="Daily timeframe">
+      <span class="lbl-text">Daily</span>
+      <span class="lbl-icon">D</span>
+    </button>
+    <button id="btnWeekly" onclick="setFreq(true)" title="Weekly timeframe">
+      <span class="lbl-text">Weekly</span>
+      <span class="lbl-icon">W</span>
+    </button>
+  </div>
+  <input class="srch rs-only-tool" id="si" placeholder="Search ticker, name, holding..." oninput="render()">
+</div>
 <div class="spy" id="spyBar" style="display:none">
   <span><b>SPY</b> <span class="m" id="spyP"></span> <span class="m" id="spyC" style="font-weight:600"></span></span>
   <span id="ut" style="color:var(--t2)"></span>
 </div>
-<div class="clip-panel" id="clipPanel">
-  <div class="clip-header">
-    <span class="clip-title">📋 Clipboard</span>
-    <div class="clip-actions">
-      <button class="btn btn-copy" onclick="copyAll()">Copy All</button>
-      <span class="clip-copied" id="clipCopied">✓ Copied!</span>
-      <button class="btn btn-clear" onclick="clearClipboard()">Clear All</button>
-    </div>
-  </div>
-  <div class="clip-body" id="clipBody">
-    <span class="clip-empty">Click gold/silver/bronze pill labels in expanded rows to add stocks</span>
-  </div>
-</div>
+</div><!-- /.top-fixed -->
 <div class="status" id="statusBar"><span class="spinner"></span> Loading data...</div>
 <div class="tw" id="tw" style="display:none">
   <table id="mainTable">
@@ -444,29 +444,9 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
 <div class="profile-wrap" id="profileTab" style="display:none">
   <div id="profileContent"></div>
 </div>
-<div class="modal-overlay" id="sortModal">
-  <div class="modal">
-    <h3>⇅ Multi-Level Sort</h3>
-    <div id="sortLevels"></div>
-    <button class="btn-add" onclick="addSortLevel()">+ Add sort level</button>
-    <div class="modal-actions">
-      <button class="btn btn-t" onclick="closeSortModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="applyMultiSort()">Apply Sort</button>
-    </div>
-  </div>
-</div>
-<div class="modal-overlay" id="colModal">
-  <div class="modal">
-    <h3>⊞ Toggle Columns</h3>
-    <div class="col-grid" id="colGrid"></div>
-    <div class="modal-actions">
-      <button class="btn btn-t" onclick="closeColModal()">Close</button>
-    </div>
-  </div>
-</div>
 <script>
 let DATA=null,HISTORY=null,sortKey='rk',sortDir=1;
-let multiSort=[],useMultiSort=false,isMobile=false,isWeekly=false;
+let isMobile=false,isWeekly=false;
 let currentTab='overview'; // 'rs' | 'overview' | 'profile' — Overview is the landing tab
 let profileTicker=null; // ETF ticker currently shown in Individual Profile
 let profileTier='gold'; // 'gold' | 'silver' | 'bronze' — selected tier for the bottom chart grid
@@ -495,7 +475,7 @@ function switchTab(tab){
   const profile=document.getElementById('profileTab');
   const status=document.getElementById('statusBar');
   const spy=document.getElementById('spyBar');
-  const clip=document.getElementById('clipPanel');
+  const fsRow=document.querySelector('.filter-search-row');
   if(tab==='rs'){
     if(DATA) tw.style.display='block';
     overview.style.display='none';
@@ -503,15 +483,17 @@ function switchTab(tab){
     if(spy) spy.style.display='flex';
     // RS Ranking shows everything: rs-only + rs-and-profile tools.
     document.querySelectorAll('.rs-only-tool, .rs-and-profile-tool').forEach(el=>el.style.display='');
+    if(fsRow) fsRow.style.display='';
   }else if(tab==='overview'){
     tw.style.display='none';
     overview.style.display='block';
     profile.style.display='none';
     if(status) status.style.display='none';
     if(spy) spy.style.display='none';
-    if(clip) clip.classList.remove('show');
     // Overview: hide everything except theme toggle (which has no "rs-only" class).
     document.querySelectorAll('.rs-only-tool, .rs-and-profile-tool').forEach(el=>el.style.display='none');
+    // Hide the filter-search row — both Daily/Weekly and Search are irrelevant on Overview.
+    if(fsRow) fsRow.style.display='none';
     renderOverview();
   }else{ // profile
     tw.style.display='none';
@@ -519,11 +501,12 @@ function switchTab(tab){
     profile.style.display='block';
     if(status) status.style.display='none';
     if(spy) spy.style.display='none';
-    if(clip) clip.classList.remove('show');
-    // Profile: hide RS-only tools (sort/columns/clipboard/search), but keep
-    // freq + view toggles visible since both are relevant on the profile too.
+    // Profile: hide RS-only tools (search), but keep freq + view toggles visible
+    // since both are relevant on the profile too.
     document.querySelectorAll('.rs-only-tool').forEach(el=>el.style.display='none');
     document.querySelectorAll('.rs-and-profile-tool').forEach(el=>el.style.display='');
+    // Re-show the filter-search row so the visible Daily/Weekly button has a home.
+    if(fsRow) fsRow.style.display='';
     renderProfile();
   }
 }
@@ -723,11 +706,11 @@ function updateColumnLabels(){
   });
 }
 
-function toggleFreq(){
-  isWeekly=document.getElementById('freqToggle').checked;
+function setFreq(weekly){
+  isWeekly=!!weekly;
+  document.getElementById('btnDaily').classList.toggle('on',!isWeekly);
+  document.getElementById('btnWeekly').classList.toggle('on',isWeekly);
   updateColumnLabels();
-  useMultiSort=false;
-  multiSort=[];
   sortKey='rk';
   sortDir=1;
   buildHeader();
@@ -850,46 +833,11 @@ function toSGT(utcStr){
   }catch(e){return utcStr;}
 }
 
-function openColModal(){
-  document.getElementById('colGrid').innerHTML=ALL_COLUMNS.map(c=>`<label class="col-opt"><input type="checkbox" ${colVisible[c.key]?'checked':''} onchange="colVisible['${c.key}']=this.checked;buildHeader();render();"> ${c.label}</label>`).join('');
-  document.getElementById('colModal').classList.add('show');
-}
-function closeColModal(){document.getElementById('colModal').classList.remove('show');}
-
-function openSortModal(){
-  if(multiSort.length===0)multiSort=[{key:'rs',dir:-1},{key:'ch',dir:-1}];
-  renderSortLevels();document.getElementById('sortModal').classList.add('show');
-}
-function closeSortModal(){document.getElementById('sortModal').classList.remove('show');}
-function renderSortLevels(){
-  const sortable=ALL_COLUMNS.filter(c=>c.key!=='vs');
-  document.getElementById('sortLevels').innerHTML=multiSort.map((s,i)=>`<div class="sort-row"><select onchange="multiSort[${i}].key=this.value">${sortable.map(c=>`<option value="${c.key}"${c.key===s.key?' selected':''}>${c.label}</option>`).join('')}</select><select onchange="multiSort[${i}].dir=+this.value"><option value="-1"${s.dir===-1?' selected':''}>Desc</option><option value="1"${s.dir===1?' selected':''}>Asc</option></select>${multiSort.length>1?`<button class="remove-sort" onclick="multiSort.splice(${i},1);renderSortLevels()">×</button>`:''}</div>`).join('');
-}
-function addSortLevel(){if(multiSort.length<5)multiSort.push({key:'ch',dir:-1});renderSortLevels();}
-function applyMultiSort(){useMultiSort=true;closeSortModal();document.querySelectorAll('thead th').forEach(th=>th.classList.remove('on'));render();}
-
 function srt(key){
-  if(key==='vs')return;useMultiSort=false;
+  if(key==='vs')return;
   if(sortKey===key)sortDir=-sortDir;else{sortKey=key;sortDir=key==='rk'?1:-1;}
   document.querySelectorAll('thead th').forEach(th=>th.classList.remove('on'));
   document.querySelector(`thead th[data-key="${key}"]`)?.classList.add('on');render();
-}
-
-let clipboardSet=new Set(),clipPanelOpen=false;
-function toggleClipboard(){clipPanelOpen=!clipPanelOpen;document.getElementById('clipPanel').classList.toggle('show',clipPanelOpen);document.getElementById('bClip').classList.toggle('on',clipPanelOpen);}
-function updateClipCount(){document.getElementById('clipCount').textContent=clipboardSet.size>0?`(${clipboardSet.size})`:'';}
-function addToClipboard(stocks){stocks.forEach(s=>clipboardSet.add(s));updateClipCount();renderClipboard();if(!clipPanelOpen)toggleClipboard();}
-function removeFromClipboard(stock){clipboardSet.delete(stock);updateClipCount();renderClipboard();}
-function clearClipboard(){clipboardSet.clear();updateClipCount();renderClipboard();}
-function renderClipboard(){
-  const el=document.getElementById('clipBody');
-  if(clipboardSet.size===0){el.innerHTML='<span class="clip-empty">Click gold/silver/bronze pill labels in expanded rows to add stocks</span>';return;}
-  el.innerHTML=[...clipboardSet].sort().map(s=>`<span class="pill pill-b" onclick="removeFromClipboard('${esc(s)}');event.stopPropagation()" style="cursor:pointer">${esc(s)}<span class="x">✕</span></span>`).join('');
-}
-async function copyAll(){
-  if(clipboardSet.size===0)return;const text=[...clipboardSet].sort().join(', ');
-  try{await navigator.clipboard.writeText(text);}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
-  const el=document.getElementById('clipCopied');el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2000);
 }
 
 let NAMES={};
@@ -1018,9 +966,7 @@ function render(){
   if(f)items=items.filter(e=>e.t.toLowerCase().includes(f)||e.n.toLowerCase().includes(f)||(e.h&&e.h.toLowerCase().includes(f)));
 
   // Default sort: daily=by rank, weekly=by w_rs desc then c5 desc
-  if(useMultiSort&&multiSort.length>0){
-    items=[...items].sort((a,b)=>{for(const{key,dir}of multiSort){const dk=dataKey(key);const av=a[dk]??(typeof a[dk]==='string'?'':-Infinity),bv=b[dk]??(typeof b[dk]==='string'?'':-Infinity);let cmp=typeof av==='string'?av.localeCompare(bv):av>bv?1:av<bv?-1:0;if(cmp!==0)return dir*cmp;}return 0;});
-  }else if(isWeekly&&sortKey==='rk'){
+  if(isWeekly&&sortKey==='rk'){
     // Weekly default: sort by w_rs desc, then c5 desc
     items=[...items].sort((a,b)=>{
       const a_rs=a.w_rs??-Infinity, b_rs=b.w_rs??-Infinity;
@@ -1075,7 +1021,7 @@ function render(){
     html+=`</tr>`;
   }
   document.getElementById('tb').innerHTML=html;
-  document.getElementById('ft').textContent=`${items.length} ETFs · ${useMultiSort?'Multi-level sort active':'Sorted by '+sortKey}`;
+  document.getElementById('ft').textContent=`${items.length} ETFs · Sorted by ${sortKey}`;
   requestAnimationFrame(()=>{
     const etfMap={};DATA.e.forEach(e=>{etfMap[e.t]=e;});
     const vsKey=isWeekly?'w_vs':'vs';
