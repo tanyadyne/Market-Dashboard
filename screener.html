@@ -38,9 +38,14 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .btn-sm:hover{background:var(--bg3);color:var(--t1)}
 /* Segmented toggles */
 .seg-toggle{display:inline-flex;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;background:var(--bg2)}
-.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s}
+.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s;display:inline-flex;align-items:center;justify-content:center}
 .seg-toggle button.on{background:var(--bg4);color:var(--t1)}
 .seg-toggle button:hover:not(.on){color:var(--t1)}
+/* Icon vs text inside segmented toggles.
+   Desktop shows the word; mobile (data-view="mobile") swaps to a compact icon so the
+   whole .hdr-r row can fit on one line next to the back button + title. */
+.seg-toggle .lbl-icon{width:14px;height:14px;display:none;fill:currentColor}
+.seg-toggle .lbl-text{display:inline}
 /* Single pill theme toggle (☀/🌙) */
 .pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#e0e0e0;transition:background .25s ease;flex-shrink:0}
 [data-theme="dark"] .pill-toggle{background:#000}
@@ -281,8 +286,16 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 /* Chart view: 2 per row on mobile */
 [data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}
 [data-view="mobile"] .chart-card-body{height:200px}
-[data-view="mobile"] .hdr{padding:10px 12px;flex-wrap:wrap;gap:6px}
-[data-view="mobile"] .hdr-r{gap:6px;flex-wrap:wrap;padding-right:0}
+/* Mobile header: force everything onto a single row.
+   - flex-wrap:nowrap prevents .hdr-r from dropping to a new line when the icons
+     would otherwise barely fit. Combined with the icon-swap below (saves ~120px),
+     all of: back, title, List/Charts, Desktop/Mobile, theme toggle fit on one row.
+   - .hdr-l min-width:0 lets the title shrink/truncate so the right-side toggles
+     are never pushed off-screen. */
+[data-view="mobile"] .hdr{padding:10px 12px;flex-wrap:nowrap;gap:6px;align-items:center}
+[data-view="mobile"] .hdr-l{min-width:0;flex:1 1 auto;overflow:hidden}
+[data-view="mobile"] .hdr-l > div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px!important;letter-spacing:1px!important}
+[data-view="mobile"] .hdr-r{gap:4px;flex-wrap:nowrap;padding-right:0;flex-shrink:0}
 [data-view="mobile"] .srch{width:100%;font-size:11px;padding:5px 8px;order:10}
 /* Mobile layout for the filter-search-row:
    - Reset its desktop absolute positioning so it flows in normal order.
@@ -302,8 +315,12 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 /* Constrain tab strip to viewport: shrink button padding + font + allow wrapping */
 [data-view="mobile"] .tab-strip{padding:10px 8px 8px;gap:4px;flex-wrap:wrap}
 [data-view="mobile"] .tab-btn{padding:8px 12px;font-size:10px;letter-spacing:.3px}
-/* Shrink header toggle buttons on mobile */
+/* Shrink header toggle buttons on mobile + swap text labels for compact icons so all
+   three controls (List/Charts, Desktop/Mobile, theme) fit on the same row as the
+   title without wrapping. */
 [data-view="mobile"] .seg-toggle button{padding:4px 7px;font-size:10px}
+[data-view="mobile"] .seg-toggle .lbl-text{display:none}
+[data-view="mobile"] .seg-toggle .lbl-icon{display:inline-block}
 [data-view="mobile"] .filter-btn{padding:4px 8px;font-size:10px}
 /* Filter popup on mobile: open downward + to the RIGHT of the button so it doesn't
    get clipped off the left edge of the screen. Constrain width to viewport. */
@@ -327,12 +344,24 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
   </div>
   <div class="hdr-r">
     <div class="seg-toggle" id="viewToggle">
-      <button id="viewList" class="on" onclick="switchView('list')">List</button>
-      <button id="viewChart" onclick="switchView('chart')">Charts</button>
+      <button id="viewList" class="on" onclick="switchView('list')" title="List view">
+        <span class="lbl-text">List</span>
+        <svg class="lbl-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="1.6" rx="0.5"/><rect x="2" y="7.2" width="12" height="1.6" rx="0.5"/><rect x="2" y="11.4" width="12" height="1.6" rx="0.5"/></svg>
+      </button>
+      <button id="viewChart" onclick="switchView('chart')" title="Charts view">
+        <span class="lbl-text">Charts</span>
+        <svg class="lbl-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="9" width="2.4" height="5" rx="0.4"/><rect x="6.8" y="6" width="2.4" height="8" rx="0.4"/><rect x="11.6" y="3" width="2.4" height="11" rx="0.4"/></svg>
+      </button>
     </div>
     <div class="seg-toggle" id="layoutToggle">
-      <button id="btnDesktop" class="on" onclick="setLayout(false)">Desktop</button>
-      <button id="btnMobile" onclick="setLayout(true)">Mobile</button>
+      <button id="btnDesktop" class="on" onclick="setLayout(false)" title="Desktop layout">
+        <span class="lbl-text">Desktop</span>
+        <svg class="lbl-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6" y="12.5" width="4" height="1.4" rx="0.3"/></svg>
+      </button>
+      <button id="btnMobile" onclick="setLayout(true)" title="Mobile layout">
+        <span class="lbl-text">Mobile</span>
+        <svg class="lbl-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="4.5" y="1.5" width="7" height="13" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="7" y="12" width="2" height="1.2" rx="0.4"/></svg>
+      </button>
     </div>
     <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
   </div>
