@@ -87,8 +87,10 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .filter-search-row{position:absolute;top:18px;right:20px;display:flex;align-items:center;gap:8px;z-index:6}
 .filter-search-row .srch{margin:0}
 /* Reserve right-side space on .hdr-r so the toggles don't slide under the
-   absolutely-positioned .filter-search-row on desktop. Adjust if .srch width changes. */
-.hdr-r{padding-right:300px}
+   absolutely-positioned .filter-search-row on desktop. 360px = Daily/Weekly
+   seg-toggle (~110px) + gap (8px) + .srch (226px = 200 width + 24 padding +
+   2 border) + a ~16px safety margin. Bump if .srch width changes. */
+.hdr-r{padding-right:360px}
 .seg-toggle{display:inline-flex;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;background:var(--bg2)}
 .seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s;display:inline-flex;align-items:center;justify-content:center}
 .seg-toggle button.on{background:var(--bg4);color:var(--t1)}
