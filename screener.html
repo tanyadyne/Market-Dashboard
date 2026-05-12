@@ -901,28 +901,22 @@ function copyOvList(boxKey, btn){
   }
 }
 
-// Copy the top 600 tickers by daily rank (ascending — rank 1 is strongest)
-// as a comma-separated list with a trailing comma. Format matches the user's
-// brief: "NVDA, AMD, TSLA, AAPL, " (note trailing ", ").
+// Copy the top 600 tickers by weekly rank — same logic as the "Top 40 strongest"
+// box on the Overview tab, just with N=600 and a trailing comma in the output.
 function copyTop600(btn){
-  if(!DATA || !DATA.e || !DATA.e.length){
+  if(!DATA || !DATA.e){
     flashCopyBtn(btn,'No data');
     return;
   }
-  // Keep entries that have a ticker AND a rank value (either a number or a numeric
-  // string — the rest of the codebase relies on implicit number coercion so we do
-  // the same here). Sort by rank ascending, then map to ticker symbols.
-  const ranked=DATA.e
-    .filter(e=>e && e.t && e.rk!=null && e.rk!=='')
-    .map(e=>({t:e.t, rk:Number(e.rk)}))
-    .filter(e=>!Number.isNaN(e.rk))
-    .sort((a,b)=>a.rk-b.rk);
-  const tickers=ranked.slice(0,600).map(e=>e.t);
+  // Same filter+sort as the Top 40 box on the Overview tab (line ~972).
+  const top600=[...DATA.e].filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,600);
+  const tickers=top600.map(e=>e.t);
   if(!tickers.length){
     flashCopyBtn(btn,'No tickers');
     return;
   }
-  // Trailing comma + space after the final ticker — matches the requested format.
+  // Trailing comma + space after the final ticker — matches the requested format
+  // "NVDA, AMD, TSLA, AAPL, ".
   const text=tickers.join(', ')+', ';
   const done=()=>flashCopyBtn(btn,'Copied!');
   const fail=()=>flashCopyBtn(btn,'Copy failed');
