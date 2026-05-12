@@ -131,6 +131,13 @@ tr:hover{background:var(--bg3)}
 .ov-copy:hover{background:var(--bg4);color:var(--t1);border-color:var(--bdr2)}
 .ov-copy:active{transform:translateY(1px)}
 .ov-copy.copied{background:#16a34a;color:#fff;border-color:#16a34a}
+/* "Copy Top 600" button in the SPY bar — desktop-only. margin-left:auto pushes
+   it to the far right of the flex SPY bar so it sits opposite the "Updated:" and
+   "N stocks ranked" labels on the left. Hidden on mobile (the SPY bar is already
+   cramped there with the Daily/Weekly slot equivalent — although the screener has
+   no Daily/Weekly, keeping the desktop-only constraint matches the user's brief). */
+.copy-top600{margin-left:auto}
+[data-view="mobile"] .copy-top600{display:none}
 .ov-body{flex:1;overflow-y:auto;padding:0 0 4px 0}
 .ov-body::-webkit-scrollbar{width:6px}
 .ov-body::-webkit-scrollbar-track{background:transparent}
@@ -396,6 +403,10 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 <div class="spy" id="spyBar" style="display:none">
   <span>Updated: <span id="ut"></span></span>
   <span><span id="stockCount"></span> stocks ranked</span>
+  <!-- Copy-top-600 button: desktop-only (hidden on mobile via [data-view="mobile"]
+       rule below). Sits to the right of the stock count, copies the top 600
+       tickers by daily rank as a comma-separated list. -->
+  <button class="ov-copy copy-top600" id="copyTop600" onclick="copyTop600(this)" title="Copy top 600 tickers by daily rank">Copy Top 600</button>
 </div>
 </div><!-- /.top-fixed -->
 <div class="status" id="statusBar">Loading data...</div>
@@ -871,6 +882,37 @@ function copyOvList(boxKey, btn){
   const text=list.join(', ');
   // Try the modern clipboard API first, fall back to a hidden textarea for older
   // browsers and non-secure contexts (file://, http://).
+  const done=()=>flashCopyBtn(btn,'Copied!');
+  const fail=()=>flashCopyBtn(btn,'Copy failed');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text)?done():fail());
+  }else{
+    fallbackCopy(text)?done():fail();
+  }
+}
+
+// Copy the top 600 tickers by daily rank (ascending — rank 1 is strongest)
+// as a comma-separated list with a trailing comma. Format matches the user's
+// brief: "NVDA, AMD, TSLA, AAPL, " (note trailing ", ").
+function copyTop600(btn){
+  if(!DATA || !DATA.e){
+    flashCopyBtn(btn,'No data');
+    return;
+  }
+  // Sort by daily rank ascending, drop entries without a rank (e.g. brand new
+  // listings), take first 600. If the universe has < 600 ranked stocks, we just
+  // copy as many as we have — better than refusing.
+  const tickers=[...DATA.e]
+    .filter(e=>e.rk!=null && Number.isFinite(e.rk))
+    .sort((a,b)=>a.rk-b.rk)
+    .slice(0,600)
+    .map(e=>e.t);
+  if(!tickers.length){
+    flashCopyBtn(btn,'No tickers');
+    return;
+  }
+  // Trailing comma + space after the final ticker — matches the requested format.
+  const text=tickers.join(', ')+', ';
   const done=()=>flashCopyBtn(btn,'Copied!');
   const fail=()=>flashCopyBtn(btn,'Copy failed');
   if(navigator.clipboard && navigator.clipboard.writeText){
