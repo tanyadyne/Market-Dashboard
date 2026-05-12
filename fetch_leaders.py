@@ -61,6 +61,147 @@ MANUAL_EXCLUDE = {
     "FPS", "ARES", "GBTG",
 }
 
+# ─── Auto acquisition blacklist ────────────────────────────────────────────────
+# Persistent blacklist for stocks that have been confirmed as acquisition targets
+# (announced/pending mergers). Updated by detect_acquisition_news() during the
+# pre-filter pass. Once a ticker is added, it stays excluded permanently — we
+# never re-evaluate, so a false-positive headline AFTER blacklisting can't
+# accidentally remove a real acquisition.
+#
+# File schema (acquisition_blacklist.json):
+#   {
+#     "tickers": {
+#       "GSAT": {"added_date": "2026-05-12", "headline": "...", "phrase": "..."},
+#       ...
+#     }
+#   }
+ACQ_BLACKLIST_FILE = "acquisition_blacklist.json"
+
+# Phrases that almost unambiguously mean THIS company is the acquisition target.
+# Passive constructions ("to be acquired", "agreed to be acquired") or shareholder-
+# action language ("stockholders will receive") — these don't fire on headlines
+# where the company is the *acquirer* (e.g. "AMZN to acquire GSAT" would not
+# match for AMZN's news, but the equivalent passive version on GSAT's news will).
+# Lowercase-only; matching is case-insensitive.
+ACQ_TARGET_PHRASES = (
+    "to be acquired by",
+    "agreed to be acquired",
+    "agreed to be taken private",
+    "definitive merger agreement",
+    "definitive agreement to be acquired",
+    "stockholders will receive",
+    "shareholders will receive",
+    "going-private transaction",
+    "take-private deal",
+    "take-private agreement",
+    "plan of merger",
+    "entered into a merger agreement",
+    "completion of the merger",
+    "merger consideration",
+    "completes acquisition of",   # post-close news; company is gone
+    "completed acquisition of",
+    "all-cash transaction",
+    "cash merger",
+)
+
+# Loosened price-action thresholds for the news-confirmed path. The stricter
+# 2%/0.5% thresholds in the price-only filter only catch all-cash deals where
+# the stock is pinned exactly at the deal price. Stock-or-mixed deals (like
+# GSAT/AMZN: $90 cash OR 0.3210 AMZN shares) float in a wider band as the
+# acquirer's stock moves. 5%/1.5% catches those without false-positiving on
+# normal low-volatility stocks (utilities, staples etc typically range 3-5%
+# with std 0.7-1.2%, so we're at the edge — that's why news confirmation is
+# required for this looser threshold).
+ACQ_LOOSE_RANGE_PCT = 0.05
+ACQ_LOOSE_STD_PCT   = 0.015
+
+# ADR-ratio thresholds: alternative trigger that normalises by each stock's
+# *own* historical volatility. "ADR" = average daily range = mean((high-low)/
+# close) over a lookback window. We compare the LAST 10 BARS' average daily
+# range against the BASELINE (everything before those 10 bars), and a low
+# ratio means the stock is suddenly trading at a fraction of its normal range
+# — the hallmark of acquisition pinning. Useful for catching deals on
+# *volatile* stocks where the absolute 2%/5% range threshold would never
+# trigger because the stock's normal day already exceeds it.
+#
+# Pinned stocks typically trade at 5-15% of their normal range, so:
+#   STRICT layer: recent_adr / baseline_adr < 0.15  (no news needed)
+#   LOOSE  layer: recent_adr / baseline_adr < 0.35  (news confirmation required)
+#
+# The two layers fire INDEPENDENTLY of the absolute thresholds (OR logic):
+# either the absolute test OR the ADR-ratio test trips → that layer activates.
+ACQ_ADR_STRICT_RATIO = 0.15
+ACQ_ADR_LOOSE_RATIO  = 0.35
+# Minimum baseline bars required to compute a reliable ADR-ratio. Below this,
+# we skip the ADR test entirely and fall back to the absolute thresholds (new
+# IPOs etc — not enough history to know what "normal" looks like).
+ACQ_ADR_MIN_BASELINE_BARS = 20
+
+
+def load_acquisition_blacklist():
+    """Load the persistent acquisition blacklist. Returns the parsed dict (with
+    a 'tickers' key) or a fresh skeleton if the file is missing/corrupt."""
+    if not os.path.exists(ACQ_BLACKLIST_FILE):
+        return {"tickers": {}}
+    try:
+        with open(ACQ_BLACKLIST_FILE) as f:
+            data = json.load(f)
+        if not isinstance(data, dict) or "tickers" not in data:
+            return {"tickers": {}}
+        return data
+    except Exception:
+        return {"tickers": {}}
+
+
+def save_acquisition_blacklist(blacklist):
+    """Persist the blacklist atomically (write tmp then rename) so a crash
+    mid-write can't leave a corrupt file."""
+    try:
+        tmp = ACQ_BLACKLIST_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(blacklist, f, indent=2, sort_keys=True)
+        os.replace(tmp, ACQ_BLACKLIST_FILE)
+    except Exception as e:
+        print(f"  [WARN] Failed to save {ACQ_BLACKLIST_FILE}: {e}")
+
+
+def check_acquisition_news(ticker):
+    """Fetch recent news headlines for `ticker` via yfinance and look for
+    phrases that unambiguously identify the company as an acquisition target.
+
+    Returns (headline, matched_phrase) on hit, or (None, None) otherwise.
+    Catches every yfinance exception — the unofficial news endpoint breaks
+    periodically and we don't want a bad fetch to crash the whole pipeline.
+    """
+    try:
+        t = yf.Ticker(ticker)
+        # yfinance's .news returns a list of dicts. Newer versions wrap the
+        # actual fields under a "content" key; older versions put title at the
+        # top level. Handle both.
+        items = getattr(t, "news", None) or []
+        if not items:
+            return (None, None)
+        for item in items[:20]:  # cap iteration — old news isn't relevant
+            if not isinstance(item, dict):
+                continue
+            # Try new schema (content wrapper) first, then fall back to legacy
+            content = item.get("content") if isinstance(item.get("content"), dict) else None
+            title = ""
+            if content:
+                title = content.get("title", "") or ""
+            if not title:
+                title = item.get("title", "") or ""
+            if not title:
+                continue
+            lower = title.lower()
+            for phrase in ACQ_TARGET_PHRASES:
+                if phrase in lower:
+                    return (title, phrase)
+        return (None, None)
+    except Exception:
+        return (None, None)
+
+
 # Yahoo Finance industry → our theme name mapping
 INDUSTRY_TO_THEME = {
     # Tech
@@ -1503,16 +1644,25 @@ def main():
         return
 
     all_tickers, stock_to_etfs = build_universe()
-    # Drop tickers in MANUAL_EXCLUDE before any further processing.
-    if MANUAL_EXCLUDE:
+    # Load the auto-built acquisition blacklist — combined with MANUAL_EXCLUDE
+    # into a single set for the universe-pruning pass below.
+    acq_blacklist_data = load_acquisition_blacklist()
+    acq_blacklisted_set = set(acq_blacklist_data.get("tickers", {}).keys())
+    combined_exclude = MANUAL_EXCLUDE | acq_blacklisted_set
+    # Drop tickers in MANUAL_EXCLUDE or the acquisition blacklist before any
+    # further processing.
+    if combined_exclude:
         before_set = set(all_tickers)
-        all_tickers = [t for t in all_tickers if t not in MANUAL_EXCLUDE]
+        all_tickers = [t for t in all_tickers if t not in combined_exclude]
         for t in list(stock_to_etfs.keys()):
-            if t in MANUAL_EXCLUDE:
+            if t in combined_exclude:
                 del stock_to_etfs[t]
-        actually_removed = sorted(before_set & MANUAL_EXCLUDE)
-        if actually_removed:
-            print(f"  MANUAL_EXCLUDE: dropped {len(actually_removed)} ticker(s): {actually_removed}")
+        removed_manual = sorted(before_set & MANUAL_EXCLUDE)
+        removed_acq    = sorted(before_set & acq_blacklisted_set)
+        if removed_manual:
+            print(f"  MANUAL_EXCLUDE: dropped {len(removed_manual)} ticker(s): {removed_manual}")
+        if removed_acq:
+            print(f"  ACQ_BLACKLIST: dropped {len(removed_acq)} ticker(s) (previously confirmed acquisitions): {removed_acq}")
     print(f"Universe: {len(all_tickers)} stocks, {len(set(name for etfs in stock_to_etfs.values() for name, _ in etfs))} unique ETF themes")
 
     # ─── Download SPY (daily + weekly) ────────────────────────
@@ -1757,33 +1907,119 @@ def main():
             pass
         c = df["Close"].values
         v = df["Volume"].values
+        # High/Low for ADR computation. Use np.nan_to_num to defensively handle
+        # any malformed bars; the math below ignores zero-range bars anyway.
+        try:
+            h = df["High"].values
+            l = df["Low"].values
+        except Exception:
+            h, l = c, c  # fall back to close-only (range=0 → ADR=0, ratio=0 → triggers)
         n = len(c)
         # ─── Acquisition-limbo detection ───────────────────────
-        # Two patterns:
-        # 1. Stock has been flat for a long time (slow-grinding pre-merger arb)
-        # 2. Stock gapped recently and now sits pinned at deal price (post-announcement)
-        # Use the LAST 10 BARS — short enough to catch post-gap pinning even when older
-        # data is volatile. Real stocks (even low-vol staples/utilities) have wider
-        # 10-day ranges than acquisition-pinned stocks.
+        # Two layers, each with TWO independent triggers (absolute thresholds
+        # OR ADR-ratio thresholds — either firing activates that layer):
+        #
+        # 1. STRICT (price-action-only, no news fetch needed):
+        #    - Absolute: 10d range <2% AND std <0.5%, OR
+        #    - ADR-ratio: recent ADR / baseline ADR < 15%
+        #    Catches all-cash deals where the stock pins at the deal price.
+        #    Excludes this run only — re-evaluated daily.
+        #
+        # 2. LOOSE + news-confirmed (adds to PERSISTENT blacklist on hit):
+        #    - Absolute: 10d range <5% AND std <1.5%, OR
+        #    - ADR-ratio: recent ADR / baseline ADR < 35%
+        #    + yfinance news must contain a definitive target-phrase.
+        #    Catches stock-or-mixed deals (e.g. GSAT/AMZN: $90 cash OR
+        #    0.32 AMZN shares) where the stock floats with the acquirer's
+        #    price but is clearly in arb mode.
+        #
+        # ADR ("Average Daily Range") = mean((high - low) / close) per bar.
+        # Normalizing by each stock's *own* historical ADR catches pinning on
+        # volatile stocks where the absolute 2%/5% range would never trigger
+        # because their normal daily move already exceeds it.
         if n >= 10:
             recent = c[-10:]
             avg_price = np.mean(recent)
             if avg_price > 0:
+                # Existing close-based metrics (absolute thresholds)
                 price_range_pct = (np.max(recent) - np.min(recent)) / avg_price
                 returns = np.diff(recent) / recent[:-1]
                 return_std = float(np.std(returns)) if len(returns) > 0 else 0
-                # Acquisition-pinned: range under 2% AND return std under 0.5% over 10 days.
-                # For comparison, even the lowest-vol utilities (e.g. SO, DUK) typically
-                # have 10-day ranges of 3-5% and return std of 0.7-1.2%.
-                if price_range_pct < 0.02 and return_std < 0.005:
+                # ADR-ratio metric — adaptive baseline window.
+                # `recent_adr`   = avg daily range over last 10 bars
+                # `baseline_adr` = avg daily range over all earlier bars
+                # `adr_ratio`    = recent / baseline (smaller = more pinned).
+                # Set to None if not enough history (skips the ADR test below).
+                adr_ratio = None
+                baseline_bars = n - 10
+                if baseline_bars >= ACQ_ADR_MIN_BASELINE_BARS:
+                    try:
+                        # Per-bar daily range as % of close. Use Close (not avg
+                        # price) per bar so the metric self-normalises against
+                        # price drift over the lookback. Guard against zero/
+                        # negative closes (data errors).
+                        with np.errstate(divide='ignore', invalid='ignore'):
+                            day_range_pct = np.where(c > 0, (h - l) / c, 0)
+                        recent_adr = float(np.nanmean(day_range_pct[-10:]))
+                        baseline_adr = float(np.nanmean(day_range_pct[:-10]))
+                        if baseline_adr > 0 and np.isfinite(recent_adr) and np.isfinite(baseline_adr):
+                            adr_ratio = recent_adr / baseline_adr
+                    except Exception:
+                        adr_ratio = None
+
+                # Layer 1: STRICT — either trigger fires. For comparison, even
+                # the lowest-vol utilities (e.g. SO, DUK) typically have 10-day
+                # ranges of 3-5% and return std of 0.7-1.2%, and their ADR ratio
+                # stays close to 1.0 — well above the 0.15 threshold.
+                absolute_strict = (price_range_pct < 0.02 and return_std < 0.005)
+                adr_strict      = (adr_ratio is not None and adr_ratio < ACQ_ADR_STRICT_RATIO)
+                if absolute_strict or adr_strict:
                     if tk in MANUAL_INCLUDE:
                         if tk in DEBUG_TICKERS:
                             print(f"  [DEBUG] {tk}: bypassing acquisition-limbo filter (MANUAL_INCLUDE)")
                     else:
                         excluded["flat"] += 1
                         if tk in DEBUG_TICKERS:
-                            print(f"  [DEBUG] {tk}: EXCLUDED — acquisition-limbo (10d range {price_range_pct*100:.2f}%, std {return_std*100:.2f}%)")
+                            trig = "absolute" if absolute_strict else "ADR-ratio"
+                            adr_str = f"{adr_ratio:.2f}" if adr_ratio is not None else "n/a"
+                            print(f"  [DEBUG] {tk}: EXCLUDED — acquisition-limbo via {trig} (10d range {price_range_pct*100:.2f}%, std {return_std*100:.2f}%, ADR ratio {adr_str})")
                         continue
+
+                # Layer 2: LOOSE + news-confirmed. Either trigger fires AND
+                # ticker isn't already excluded/whitelisted. The strict layer
+                # above already `continue`'d, so we know neither strict trigger
+                # fired here.
+                absolute_loose = (price_range_pct < ACQ_LOOSE_RANGE_PCT and return_std < ACQ_LOOSE_STD_PCT)
+                adr_loose      = (adr_ratio is not None and adr_ratio < ACQ_ADR_LOOSE_RATIO)
+                if ((absolute_loose or adr_loose)
+                        and tk not in MANUAL_INCLUDE
+                        and tk not in acq_blacklisted_set):
+                    headline, phrase = check_acquisition_news(tk)
+                    if headline:
+                        # All signals fire: flat-ish price (absolute OR ADR
+                        # ratio) + definitive target-phrase in news. Add to
+                        # persistent blacklist and drop from this run.
+                        trig = "absolute" if absolute_loose else "ADR-ratio"
+                        adr_str = f"{adr_ratio:.3f}" if adr_ratio is not None else "n/a"
+                        acq_blacklist_data["tickers"][tk] = {
+                            "added_date": date.today().isoformat(),
+                            "headline": headline[:200],  # truncate paranoia
+                            "phrase": phrase,
+                            "price_range_pct": round(price_range_pct, 4),
+                            "return_std": round(return_std, 4),
+                            "adr_ratio": round(adr_ratio, 4) if adr_ratio is not None else None,
+                            "trigger": trig,
+                        }
+                        acq_blacklisted_set.add(tk)
+                        excluded["flat"] += 1
+                        print(f"  [ACQ_BLACKLIST] {tk}: confirmed acquisition target via {trig} trigger — added to permanent blacklist")
+                        print(f"      Headline: {headline[:120]}")
+                        print(f"      Phrase: '{phrase}' | 10d range {price_range_pct*100:.2f}%, std {return_std*100:.2f}%, ADR ratio {adr_str}")
+                        continue
+                    elif tk in DEBUG_TICKERS:
+                        trig = "absolute" if absolute_loose else "ADR-ratio"
+                        adr_str = f"{adr_ratio:.2f}" if adr_ratio is not None else "n/a"
+                        print(f"  [DEBUG] {tk}: loose-threshold acquisition-limbo via {trig} (range {price_range_pct*100:.2f}%, std {return_std*100:.2f}%, ADR ratio {adr_str}) but no news confirmation — passing through")
         # Dollar volume check (price × avg_vol_10d) with tiered threshold by market cap
         last_price = float(c[-1])
         avg_vol_10d = float(np.mean(v[-10:]))
@@ -1801,6 +2037,10 @@ def main():
         if tk in DEBUG_TICKERS:
             print(f"  [DEBUG] {tk}: PASSED pre-filter (price ${last_price:.2f}, dollar_vol ${dollar_vol/1e6:.1f}M, threshold ${threshold/1e6:.0f}M)")
     print(f"  Pre-filter: {len(all_tickers)} → {len(liquid_tickers)} (excluded: {excluded['no_data']} no data, {excluded['stale']} delisted, {excluded['flat']} acquisition-limbo, {excluded['illiquid']} illiquid)")
+    # Persist the acquisition blacklist if any new tickers were added this run.
+    # No-op if nothing changed (save_acquisition_blacklist always writes; the
+    # diff is whether the file content actually differs — cheap operation).
+    save_acquisition_blacklist(acq_blacklist_data)
 
     # ─── Market cap + industry lookup (ONLY on liquid survivors) ──
     MIN_MCAP = 2_000_000_000
