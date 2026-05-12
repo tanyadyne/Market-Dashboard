@@ -710,6 +710,13 @@ def compute_setup_adjustment(c, h, l, n):
     sma100 = float(np.mean(c[-100:])) if n >= 100 else None
     sma200 = float(np.mean(c[-200:])) if n >= 200 else None
 
+    # 21EMA slope: compare current vs 5 bars ago.
+    # We need at least 26 bars (21 for EMA seed + 5 lookback) for a stable
+    # comparison. compute_ema_value handles short series gracefully but the
+    # slope check is only meaningful with enough history.
+    ema21_prev = compute_ema_value(c[:-5], 21) if n >= 26 else None
+    ema21_rising = (ema21 > ema21_prev) if ema21_prev is not None else None
+
     # 50SMA slope: compare current vs 5 bars ago
     sma50_prev = float(np.mean(c[-55:-5])) if n >= 55 else None
     sma50_rising = (sma50 > sma50_prev) if sma50_prev is not None else None
@@ -736,6 +743,7 @@ def compute_setup_adjustment(c, h, l, n):
     #   X1=512 Price>EMA9          (added for Overview-tab medal tier check)
     #   X2=1024 EMA9>EMA21         (added for Overview-tab medal tier check)
     #   X3=2048 SMA50>SMA200       (added for Overview-tab medal tier check)
+    #   X4=4096 EMA21 rising       (used by Silver tier qualification)
     flags = 0
 
     # Gold criteria
@@ -810,6 +818,11 @@ def compute_setup_adjustment(c, h, l, n):
     # X3: SMA50 > SMA200
     if sma200 is not None and sma50 > sma200:
         flags |= 2048
+    # X4: EMA21 rising. Used by Silver tier (replaces the older X2 EMA9>EMA21
+    # requirement — see SF_SILVER in the front-end). `ema21_rising` is None when
+    # there's insufficient history for a stable slope read.
+    if ema21_rising:
+        flags |= 4096
 
     return round(adj, 2), flags
 
