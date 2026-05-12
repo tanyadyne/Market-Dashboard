@@ -905,18 +905,19 @@ function copyOvList(boxKey, btn){
 // as a comma-separated list with a trailing comma. Format matches the user's
 // brief: "NVDA, AMD, TSLA, AAPL, " (note trailing ", ").
 function copyTop600(btn){
-  if(!DATA || !DATA.e){
+  if(!DATA || !DATA.e || !DATA.e.length){
     flashCopyBtn(btn,'No data');
     return;
   }
-  // Sort by daily rank ascending, drop entries without a rank (e.g. brand new
-  // listings), take first 600. If the universe has < 600 ranked stocks, we just
-  // copy as many as we have — better than refusing.
-  const tickers=[...DATA.e]
-    .filter(e=>e.rk!=null && Number.isFinite(e.rk))
-    .sort((a,b)=>a.rk-b.rk)
-    .slice(0,600)
-    .map(e=>e.t);
+  // Keep entries that have a ticker AND a rank value (either a number or a numeric
+  // string — the rest of the codebase relies on implicit number coercion so we do
+  // the same here). Sort by rank ascending, then map to ticker symbols.
+  const ranked=DATA.e
+    .filter(e=>e && e.t && e.rk!=null && e.rk!=='')
+    .map(e=>({t:e.t, rk:Number(e.rk)}))
+    .filter(e=>!Number.isNaN(e.rk))
+    .sort((a,b)=>a.rk-b.rk);
+  const tickers=ranked.slice(0,600).map(e=>e.t);
   if(!tickers.length){
     flashCopyBtn(btn,'No tickers');
     return;
