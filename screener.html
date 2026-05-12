@@ -776,17 +776,20 @@ const MOBILE_COLS=new Set(['rk','rd','t','th','ch','ytd','rs']);
 //   X1=512   Price>EMA9
 //   X2=1024  EMA9>EMA21
 //   X3=2048  SMA50>SMA200
+//   X4=4096  EMA21 rising
 const SF_COILED=128;
 // Gold = SMA200 rising, SMA50 rising, Price>SMA200/SMA50/EMA21/EMA9, EMA9>EMA21>SMA50>SMA200
 const SF_GOLD = 64|8|256|4|2|512|1024|1|2048;   // = 3919
-// Silver = SMA200 rising, Price>SMA200/SMA100/EMA21, EMA9>EMA21
-const SF_SILVER = 64|256|16|2|1024;             // = 1362
+// Silver = SMA200 rising, Price>SMA200/SMA100/EMA21, EMA21 rising
+const SF_SILVER = 64|256|16|2|4096;             // = 4434
 
 function vcpMedal(sf){
+  // Bronze tier removed: a coiled stock that doesn't qualify for Gold or Silver
+  // returns null (no medal). Front-end filters drop these from VCP setup lists.
   if((sf&SF_COILED)===0)return null;
   if((sf&SF_GOLD)===SF_GOLD)return 'gold';
   if((sf&SF_SILVER)===SF_SILVER)return 'silver';
-  return 'bronze';
+  return null;
 }
 
 function medalPill(m){
@@ -969,12 +972,14 @@ function renderOverview(){
 
   // VCP setups: coiled EMAs + trend zone in {neutral, bull_light, bull_strong}
   //             + w_rs >= 40 (filter out weakest names even if structurally coiled).
-  // Order: tier first (Gold → Silver → Bronze), then by w_rk ascending within tier.
+  // Order: tier first (Gold → Silver), then by w_rk ascending within tier.
   // The medal/tier itself is NOT displayed in the row (Tier column removed) —
-  // it's only used to drive the sort order behind the scenes.
+  // it's only used to drive the sort order behind the scenes. Bronze tier was
+  // removed: vcpMedal() returns null for coiled stocks that don't qualify Gold
+  // or Silver, and the .filter(x=>x.medal) below drops them from this minibox.
   const allowedZones=new Set(['neutral','bull_light','bull_strong']);
   const VCP_MIN_RS=40;
-  const tierRank={gold:0,silver:1,bronze:2};
+  const tierRank={gold:0,silver:1};
   const vcp=items
     .filter(e=>(e.sf||0)&SF_COILED)
     .filter(e=>allowedZones.has(e.tz))
