@@ -53,6 +53,24 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 [data-theme="dark"] .pill-toggle .knob{left:32px;background:#fff}
 .pill-toggle .knob::before{content:"☀";}
 [data-theme="dark"] .pill-toggle .knob::before{content:"🌙";}
+/* Overview-tab ticker search.
+   The wrapper is position:relative so the absolutely-positioned dropdown
+   anchors to it. Input matches the .srch styling used elsewhere for
+   visual consistency. Dropdown opens downward, capped at 10 results so
+   it never grows past a screenful. z-index above sticky header so results
+   aren't clipped by the bottom border. */
+.ov-search-wrap{position:relative;flex-shrink:0}
+.ov-search-input{padding:5px 12px;border-radius:6px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:12px;width:160px;font-family:inherit;outline:none}
+.ov-search-input:focus{border-color:#3b82f6}
+.ov-search-dropdown{position:absolute;top:calc(100% + 4px);right:0;min-width:160px;max-height:300px;overflow-y:auto;background:var(--bg2);border:1px solid var(--bdr);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:100;display:none}
+.ov-search-dropdown.show{display:block}
+.ov-search-item{padding:6px 12px;cursor:pointer;font-family:'JetBrains Mono','SF Mono',Consolas,monospace;font-size:12px;font-weight:600;color:var(--t1);border-bottom:1px solid var(--bdr2)}
+.ov-search-item:last-child{border-bottom:none}
+.ov-search-item:hover,.ov-search-item.active{background:var(--bg3);color:#3b82f6}
+.ov-search-empty{padding:8px 12px;font-size:11px;color:var(--t3);font-style:italic}
+/* Mobile: hide entirely. Mobile has a constrained header that can't fit
+   another input alongside the back arrow, title, and existing controls. */
+[data-view="mobile"] .ov-search-wrap{display:none!important}
 /* Centered tab strip */
 .tab-strip{display:flex;justify-content:center;gap:6px;padding:14px 20px 12px;border-bottom:1px solid var(--bdr2);background:var(--bg)}
 .tab-btn{padding:10px 32px;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.6px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:all .2s;font-family:inherit;text-transform:uppercase}
@@ -373,6 +391,14 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
       </button>
     </div>
     <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
+    <!-- Overview-tab ticker search. Hidden by default; switchTab() reveals it
+         only when tab==='overview'. Click on a result navigates to that
+         ticker's Individual Profile tab. Prefix-match on ticker only — no
+         theme/name matching. -->
+    <div class="ov-search-wrap" id="ovSearchWrap" style="display:none">
+      <input class="ov-search-input" id="ovSearchInput" type="text" placeholder="Search ticker..." oninput="ovSearchInput()" onfocus="ovSearchInput()" onblur="setTimeout(ovSearchClose,150)" autocomplete="off">
+      <div class="ov-search-dropdown" id="ovSearchDropdown"></div>
+    </div>
   </div>
 </div>
 <div class="filter-search-row">
@@ -510,6 +536,70 @@ function openProfile(ticker){
   switchTab('search');
   const si=document.getElementById('searchInput');
   if(si){si.value=ticker;searchStock();}
+}
+
+// ─── Overview-tab ticker search ──────────────────────────────────────
+// Lightweight prefix-match ticker lookup that lives in the .hdr-r area only on
+// the Overview tab. Clicking a result navigates to that ticker's Individual
+// Profile via openProfile() (the same entry point used by row-click handlers
+// in the RS Ranking table and Overview minibox rows). Matching is strict
+// prefix on the ticker only — no theme/company-name matching.
+
+function ovSearchInput(){
+  const inputEl=document.getElementById('ovSearchInput');
+  const dropdown=document.getElementById('ovSearchDropdown');
+  if(!inputEl||!dropdown)return;
+  const q=inputEl.value.trim().toUpperCase();
+  // Empty query → hide dropdown entirely (don't show all 1000+ tickers).
+  if(!q){dropdown.classList.remove('show');dropdown.innerHTML='';return;}
+  if(!DATA||!DATA.e){
+    dropdown.innerHTML='<div class="ov-search-empty">Loading data…</div>';
+    dropdown.classList.add('show');
+    return;
+  }
+  // Prefix-match on ticker only. Cap at 10 results so the dropdown doesn't
+  // grow past a screenful for short queries (e.g. "A" would otherwise return
+  // ~60+ matches). Tickers are deduped by Set in case DATA.e ever has dupes.
+  const seen=new Set();
+  const matches=[];
+  for(const e of DATA.e){
+    const t=(e.t||'').toUpperCase();
+    if(!t||seen.has(t))continue;
+    if(t.startsWith(q)){
+      seen.add(t);
+      matches.push(t);
+      if(matches.length>=10)break;
+    }
+  }
+  if(!matches.length){
+    dropdown.innerHTML='<div class="ov-search-empty">No matching tickers</div>';
+  }else{
+    // Inline onmousedown (NOT onclick) so the dropdown action fires BEFORE
+    // the input's blur handler closes the dropdown. Click-based handlers can
+    // miss because blur+timeout fire first in some browsers/conditions.
+    dropdown.innerHTML=matches.map(t=>
+      `<div class="ov-search-item" onmousedown="ovSearchSelect('${esc(t)}')">${esc(t)}</div>`
+    ).join('');
+  }
+  dropdown.classList.add('show');
+}
+
+function ovSearchSelect(ticker){
+  // Reset the search UI, then navigate. Reset BEFORE navigate so the dropdown
+  // doesn't briefly flicker visible during the tab switch.
+  const inputEl=document.getElementById('ovSearchInput');
+  const dropdown=document.getElementById('ovSearchDropdown');
+  if(inputEl)inputEl.value='';
+  if(dropdown){dropdown.classList.remove('show');dropdown.innerHTML='';}
+  openProfile(ticker);
+}
+
+function ovSearchClose(){
+  // Called from input's onblur (with a small delay) so click events on the
+  // dropdown have time to fire first. Also clears the input — the user is done
+  // searching whether they picked something or not.
+  const dropdown=document.getElementById('ovSearchDropdown');
+  if(dropdown){dropdown.classList.remove('show');}
 }
 
 function switchView(view){
@@ -709,6 +799,9 @@ function switchTab(tab){
     // are hidden on Overview — otherwise the empty bar still occupies space.
     const fsRow=document.querySelector('.filter-search-row');
     if(fsRow)fsRow.style.display='none';
+    // Show the Overview-only ticker search bar in the top-right corner.
+    const ovSearch=document.getElementById('ovSearchWrap');
+    if(ovSearch)ovSearch.style.display='';
     ovPanel.style.display='grid';
     renderOverview();
   }else if(tab==='search'){
@@ -725,6 +818,9 @@ function switchTab(tab){
     // Individual Profile, so the empty bar shouldn't take up space.
     const fsRow=document.querySelector('.filter-search-row');
     if(fsRow)fsRow.style.display='none';
+    // Hide the Overview ticker search — Individual Profile has its own search input.
+    const ovSearch=document.getElementById('ovSearchWrap');
+    if(ovSearch)ovSearch.style.display='none';
     // Render empty-state message (or current search result) when entering this tab.
     // Without this, the panel would show as blank on first navigation since the
     // input is empty and no render was ever triggered.
@@ -739,6 +835,9 @@ function switchTab(tab){
     // Re-show the filter-search row (both Filters and Search are visible here).
     const fsRow=document.querySelector('.filter-search-row');
     if(fsRow)fsRow.style.display='';
+    // Hide the Overview ticker search — it's Overview-only.
+    const ovSearch=document.getElementById('ovSearchWrap');
+    if(ovSearch)ovSearch.style.display='none';
     if(currentView==='chart'){
       document.getElementById('tw').style.display='none';
       document.getElementById('chartGrid').style.display='';
