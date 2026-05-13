@@ -510,18 +510,13 @@ let profileTier='gold'; // 'gold' | 'silver' | 'bronze' — selected tier for th
 // ─── VCP setup-flag bitmask (must match fetch_data.py + screener.html) ─────
 const SF_COILED  = 128;
 const SF_GOLD    = 64|8|256|4|2|512|1024|1|2048; // 3919
-// Silver: SMA200 rising, Price>SMA200/SMA100/EMA21, EMA21 rising
-const SF_SILVER  = 64|256|16|2|4096;             // 4434
+const SF_SILVER  = 64|256|16|2|1024;             // 1362
 
 function vcpMedal(sf){
-  // Bronze tier removed from VCP minibox. Coiled stocks that don't qualify
-  // Gold or Silver return null. Note: 'bronze' is still used elsewhere in this
-  // file for the Profile-tab tier toggle (holdings classification) — a separate
-  // feature from VCP medal tiers.
   if((sf & SF_COILED) === 0) return null;
   if((sf & SF_GOLD) === SF_GOLD) return 'gold';
   if((sf & SF_SILVER) === SF_SILVER) return 'silver';
-  return null;
+  return 'bronze';
 }
 
 // Search-input handler. Resets chart pagination to page 1 (a new search means a
@@ -750,12 +745,10 @@ function renderOverview(){
     : '<div class="ov-empty">No data</div>';
 
   // VCP Coil Setups — same logic as screener: coiled + neutral/bull zones + w_rs >= 40
-  // Sort by tier (gold→silver), then by w_rk ascending within tier. Bronze tier
-  // was removed: vcpMedal returns null for coiled stocks that don't qualify Gold
-  // or Silver, and the .filter(x=>x.medal) below drops them from this box.
+  // Sort by tier (gold→silver→bronze), then by w_rk ascending within tier.
   const allowedZones = new Set(['neutral','bull_light','bull_strong']);
   const VCP_MIN_RS = 40;
-  const tierRank = {gold:0, silver:1};
+  const tierRank = {gold:0, silver:1, bronze:2};
   const vcp = items
     .filter(e=>(e.sf||0) & SF_COILED)
     .filter(e=>allowedZones.has(e.tz))
