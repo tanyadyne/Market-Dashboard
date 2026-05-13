@@ -7,7 +7,7 @@ Supports both real ETFs (price from Yahoo) and custom baskets
 (equal-weighted synthetic metrics from component stocks).
 
 Reads pre-computed holding grades from grades.json and dynamic
-holdings for FFTY/BUZZ from dynamic_holdings.json.
+holdings for BUZZ from dynamic_holdings.json.
 
 Usage:
     pip install yfinance numpy
@@ -42,7 +42,6 @@ ETF_INFO = [
     {"t":"FCG","n":"Natural Gas","fn":"FT:Natural Gas","h":"AR,EXE,DVN,EQT,FANG,CTRA,APA,EOG,OXY,SM,COP,HESM"},
     {"t":"BOAT","n":"Maritime & Shipping","fn":"Tidal:SS Glb Ship","h":"FRO,MATX,STNG,INSW,ZIM,SBLK,CMDB,DHT,CMRE,DAC,TNK,NAT"},
     {"t":"XLE","n":"Energy","fn":"Sel Sector:Enrgy SS SPDR","h":"APA,BKR,COP,CTRA,CVX,DVN,EOG,EQT,EXE,FANG,HAL,HES,KMI,MPC,OKE,OXY,PSX,SHEL,SLB,TPL,TRGP,VLO,WMB,XOM"},
-    {"t":"FFTY","n":"IBD 50","fn":"Innovator IBD 50","h":"ANAB,CLS,ARQT,STOK,FIX,MU,AU,TARS,APH,TVTX,AGI,KGC,GH,VRT,AEM,LLY,HWM,ARGX,ONC,WGS,ZYME,FN,TMDX"},
     {"t":"AMLP","n":"Energy Infrastructure","fn":"Alerian MLP","h":"MPLX,WES,EPD,SUN,PAA,ET,HESM,CQP,USAC,GEL,SPH,GLP,DKL"},
     {"t":"IYZ","n":"Telecom","fn":"iShares:US Telecom ETF","h":"AAOI,ANET,ASTS,CALX,CCOI,CHTR,CIEN,CMCSA,COMM,CSCO,DIS,EA,EXTR,FFIV,FOX,FOXA,FYBR,GLIBK,GOOGL,GSAT,IPG,IRDM,LITE,LUMN,LYV,META,MSI,MTCH,NFLX,NTCT,NWS,NWSA,NYT,OMC,ONDS,PARA,ROKU,T,TDS,TIGO,TKO,TMUS,TSAT,TTWO,USM,VIAV,VZ,WBD,ZBRA"},
     {"t":"XLI","n":"Industrials","fn":"Sel Sector:Ind SS SPDR","h":"GE,CAT,RTX,UBER,GEV,BA,UNP,ETN,HON,DE,PH,ADP,TT,MMM,LMT,GD,HWM,WM,TDG,JCI,EMR,NOC,UPS,CMI,PWR,LUV,UAL,PAYX,J,FDX,HII,VLTO,ROK,EFX,VRSK,AME"},
@@ -496,7 +495,7 @@ def compute_market_regime(closes):
 
 
 def load_dynamic_holdings():
-    """Load dynamic holdings for FFTY/BUZZ from dynamic_holdings.json."""
+    """Load dynamic holdings for BUZZ from dynamic_holdings.json."""
     if os.path.exists("dynamic_holdings.json"):
         with open("dynamic_holdings.json") as f:
             return json.load(f)
@@ -731,7 +730,9 @@ def main():
         print(f"\n[holiday] {_et_today} is a US market holiday — exiting without changes.")
         return
 
-    # Override FFTY/BUZZ holdings from dynamic file
+    # Override dynamic ETF holdings (e.g. BUZZ) from dynamic file. Any keys in
+    # the dynamic file for ETFs no longer in ETF_INFO (e.g. FFTY, removed) are
+    # silently ignored.
     dyn = load_dynamic_holdings()
     for info in ETF_INFO:
         if info["t"] in dyn and dyn[info["t"]]:
