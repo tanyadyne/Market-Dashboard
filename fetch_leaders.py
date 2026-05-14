@@ -37,7 +37,7 @@ MAX_HISTORY_DAYS = 90
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
-    "ACN","AEHR","ALAB","APO","ARES","ARM","AXTI","BIRD","BP","BRK-B","CAR",
+    "ACN","ADEA","AEHR","ALAB","APO","ARES","ARM","AXTI","BIRD","BP","BRK-B","CAR",
     "ENS","GOOG","LAC","LNG","NOK","NVO","OWL","RDDT","RIG","SMCI","SNAP","SNDK","STX","WDC",
     "WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM", "UMC",
     "NVEC", "CAMT", "NLST", "SKYT", "POWI", "LWLG",
@@ -50,7 +50,7 @@ CSV_EXTRAS = [
 # holding) so they reach the universe in the first place.
 MANUAL_INCLUDE = {
     "LAC", "ENS","WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM", "UMC",
-    "NVEC", "CAMT", "NLST", "SKYT", "POWI", "LWLG",
+    "NVEC", "CAMT", "NLST", "SKYT", "POWI", "LWLG", "ADEA",
 }
 
 # MANUAL_EXCLUDE — tickers dropped from the universe before any filtering or data
