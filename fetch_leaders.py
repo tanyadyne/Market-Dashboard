@@ -2398,7 +2398,22 @@ def main():
     with open("leaders.json", "w") as f:
         json.dump(data, f, separators=(",", ":"))
 
+    # ─── Output screener_tickers.json ─────────────────────────
+    # Lightweight companion file containing ONLY the screener's ticker universe
+    # (a few KB vs leaders.json's ~2MB). The Theme Tracker fetches this to know
+    # which stock tickers have a screener profile, so it can disable the click
+    # on holding pills whose ticker isn't in the screener (no point navigating
+    # to a profile that doesn't exist). Sorted for stable diffs / caching.
+    screener_tickers = sorted(r["t"] for r in results if r.get("t"))
+    with open("screener_tickers.json", "w") as f:
+        json.dump({
+            "updated": data["meta"]["updated"],
+            "count": len(screener_tickers),
+            "tickers": screener_tickers,
+        }, f, separators=(",", ":"))
+
     print(f"\nOutput: leaders.json ({len(results)} stocks)")
+    print(f"  screener_tickers.json ({len(screener_tickers)} tickers)")
     print(f"  leaders_score_history.json ({len(dates)} daily snapshots)")
 
 
