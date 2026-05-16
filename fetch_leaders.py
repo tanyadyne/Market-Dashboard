@@ -41,6 +41,12 @@ CSV_EXTRAS = [
     "ENS","GOOG","LAC","LNG","NOK","NVO","OWL","RDDT","RIG","SMCI","SNAP","SNDK","STX","WDC",
     "WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM", "UMC",
     "NVEC", "CAMT", "NLST", "SKYT", "POWI", "LWLG",
+    # HUMN (Roundhill Humanoid Robotics) US-listed holdings — added so every HUMN
+    # constituent reaches the screener seed. The mega-caps pass the liquidity/mcap
+    # gates on their own; the smaller names below are also force-kept via
+    # MANUAL_INCLUDE so they survive those gates.
+    "TSLA","NVDA","QCOM","XPEV","AMZN","AMD","TER","GOOGL","BABA",
+    "MBLY","HSAI","ROK","TKR","RBC","ABB","AEVA",
 ]
 
 # MANUAL_INCLUDE — tickers that bypass all filtering (liquidity, market cap, pharma/biotech).
@@ -51,6 +57,9 @@ CSV_EXTRAS = [
 MANUAL_INCLUDE = {
     "LAC", "ENS","WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM", "UMC",
     "NVEC", "CAMT", "NLST", "SKYT", "POWI", "LWLG", "ADEA",
+    # Smaller HUMN holdings — force-kept so the liquidity / $2B mcap gates don't
+    # drop them (the HUMN mega-caps don't need this; they pass on their own).
+    "AEVA", "MBLY", "HSAI", "RBC", "TKR", "XPEV",
 }
 
 # MANUAL_EXCLUDE — tickers dropped from the universe before any filtering or data
