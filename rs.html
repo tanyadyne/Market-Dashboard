@@ -711,6 +711,10 @@ function restoreTTState(useLiveUrl){
 // restoreTTState), the user lands back on the exact view they left.
 function openStockInScreener(ticker){
   if(!ticker) return;
+  // Defensive: never navigate to a screener profile that doesn't exist. Click
+  // sites already gate on isInScreener(), but this guards stale/unexpected
+  // call paths too — a no-op is the desired "nothing happens" behaviour.
+  if(!isInScreener(ticker)) return;
   const tk=encodeURIComponent(String(ticker).trim().toUpperCase());
   window.location.href='screener.html?profile='+tk;
 }
@@ -1140,17 +1144,40 @@ function srt(key){
 }
 
 let NAMES={};
+// Set of stock tickers that have a Stock Screener profile (from
+// screener_tickers.json). null until loaded, OR if the fetch failed — in which
+// case isInScreener() returns true (fail-OPEN: better to allow a click that
+// might dead-end than to wrongly disable a valid one).
+let SCREENER_TICKERS=null;
+
+// Whether a stock ticker has a profile in the Stock Screener. Fail-open: if the
+// universe list isn't available (still loading / fetch failed / file missing),
+// returns true so navigation behaves exactly as it did before this feature.
+function isInScreener(ticker){
+  if(!SCREENER_TICKERS) return true;          // unknown → don't block
+  return SCREENER_TICKERS.has(String(ticker||'').trim().toUpperCase());
+}
 async function loadData(){
   try{
-    const [dataRes,namesRes,histRes]=await Promise.all([
+    const [dataRes,namesRes,histRes,scrRes]=await Promise.all([
       fetch('data.json?_='+Date.now()),
       fetch('names.json?_='+Date.now()).catch(()=>null),
-      fetch('data_score_history.json?_='+Date.now()).catch(()=>null)
+      fetch('data_score_history.json?_='+Date.now()).catch(()=>null),
+      // Lightweight (~4KB) list of tickers that have a Stock Screener profile.
+      // Used to gate cross-app navigation (see isInScreener / pill rendering).
+      // .catch → null so a missing/failed file never breaks data loading.
+      fetch('screener_tickers.json?_='+Date.now()).catch(()=>null)
     ]);
     if(!dataRes.ok)throw new Error('data.json not found');
     DATA=await dataRes.json();
     if(namesRes&&namesRes.ok){try{NAMES=await namesRes.json();}catch(e){}}
     if(histRes&&histRes.ok){try{HISTORY=await histRes.json();}catch(e){HISTORY=null;}}
+    if(scrRes&&scrRes.ok){
+      try{
+        const sj=await scrRes.json();
+        if(sj&&Array.isArray(sj.tickers)) SCREENER_TICKERS=new Set(sj.tickers);
+      }catch(e){SCREENER_TICKERS=null;}
+    }
     onDataLoaded();
   }
   catch(err){document.getElementById('statusBar').innerHTML=`<span style="color:var(--r)">Error: ${esc(err.message)}</span>`;}
@@ -1593,8 +1620,19 @@ function renderProfile(){
   const bs=hl.filter(h=>hg[h]==='b' || !hg[h]); // anything ungraded falls into bronze
   const orderedHoldings=[...gs,...ss,...bs];
   const pillFor=h=>{const g=hg[h];return g==='g'?'pill-g':g==='s'?'pill-s':'pill-b';};
+  // A pill is only clickable if the ticker has a Stock Screener profile.
+  // Non-screener tickers keep the SAME pill color (per design) but get no
+  // onclick, no pointer cursor, and no "view" tooltip — clicking does nothing.
+  const pillHtml=h=>{
+    const base=`pill ${pillFor(h)}`;
+    if(isInScreener(h)){
+      return `<span class="${base}" style="cursor:pointer" onclick="openStockInScreener('${esc(h)}')" title="View ${esc(h)} in Stock Screener">${esc(h)}</span>`;
+    }
+    // Not in screener → inert pill (default cursor, no handler/title).
+    return `<span class="${base}" style="cursor:default">${esc(h)}</span>`;
+  };
   const holdingsHtml=orderedHoldings.length
-    ? orderedHoldings.map(h=>`<span class="pill ${pillFor(h)}" style="cursor:pointer" onclick="openStockInScreener('${esc(h)}')" title="View ${esc(h)} in Stock Screener">${esc(h)}</span>`).join('')
+    ? orderedHoldings.map(pillHtml).join('')
     : '<span class="clip-empty">No holdings data</span>';
 
   // Section 1: Three info boxes (RS Score | Ranking | Rank Change Δ).
@@ -1702,9 +1740,14 @@ function renderProfile(){
   }else{
     html+='<div class="chart-grid">';
     tierStocks.forEach(tk=>{
+      // Ticker label is clickable only if the stock has a screener profile.
+      // Same visual either way; non-screener tickers just aren't interactive.
+      const tkSpan=isInScreener(tk)
+        ? `<span class="chart-card-tk" style="cursor:pointer" onclick="openStockInScreener('${esc(tk)}')" title="View ${esc(tk)} in Stock Screener">${esc(tk)}</span>`
+        : `<span class="chart-card-tk" style="cursor:default">${esc(tk)}</span>`;
       html+=`<div class="chart-card">
         <div class="chart-card-hdr">
-          <div class="chart-card-l"><span class="chart-card-tier ${profileTier}"></span><span class="chart-card-tk" style="cursor:pointer" onclick="openStockInScreener('${esc(tk)}')" title="View ${esc(tk)} in Stock Screener">${esc(tk)}</span></div>
+          <div class="chart-card-l"><span class="chart-card-tier ${profileTier}"></span>${tkSpan}</div>
         </div>
         <div class="chart-card-body tv-chart" id="tvc-stk-${esc(tk)}"></div>
       </div>`;
