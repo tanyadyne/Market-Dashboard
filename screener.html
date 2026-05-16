@@ -1738,7 +1738,29 @@ window.addEventListener('load',syncTopHeight);
 window.addEventListener('resize',syncTopHeight);
 // Also re-sync after initial data load / tab switches (header height can change)
 const _origLoad=loadData;
-loadData=async function(){await _origLoad.apply(this,arguments);syncTopHeight();};
+let _deepLinkHandled=false;
+loadData=async function(){
+  await _origLoad.apply(this,arguments);
+  syncTopHeight();
+  // Deep-link support: if the page was opened as screener.html?profile=TICKER
+  // (e.g. from a stock-ticker click in the theme tracker), auto-open that
+  // stock's Individual Profile once data is available. Only fire once — the
+  // 60s auto-refresh also calls loadData() and we don't want it yanking the
+  // user back to the deep-linked profile after they've navigated away.
+  if(!_deepLinkHandled && DATA && DATA.e){
+    _deepLinkHandled=true;
+    try{
+      const params=new URLSearchParams(window.location.search);
+      const tk=(params.get('profile')||'').trim().toUpperCase();
+      if(tk){
+        // Only open if the ticker actually exists in the universe; otherwise
+        // fall through to the normal landing tab.
+        const exists=DATA.e.some(e=>e.t===tk);
+        if(exists) openProfile(tk);
+      }
+    }catch(e){/* malformed URL — ignore, land normally */}
+  }
+};
 
 setInterval(()=>{if(currentTab!=='search')loadData();},60000);
 loadData();
