@@ -61,7 +61,10 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .ov-box.with-streak .ov-colhdr,.ov-box.with-streak .ov-row{grid-template-columns:34px 64px 1fr 48px 52px 56px}
 .ov-row{display:grid;grid-template-columns:34px 70px 1fr 56px 60px;gap:6px;padding:7px 14px;font-size:12px;align-items:center;border-bottom:1px solid var(--bdr2)}
 .ov-row .ov-streak{text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:11px;color:var(--t3)}
-.streak-new{color:#3b82f6;font-weight:700;letter-spacing:.3px}
+/* Scoped to .ov-row so this beats the .ov-row .ov-streak color above (equal-ish
+   specificity needs the extra selector). #3b82f6 matches the screener's
+   .streak-new exactly so "NEW" looks identical across both apps. */
+.ov-row .ov-streak.streak-new{color:#3b82f6;font-weight:700;letter-spacing:.3px}
 .ov-row:last-child{border-bottom:none}
 /* Cross-list highlight — a theme that appears in BOTH Top 10 Daily and Top 10 Weekly
    gets a subtle blue tint + left border. Helps the user spot themes leading on
