@@ -70,6 +70,45 @@ MANUAL_EXCLUDE = {
     "FPS", "ARES", "GBTG",
 }
 
+# ─── ADR-collapse filter ───────────────────────────────────────────────────────
+# Drops stocks whose Average Daily Range has collapsed to a fraction of its OWN
+# historical norm. Catches acquisition-pinned names (GSAT, JHG, etc.) without
+# needing news or deal detection — it filters on the thing we actually care
+# about (the stock has become untradeable due to a volatility collapse),
+# regardless of the cause. Fully relative: no absolute ADR threshold anywhere,
+# so "low" is judged per-stock (1.5% is a collapse for GSAT whose norm was ~7%,
+# while 0.12% is a collapse for JHG whose norm was ~1.3%).
+#
+# Two-baseline robustness — a stock is filtered only if its recent ADR is
+# collapsed versus BOTH:
+#   1. recent_ADR / short_baseline_ADR  < ACR_RATIO
+#   2. recent_ADR / long_baseline_ADR   < ACR_RATIO
+#
+# Why two windows instead of one + an absolute floor: the failure mode of a
+# single-baseline ratio is post-event normalisation. E.g. a biotech spikes to
+# 15% ADR for two weeks around an FDA decision then reverts to its true ~3%
+# norm. If the lone baseline window mostly captures the spike, recent/baseline
+# = 3/15 = 0.2 looks like a "collapse" but 3% is perfectly tradeable. The LONG
+# baseline (≈120 trading days) contains plenty of the stock's true-normal
+# periods, so recent 3% is NOT collapsed versus it → the stock is correctly
+# kept. A genuine pin (GSAT/JHG) is collapsed versus both the short AND long
+# window, so it's filtered. This makes the second condition fully relative
+# (no magic absolute number) while still killing the normalisation false
+# positive that the old absolute floor was crudely hacking around.
+#
+# ADR% per bar = (High - Low) / Close. "recent" = last ACR_RECENT_BARS bars.
+# Both baselines are measured BEFORE the recent window (so the collapsed period
+# can't contaminate them) and are adaptive: each is clamped to the history
+# available, and the whole check is skipped if there aren't at least
+# ACR_MIN_SHORT_BARS baseline bars (new listings).
+# MANUAL_INCLUDE bypasses this filter.
+ACR_RATIO            = 0.30   # recent ADR must be < 30% of EACH baseline ADR
+ACR_RECENT_BARS      = 10     # "recent" = last 10 bars
+ACR_SHORT_BASELINE   = 40     # short baseline = ~40 bars before the recent window
+ACR_LONG_BASELINE    = 120    # long  baseline = ~120 bars before the recent window
+ACR_MIN_SHORT_BARS   = 20     # need >= 20 short-baseline bars or skip the check
+
+
 
 # Yahoo Finance industry → our theme name mapping
 INDUSTRY_TO_THEME = {
@@ -1759,7 +1798,7 @@ def main():
     DEBUG_TICKERS = {"RIG"}
 
     liquid_tickers = []
-    excluded = {"no_data": 0, "stale": 0, "illiquid": 0}
+    excluded = {"no_data": 0, "stale": 0, "illiquid": 0, "adr_collapse": 0}
     for tk in all_tickers:
         df = get_df(tk)
         if df is None or len(df) < 10:
@@ -1793,10 +1832,58 @@ def main():
             if tk in DEBUG_TICKERS:
                 print(f"  [DEBUG] {tk}: EXCLUDED — illiquid (price ${last_price:.2f} × avg_vol_10d {avg_vol_10d/1e6:.2f}M = ${dollar_vol/1e6:.1f}M < ${threshold/1e6:.0f}M)")
             continue
+        # ─── ADR-collapse check ───────────────────────────────────
+        # Filter stocks whose daily range has collapsed vs its OWN history.
+        # Fully relative (no absolute floor): recent ADR must be < ACR_RATIO of
+        # BOTH a short (~40-bar) and a long (~120-bar) baseline measured before
+        # the recent window. MANUAL_INCLUDE bypasses. See ACR_* constant block.
+        if tk not in MANUAL_INCLUDE:
+            try:
+                h = df["High"].values
+                l = df["Low"].values
+                n = len(c)
+                # Bars available to form baselines (everything before "recent").
+                avail_baseline = n - ACR_RECENT_BARS
+                if avail_baseline >= ACR_MIN_SHORT_BARS:
+                    # Per-bar ADR% = (High-Low)/Close, guarding bad/zero closes.
+                    with np.errstate(divide="ignore", invalid="ignore"):
+                        adr_pct = np.where(c > 0, (h - l) / c, np.nan)
+                    recent_adr = float(np.nanmean(adr_pct[-ACR_RECENT_BARS:]))
+                    # Both baselines are the window ending just before the recent
+                    # bars. Clamp each to the history actually available; the
+                    # long baseline simply uses fewer bars on short-history names
+                    # (and equals the short baseline in the limit — still valid,
+                    # just less independent).
+                    pre = adr_pct[:-ACR_RECENT_BARS]                       # bars before recent
+                    short_n = min(ACR_SHORT_BASELINE, pre.shape[0])
+                    long_n  = min(ACR_LONG_BASELINE,  pre.shape[0])
+                    short_baseline = float(np.nanmean(pre[-short_n:]))
+                    long_baseline  = float(np.nanmean(pre[-long_n:]))
+                    if (np.isfinite(recent_adr)
+                            and np.isfinite(short_baseline) and short_baseline > 0
+                            and np.isfinite(long_baseline)  and long_baseline  > 0):
+                        short_ratio = recent_adr / short_baseline
+                        long_ratio  = recent_adr / long_baseline
+                        # Collapsed vs BOTH windows → genuine pin, not a
+                        # post-spike normalisation (which would fail the long
+                        # test because the long baseline holds true-normal data).
+                        if short_ratio < ACR_RATIO and long_ratio < ACR_RATIO:
+                            excluded["adr_collapse"] += 1
+                            if tk in DEBUG_TICKERS:
+                                print(f"  [DEBUG] {tk}: EXCLUDED — ADR collapse "
+                                      f"(recent {recent_adr*100:.2f}%; short base "
+                                      f"{short_baseline*100:.2f}% r={short_ratio:.2f}; "
+                                      f"long base {long_baseline*100:.2f}% "
+                                      f"r={long_ratio:.2f}; thresh {ACR_RATIO})")
+                            continue
+            except Exception:
+                # Any data issue → don't filter on ADR (fail-open); the stock
+                # still had to pass the liquidity gate to reach this point.
+                pass
         liquid_tickers.append(tk)
         if tk in DEBUG_TICKERS:
             print(f"  [DEBUG] {tk}: PASSED pre-filter (price ${last_price:.2f}, dollar_vol ${dollar_vol/1e6:.1f}M, threshold ${threshold/1e6:.0f}M)")
-    print(f"  Pre-filter: {len(all_tickers)} → {len(liquid_tickers)} (excluded: {excluded['no_data']} no data, {excluded['stale']} delisted, {excluded['illiquid']} illiquid)")
+    print(f"  Pre-filter: {len(all_tickers)} → {len(liquid_tickers)} (excluded: {excluded['no_data']} no data, {excluded['stale']} delisted, {excluded['illiquid']} illiquid, {excluded['adr_collapse']} ADR collapse)")
 
     # ─── Market cap + industry lookup (ONLY on liquid survivors) ──
     MIN_MCAP = 2_000_000_000
