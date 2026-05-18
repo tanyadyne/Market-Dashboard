@@ -13,7 +13,16 @@
 [data-theme="dark"]{--bg:#0a0a0a;--bg2:#111111;--bg3:#161616;--bg4:#1f1f1f;--bdr:#1f1f1f;--bdr2:#2a2a2a;--t1:#e8e8e8;--t2:#888;--t3:#666;--t4:#444;--g:#22c55e;--g2:#4ade80;--gbg:#0a2818;--gbg2:#051a0e;--r:#ef4444;--r2:#f87171;--rbg:#2a0a0a;--rbg2:#1a0606;--purple:#c084fc;--indigo:#818cf8;--thbg:#111111;--hovbg:#161616;--spark-up:#22c55e;--spark-dn:#ef4444;--spark-line:#60a5fa;--modal-bg:rgba(0,0,0,0.7);--card:#161616}
 [data-theme="light"]{--bg:#f7f7f8;--bg2:#ffffff;--bg3:#f3f4f6;--bg4:#e5e7eb;--bdr:#e5e7eb;--bdr2:#d1d5db;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--t4:#9ca3af;--g:#15803d;--g2:#166534;--gbg:#dcfce7;--gbg2:#f0fdf4;--r:#b91c1c;--r2:#991b1b;--rbg:#fee2e2;--rbg2:#fef2f2;--purple:#7c3aed;--indigo:#4338ca;--thbg:#ffffff;--hovbg:#f3f4f6;--spark-up:#15803d;--spark-dn:#b91c1c;--spark-line:#1d4ed8;--modal-bg:rgba(17,24,39,0.5);--card:#ffffff}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;transition:background .2s,color .2s;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+/* Base body: flex column, grows with content. NOT height-locked here — the
+   lock is applied per-tab below. Default (no data-tab yet, e.g. first paint)
+   stays unlocked so initial Overview render scrolls natively. */
+body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;transition:background .2s,color .2s;display:flex;flex-direction:column}
+/* RS Ranking + Individual Profile need a viewport-locked body so their inner
+   scroll containers (.tw table, #chartView) can own the scroll and keep their
+   sticky headers. Overview deliberately omitted → it uses native document
+   scroll (whole page scrolls anywhere the cursor is, like the stock screener). */
+html[data-tab="rs"] body,
+html[data-tab="profile"] body{height:100vh;overflow:hidden}
 .mono{font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
 .top-fixed{position:relative;background:var(--bg)}
 .hdr{padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
@@ -35,10 +44,11 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 [data-theme="light"] .tab-btn.active{background:#e5e7eb;color:#111827;border-color:#9ca3af}
 [data-view="mobile"] .tab-strip{padding:10px 8px 8px;gap:4px;flex-wrap:wrap}
 [data-view="mobile"] .tab-btn{padding:8px 18px;font-size:11px;letter-spacing:.3px}
-/* Overview tab content. The body is height-locked (height:100vh; overflow:hidden) for
-   the table layout, so the Overview wrapper needs flex:1 + its own overflow-y:auto
-   to handle scrolling — same pattern as .tw uses for the RS Ranking table. */
-.overview-wrap{padding:20px;max-width:1400px;margin:0 auto;flex:1;min-height:0;overflow-y:auto;width:100%;box-sizing:border-box}
+/* Overview tab content. The body uses native document scroll on this tab (it's
+   NOT height-locked — see the body rules), so this wrapper is just a normal
+   block: no flex:1, no inner overflow. The whole page scrolls regardless of
+   cursor position, matching the stock screener's Overview behaviour. */
+.overview-wrap{padding:20px;max-width:1400px;margin:0 auto;width:100%;box-sizing:border-box}
 .ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .ov-box{border:1px solid var(--bdr);border-radius:10px;background:var(--bg2);overflow:hidden}
 [data-theme="light"] .ov-box{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
@@ -579,6 +589,13 @@ function switchView(view){
 
 function switchTab(tab){
   currentTab=tab;
+  // Expose the active tab to CSS. The body is height-locked (overflow:hidden)
+  // for the RS Ranking table + chart view, which need an inner scroll container
+  // with sticky headers. The Overview tab has no such requirement and should
+  // scroll like a normal document (so the whole page scrolls regardless of
+  // where the cursor is — matching the stock screener). The body height-lock
+  // is therefore gated on [data-tab="overview"] in CSS (see body rule).
+  document.documentElement.setAttribute('data-tab', tab);
   // Update tab buttons
   document.getElementById('tabRS').classList.toggle('active', tab==='rs');
   document.getElementById('tabOverview').classList.toggle('active', tab==='overview');
