@@ -69,7 +69,7 @@ MANUAL_INCLUDE = {
 # don't want tracked (e.g. data-quality issues, recent IPOs without enough history,
 # or just personal preference).
 MANUAL_EXCLUDE = {
-    "FPS", "ARES", "GBTG",
+    "FPS", "ARES", "GBTG", "MASI",
 }
 
 # ─── ADR-collapse filter ───────────────────────────────────────────────────────
@@ -2097,6 +2097,32 @@ def main():
     ]
     pharma_removed = before - len(all_tickers)
     print(f"  Pharma/Biotech filter: {pharma_removed} removed (< ${PHARMA_BIOTECH_MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
+
+    # ─── Healthcare-adjacent mcap filter: require >= $12B (MANUAL_INCLUDE bypasses) ──
+    # Same idea as the pharma/biotech filter but a lower bar, applied to the
+    # broader healthcare cluster (devices, diagnostics, services, care
+    # facilities). $12B keeps established large mid-caps (Align, Insulet,
+    # Cooper, Penumbra, Tenet, etc.) while cutting smaller/speculative names and
+    # — usefully — buyout-pinned mid-caps like MASI ($9.35B) automatically.
+    # These theme strings are the INDUSTRY_TO_THEME outputs for: Medical Devices
+    # / Medical Instruments & Supplies → "Healthcare Equipment"; Diagnostics &
+    # Research → "Healthcare"; Healthcare Plans / Health Information Services /
+    # Medical Distribution / Pharmaceutical Retailers → "Healthcare Services";
+    # Medical Care Facilities → "Medical/Nursing Services".
+    HEALTHCARE_ADJ_THEMES = {
+        "Healthcare Equipment", "Healthcare", "Healthcare Services",
+        "Medical/Nursing Services",
+    }
+    HEALTHCARE_ADJ_MIN_MCAP = 12_000_000_000
+    before_hc = len(all_tickers)
+    all_tickers = [
+        t for t in all_tickers
+        if t in MANUAL_INCLUDE
+        or theme_map.get(t) not in HEALTHCARE_ADJ_THEMES
+        or mcap_cache.get(t, 0) >= HEALTHCARE_ADJ_MIN_MCAP
+    ]
+    hc_removed = before_hc - len(all_tickers)
+    print(f"  Healthcare-adjacent filter: {hc_removed} removed (< ${HEALTHCARE_ADJ_MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
     # Diagnostic for DEBUG_TICKERS
     for tk in DEBUG_TICKERS:
         if tk in all_tickers:
@@ -2113,6 +2139,8 @@ def main():
                 theme = theme_map.get(tk, "?")
                 if theme in PHARMA_BIOTECH_THEMES and mc < PHARMA_BIOTECH_MIN_MCAP:
                     print(f"  [DEBUG] {tk}: EXCLUDED by pharma filter (mc=${mc/1e9:.2f}B, theme='{theme}')")
+                elif theme in HEALTHCARE_ADJ_THEMES and mc < HEALTHCARE_ADJ_MIN_MCAP:
+                    print(f"  [DEBUG] {tk}: EXCLUDED by healthcare-adjacent filter (mc=${mc/1e9:.2f}B, theme='{theme}')")
 
     # ─── SPY baselines ────────────────────────────────────────
     spy_closes = spy_df["Close"].values
