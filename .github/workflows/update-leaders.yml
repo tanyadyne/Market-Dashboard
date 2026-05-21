@@ -5,6 +5,12 @@ on:
   # No GitHub-native crons — those were unreliable and have been replaced by cron-job.org
   # which fires on time and respects timezones cleanly.
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Run even outside regular market hours"
+        required: false
+        type: boolean
+        default: false
 
 # Don't let overlapping triggers stomp on each other. If one run is still in flight
 # when the next fires, the second waits for the first to finish rather than being
@@ -44,12 +50,12 @@ jobs:
           elif [ "$DOW" -ge 6 ]; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "Weekend ($(date '+%A %H:%M %Z')) — skipping"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          elif [ "${{ inputs.force || false }}" = "true" ]; then
             echo "skip=false" >> $GITHUB_OUTPUT
-            echo "Manual/API trigger on weekday (non-holiday) — running regardless of time of day"
-          elif [ $TIME_MIN -ge 570 ] && [ $TIME_MIN -le 980 ]; then
+            echo "Forced manual/API trigger on weekday (non-holiday) — running"
+          elif [ $TIME_MIN -ge 570 ] && [ $TIME_MIN -le 955 ]; then
             # 570 = 9:30 AM ET (market open)
-            # 980 = 4:20 PM ET (covers post-close runs scheduled up to 4:15 with small buffer)
+            # 955 = 3:55 PM ET (avoid post-close fast_info/quote inconsistencies)
             echo "skip=false" >> $GITHUB_OUTPUT
             echo "Within market hours window ($(date '+%H:%M %Z'))"
           else
@@ -73,14 +79,25 @@ jobs:
 
       - name: Fetch Liquid Leaders data
         if: steps.market_check.outputs.skip != 'true'
-        run: python fetch_leaders.py
+        run: |
+          if [ "${{ inputs.force || false }}" = "true" ]; then
+            export FORCE_INTRADAY=1
+          fi
+          if [ -f leaders_intraday_baselines.json ]; then
+            python fetch_leaders_intraday.py
+          else
+            echo "leaders_intraday_baselines.json missing — running one full rebuild to seed intraday baselines"
+            python fetch_leaders.py
+          fi
 
       - name: Commit and push
         if: steps.market_check.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add leaders.json leaders_score_history.json leaders_mcap.json leaders_index_universe.json
-          git diff --staged --quiet || git commit -m "Update Liquid Leaders $(date -u '+%Y-%m-%d %H:%M UTC')"
+          for f in leaders.json leaders_score_history.json leaders_mcap.json leaders_index_universe.json leaders_intraday_baselines.json screener_tickers.json; do
+            [ -f "$f" ] && git add "$f"
+          done
+          git diff --staged --quiet || git commit -m "Update leaders.json"
           git pull --rebase
           git push

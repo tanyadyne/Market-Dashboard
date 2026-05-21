@@ -1,0 +1,46 @@
+name: Update Liquid Leaders Full
+
+on:
+  # Canonical after-close rebuild. This refreshes universe membership, historical
+  # weekly/daily scores, market-cap metadata, histories, and intraday baselines.
+  schedule:
+    # 21:35 UTC = after the US close in both EDT and EST.
+    - cron: '35 21 * * 1-5'
+  workflow_dispatch:
+
+concurrency:
+  group: update-leaders
+  cancel-in-progress: false
+
+jobs:
+  update-leaders-full:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install --retries 5 --timeout 60 yfinance numpy requests curl_cffi
+
+      - name: Fetch full Liquid Leaders data
+        run: python fetch_leaders.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for f in leaders.json leaders_score_history.json leaders_mcap.json leaders_index_universe.json leaders_intraday_baselines.json screener_tickers.json; do
+            [ -f "$f" ] && git add "$f"
+          done
+          git diff --staged --quiet || git commit -m "Update leaders.json"
+          git pull --rebase
+          git push

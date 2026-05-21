@@ -34,6 +34,7 @@ LOOKBACK_W = 20    # weekly: compute deltas for last 20 weeks
 MA_LENGTH_W = 12   # weekly: window length for recency-weighted average of deltas
 ATR_PERIOD = 14
 MAX_HISTORY_DAYS = 90
+INTRADAY_BASELINES_FILE = "leaders_intraday_baselines.json"
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
@@ -982,6 +983,12 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     atr_pct_for_mult = (atr / c[-2] * 100) if n >= 2 and c[-2] != 0 else 1
     atr_mult = abs(change) / atr_pct_for_mult if atr_pct_for_mult > 0 else 0
 
+    try:
+        valid_highs = [float(x) for x in h[-min(252, n):] if x is not None and not (isinstance(x, float) and x != x)]
+        high_52w = max(valid_highs) if valid_highs else 0
+    except Exception:
+        high_52w = 0
+
     vols = [x for x in v if x is not None and x > 0]
     rvol = (vols[-1] / np.mean(vols[:-1][-20:])) if len(vols) > 1 and np.mean(vols[:-1][-20:]) > 0 else None
 
@@ -1028,6 +1035,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "sa": _sa, "sf": _sf, "tz": "neutral",
                 "w_pen_engulf": False, "w_pen_ema21": False, "w_pen_crash5": False,
                 # Internal baselines for intraday overlay (stripped before output)
+                "_atr": round(float(atr), 6) if atr else None,
+                "_hi52": round(float(high_52w), 6) if high_52w else None,
                 "_pc": float(c[-2]) if n >= 2 else None,
                 "_5b": w_base,
                 "_20b": m_base,
@@ -1073,8 +1082,6 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     # their peaks, while rewarding stocks still near highs (current leaders).
     # Uses the 14-period ATR as the ADR proxy (already computed above as `atr`).
     try:
-        valid_highs = [float(x) for x in h[-min(252, n):] if x is not None and not (isinstance(x, float) and x != x)]
-        high_52w = max(valid_highs) if valid_highs else 0
         if high_52w > 0 and atr and atr > 0:
             distance_from_high = high_52w - float(stock_now)
             adr_units_below = distance_from_high / atr
@@ -1230,6 +1237,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "w_pen_ema21": pen_ema21,
         "w_pen_crash5": pen_crash5,
         # Internal baselines for intraday overlay (stripped before output)
+        "_atr": round(float(atr), 6) if atr else None,
+        "_hi52": round(float(high_52w), 6) if high_52w else None,
         "_pc": float(c[-2]) if n >= 2 else None,
         "_5b": w_base,
         "_20b": m_base,
@@ -1283,6 +1292,31 @@ def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_
         rrs = (stock_chg - expected) / stock_atr
         deltas.append(rrs)
 
+    def week_id(ts):
+        try:
+            d = ts.date() if hasattr(ts, "date") else date.fromisoformat(str(ts)[:10])
+            iso = d.isocalendar()
+            return f"{iso.year}-W{iso.week:02d}", d.isoformat()
+        except Exception:
+            return "", ""
+
+    _prev_stock_idx, _prev_spy_idx = extended[-2]
+    _cur_stock_idx, _cur_spy_idx = extended[-1]
+    _w_week, _w_date = week_id(df_w.index[_cur_stock_idx])
+    _w_stock_atr = etf_atr_series[_cur_stock_idx] if _cur_stock_idx < len(etf_atr_series) else 0
+    _w_spy_atr = spy_w_atr_series[_cur_spy_idx] if _cur_spy_idx < len(spy_w_atr_series) else 0
+    _w_intraday_base = {
+        "_w_deltas": [round(float(x), 6) for x in deltas[-LOOKBACK_W:]],
+        "_w_week": _w_week,
+        "_w_date": _w_date,
+        "_w_stock_prev": float(c[_prev_stock_idx]) if c[_prev_stock_idx] is not None else None,
+        "_w_stock_last": float(c[_cur_stock_idx]) if c[_cur_stock_idx] is not None else None,
+        "_w_stock_atr": round(float(_w_stock_atr), 6) if _w_stock_atr and _w_stock_atr > 0 else None,
+        "_w_spy_prev": float(spy_w_closes[_prev_spy_idx]) if spy_w_closes[_prev_spy_idx] is not None else None,
+        "_w_spy_last": float(spy_w_closes[_cur_spy_idx]) if spy_w_closes[_cur_spy_idx] is not None else None,
+        "_w_spy_atr": round(float(_w_spy_atr), 6) if _w_spy_atr and _w_spy_atr > 0 else None,
+    }
+
     # Recency-weighted rolling average of deltas across a 12-week window.
     # Weights (most recent first): [0.12, 0.11, 0.10, 0.09, 0.08, 0.08, 0.08, 0.08, 0.07, 0.07, 0.06, 0.06]
     # sum = 1.0. Deliberately FLAT — no week carries more than 12% of the score, so a
@@ -1306,7 +1340,7 @@ def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_
     if not sma_series:
         return {"w_rv": round(rvol * 100) if rvol else None, "w_am": round(atr_mult * 100),
                 "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None,
-                "w_crash": False, "w_c5": week_change}
+                "w_crash": False, "w_c5": week_change, **_w_intraday_base}
 
     final_rs = sma_series[-1]
 
@@ -1323,6 +1357,7 @@ def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_
         "w_rv": round(rvol * 100) if rvol else None, "w_am": round(atr_mult * 100),
         "w_rs": None,  # Set cross-sectionally in main()
         "w_rf": dec_streak, "w_ra": adv_streak, "w_vs": sma_series, "w_fr": round(final_rs, 4),
+        **_w_intraday_base,
     }
 
 
@@ -1509,6 +1544,45 @@ def apply_intraday_overlay(results):
             r["ytd"] = round((live / r["_yb"] - 1) * 100, 2)
         refreshed += 1
     print(f"  [Intraday overlay] Refreshed {refreshed}/{len(results)} entries (rejected {rejected} with suspicious values)")
+
+
+def write_intraday_baselines(results):
+    """Persist the compact historical inputs needed by the fast intraday reranker.
+
+    The market-hours workflow uses this file to recompute weekly RS/ranks from live
+    quotes without redownloading a year of daily+weekly history for the full universe.
+    """
+    keep = {
+        "p", "w_fr", "w_vs", "w_rs", "w_rk",
+        "w_pen_engulf", "w_pen_crash5",
+        "_pc", "_5b", "_20b", "_yb", "_atr", "_hi52",
+        "_w_deltas", "_w_week", "_w_date",
+        "_w_stock_prev", "_w_stock_last", "_w_stock_atr",
+        "_w_spy_prev", "_w_spy_last", "_w_spy_atr",
+    }
+    baselines = {}
+    for r in results:
+        tk = r.get("t")
+        if not tk:
+            continue
+        b = {}
+        for k in keep:
+            if k in r:
+                b[k] = r.get(k)
+        if b.get("_w_deltas") and b.get("_w_stock_atr") and b.get("_w_spy_atr"):
+            baselines[tk] = b
+
+    payload = {
+        "meta": {
+            "updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "count": len(baselines),
+            "source": "fetch_leaders.py",
+        },
+        "d": baselines,
+    }
+    with open(INTRADAY_BASELINES_FILE, "w") as f:
+        json.dump(payload, f, separators=(",", ":"))
+    print(f"  {INTRADAY_BASELINES_FILE} ({len(baselines)} baselines)")
 
 
 def strip_internal_fields(results):
@@ -2513,6 +2587,7 @@ def main():
     # ─── Output leaders.json ──────────────────────────────────
     # Strip internal _-prefixed baseline fields used by the intraday overlay so they
     # don't bloat the output JSON.
+    write_intraday_baselines(results)
     strip_internal_fields(results)
 
     data = {
