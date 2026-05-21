@@ -27,7 +27,8 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 [data-theme="light"] .pill-toggle .knob{left:2px}
 .pill-toggle .knob::before{content:"🌙"}
 [data-theme="light"] .pill-toggle .knob::before{content:"☀"}
-.page{min-height:calc(100vh - 64px)}
+.page{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:24px}
+.coming-soon{font-size:18px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t2)}
 </style>
 </head>
 <body>
@@ -38,7 +39,9 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
   <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
 </div>
 
-<main class="page"></main>
+<main class="page">
+  <div class="coming-soon">Coming soon</div>
+</main>
 
 <script>
 function setTheme(theme){
