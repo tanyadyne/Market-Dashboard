@@ -35,6 +35,8 @@ MA_LENGTH_W = 12   # weekly: window length for recency-weighted average of delta
 ATR_PERIOD = 14
 MAX_HISTORY_DAYS = 90
 INTRADAY_BASELINES_FILE = "leaders_intraday_baselines.json"
+UNIVERSE_GRACE_FILE = "leaders_universe_grace.json"
+UNIVERSE_GRACE_DAYS = 10
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
@@ -1597,6 +1599,63 @@ def strip_internal_fields(results):
                 del r[k]
 
 
+def load_universe_grace_state():
+    if not os.path.exists(UNIVERSE_GRACE_FILE):
+        return {"tickers": {}}
+    try:
+        with open(UNIVERSE_GRACE_FILE) as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return {"tickers": {}}
+        if not isinstance(data.get("tickers"), dict):
+            data["tickers"] = {}
+        return data
+    except Exception:
+        return {"tickers": {}}
+
+
+def recently_ranked_tickers(window_days=UNIVERSE_GRACE_DAYS):
+    """Tickers with a non-null weekly rank in the recent history window."""
+    if not os.path.exists("leaders_score_history.json"):
+        return set()
+    try:
+        with open("leaders_score_history.json") as f:
+            history = json.load(f)
+    except Exception:
+        return set()
+    dates = history.get("dates") or []
+    scores = history.get("d") or {}
+    if not dates or not isinstance(scores, dict):
+        return set()
+    start = max(0, len(dates) - window_days)
+    recent = set()
+    for tk, entry in scores.items():
+        if not isinstance(entry, dict):
+            continue
+        wr = entry.get("wr") or []
+        if any(rk is not None for rk in wr[start:]):
+            recent.add(tk)
+    return recent
+
+
+def write_universe_grace_state(state, today_str):
+    tickers = state.get("tickers", {})
+    keep = {}
+    for tk, item in tickers.items():
+        if not isinstance(item, dict):
+            continue
+        failures = int(item.get("liquidity_failures", 0) or 0)
+        if failures > 0:
+            keep[tk] = item
+    payload = {
+        "updated": today_str,
+        "grace_days": UNIVERSE_GRACE_DAYS,
+        "tickers": keep,
+    }
+    with open(UNIVERSE_GRACE_FILE, "w") as f:
+        json.dump(payload, f, separators=(",", ":"))
+
+
 def get_position_label(rank, total):
     """Map rank to position label."""
     if rank <= 50: return "Strong Leader"
@@ -1876,6 +1935,11 @@ def main():
     # Tickers to log verbosely through each filter (for debugging why a stock is missing)
     DEBUG_TICKERS = {"RIG"}
 
+    grace_state = load_universe_grace_state()
+    grace_records = grace_state.setdefault("tickers", {})
+    grace_recent = recently_ranked_tickers()
+    grace_kept = 0
+    grace_expired = 0
     liquid_tickers = []
     excluded = {"no_data": 0, "stale": 0, "illiquid": 0, "adr_collapse": 0}
     for tk in all_tickers:
@@ -1907,10 +1971,34 @@ def main():
         cached_mcap = _cached_mcaps.get(tk)
         threshold = MIN_DOLLAR_VOL_SMALL_CAP if (cached_mcap is not None and cached_mcap < SMALL_CAP_THRESHOLD) else MIN_DOLLAR_VOL
         if dollar_vol < threshold and tk not in MANUAL_INCLUDE:
-            excluded["illiquid"] += 1
-            if tk in DEBUG_TICKERS:
-                print(f"  [DEBUG] {tk}: EXCLUDED — illiquid (price ${last_price:.2f} × avg_vol_10d {avg_vol_10d/1e6:.2f}M = ${dollar_vol/1e6:.1f}M < ${threshold/1e6:.0f}M)")
-            continue
+            rec = grace_records.setdefault(tk, {})
+            failures = int(rec.get("liquidity_failures", 0) or 0) + 1
+            rec.update({
+                "liquidity_failures": failures,
+                "last_failure": _et_today,
+                "last_reason": "illiquid",
+                "dollar_vol": round(dollar_vol),
+                "threshold": round(threshold),
+            })
+            if tk in grace_recent and failures <= UNIVERSE_GRACE_DAYS:
+                grace_kept += 1
+                rec["last_grace_kept"] = _et_today
+                if tk in DEBUG_TICKERS:
+                    print(f"  [DEBUG] {tk}: GRACE-KEPT — illiquid day {failures}/{UNIVERSE_GRACE_DAYS} "
+                          f"(price ${last_price:.2f} × avg_vol_10d {avg_vol_10d/1e6:.2f}M = "
+                          f"${dollar_vol/1e6:.1f}M < ${threshold/1e6:.0f}M)")
+            else:
+                excluded["illiquid"] += 1
+                if tk in grace_recent:
+                    grace_expired += 1
+                if tk in DEBUG_TICKERS:
+                    print(f"  [DEBUG] {tk}: EXCLUDED — illiquid "
+                          f"(price ${last_price:.2f} × avg_vol_10d {avg_vol_10d/1e6:.2f}M = "
+                          f"${dollar_vol/1e6:.1f}M < ${threshold/1e6:.0f}M; "
+                          f"grace failures {failures}/{UNIVERSE_GRACE_DAYS})")
+                continue
+        else:
+            grace_records.pop(tk, None)
         # ─── ADR-collapse check ───────────────────────────────────
         # Filter stocks whose daily range has collapsed vs its OWN history.
         # Fully relative (no absolute floor): recent ADR must be < ACR_RATIO of
@@ -1963,6 +2051,8 @@ def main():
         if tk in DEBUG_TICKERS:
             print(f"  [DEBUG] {tk}: PASSED pre-filter (price ${last_price:.2f}, dollar_vol ${dollar_vol/1e6:.1f}M, threshold ${threshold/1e6:.0f}M)")
     print(f"  Pre-filter: {len(all_tickers)} → {len(liquid_tickers)} (excluded: {excluded['no_data']} no data, {excluded['stale']} delisted, {excluded['illiquid']} illiquid, {excluded['adr_collapse']} ADR collapse)")
+    if grace_kept or grace_expired:
+        print(f"  Universe grace: kept {grace_kept} recently-ranked illiquid ticker(s), expired {grace_expired}")
 
     # ─── Market cap + industry lookup (ONLY on liquid survivors) ──
     MIN_MCAP = 2_000_000_000
@@ -2477,14 +2567,19 @@ def main():
             for r in results:
                 tk = r["t"]
                 if tk not in scores:
-                    scores[tk] = {"wr": []}
+                    scores[tk] = {"wr": [], "ws": []}
                 if "wr" not in scores[tk]:
                     scores[tk]["wr"] = []
+                if "ws" not in scores[tk]:
+                    scores[tk]["ws"] = []
                 # Pad if this ticker is shorter than the dates array (joined the universe
                 # partway through the history window).
                 while len(scores[tk]["wr"]) < len(dates) - 1:
                     scores[tk]["wr"].append(None)
+                while len(scores[tk]["ws"]) < len(dates) - 1:
+                    scores[tk]["ws"].append(None)
                 scores[tk]["wr"].append(r.get("w_rk"))
+                scores[tk]["ws"].append(r.get("w_rs"))
             # Trim to MAX_HISTORY_DAYS
             if len(dates) > MAX_HISTORY_DAYS:
                 trim = len(dates) - MAX_HISTORY_DAYS
@@ -2492,20 +2587,30 @@ def main():
                 for tk in scores:
                     if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
                         scores[tk]["wr"] = scores[tk]["wr"][trim:]
+                    if "ws" in scores[tk] and len(scores[tk]["ws"]) > MAX_HISTORY_DAYS:
+                        scores[tk]["ws"] = scores[tk]["ws"][trim:]
         else:
-            # Same-day update: refresh today's wr in place.
+            # Same-day update: refresh today's wr/ws in place.
             for r in results:
                 tk = r["t"]
                 if tk not in scores:
-                    scores[tk] = {"wr": []}
+                    scores[tk] = {"wr": [], "ws": []}
                 if "wr" not in scores[tk]:
                     scores[tk]["wr"] = []
+                if "ws" not in scores[tk]:
+                    scores[tk]["ws"] = []
                 if len(scores[tk]["wr"]) == len(dates):
                     scores[tk]["wr"][-1] = r.get("w_rk")
                 else:
                     while len(scores[tk]["wr"]) < len(dates) - 1:
                         scores[tk]["wr"].append(None)
                     scores[tk]["wr"].append(r.get("w_rk"))
+                if len(scores[tk]["ws"]) == len(dates):
+                    scores[tk]["ws"][-1] = r.get("w_rs")
+                else:
+                    while len(scores[tk]["ws"]) < len(dates) - 1:
+                        scores[tk]["ws"].append(None)
+                    scores[tk]["ws"].append(r.get("w_rs"))
 
         # ─── top40_entry tracking ────────────────────────────────────
         # Captures the entry price + entry date when a stock enters the top 40 (by w_rk),
@@ -2583,6 +2688,8 @@ def main():
     # Add theme status to each result
     for r in results:
         r["ts"] = theme_status.get(r.get("thm", ""), "Neutral")
+
+    write_universe_grace_state(grace_state, _et_today)
 
     # ─── Output leaders.json ──────────────────────────────────
     # Strip internal _-prefixed baseline fields used by the intraday overlay so they

@@ -212,14 +212,50 @@ tr:hover{background:var(--bg3)}
 .info-pair{display:contents}
 /* Desktop: shrink Theme value font so long theme names fit nicely in their own box. */
 .info-box-theme .val{font-size:14px !important}
+.rs-history-card{margin-top:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px}
+[data-theme="light"] .rs-history-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.rs-history-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.rs-history-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t2)}
+.rs-history-legend{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;font-size:9px;font-weight:600;color:var(--t3)}
+.rs-history-legend span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.rs-history-legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.rs-history-plot{width:100%;height:240px;display:block}
+.rs-history-axis{stroke:var(--bdr);stroke-width:1}
+.rs-history-grid{stroke:var(--bdr2);stroke-width:1}
+.rs-history-midline{stroke:var(--t4);stroke-width:1;stroke-dasharray:4 5;opacity:.55}
+.rs-history-line{fill:none;stroke:var(--t4);stroke-width:1.5;opacity:.55}
+.rs-history-area{fill:rgba(20,184,166,.08)}
+.rs-history-label{fill:var(--t3);font-size:10px;font-family:'JetBrains Mono',monospace}
+.rs-history-dot{stroke:var(--bg2);stroke-width:1.4}
+.rs-history-dot.excluded{opacity:.35}
+.rs-history-strong{fill:#16a34a;background:#16a34a}
+.rs-history-leader{fill:#84cc16;background:#84cc16}
+.rs-history-neutral{fill:#94a3b8;background:#94a3b8}
+.rs-history-laggard{fill:#f59e0b;background:#f59e0b}
+.rs-history-deep{fill:#ef4444;background:#ef4444}
+[data-theme="dark"] .rs-history-area{fill:rgba(45,212,191,.11)}
+[data-theme="dark"] .rs-history-dot{stroke:var(--bg2)}
+[data-theme="dark"] .rs-history-strong{fill:#22c55e;background:#22c55e}
+[data-theme="dark"] .rs-history-leader{fill:#a3e635;background:#a3e635}
+[data-theme="dark"] .rs-history-neutral{fill:#94a3b8;background:#94a3b8}
+[data-theme="dark"] .rs-history-laggard{fill:#f59e0b;background:#f59e0b}
+[data-theme="dark"] .rs-history-deep{fill:#fb7185;background:#fb7185}
 .hist-table{margin-top:16px}
 .hist-table table{font-size:12px}
 .hist-table th{font-size:9px;padding:6px}
 .hist-table td{padding:5px 6px;font-family:'JetBrains Mono',monospace;font-size:11px}
+[data-view="desktop"] .hist-table table{table-layout:fixed}
+[data-view="desktop"] .hist-table th:nth-child(1),[data-view="desktop"] .hist-table td:nth-child(1){width:18%;text-align:right}
+[data-view="desktop"] .hist-table th:nth-child(2),[data-view="desktop"] .hist-table td:nth-child(2){width:12%}
+[data-view="desktop"] .hist-table th:nth-child(3),[data-view="desktop"] .hist-table td:nth-child(3){width:12%}
+[data-view="desktop"] .hist-table th:nth-child(4),[data-view="desktop"] .hist-table td:nth-child(4){width:22%}
+[data-view="desktop"] .hist-table th:nth-child(5),[data-view="desktop"] .hist-table td:nth-child(5){width:36%;text-align:left}
 .hist-pager{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 0 2px}
 .hist-pager button{min-width:28px;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);font-family:'JetBrains Mono',monospace}
 .hist-pager button:hover:not(:disabled){background:var(--bg3);color:var(--t1)}
-.hist-pager button.cur{background:#1e3a5f;border-color:#3b82f6;color:#60a5fa;cursor:default}
+.hist-pager button.cur{cursor:default}
+[data-theme="light"] .hist-pager button.cur{background:#e5e7eb;border-color:#9ca3af;color:#111827}
+[data-theme="dark"] .hist-pager button.cur{background:#2a2a2a;border-color:#666;color:#e8e8e8}
 /* Excluded history rows — methodology change days etc. Visible for transparency
    but visually de-emphasised, and ignored for Δ rank calculations. */
 .hist-row-excluded td{opacity:.35;font-style:italic}
@@ -282,6 +318,10 @@ tr:hover{background:var(--bg3)}
 /* Theme value needs to wrap and shrink further on mobile since it can be long. */
 [data-view="mobile"] .info-box-theme .val{font-size:11px !important;line-height:1.2;word-break:break-word;white-space:normal}
 [data-view="mobile"] .info-box-theme .sub{font-size:8px;line-height:1.2;word-break:break-word;white-space:normal}
+[data-view="mobile"] .rs-history-card{padding:10px 8px;margin-top:12px}
+[data-view="mobile"] .rs-history-head{align-items:flex-start;flex-direction:column;gap:6px}
+[data-view="mobile"] .rs-history-legend{justify-content:flex-start;gap:7px}
+[data-view="mobile"] .rs-history-plot{height:210px}
 
 /* ─── MOBILE LAYOUT ─── */
 /* Master constraint: every direct child of body is clamped to viewport width.
@@ -1537,6 +1577,97 @@ function getThemeRankInfo(themeName){
   return null;
 }
 
+function rsHistoryScoreFromRank(rank,total){
+  if(rank==null||!total)return null;
+  if(total<=1)return 100;
+  const score=100-((rank-1)/(total-1)*100);
+  return Math.max(0,Math.min(100,Math.round(score)));
+}
+
+function rsHistoryDotClass(pos){
+  if(pos==='Strong Leader')return'rs-history-strong';
+  if(pos==='Moderate Leader')return'rs-history-leader';
+  if(pos==='Deep Laggard')return'rs-history-deep';
+  if(pos==='Moderate Laggard')return'rs-history-laggard';
+  return'rs-history-neutral';
+}
+
+function formatHistoryAxisDate(dt){
+  const parts=(dt||'').split('-');
+  if(parts.length!==3)return dt||'';
+  return `${parts[2]}/${parts[1]}`;
+}
+
+function renderRSHistoryChart(dates,h,total,excluded){
+  const wrArr=h&&h.wr?h.wr:[];
+  const wsArr=h&&h.ws?h.ws:[];
+  const points=[];
+  dates.forEach((dt,i)=>{
+    const rank=wrArr[i];
+    const savedScore=wsArr[i];
+    const score=savedScore!=null?savedScore:rsHistoryScoreFromRank(rank,total);
+    if(score==null)return;
+    const pos=rank!=null?getPosition(rank,total):'Mid-Range';
+    points.push({dt,rank,score,pos,derived:savedScore==null,excluded:excluded&&excluded.has(dt)});
+  });
+  if(!points.length)return'';
+
+  const w=760,hgt=240;
+  const left=52,right=18,top=18,bottom=34;
+  const plotW=w-left-right;
+  const plotH=hgt-top-bottom;
+  const xFor=i=>left+(points.length===1?plotW/2:(i/(points.length-1))*plotW);
+  const yFor=score=>top+((100-score)/100)*plotH;
+  const lineD=points.map((p,i)=>`${i?'L':'M'}${xFor(i).toFixed(1)} ${yFor(p.score).toFixed(1)}`).join(' ');
+  const areaD=points.length>1?`${lineD} L${xFor(points.length-1).toFixed(1)} ${top+plotH} L${xFor(0).toFixed(1)} ${top+plotH} Z`:'';
+  const yTicks=[100,75,50,25,0];
+  const grid=yTicks.map(v=>{
+    const y=yFor(v).toFixed(1);
+    const cls=v===50?'rs-history-midline':'rs-history-grid';
+    return `<line class="${cls}" x1="${left}" y1="${y}" x2="${w-right}" y2="${y}"></line><text class="rs-history-label" x="${left-12}" y="${Number(y)+3}" text-anchor="end">${v}</text>`;
+  }).join('');
+  const tickCount=Math.min(5,points.length);
+  const tickIdxs=[];
+  for(let i=0;i<tickCount;i++){
+    const idx=tickCount===1?0:Math.round(i*(points.length-1)/(tickCount-1));
+    if(!tickIdxs.includes(idx))tickIdxs.push(idx);
+  }
+  const xTicks=tickIdxs.map(idx=>{
+    const x=xFor(idx).toFixed(1);
+    return `<text class="rs-history-label" x="${x}" y="${hgt-9}" text-anchor="middle">${formatHistoryAxisDate(points[idx].dt)}</text>`;
+  }).join('');
+  const dots=points.map((p,i)=>{
+    const x=xFor(i).toFixed(1);
+    const y=yFor(p.score).toFixed(1);
+    const cls=`rs-history-dot ${rsHistoryDotClass(p.pos)}${p.excluded?' excluded':''}`;
+    const source=p.derived?'derived from rank':'saved score';
+    const rankTxt=p.rank!=null?`rank #${p.rank}`:'rank unavailable';
+    return `<circle class="${cls}" cx="${x}" cy="${y}" r="4"><title>${formatHistoryAxisDate(p.dt)}: RS ${p.score}, ${rankTxt}, ${p.pos} (${source})</title></circle>`;
+  }).join('');
+
+  return `<div class="rs-history-card">
+    <div class="rs-history-head">
+      <div class="rs-history-title">RS Score History</div>
+      <div class="rs-history-legend">
+        <span><i class="rs-history-strong"></i>Strong Leader</span>
+        <span><i class="rs-history-leader"></i>Moderate Leader</span>
+        <span><i class="rs-history-neutral"></i>Neutral</span>
+        <span><i class="rs-history-laggard"></i>Moderate Laggard</span>
+        <span><i class="rs-history-deep"></i>Deep Laggard</span>
+      </div>
+    </div>
+    <svg class="rs-history-plot" viewBox="0 0 ${w} ${hgt}" role="img" aria-label="RS score history">
+      ${grid}
+      <line class="rs-history-axis" x1="${left}" y1="${top}" x2="${left}" y2="${top+plotH}"></line>
+      <line class="rs-history-axis" x1="${left}" y1="${top+plotH}" x2="${w-right}" y2="${top+plotH}"></line>
+      ${areaD?`<path class="rs-history-area" d="${areaD}"></path>`:''}
+      ${points.length>1?`<path class="rs-history-line" d="${lineD}"></path>`:''}
+      ${dots}
+      ${xTicks}
+    </svg>
+  </div>`;
+}
+
 function searchStock(){
   const input=document.getElementById('searchInput').value.trim().toUpperCase();
   const box=document.getElementById('searchResults');
@@ -1634,11 +1765,12 @@ function searchStock(){
     if(profileHistoryPage<1)profileHistoryPage=1;
     const pageStart=(profileHistoryPage-1)*PROFILE_HISTORY_PAGE_SIZE;
     const pageRows=newestRows.slice(pageStart,pageStart+PROFILE_HISTORY_PAGE_SIZE);
+    const tickerExcluded=getExcludedWeeklyForTicker(input);
+    html+=renderRSHistoryChart(dates,h,total,tickerExcluded);
     html+=`<div class="hist-table"><table><thead><tr>
       <th class="l">Date</th><th class="c">Rank</th><th class="c">Δ</th><th class="c">Position</th><th class="l">Theme</th>
     </tr></thead><tbody>`;
     // History table shows the WEEKLY (RS) rank now — daily ranking has been retired.
-    const tickerExcluded=getExcludedWeeklyForTicker(input);
     // Build a map from date → index in HISTORY.dates for quick lookup
     const dateToIdx = {};
     dates.forEach((d,i)=>{dateToIdx[d]=i;});
@@ -1679,6 +1811,16 @@ function searchStock(){
         if(diff>0)deltaHtml=`<span class="up">▲ +${diff}</span>`;
         else if(diff<0)deltaHtml=`<span class="dn">▼ ${diff}</span>`;
         else deltaHtml='<span class="fl">–</span>';
+      }
+      if(wr==null){
+        html+=`<tr>
+          <td class="l">${fmtDate}</td>
+          <td class="c">—</td>
+          <td class="hist-delta">—</td>
+          <td class="c">—</td>
+          <td class="l">—</td>
+        </tr>`;
+        continue;
       }
       const p=wr!=null?getPosition(wr,total):'—';
       // Theme column uses current theme status (history doesn't store per-day theme status)

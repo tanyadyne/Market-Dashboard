@@ -38,7 +38,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          for f in leaders.json leaders_score_history.json leaders_mcap.json leaders_index_universe.json leaders_intraday_baselines.json screener_tickers.json; do
+          for f in leaders.json leaders_score_history.json leaders_mcap.json leaders_index_universe.json leaders_intraday_baselines.json leaders_universe_grace.json screener_tickers.json; do
             [ -f "$f" ] && git add "$f"
           done
           git diff --staged --quiet || git commit -m "Update leaders.json"
