@@ -1759,7 +1759,6 @@ function searchStock(){
     const pageStart=(profileHistoryPage-1)*PROFILE_HISTORY_PAGE_SIZE;
     const pageRows=newestRows.slice(pageStart,pageStart+PROFILE_HISTORY_PAGE_SIZE);
     const tickerExcluded=getExcludedWeeklyForTicker(input);
-    html+=renderRSHistoryChart(dates,h,total,tickerExcluded);
     html+=`<div class="hist-table"><table><thead><tr>
       <th class="l">Date</th><th class="c">Rank</th><th class="c">Δ</th><th class="c">Position</th><th class="l">Theme</th>
     </tr></thead><tbody>`;

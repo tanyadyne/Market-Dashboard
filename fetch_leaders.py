@@ -75,7 +75,7 @@ MANUAL_INCLUDE = {
 # don't want tracked (e.g. data-quality issues, recent IPOs without enough history,
 # or just personal preference).
 MANUAL_EXCLUDE = {
-    "FPS", "ARES", "GBTG", "MASI",
+    "FPS", "ARES", "GBTG", "MASI", "RAMP",
 }
 
 # ─── ADR-collapse filter ───────────────────────────────────────────────────────
