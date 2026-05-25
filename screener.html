@@ -1577,13 +1577,6 @@ function getThemeRankInfo(themeName){
   return null;
 }
 
-function rsHistoryScoreFromRank(rank,total){
-  if(rank==null||!total)return null;
-  if(total<=1)return 100;
-  const score=100-((rank-1)/(total-1)*100);
-  return Math.max(0,Math.min(100,Math.round(score)));
-}
-
 function rsHistoryDotClass(pos){
   if(pos==='Strong Leader')return'rs-history-strong';
   if(pos==='Moderate Leader')return'rs-history-leader';
@@ -1600,15 +1593,12 @@ function formatHistoryAxisDate(dt){
 
 function renderRSHistoryChart(dates,h,total,excluded){
   const wrArr=h&&h.wr?h.wr:[];
-  const wsArr=h&&h.ws?h.ws:[];
   const points=[];
   dates.forEach((dt,i)=>{
     const rank=wrArr[i];
-    const savedScore=wsArr[i];
-    const score=savedScore!=null?savedScore:rsHistoryScoreFromRank(rank,total);
-    if(score==null)return;
-    const pos=rank!=null?getPosition(rank,total):'Mid-Range';
-    points.push({dt,rank,score,pos,derived:savedScore==null,excluded:excluded&&excluded.has(dt)});
+    if(rank==null)return;
+    const pos=getPosition(rank,total);
+    points.push({dt,rank,pos,excluded:excluded&&excluded.has(dt)});
   });
   if(!points.length)return'';
 
@@ -1617,14 +1607,19 @@ function renderRSHistoryChart(dates,h,total,excluded){
   const plotW=w-left-right;
   const plotH=hgt-top-bottom;
   const xFor=i=>left+(points.length===1?plotW/2:(i/(points.length-1))*plotW);
-  const yFor=score=>top+((100-score)/100)*plotH;
-  const lineD=points.map((p,i)=>`${i?'L':'M'}${xFor(i).toFixed(1)} ${yFor(p.score).toFixed(1)}`).join(' ');
+  const yForRank=rank=>top+(((Math.max(1,Math.min(total,rank))-1)/Math.max(1,total-1))*plotH);
+  const lineD=points.map((p,i)=>`${i?'L':'M'}${xFor(i).toFixed(1)} ${yForRank(p.rank).toFixed(1)}`).join(' ');
   const areaD=points.length>1?`${lineD} L${xFor(points.length-1).toFixed(1)} ${top+plotH} L${xFor(0).toFixed(1)} ${top+plotH} Z`:'';
-  const yTicks=[100,75,50,25,0];
-  const grid=yTicks.map(v=>{
-    const y=yFor(v).toFixed(1);
-    const cls=v===50?'rs-history-midline':'rs-history-grid';
-    return `<line class="${cls}" x1="${left}" y1="${y}" x2="${w-right}" y2="${y}"></line><text class="rs-history-label" x="${left-12}" y="${Number(y)+3}" text-anchor="end">${v}</text>`;
+  const yTicks=[
+    {rank:1},
+    {rank:Math.round(total*0.25)},
+    {rank:Math.round(total*0.5)},
+    {rank:Math.round(total*0.75)}
+  ];
+  const grid=yTicks.map((tick,idx)=>{
+    const y=yForRank(tick.rank).toFixed(1);
+    const cls=idx===2?'rs-history-midline':'rs-history-grid';
+    return `<line class="${cls}" x1="${left}" y1="${y}" x2="${w-right}" y2="${y}"></line>`;
   }).join('');
   const tickCount=Math.min(5,points.length);
   const tickIdxs=[];
@@ -1638,16 +1633,14 @@ function renderRSHistoryChart(dates,h,total,excluded){
   }).join('');
   const dots=points.map((p,i)=>{
     const x=xFor(i).toFixed(1);
-    const y=yFor(p.score).toFixed(1);
+    const y=yForRank(p.rank).toFixed(1);
     const cls=`rs-history-dot ${rsHistoryDotClass(p.pos)}${p.excluded?' excluded':''}`;
-    const source=p.derived?'derived from rank':'saved score';
-    const rankTxt=p.rank!=null?`rank #${p.rank}`:'rank unavailable';
-    return `<circle class="${cls}" cx="${x}" cy="${y}" r="4"><title>${formatHistoryAxisDate(p.dt)}: RS ${p.score}, ${rankTxt}, ${p.pos} (${source})</title></circle>`;
+    return `<circle class="${cls}" cx="${x}" cy="${y}" r="4"><title>${formatHistoryAxisDate(p.dt)}: rank #${p.rank}, ${p.pos}</title></circle>`;
   }).join('');
 
   return `<div class="rs-history-card">
     <div class="rs-history-head">
-      <div class="rs-history-title">RS Score History</div>
+      <div class="rs-history-title">RS Rank History</div>
       <div class="rs-history-legend">
         <span><i class="rs-history-strong"></i>Strong Leader</span>
         <span><i class="rs-history-leader"></i>Moderate Leader</span>
@@ -1656,7 +1649,7 @@ function renderRSHistoryChart(dates,h,total,excluded){
         <span><i class="rs-history-deep"></i>Deep Laggard</span>
       </div>
     </div>
-    <svg class="rs-history-plot" viewBox="0 0 ${w} ${hgt}" role="img" aria-label="RS score history">
+    <svg class="rs-history-plot" viewBox="0 0 ${w} ${hgt}" role="img" aria-label="RS rank history">
       ${grid}
       <line class="rs-history-axis" x1="${left}" y1="${top}" x2="${left}" y2="${top+plotH}"></line>
       <line class="rs-history-axis" x1="${left}" y1="${top+plotH}" x2="${w-right}" y2="${top+plotH}"></line>

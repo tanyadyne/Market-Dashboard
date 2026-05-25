@@ -2546,10 +2546,11 @@ def main():
     scores = score_history.get("d", {})
 
     # ─── One-time cleanup: strip daily-RS fields ('s', 'r') from existing history. ──
-    # The dashboard now uses only the weekly rank, so the daily score and rank arrays
-    # are dead weight. Removing them on each run keeps the history file lean. The 'tz'
-    # array is also no longer needed since the daily transition penalty has been retired.
-    OBSOLETE_HIST_KEYS = {"s", "r", "tz"}
+    # The dashboard now uses only the weekly rank, so score/rank arrays not used by
+    # the current UI are dead weight. Removing them on each run keeps history lean.
+    # The 'tz' array is also no longer needed since the daily transition penalty
+    # has been retired.
+    OBSOLETE_HIST_KEYS = {"s", "r", "tz", "ws"}
     for tk, entry in scores.items():
         if isinstance(entry, dict):
             for k in OBSOLETE_HIST_KEYS:
@@ -2567,19 +2568,14 @@ def main():
             for r in results:
                 tk = r["t"]
                 if tk not in scores:
-                    scores[tk] = {"wr": [], "ws": []}
+                    scores[tk] = {"wr": []}
                 if "wr" not in scores[tk]:
                     scores[tk]["wr"] = []
-                if "ws" not in scores[tk]:
-                    scores[tk]["ws"] = []
                 # Pad if this ticker is shorter than the dates array (joined the universe
                 # partway through the history window).
                 while len(scores[tk]["wr"]) < len(dates) - 1:
                     scores[tk]["wr"].append(None)
-                while len(scores[tk]["ws"]) < len(dates) - 1:
-                    scores[tk]["ws"].append(None)
                 scores[tk]["wr"].append(r.get("w_rk"))
-                scores[tk]["ws"].append(r.get("w_rs"))
             # Trim to MAX_HISTORY_DAYS
             if len(dates) > MAX_HISTORY_DAYS:
                 trim = len(dates) - MAX_HISTORY_DAYS
@@ -2587,30 +2583,20 @@ def main():
                 for tk in scores:
                     if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
                         scores[tk]["wr"] = scores[tk]["wr"][trim:]
-                    if "ws" in scores[tk] and len(scores[tk]["ws"]) > MAX_HISTORY_DAYS:
-                        scores[tk]["ws"] = scores[tk]["ws"][trim:]
         else:
-            # Same-day update: refresh today's wr/ws in place.
+            # Same-day update: refresh today's wr in place.
             for r in results:
                 tk = r["t"]
                 if tk not in scores:
-                    scores[tk] = {"wr": [], "ws": []}
+                    scores[tk] = {"wr": []}
                 if "wr" not in scores[tk]:
                     scores[tk]["wr"] = []
-                if "ws" not in scores[tk]:
-                    scores[tk]["ws"] = []
                 if len(scores[tk]["wr"]) == len(dates):
                     scores[tk]["wr"][-1] = r.get("w_rk")
                 else:
                     while len(scores[tk]["wr"]) < len(dates) - 1:
                         scores[tk]["wr"].append(None)
                     scores[tk]["wr"].append(r.get("w_rk"))
-                if len(scores[tk]["ws"]) == len(dates):
-                    scores[tk]["ws"][-1] = r.get("w_rs")
-                else:
-                    while len(scores[tk]["ws"]) < len(dates) - 1:
-                        scores[tk]["ws"].append(None)
-                    scores[tk]["ws"].append(r.get("w_rs"))
 
         # ─── top40_entry tracking ────────────────────────────────────
         # Captures the entry price + entry date when a stock enters the top 40 (by w_rk),

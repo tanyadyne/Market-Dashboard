@@ -456,6 +456,9 @@ def update_score_history(entries):
 
     dates = history.get("dates", [])
     scores = history.get("d", {})
+    for item in scores.values():
+        if isinstance(item, dict):
+            item.pop("ws", None)
     today = et_now().date().isoformat()
     if not dates or dates[-1] != today:
         dates.append(today)
@@ -470,19 +473,12 @@ def update_score_history(entries):
             continue
         scores.setdefault(tk, {})
         scores[tk].setdefault("wr", [])
-        scores[tk].setdefault("ws", [])
         while len(scores[tk]["wr"]) < len(dates) - 1:
             scores[tk]["wr"].append(None)
-        while len(scores[tk]["ws"]) < len(dates) - 1:
-            scores[tk]["ws"].append(None)
         if len(scores[tk]["wr"]) == len(dates):
             scores[tk]["wr"][-1] = entry.get("w_rk")
         else:
             scores[tk]["wr"].append(entry.get("w_rk"))
-        if len(scores[tk]["ws"]) == len(dates):
-            scores[tk]["ws"][-1] = entry.get("w_rs")
-        else:
-            scores[tk]["ws"].append(entry.get("w_rs"))
 
     if len(dates) > MAX_HISTORY_DAYS:
         trim = len(dates) - MAX_HISTORY_DAYS
@@ -490,8 +486,6 @@ def update_score_history(entries):
         for tk in scores:
             if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
                 scores[tk]["wr"] = scores[tk]["wr"][trim:]
-            if "ws" in scores[tk] and len(scores[tk]["ws"]) > MAX_HISTORY_DAYS:
-                scores[tk]["ws"] = scores[tk]["ws"][trim:]
 
     def in_top40(rk):
         return rk is not None and rk <= 40
