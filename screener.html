@@ -1331,6 +1331,10 @@ function getTickersInMatchingBaskets(f){
 
 // Per-keyword search overrides: for terms with custom match rules, replacing the default
 // behavior. Each entry is a function(e, ETF_DATA) -> boolean.
+const COUNTRY_SEARCH_GROUPS={
+  china: new Set(['BABA','BIDU','PDD','JD','TCOM','FUTU','XPEV','TCEHY','NTES']),
+};
+
 const SEARCH_OVERRIDES={
   // "energy" → match only by company name OR membership in selected energy ETFs.
   // Skip Theme column (matches too many adjacent industries) and description text.
@@ -1344,6 +1348,12 @@ const SEARCH_OVERRIDES={
       if(holdings.includes(e.t))return true;
     }
     return false;
+  },
+  china(e){
+    return COUNTRY_SEARCH_GROUPS.china.has(e.t);
+  },
+  chinese(e){
+    return COUNTRY_SEARCH_GROUPS.china.has(e.t);
   },
 };
 
