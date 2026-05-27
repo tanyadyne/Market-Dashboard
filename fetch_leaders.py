@@ -44,6 +44,7 @@ CSV_EXTRAS = [
     "ENS","GOOG","LAC","LNG","NOK","NVO","OWL","RDDT","RIG","SMCI","SNAP","SNDK","STX","WDC",
     "WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM", "UMC",
     "NVEC", "CAMT", "NLST", "SKYT", "POWI", "LWLG",
+    "INFQ", "RR", "MRAM", "AOSL", "AMBA", "SPIR", "BYDDY", "SERV", "ARBE", "VPG", "INDI", "ALNT",
     # Robotics/humanoid names (originally added for the HUMN ETF, since merged
     # into ROBO and removed). Kept in the screener seed so every one of these
     # ROBO holdings has a screener profile (clickable pills). Mega-caps pass the
@@ -62,6 +63,7 @@ CSV_EXTRAS = [
 MANUAL_INCLUDE = {
     "LAC", "ENS","WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM", "UMC",
     "NVEC", "CAMT", "NLST", "SKYT", "POWI", "LWLG", "ADEA",
+    "INFQ", "RR", "MRAM", "AOSL", "AMBA", "SPIR", "BYDDY", "SERV", "ARBE", "VPG", "INDI", "ALNT",
     # Smaller robotics/humanoid names (originally added for the HUMN ETF, which
     # was merged into ROBO). Force-kept so the liquidity / $2B mcap gates don't
     # drop them, so their pills stay clickable in ROBO's profile.
