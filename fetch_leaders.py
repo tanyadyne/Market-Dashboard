@@ -120,6 +120,30 @@ ACR_SHORT_BASELINE   = 40     # short baseline = ~40 bars before the recent wind
 ACR_LONG_BASELINE    = 120    # long  baseline = ~120 bars before the recent window
 ACR_MIN_SHORT_BARS   = 20     # need >= 20 short-baseline bars or skip the check
 
+CAP_ONLY_MIN_MCAP = 1_200_000_000
+CAP_ONLY_INDUSTRIES = {
+    "Information Technology Services",
+    "Semiconductors",
+    "Software - Infrastructure",
+    "Electronic Components",
+    "Communication Equipment",
+    "Computer Hardware",
+    "Telecom Services",
+    "Electronics & Computer Distribution",
+    "Semiconductor Equipment & Materials",
+    "Engineering & Construction",
+    "Aerospace & Defense",
+    "Electrical Equipment & Parts",
+    "Software - Application",
+    "Internet Content & Information",
+    "Solar",
+    "Consumer Electronics",
+    "Specialty Industrial Machinery",
+    "Scientific & Technical Instruments",
+    "Utilities - Renewable",
+    "Utilities - Independent Power Producers",
+}
+
 
 
 # Yahoo Finance industry → our theme name mapping
@@ -1516,6 +1540,54 @@ def recently_ranked_tickers(history_file="leaders_score_history.json", lookback=
         return set()
 
 
+def normalize_industry_label(label):
+    """Normalize Yahoo industry labels for exact policy matching."""
+    return " ".join(str(label or "").replace("—", "-").replace("–", "-").split())
+
+
+CAP_ONLY_INDUSTRIES_NORMALIZED = {normalize_industry_label(x) for x in CAP_ONLY_INDUSTRIES}
+
+
+def is_cap_only_industry(label):
+    return normalize_industry_label(label) in CAP_ONLY_INDUSTRIES_NORMALIZED
+
+
+def fetch_ticker_metadata(tk):
+    mc = 0
+    industry = ""
+    name = ""
+    desc = ""
+    try:
+        ticker_obj = yf.Ticker(tk, session=_session)
+        fi = ticker_obj.fast_info
+        try:
+            mc = int(fi.get("marketCap", 0) or fi.get("market_cap", 0) or 0)
+        except Exception:
+            mc = 0
+        if mc == 0:
+            try:
+                shares = fi.get("shares", 0) or 0
+                last_price = fi.get("lastPrice", fi.get("last_price", 0)) or 0
+                if shares and last_price:
+                    mc = int(shares * last_price)
+            except Exception:
+                pass
+        try:
+            info = ticker_obj.info
+            industry = info.get("industry", "") or ""
+            name = info.get("shortName", "") or info.get("longName", "") or ""
+            desc = info.get("longBusinessSummary", "") or ""
+            if mc == 0:
+                info_mc = info.get("marketCap", 0) or 0
+                if info_mc:
+                    mc = int(info_mc)
+        except Exception:
+            pass
+    except Exception:
+        pass
+    return mc, industry, name, desc
+
+
 def fetch_live_quote(ticker):
     """Fetch live (intraday) quote for a single ticker via fast_info.
     Returns (last_price, prev_close) or (None, None) on failure.
@@ -2073,15 +2145,37 @@ def main():
     MIN_DOLLAR_VOL = 70_000_000
     MIN_DOLLAR_VOL_SMALL_CAP = 100_000_000
     SMALL_CAP_THRESHOLD = 5_000_000_000
+    MIN_MCAP = 2_000_000_000
+    CACHE_VERSION = 5  # Bumped: adds names + descriptions
 
-    # Load cached market caps for use in the tiered liquidity filter
-    _cached_mcaps = {}
+    # Load cached metadata before the liquidity gate. Some raw Yahoo industries have
+    # a cap-only rule: no dollar-volume or ADR-collapse gate, just a lower mcap floor.
+    mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "names": {}, "descs": {}, "version": 0, "refresh_in_progress": False}
     if os.path.exists("leaders_mcap.json"):
         try:
-            with open("leaders_mcap.json") as _mf:
-                _cached_mcaps = json.load(_mf).get("caps", {})
+            with open("leaders_mcap.json") as f:
+                mcap_data = json.load(f)
+                if "industries" not in mcap_data:
+                    mcap_data["industries"] = {}
+                if "names" not in mcap_data:
+                    mcap_data["names"] = {}
+                if "descs" not in mcap_data:
+                    mcap_data["descs"] = {}
+                if "version" not in mcap_data:
+                    mcap_data["version"] = 0
+                if "refresh_in_progress" not in mcap_data:
+                    mcap_data["refresh_in_progress"] = False
         except Exception:
-            _cached_mcaps = {}
+            mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "names": {}, "descs": {}, "version": 0, "refresh_in_progress": False}
+
+    mcap_cache = mcap_data.get("caps", {})
+    industry_cache = mcap_data.get("industries", {})
+    name_cache = mcap_data.get("names", {})
+    desc_cache = mcap_data.get("descs", {})
+    last_refreshed = mcap_data.get("refreshed", "")
+    cache_version = mcap_data.get("version", 0)
+    refresh_in_progress = mcap_data.get("refresh_in_progress", False)
+    refreshed_at_v = mcap_data.get("refreshed_at_v", {})
 
     print(f"\nPre-filtering by liquidity (price × avg_vol_10d >= ${MIN_DOLLAR_VOL/1e6:.0f}M, or ${MIN_DOLLAR_VOL_SMALL_CAP/1e6:.0f}M for small caps < ${SMALL_CAP_THRESHOLD/1e9:.0f}B)...")
 
@@ -2094,6 +2188,9 @@ def main():
     grace_kept = 0
     grace_expired = 0
     liquid_tickers = []
+    cap_only_prefilter_kept = 0
+    cap_only_metadata_checked = 0
+    cap_only_metadata_updated = False
     excluded = {"no_data": 0, "stale": 0, "illiquid": 0, "adr_collapse": 0}
     for tk in all_tickers:
         df = get_df(tk)
@@ -2121,9 +2218,27 @@ def main():
         dollar_vol = last_price * avg_vol_10d
         # Use cached market cap to choose the threshold. If unknown (new ticker), use
         # the standard threshold and let the normal market cap filter handle it later.
-        cached_mcap = _cached_mcaps.get(tk)
+        cached_mcap = mcap_cache.get(tk)
         threshold = MIN_DOLLAR_VOL_SMALL_CAP if (cached_mcap is not None and cached_mcap < SMALL_CAP_THRESHOLD) else MIN_DOLLAR_VOL
-        if dollar_vol < threshold and tk not in MANUAL_INCLUDE:
+        cap_only_policy = is_cap_only_industry(industry_cache.get(tk, ""))
+        if dollar_vol < threshold and tk not in MANUAL_INCLUDE and not cap_only_policy and (
+            tk not in mcap_cache or not industry_cache.get(tk, "")
+        ):
+            mc, industry, name, desc = fetch_ticker_metadata(tk)
+            cap_only_metadata_checked += 1
+            if mc > 0:
+                mcap_cache[tk] = mc
+                industry_cache[tk] = industry or industry_cache.get(tk, "")
+                name_cache[tk] = name or name_cache.get(tk, "")
+                desc_cache[tk] = desc or desc_cache.get(tk, "")
+                refreshed_at_v[tk] = CACHE_VERSION
+                cap_only_metadata_updated = True
+                cached_mcap = mc
+                cap_only_policy = is_cap_only_industry(industry_cache.get(tk, ""))
+        if cap_only_policy:
+            cap_only_prefilter_kept += 1
+            grace_records.pop(tk, None)
+        elif dollar_vol < threshold and tk not in MANUAL_INCLUDE:
             rec = grace_records.setdefault(tk, {})
             failures = int(rec.get("liquidity_failures", 0) or 0) + 1
             rec.update({
@@ -2156,8 +2271,9 @@ def main():
         # Filter stocks whose daily range has collapsed vs its OWN history.
         # Fully relative (no absolute floor): recent ADR must be < ACR_RATIO of
         # BOTH a short (~40-bar) and a long (~120-bar) baseline measured before
-        # the recent window. MANUAL_INCLUDE bypasses. See ACR_* constant block.
-        if tk not in MANUAL_INCLUDE:
+        # the recent window. MANUAL_INCLUDE and cap-only industries bypass.
+        # See ACR_* constant block.
+        if tk not in MANUAL_INCLUDE and not cap_only_policy:
             try:
                 h = df["High"].values
                 l = df["Low"].values
@@ -2204,39 +2320,14 @@ def main():
         if tk in DEBUG_TICKERS:
             print(f"  [DEBUG] {tk}: PASSED pre-filter (price ${last_price:.2f}, dollar_vol ${dollar_vol/1e6:.1f}M, threshold ${threshold/1e6:.0f}M)")
     print(f"  Pre-filter: {len(all_tickers)} → {len(liquid_tickers)} (excluded: {excluded['no_data']} no data, {excluded['stale']} delisted, {excluded['illiquid']} illiquid, {excluded['adr_collapse']} ADR collapse)")
+    if cap_only_prefilter_kept:
+        print(f"  Cap-only industries: kept {cap_only_prefilter_kept} ticker(s) through liquidity/ADR filters ({cap_only_metadata_checked} metadata lookup(s))")
     if grace_kept or grace_expired:
         print(f"  Universe grace: kept {grace_kept} recently-ranked illiquid ticker(s), expired {grace_expired}")
 
-    # ─── Market cap + industry lookup (ONLY on liquid survivors) ──
-    MIN_MCAP = 2_000_000_000
-    CACHE_VERSION = 5  # Bumped: adds names + descriptions
-    mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "names": {}, "descs": {}, "version": 0, "refresh_in_progress": False}
-    if os.path.exists("leaders_mcap.json"):
-        try:
-            with open("leaders_mcap.json") as f:
-                mcap_data = json.load(f)
-                if "industries" not in mcap_data:
-                    mcap_data["industries"] = {}
-                if "names" not in mcap_data:
-                    mcap_data["names"] = {}
-                if "descs" not in mcap_data:
-                    mcap_data["descs"] = {}
-                if "version" not in mcap_data:
-                    mcap_data["version"] = 0
-                if "refresh_in_progress" not in mcap_data:
-                    mcap_data["refresh_in_progress"] = False
-        except Exception:
-            mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "names": {}, "descs": {}, "version": 0, "refresh_in_progress": False}
-
-    mcap_cache = mcap_data.get("caps", {})
-    industry_cache = mcap_data.get("industries", {})
-    name_cache = mcap_data.get("names", {})
-    desc_cache = mcap_data.get("descs", {})
-    last_refreshed = mcap_data.get("refreshed", "")
-    cache_version = mcap_data.get("version", 0)
-    refresh_in_progress = mcap_data.get("refresh_in_progress", False)
-    # Per-version refresh checkpoint: tracks which tickers have been re-verified at the current schema
-    refreshed_at_v = mcap_data.get("refreshed_at_v", {})  # {ticker: version_int}
+    # ─── Market cap + industry lookup ─────────────────────────
+    # Per-version refresh checkpoint: tracks which tickers have been re-verified
+    # at the current schema.
 
     # Auto-refresh if: cache older than 7 days OR schema version changed OR refresh still in progress
     needs_full_refresh = False
@@ -2286,38 +2377,7 @@ def main():
         print(f"  Fetching market cap + industry for {total} liquid tickers...")
         failed = 0
         for i, tk in enumerate(tickers_to_check):
-            mc = 0
-            industry = ""
-            name = ""
-            desc = ""
-            try:
-                ticker_obj = yf.Ticker(tk, session=_session)
-                fi = ticker_obj.fast_info
-                try:
-                    mc = int(fi.get("marketCap", 0) or fi.get("market_cap", 0) or 0)
-                except Exception:
-                    mc = 0
-                if mc == 0:
-                    try:
-                        shares = fi.get("shares", 0) or 0
-                        last_price = fi.get("lastPrice", fi.get("last_price", 0)) or 0
-                        if shares and last_price:
-                            mc = int(shares * last_price)
-                    except Exception:
-                        pass
-                try:
-                    info = ticker_obj.info
-                    industry = info.get("industry", "") or ""
-                    name = info.get("shortName", "") or info.get("longName", "") or ""
-                    desc = info.get("longBusinessSummary", "") or ""
-                    if mc == 0:
-                        info_mc = info.get("marketCap", 0) or 0
-                        if info_mc:
-                            mc = int(info_mc)
-                except Exception:
-                    pass
-            except Exception:
-                pass
+            mc, industry, name, desc = fetch_ticker_metadata(tk)
             if mc == 0:
                 failed += 1
                 # DO NOT overwrite cache with empty values on failure.
@@ -2329,9 +2389,9 @@ def main():
             else:
                 # Successful fetch — update all fields
                 mcap_cache[tk] = mc
-                industry_cache[tk] = industry
-                name_cache[tk] = name
-                desc_cache[tk] = desc
+                industry_cache[tk] = industry or industry_cache.get(tk, "")
+                name_cache[tk] = name or name_cache.get(tk, "")
+                desc_cache[tk] = desc or desc_cache.get(tk, "")
                 refreshed_at_v[tk] = CACHE_VERSION
             time.sleep(0.2)
             if (i + 1) % 100 == 0:
@@ -2358,17 +2418,35 @@ def main():
             print(f"  Cache partially updated ({len(mcap_cache)} entries, {remaining_after_run} more in next runs)")
         else:
             print(f"  Cache fully refreshed ({len(mcap_cache)} entries, version {CACHE_VERSION})")
+    elif cap_only_metadata_updated:
+        mcap_data = {
+            "refreshed": last_refreshed,
+            "caps": mcap_cache,
+            "industries": industry_cache,
+            "names": name_cache,
+            "descs": desc_cache,
+            "version": cache_version,
+            "refresh_in_progress": refresh_in_progress,
+            "refreshed_at_v": refreshed_at_v,
+        }
+        with open("leaders_mcap.json", "w") as f:
+            json.dump(mcap_data, f, separators=(",", ":"))
+        print(f"  Cache updated with {cap_only_metadata_checked} pre-liquidity metadata lookup(s)")
 
-    # Final filter: market cap >= $2B (unknowns excluded). MANUAL_INCLUDE bypasses.
+    # Final filter: standard names need >= $2B; cap-only industries need >= $1.2B.
+    # MANUAL_INCLUDE bypasses.
     all_tickers_before_mcap = list(liquid_tickers)
-    all_tickers = [t for t in liquid_tickers if mcap_cache.get(t, 0) >= MIN_MCAP or t in MANUAL_INCLUDE]
+    def min_mcap_for_ticker(t):
+        return CAP_ONLY_MIN_MCAP if is_cap_only_industry(industry_cache.get(t, "")) else MIN_MCAP
+    all_tickers = [t for t in liquid_tickers if mcap_cache.get(t, 0) >= min_mcap_for_ticker(t) or t in MANUAL_INCLUDE]
     removed = len(liquid_tickers) - len(all_tickers)
-    print(f"  Market cap filter: {removed} removed (< ${MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
+    print(f"  Market cap filter: {removed} removed (< $2B standard / < $1.2B cap-only), {len(all_tickers)} remaining")
     # Diagnostic: log DEBUG_TICKERS that got filtered here
     for tk in DEBUG_TICKERS:
         if tk in all_tickers_before_mcap and tk not in all_tickers:
             cached_mc = mcap_cache.get(tk, 0)
-            print(f"  [DEBUG] {tk}: EXCLUDED by market cap filter (mc=${cached_mc/1e9:.2f}B, need >= ${MIN_MCAP/1e9:.0f}B)")
+            needed = min_mcap_for_ticker(tk)
+            print(f"  [DEBUG] {tk}: EXCLUDED by market cap filter (mc=${cached_mc/1e9:.2f}B, need >= ${needed/1e9:.1f}B)")
         elif tk in all_tickers:
             cached_mc = mcap_cache.get(tk, 0)
             print(f"  [DEBUG] {tk}: PASSED market cap filter (mc=${cached_mc/1e9:.2f}B)")
@@ -2412,6 +2490,7 @@ def main():
     all_tickers = [
         t for t in all_tickers
         if t in MANUAL_INCLUDE
+        or is_cap_only_industry(industry_label.get(t, ""))
         or theme_map.get(t) not in PHARMA_BIOTECH_THEMES
         or mcap_cache.get(t, 0) >= PHARMA_BIOTECH_MIN_MCAP
     ]
@@ -2438,6 +2517,7 @@ def main():
     all_tickers = [
         t for t in all_tickers
         if t in MANUAL_INCLUDE
+        or is_cap_only_industry(industry_label.get(t, ""))
         or theme_map.get(t) not in HEALTHCARE_ADJ_THEMES
         or mcap_cache.get(t, 0) >= HEALTHCARE_ADJ_MIN_MCAP
     ]
