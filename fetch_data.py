@@ -119,7 +119,7 @@ ETF_INFO = [
     {"t":"AGENT","n":"Agentic AI","fn":"Custom Basket","h":"GTLB,ASAN,PATH,BRZE,VERI,AI,SOUN,BBAI,LAW,CRNC","basket":True},
     {"t":"EUV","n":"Photonics","fn":"Corgi Lithography & Semiconductor Photonics ETF","h":"TSM,ASML,LRCX,GLW,AMAT,CIEN,LITE,KLAC,COHR,MTSI,AXTI,CRDO,MRVL,FN,NVMI,ENTG,AAOI,VIAV,NOVT,ONTO,LASR,FORM,OUST,VECO,AEVA,UCTT,HSAI,PLAB,IPGP,CAMT,AEHR,PDFS,POET,ADTN,TDY,TSEM,GFS,LWLG,MTRN"},
     {"t":"LIDAR","n":"LiDAR","fn":"Custom Basket","h":"OUST,AEVA,HSAI,TDY","basket":True},
-    {"t":"PSEMI","n":"Power Semis","fn":"Custom Basket","h":"STM,ON,MPWR,ADI,TXN,NVTS,WOLF,FLEX,POWI,VRT,ETN,AOSL,SEDG,ENPH","basket":True},
+    {"t":"PSEMI","n":"Power Semis","fn":"Custom Basket","h":"STM,ON,MPWR,ADI,TXN,NVTS,WOLF,FLEX,POWI,VRT,ETN,AOSL,SEDG,ENPH,VICR,ALGM,IPWR,AMSC","basket":True},
     {"t":"IYR","n":"US Real Estate","fn":"iShares:US Real Estate","h":"WELL,PLD,EQIX,O,AMT,SPG,DLR,PSA,CBRE,VTR,CCI,VICI,EXR,IRM"},
 ]
 
