@@ -39,6 +39,7 @@ UNIVERSE_GRACE_FILE = "leaders_universe_grace.json"
 UNIVERSE_GRACE_DAYS = 10
 WEEKLY_RETRY_ATTEMPTS = 3
 STRICT_WEEKLY_RANK_RECOVERY = os.environ.get("STRICT_WEEKLY_RANK_RECOVERY", "1") != "0"
+SETUP_COILED_FLAG = 128
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
@@ -911,6 +912,23 @@ def compute_setup_adjustment(c, h, l, n):
     return round(adj, 2), flags
 
 
+def compute_intraday_setup_baseline(c, h, l, n):
+    """Compact setup inputs used by the fast intraday reranker."""
+    try:
+        ema9 = compute_ema_value(c, 9)
+        ema21 = compute_ema_value(c, 21)
+        adr = float(np.mean([h[i] - l[i] for i in range(max(0, n - 14), n)])) if n > 0 else 0
+        if ema9 and ema21 and adr > 0:
+            return {
+                "_setup_ema9": round(float(ema9), 6),
+                "_setup_ema21": round(float(ema21), 6),
+                "_setup_adr": round(float(adr), 6),
+            }
+    except Exception:
+        pass
+    return {}
+
+
 def close_on_or_before(df_index, closes, target_date):
     """Find the close of the most recent trading day at or before target_date.
     Returns the close value (float) or None. Used for calendar-based 1W/1M lookups
@@ -1054,6 +1072,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     # Need at least 63 common bars for Q1 calculation
     if len(common) < 63:
         _sa, _sf = compute_setup_adjustment(c, h, l, n)
+        _setup_base = compute_intraday_setup_baseline(c, h, l, n)
         return {"rv": round(rvol * 100) if rvol else None,
                 "t5_rv": round(t5_rvol * 100) if t5_rvol else None,
                 "am": round(atr_mult * 100),
@@ -1070,7 +1089,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "_pc": float(c[-2]) if n >= 2 else None,
                 "_5b": w_base,
                 "_20b": m_base,
-                "_yb": ytd_base}
+                "_yb": ytd_base,
+                **_setup_base}
 
     # Handle IPOs with <252 bars: use actual bar count (mirrors Pine's "n63/n126/n189/n252" logic)
     avail = len(common)
@@ -1167,6 +1187,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
 
     # Setup quality adjustment (applied to RS percentrank in main)
     setup_adj, setup_flags = compute_setup_adjustment(c, h, l, n)
+    setup_base = compute_intraday_setup_baseline(c, h, l, n)
 
     # Trend zone (from Pine Script CMI "smooth_trend" — used as multiplier on RS)
     trend_zone = compute_trend_zone(c, h, l, spy_closes, spy_ts_map, df.index)
@@ -1273,6 +1294,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "_5b": w_base,
         "_20b": m_base,
         "_yb": ytd_base,
+        **setup_base,
     }
 
 
@@ -1783,6 +1805,7 @@ def write_intraday_baselines(results):
         "p", "w_fr", "w_vs", "w_rs", "w_rk",
         "w_pen_engulf", "w_pen_crash5",
         "_pc", "_5b", "_20b", "_yb", "_atr", "_hi52",
+        "_setup_ema9", "_setup_ema21", "_setup_adr",
         "_w_deltas", "_w_week", "_w_date",
         "_w_stock_prev", "_w_stock_last", "_w_stock_atr",
         "_w_spy_prev", "_w_spy_last", "_w_spy_atr",
