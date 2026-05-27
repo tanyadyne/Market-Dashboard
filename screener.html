@@ -1112,8 +1112,10 @@ function copyTop600(btn){
     flashCopyBtn(btn,'No data');
     return;
   }
-  // Same filter+sort as the Top 40 box on the Overview tab (line ~972).
-  const top600=[...DATA.e].filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,500);
+  const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly);
+  let copyItems=[...DATA.e];
+  if(hasFilter)copyItems=applyScreenerFilters(copyItems,true);
+  const top600=copyItems.filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,500);
   const tickers=top600.map(e=>e.t);
   if(!tickers.length){
     flashCopyBtn(btn,'No tickers');
