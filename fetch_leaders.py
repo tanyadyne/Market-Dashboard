@@ -37,6 +37,8 @@ MAX_HISTORY_DAYS = 90
 INTRADAY_BASELINES_FILE = "leaders_intraday_baselines.json"
 UNIVERSE_GRACE_FILE = "leaders_universe_grace.json"
 UNIVERSE_GRACE_DAYS = 10
+WEEKLY_RETRY_ATTEMPTS = 3
+STRICT_WEEKLY_RANK_RECOVERY = os.environ.get("STRICT_WEEKLY_RANK_RECOVERY", "1") != "0"
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
@@ -1365,6 +1367,155 @@ def process_stock_weekly(ticker, df_w, spy_w_closes, spy_w_atr_series, spy_w_ts_
     }
 
 
+def flatten_single_download(df):
+    """Normalize yfinance's single-ticker DataFrame shape."""
+    if df is None or df.empty:
+        return None
+    out = df.copy()
+    if hasattr(out.columns, "names") and out.columns.names and "Ticker" in out.columns.names:
+        out = out.droplevel("Ticker", axis=1)
+    elif hasattr(out.columns, "nlevels") and out.columns.nlevels == 2:
+        out = out.droplevel(1, axis=1)
+    if "Close" not in out:
+        return None
+    out = out.dropna(subset=["Close"])
+    return out if not out.empty else None
+
+
+def daily_to_weekly(df):
+    """Build Friday-ending weekly OHLCV bars from daily data as a local fallback."""
+    if df is None or df.empty or "Close" not in df:
+        return None
+    try:
+        import pandas as pd
+        work = df.copy()
+        work.index = pd.to_datetime(work.index)
+        agg = {}
+        if "Open" in work:
+            agg["Open"] = "first"
+        if "High" in work:
+            agg["High"] = "max"
+        if "Low" in work:
+            agg["Low"] = "min"
+        agg["Close"] = "last"
+        if "Volume" in work:
+            agg["Volume"] = "sum"
+        weekly = work.resample("W-FRI", label="right", closed="right").agg(agg)
+        weekly = weekly.dropna(subset=["Close"])
+        needed = ["Open", "High", "Low", "Close", "Volume"]
+        for col in needed:
+            if col not in weekly:
+                if col == "Volume":
+                    weekly[col] = 0
+                else:
+                    weekly[col] = weekly["Close"]
+        return weekly[needed] if not weekly.empty else None
+    except Exception:
+        return None
+
+
+def download_single_weekly(ticker, start, end):
+    """Retry one ticker's weekly bars outside the large batch path."""
+    for attempt in range(WEEKLY_RETRY_ATTEMPTS):
+        try:
+            df = yf.download(
+                ticker,
+                start=start.strftime("%Y-%m-%d"),
+                end=end.strftime("%Y-%m-%d"),
+                interval="1wk",
+                auto_adjust=False,
+                session=_session,
+                threads=False,
+                progress=False,
+            )
+            flat = flatten_single_download(df)
+            if flat is not None and not flat.empty:
+                return flat
+        except Exception:
+            pass
+        time.sleep(4 + attempt * 3)
+    return None
+
+
+def recover_missing_weekly_metrics(results, daily_data, w_start, end, spy_df,
+                                   spy_w_closes, spy_w_atr_series, spy_w_ts_map):
+    """Recover weekly RS inputs for stocks whose daily data exists but weekly data failed.
+
+    The normal batch download is still the fast path. This only runs for entries that
+    would otherwise publish with a null weekly rank, first with single-ticker Yahoo
+    retries, then with weekly candles synthesized from the already-downloaded daily
+    bars.
+    """
+    candidates = [r for r in results if r.get("t") and r.get("w_fr") is None and daily_data.get(r.get("t")) is not None]
+    if not candidates:
+        return
+
+    print(f"  Weekly rank recovery: checking {len(candidates)} unranked stock(s) with daily data...")
+    recovered_retry = 0
+    recovered_daily = 0
+    fallback_spy_df = None
+    fallback_spy_closes = fallback_spy_atr_series = fallback_spy_ts_map = None
+
+    for r in candidates:
+        tk = r["t"]
+        metrics = None
+
+        retry_df = download_single_weekly(tk, w_start, end)
+        if retry_df is not None:
+            retry_metrics = process_stock_weekly(tk, retry_df, spy_w_closes, spy_w_atr_series, spy_w_ts_map)
+            if retry_metrics.get("w_fr") is not None:
+                metrics = retry_metrics
+                recovered_retry += 1
+
+        if metrics is None:
+            stock_weekly = daily_to_weekly(daily_data.get(tk))
+            if fallback_spy_df is None:
+                fallback_spy_df = daily_to_weekly(spy_df)
+                if fallback_spy_df is not None and len(fallback_spy_df) > 0:
+                    _closes = fallback_spy_df["Close"].values
+                    _highs = fallback_spy_df["High"].values
+                    _lows = fallback_spy_df["Low"].values
+                    fallback_spy_closes = _closes
+                    fallback_spy_atr_series = compute_atr_series(_highs, _lows, _closes, ATR_PERIOD) if len(_closes) > ATR_PERIOD else []
+                    fallback_spy_ts_map = {ts: i for i, ts in enumerate(fallback_spy_df.index)}
+            if stock_weekly is not None and fallback_spy_closes is not None:
+                daily_metrics = process_stock_weekly(
+                    tk,
+                    stock_weekly,
+                    fallback_spy_closes,
+                    fallback_spy_atr_series,
+                    fallback_spy_ts_map,
+                )
+                if daily_metrics.get("w_fr") is not None:
+                    metrics = daily_metrics
+                    recovered_daily += 1
+
+        if metrics is not None:
+            r.update(metrics)
+
+    remaining = sorted(r["t"] for r in candidates if r.get("w_fr") is None)
+    print(f"  Weekly rank recovery: {recovered_retry} recovered by single-ticker retry, {recovered_daily} from daily bars")
+    if remaining:
+        print(f"  Weekly rank recovery: {len(remaining)} still unranked: {remaining[:60]}")
+
+
+def recently_ranked_tickers(history_file="leaders_score_history.json", lookback=5):
+    """Tickers that had a valid rank in the recent history window."""
+    if not os.path.exists(history_file):
+        return set()
+    try:
+        with open(history_file) as f:
+            payload = json.load(f)
+        out = set()
+        for tk, entry in payload.get("d", {}).items():
+            wr = entry.get("wr") if isinstance(entry, dict) else None
+            if wr and any(v is not None for v in wr[-lookback:]):
+                out.add(tk)
+        return out
+    except Exception:
+        return set()
+
+
 def fetch_live_quote(ticker):
     """Fetch live (intraday) quote for a single ticker via fast_info.
     Returns (last_price, prev_close) or (None, None) on failure.
@@ -2345,6 +2496,17 @@ def main():
 
     print(f"  Processed: {processed}/{len(all_tickers)}")
 
+    recover_missing_weekly_metrics(
+        results,
+        daily_data,
+        w_start,
+        end,
+        spy_df,
+        spy_w_closes,
+        spy_w_atr_series,
+        spy_w_ts_map,
+    )
+
     # ─── Intraday overlay: replace EOD price with live quote when market is open ──
     # Updates p / ch / c5 / c20 / ytd to reflect the current intraday move. RS scores
     # remain anchored to the last completed daily bar (recomputing intraday would require
@@ -2400,6 +2562,14 @@ def main():
     # ─── Cross-sectional percentrank (compare each stock vs ALL others) ──
     all_d_rs = [r["fr"] for r in results if r.get("fr") is not None]
     all_w_rs = [r.get("w_fr") for r in results if r.get("w_fr") is not None]
+
+    if STRICT_WEEKLY_RANK_RECOVERY:
+        recent_ranked = recently_ranked_tickers()
+        lost_recent = sorted(r["t"] for r in results if r.get("t") in recent_ranked and r.get("w_fr") is None)
+        if lost_recent:
+            print("ERROR: refusing to publish; recently ranked tickers lost weekly RS after recovery")
+            print(f"  Lost weekly RS: {lost_recent[:80]}")
+            sys.exit(1)
 
     for r in results:
         if r.get("fr") is not None and len(all_d_rs) > 1:

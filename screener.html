@@ -791,7 +791,7 @@ function atrExtBars(val){
   let bars='';for(let i=0;i<4;i++){const lit=isNeg?(i>=4-n):(i<n);bars+=`<div class="bar" style="height:${heights[i]}px;opacity:${lit?1:0.2}"></div>`;}
   return`<div class="bars ${cls}">${bars}</div>`;
 }
-function getPosition(rank,total){if(rank<=100)return'Strong Leader';if(rank<=200)return'Moderate Leader';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Moderate Laggard';return'Deep Laggard';}
+function getPosition(rank,total){if(rank==null||!Number.isFinite(Number(rank)))return'—';if(rank<=100)return'Strong Leader';if(rank<=200)return'Moderate Leader';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Moderate Laggard';return'Deep Laggard';}
 function posClass(pos){if(pos.includes('Leader'))return'tag-leader';if(pos.includes('Laggard'))return'tag-laggard';return'tag-neutral';}
 // Used in the Individual Profile history table where the full 5-tier label is shown.
 // Splits Leader/Laggard into Strong vs Moderate visual treatments.
@@ -1764,6 +1764,7 @@ function searchStock(){
   // Theme info (mapped sector with rank among ETFs)
   const mappedSector=stock.thm||stock.th||'';
   const themeRankInfo=getThemeRankInfo(mappedSector);
+  const rankSubline=stock.w_rk!=null?`of ${DATA.e.filter(e=>e.w_rk!=null).length}`:'Unranked';
   let themeSubline;
   if(themeRankInfo){
     themeSubline=`<span class="${themeTag(themeRankInfo.status)}">${themeRankInfo.status}: #${themeRankInfo.avg} of ${themeRankInfo.total}</span>`;
@@ -1778,7 +1779,7 @@ function searchStock(){
   let html=`<div class="info-boxes">
     <div class="info-pair">
       <div class="info-box info-box-pair"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.w_rs)}">${stock.w_rs!=null?stock.w_rs:'—'}</div><div class="sub"><span class="${posClass(rsLabel)}">${rsLabel}</span></div></div>
-      <div class="info-box info-box-pair"><div class="lbl">RS Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">of ${total}</div></div>
+      <div class="info-box info-box-pair"><div class="lbl">RS Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">${rankSubline}</div></div>
       <div class="info-box info-box-pair info-box-theme"><div class="lbl">Theme</div><div class="val">${esc(mappedSector||'—')}</div><div class="sub">${themeSubline}</div></div>
     </div>
   </div>`;
