@@ -2204,6 +2204,46 @@ def main():
     industry_cache = mcap_data.get("industries", {})
     name_cache = mcap_data.get("names", {})
     desc_cache = mcap_data.get("descs", {})
+    names_fallback = {}
+    if os.path.exists("names.json"):
+        try:
+            with open("names.json") as f:
+                names_fallback = json.load(f)
+        except Exception:
+            names_fallback = {}
+
+    def merge_metadata_cache(tk, mc=0, industry="", name="", desc=""):
+        updated = False
+        if mc:
+            mcap_cache[tk] = int(mc)
+            updated = True
+        if industry:
+            industry_cache[tk] = industry
+            updated = True
+        if name:
+            name_cache[tk] = name
+            updated = True
+        elif not name_cache.get(tk, ""):
+            fallback_name = names_fallback.get(tk, {}).get("n", "")
+            if fallback_name:
+                name_cache[tk] = fallback_name
+                updated = True
+        if desc:
+            desc_cache[tk] = desc
+            updated = True
+        elif not desc_cache.get(tk, ""):
+            fallback_desc = names_fallback.get(tk, {}).get("d", "")
+            if fallback_desc:
+                desc_cache[tk] = fallback_desc
+                updated = True
+        return updated
+
+    def metadata_name(tk):
+        return name_cache.get(tk, "") or names_fallback.get(tk, {}).get("n", "")
+
+    def metadata_desc(tk):
+        return desc_cache.get(tk, "") or names_fallback.get(tk, {}).get("d", "")
+
     last_refreshed = mcap_data.get("refreshed", "")
     cache_version = mcap_data.get("version", 0)
     refresh_in_progress = mcap_data.get("refresh_in_progress", False)
@@ -2258,13 +2298,10 @@ def main():
         ):
             mc, industry, name, desc = fetch_ticker_metadata(tk)
             cap_only_metadata_checked += 1
-            if mc > 0:
-                mcap_cache[tk] = mc
-                industry_cache[tk] = industry or industry_cache.get(tk, "")
-                name_cache[tk] = name or name_cache.get(tk, "")
-                desc_cache[tk] = desc or desc_cache.get(tk, "")
-                refreshed_at_v[tk] = CACHE_VERSION
+            if merge_metadata_cache(tk, mc, industry, name, desc):
                 cap_only_metadata_updated = True
+            if mc > 0:
+                refreshed_at_v[tk] = CACHE_VERSION
                 cached_mcap = mc
                 cap_only_policy = is_cap_only_industry(industry_cache.get(tk, ""))
         if cap_only_policy:
@@ -2408,22 +2445,21 @@ def main():
         total = len(tickers_to_check)
         print(f"  Fetching market cap + industry for {total} liquid tickers...")
         failed = 0
+        partial = 0
         for i, tk in enumerate(tickers_to_check):
             mc, industry, name, desc = fetch_ticker_metadata(tk)
+            metadata_updated = merge_metadata_cache(tk, mc, industry, name, desc)
             if mc == 0:
                 failed += 1
-                # DO NOT overwrite cache with empty values on failure.
-                # Keep any previously-cached data so transient fetch failures don't erase good entries.
-                # If this ticker has never been successfully fetched, leave it unmarked so we retry next run.
-                # If it has good cached data, mark as verified at current schema.
+                if metadata_updated:
+                    partial += 1
+                # DO NOT overwrite cache with empty values on failure. Keep any
+                # previously-cached data, but still retain partial metadata
+                # (name/description/industry) so a missing market cap does not
+                # blank the screener profile.
                 if mcap_cache.get(tk, 0) > 0:
                     refreshed_at_v[tk] = CACHE_VERSION
             else:
-                # Successful fetch — update all fields
-                mcap_cache[tk] = mc
-                industry_cache[tk] = industry or industry_cache.get(tk, "")
-                name_cache[tk] = name or name_cache.get(tk, "")
-                desc_cache[tk] = desc or desc_cache.get(tk, "")
                 refreshed_at_v[tk] = CACHE_VERSION
             time.sleep(0.2)
             if (i + 1) % 100 == 0:
@@ -2431,6 +2467,8 @@ def main():
                 time.sleep(2)
         if failed > 0:
             print(f"  {failed} tickers failed lookup (will retry next run)")
+        if partial > 0:
+            print(f"  Retained partial metadata for {partial} failed lookup(s)")
 
         # Determine if refresh is now complete
         still_needs_refresh = remaining_after_run > 0
@@ -2601,7 +2639,7 @@ def main():
             if d_metrics is None:
                 continue
             processed += 1
-            entry = {"t": tk, "n": name_cache.get(tk, ""), "d": desc_cache.get(tk, ""), "th": industry_label.get(tk, "General"), "thm": theme_map.get(tk, "General"), **d_metrics, **w_metrics}
+            entry = {"t": tk, "n": metadata_name(tk), "d": metadata_desc(tk), "th": industry_label.get(tk, "General"), "thm": theme_map.get(tk, "General"), **d_metrics, **w_metrics}
             results.append(entry)
         except Exception:
             continue
