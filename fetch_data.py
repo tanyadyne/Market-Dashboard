@@ -60,7 +60,7 @@ ETF_INFO = [
     {"t":"XHE","n":"Healthcare Equipment","fn":"SS SPDR S&P Hlth Care Eq","h":"TNDM,AXGN,INSP,GMED,HAE,ATEC,TMDX,ISRG,GKOS,SOLV,COO,IDXX,HOLX,OMCL,LNTH,MDT,LIVN,ALGN,UFPT,ICUI,EW,STE,PEN,NEOG,GEHC"},
     {"t":"XLV","n":"Healthcare","fn":"Sel Sector:HC SS SPDR","h":"LLY,JNJ,ABBV,UNH,MRK,ABT,TMO,ISRG,AMGN,GILD,BSX,PFE,DHR,MDT,SYK,VRTX,MCK,CVS,BMY,HCA,REGN,ELV,CI,COR,IDXX,CNC,WST,BDX,EW,CAH,LH,ZBH,DXCM,DVA,STE,IQV,DGX"},
     {"t":"COPX","n":"Copper Miners","fn":"Glbl X Copper Miners ETF","h":"ERO,TGB,FCX,HBM,IE,TECK,SCCO"},
-    {"t":"DRNZ","n":"Drones","fn":"REX Drone ETF","h":"ACHR,AVAV,DPRO,DRSHF,EH,ELS,JOBY,KTOS,ONDS,PLTR,RCAT,UMAC"},
+    {"t":"JEDI","n":"Drones & Modern Warfare","fn":"Defiance Drone and Modern Warfare ETF","h":"AMZN,POWL,ASTS,MSCI,VALE,INDI,MRAM,ORCL,RR,DIOD,AMKR,DLR,ATI"},
     {"t":"URA","n":"Uranium / Nuclear","fn":"Glbl X Uranium ETF","h":"ASPI,BWXT,CCJ,CEG,DNN,EU,LEU,LTBR,MIR,NNE,NXE,OKLO,SBSW,SMR,SRUUF,TLN,UEC,URNJ,URNM,UROY,UUUU"},
     {"t":"UFO","n":"Space","fn":"Procure Space","h":"RKLB,PL,VSAT,IRDM,FLY,SIRI,GSAT,LUNR,ASTS,SATS,GRMN,TRMB,VOYG,BA,HON,RTX,LHX,BKSY,LMT,RDW,NOC,SATL,GILT,CMCSA,SPIR,KRMN,SIDU"},
     {"t":"PAVE","n":"Infrastructure Dev","fn":"Glbl X US Infra Dev","h":"HWM,PWR,PH,CRH,SRE,NSC,FAST,TT,CSX,ROK,URI,EMR,DE,ETN,UNP,VMC,MLM,NUE,EME,STLD,HUBB,TRMB,FTV,WWD,PNR"},

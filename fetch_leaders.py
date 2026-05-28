@@ -506,7 +506,7 @@ PROTECTED_BASKETS = {
     "Photonics",
     "LiDAR",
     "HVAC / Cooling",
-    "Drones",
+    "Drones & Modern Warfare",
     "Space",
     "Hydrogen",
     "Bitcoin",
