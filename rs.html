@@ -154,7 +154,7 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 .c{text-align:center}.rt{text-align:right}.m{font-family:'JetBrains Mono',monospace}
 .rk{text-align:center;color:var(--t4);font-family:'JetBrains Mono',monospace;font-size:11px}
 .rd{text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;white-space:nowrap}
-.rd-up{color:var(--g)}.rd-dn{color:var(--r)}.rd-flat{color:var(--t4)}
+.rd-up{color:var(--g)}.rd-dn{color:var(--r)}.rd-flat{color:var(--t4)}.rd-new{color:#3b82f6;font-weight:700;letter-spacing:.3px}
 .rd-num{color:var(--t2);font-weight:500}
 /* Mobile-only: hide arrows + color the (+N)/(-N)/(0) number by direction */
 [data-view="mobile"] .rd .rd-up,[data-view="mobile"] .rd .rd-dn,[data-view="mobile"] .rd .rd-flat{display:none}
@@ -163,6 +163,7 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] .rd .rd-dn+.rd-num{color:var(--r)}
 [data-view="mobile"] .rd .rd-flat+.rd-num{color:var(--t4)}
 [data-view="mobile"] .rd.rd-flat{color:var(--t4)}
+[data-view="mobile"] .rd.rd-new{color:#3b82f6}
 .tk{font-weight:700;font-size:13px;color:var(--t1);font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
 .sc2{color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .au{color:var(--g);font-size:11px;margin-left:4px}.ad{color:var(--r);font-size:11px;margin-left:4px}
@@ -1283,9 +1284,27 @@ function getRankDeltaVal(ticker){
   return prevRk - curRk;
 }
 
+function isNewRankEntry(ticker){
+  if(!HISTORY||!HISTORY.d)return false;
+  const etf = DATA.e.find(e=>e.t===ticker);
+  if(!etf) return false;
+  const curRk = isWeekly ? etf.w_rk : etf.rk;
+  if(curRk == null) return false;
+  const key = isWeekly ? 'wr' : 'r';
+  const hist = HISTORY.d[ticker];
+  if(!hist) return true;
+  const arr = hist[key];
+  if(!arr || !arr.length) return true;
+  const prior = (arr[arr.length - 1] === curRk) ? arr.slice(0, -1) : arr;
+  return !prior.some(rk=>rk != null);
+}
+
 function rankDelta(ticker){
   const delta = getRankDeltaVal(ticker);
-  if(delta == null) return '<td class="rd rd-flat">—</td>';
+  if(delta == null){
+    if(isNewRankEntry(ticker)) return '<td class="rd rd-new">NEW</td>';
+    return '<td class="rd rd-flat">—</td>';
+  }
   if(delta > 0) return `<td class="rd"><span class="rd-up">▲&nbsp;&nbsp;</span><span class="rd-num">(+${delta})</span></td>`;
   if(delta < 0) return `<td class="rd"><span class="rd-dn">▼&nbsp;&nbsp;</span><span class="rd-num">(${delta})</span></td>`;
   return '<td class="rd"><span class="rd-flat">–&nbsp;&nbsp;</span><span class="rd-num">(0)</span></td>';
