@@ -1887,6 +1887,15 @@ def recently_ranked_tickers(window_days=UNIVERSE_GRACE_DAYS):
 
 
 def write_universe_grace_state(state, today_str):
+    def json_safe(v):
+        if isinstance(v, (date, datetime)):
+            return v.isoformat()
+        if isinstance(v, dict):
+            return {k: json_safe(val) for k, val in v.items()}
+        if isinstance(v, list):
+            return [json_safe(x) for x in v]
+        return v
+
     tickers = state.get("tickers", {})
     keep = {}
     for tk, item in tickers.items():
@@ -1894,9 +1903,9 @@ def write_universe_grace_state(state, today_str):
             continue
         failures = int(item.get("liquidity_failures", 0) or 0)
         if failures > 0:
-            keep[tk] = item
+            keep[tk] = json_safe(item)
     payload = {
-        "updated": today_str,
+        "updated": json_safe(today_str),
         "grace_days": UNIVERSE_GRACE_DAYS,
         "tickers": keep,
     }
@@ -2637,9 +2646,9 @@ def main():
             # Bar date being scored = the most recent bar yfinance returned. We approximate
             # this as today's ET date during weekday runs, or the most recent weekday on
             # weekend runs (which yfinance will treat as Friday).
-            _et_today = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=-4))).date()
+            _et_today_date = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=-4))).date()
             # Walk back from today to find the most recent weekday (Mon-Fri)
-            _bar_date = _et_today
+            _bar_date = _et_today_date
             while _bar_date.weekday() >= 5:
                 _bar_date = _bar_date - timedelta(days=1)
             _bar_date_str = _bar_date.isoformat()
