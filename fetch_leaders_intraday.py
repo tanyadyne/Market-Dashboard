@@ -70,7 +70,7 @@ def in_market_hours():
     if now.weekday() >= 5 or is_us_market_holiday(now.date().isoformat()):
         return False
     minute = now.hour * 60 + now.minute
-    return 570 <= minute <= 955
+    return 570 <= minute <= 961
 
 
 def finite_num(v):

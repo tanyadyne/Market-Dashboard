@@ -53,9 +53,9 @@ jobs:
           elif [ "${{ inputs.force || false }}" = "true" ]; then
             echo "skip=false" >> $GITHUB_OUTPUT
             echo "Forced manual/API trigger on weekday (non-holiday) — running"
-          elif [ $TIME_MIN -ge 570 ] && [ $TIME_MIN -le 955 ]; then
+          elif [ $TIME_MIN -ge 570 ] && [ $TIME_MIN -le 961 ]; then
             # 570 = 9:30 AM ET (market open)
-            # 955 = 3:55 PM ET (avoid post-close fast_info/quote inconsistencies)
+            # 961 = 4:01 PM ET (allow final close-adjacent cron dispatch)
             echo "skip=false" >> $GITHUB_OUTPUT
             echo "Within market hours window ($(date '+%H:%M %Z'))"
           else
