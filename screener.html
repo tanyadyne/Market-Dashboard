@@ -103,7 +103,7 @@ tr:hover{background:var(--bg3)}
 .c{text-align:center}.l{text-align:left}
 .rk{text-align:center;color:var(--t4);font-family:'JetBrains Mono',monospace;font-size:11px}
 .rd{text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;white-space:nowrap}
-.rd-up{color:var(--g)}.rd-dn{color:var(--r)}.rd-flat{color:var(--t4)}.rd-num{color:var(--t2);font-weight:500}
+.rd-up{color:var(--g)}.rd-dn{color:var(--r)}.rd-flat{color:var(--t4)}.rd-new{color:#3b82f6;font-weight:700;letter-spacing:.3px}.rd-num{color:var(--t2);font-weight:500}
 /* Mobile: hide directional arrows in the rank-change column to save horizontal space */
 [data-view="mobile"] .rd .rd-up,[data-view="mobile"] .rd .rd-dn,[data-view="mobile"] .rd .rd-flat{display:none}
 [data-view="mobile"] .rd .rd-num{font-weight:600}
@@ -112,6 +112,7 @@ tr:hover{background:var(--bg3)}
 [data-view="mobile"] .rd .rd-dn+.rd-num{color:var(--r)}
 [data-view="mobile"] .rd .rd-flat+.rd-num{color:var(--t4)}
 [data-view="mobile"] .rd.rd-flat{color:var(--t4)}
+[data-view="mobile"] .rd.rd-new{color:#3b82f6}
 .tk{font-weight:700;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.5px}
 .tk-link{cursor:pointer;transition:color .15s}
 .tk-link:hover{color:var(--t1);text-decoration:underline;text-underline-offset:3px}
@@ -870,9 +871,21 @@ function getRankDeltaVal(ticker){
   const curRk=etf.w_rk;if(curRk==null)return null;
   return prevRk-curRk;
 }
+function isNewRankEntry(ticker){
+  const etf=DATA&&DATA.e&&DATA.e.find(e=>e.t===ticker);if(!etf||etf.w_rk==null)return false;
+  if(!HISTORY||!HISTORY.d||!HISTORY.d[ticker])return true;
+  const arr=HISTORY.d[ticker]['wr'];
+  if(!arr||!arr.length)return true;
+  const lastIdx=arr.length-1;
+  const prior=(arr[lastIdx]===etf.w_rk)?arr.slice(0,lastIdx):arr;
+  return !prior.some(rk=>rk!=null);
+}
 function rankDelta(ticker){
   const d=getRankDeltaVal(ticker);
-  if(d==null)return'<td class="rd rd-flat">—</td>';
+  if(d==null){
+    if(isNewRankEntry(ticker))return'<td class="rd rd-new">NEW</td>';
+    return'<td class="rd rd-flat">—</td>';
+  }
   if(d>0)return`<td class="rd"><span class="rd-up">▲&nbsp;&nbsp;</span><span class="rd-num">(+${d})</span></td>`;
   if(d<0)return`<td class="rd"><span class="rd-dn">▼&nbsp;&nbsp;</span><span class="rd-num">(${d})</span></td>`;
   return'<td class="rd"><span class="rd-flat">–&nbsp;&nbsp;</span><span class="rd-num">(0)</span></td>';
