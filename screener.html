@@ -873,12 +873,12 @@ function getRankDeltaVal(ticker){
 }
 function isNewRankEntry(ticker){
   const etf=DATA&&DATA.e&&DATA.e.find(e=>e.t===ticker);if(!etf||etf.w_rk==null)return false;
-  if(!HISTORY||!HISTORY.d||!HISTORY.d[ticker])return true;
+  if(!HISTORY||!HISTORY.d||!HISTORY.d[ticker])return false;
   const arr=HISTORY.d[ticker]['wr'];
-  if(!arr||!arr.length)return true;
+  if(!arr||!arr.length)return false;
   const lastIdx=arr.length-1;
-  const prior=(arr[lastIdx]===etf.w_rk)?arr.slice(0,lastIdx):arr;
-  return !prior.some(rk=>rk!=null);
+  if(arr[lastIdx]!==etf.w_rk)return false;
+  return !arr.slice(0,lastIdx).some(rk=>rk!=null);
 }
 function rankDelta(ticker){
   const d=getRankDeltaVal(ticker);
