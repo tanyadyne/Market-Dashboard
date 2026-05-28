@@ -117,10 +117,17 @@ ETF_INFO = [
     {"t":"QNTM","n":"Quantum","fn":"Custom Basket","h":"SKYT,ARQQ,QSI,QUBT,QBTS,RGTI,IONQ","basket":True},
     {"t":"COOL","n":"HVAC / Cooling","fn":"Custom Basket","h":"FIX,EME,JCI,TT,WSO,VRT,CARR,LII,SPXC,AAON","basket":True},
     {"t":"AGENT","n":"Agentic AI","fn":"Custom Basket","h":"GTLB,ASAN,PATH,BRZE,VERI,AI,SOUN,BBAI,LAW,CRNC","basket":True},
-    {"t":"EUV","n":"Photonics","fn":"Corgi Lithography & Semiconductor Photonics ETF","h":"TSM,ASML,LRCX,GLW,AMAT,CIEN,LITE,KLAC,COHR,MTSI,AXTI,CRDO,MRVL,FN,NVMI,ENTG,AAOI,VIAV,NOVT,ONTO,LASR,FORM,OUST,VECO,AEVA,UCTT,HSAI,PLAB,IPGP,CAMT,AEHR,PDFS,POET,ADTN,TDY,TSEM,GFS,LWLG,MTRN"},
+    {"t":"OPTIC","n":"Photonics","fn":"Custom Basket","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM","basket":True},
     {"t":"LIDAR","n":"LiDAR","fn":"Custom Basket","h":"OUST,AEVA,HSAI,TDY","basket":True},
     {"t":"PSEMI","n":"Power Semis","fn":"Custom Basket","h":"STM,ON,MPWR,ADI,TXN,NVTS,WOLF,FLEX,POWI,VRT,ETN,AOSL,SEDG,ENPH,VICR,ALGM,IPWR,AMSC","basket":True},
     {"t":"IYR","n":"US Real Estate","fn":"iShares:US Real Estate","h":"WELL,PLD,EQIX,O,AMT,SPG,DLR,PSA,CBRE,VTR,CCI,VICI,EXR,IRM"},
+]
+
+PENDING_THEME_ETF_REPLACEMENTS = [
+    {
+        "fallback_t": "OPTIC",
+        "candidate": {"t":"EUV","n":"Photonics","fn":"Corgi Lithography & Semiconductor Photonics ETF","h":"TSM,ASML,LRCX,GLW,AMAT,CIEN,LITE,KLAC,COHR,MTSI,AXTI,CRDO,MRVL,FN,NVMI,ENTG,AAOI,VIAV,NOVT,ONTO,LASR,FORM,OUST,VECO,AEVA,UCTT,HSAI,PLAB,IPGP,CAMT,AEHR,PDFS,POET,ADTN,TDY,TSEM,GFS,LWLG,MTRN"},
+    },
 ]
 
 
@@ -755,7 +762,11 @@ def main():
                 basket_components.add(h)
 
     regular_tickers = [e.get("yt", e["t"]) for e in regular_etfs]
-    all_download = list(set(["SPY", "QQQ", "IWM"] + regular_tickers + sorted(basket_components)))
+    replacement_tickers = [
+        r["candidate"].get("yt", r["candidate"]["t"])
+        for r in PENDING_THEME_ETF_REPLACEMENTS
+    ]
+    all_download = list(set(["SPY", "QQQ", "IWM"] + regular_tickers + replacement_tickers + sorted(basket_components)))
 
     print(f"Fetching data for {len(all_download)} tickers ({len(regular_tickers)} ETFs + {len(basket_components)} basket components)...")
 
@@ -853,6 +864,30 @@ def main():
     spy_w_lows = spy_df_w["Low"].values if spy_df_w is not None else np.array([])
     spy_w_atr_series = compute_atr_series(spy_w_highs, spy_w_lows, spy_w_closes, ATR_PERIOD) if len(spy_w_closes) > ATR_PERIOD else []
     spy_w_ts_map = {ts: i for i, ts in enumerate(spy_df_w.index)} if spy_df_w is not None else {}
+
+    for repl in PENDING_THEME_ETF_REPLACEMENTS:
+        candidate = repl["candidate"]
+        candidate_ticker = candidate.get("yt", candidate["t"])
+        df_candidate = get_df(candidate_ticker)
+        df_w_candidate = get_df_w(candidate_ticker)
+        has_daily_history = df_candidate is not None and len(df_candidate) >= LOOKBACK + 1
+        has_weekly_history = df_w_candidate is not None and len(df_w_candidate) >= LOOKBACK_W + 1
+        if has_daily_history and has_weekly_history:
+            for i, info in enumerate(ETF_INFO):
+                if info["t"] == repl["fallback_t"]:
+                    ETF_INFO[i] = candidate.copy()
+                    print(f"  Replaced {repl['fallback_t']} with {candidate['t']} after sufficient price history.")
+                    break
+        else:
+            d_count = len(df_candidate) if df_candidate is not None else 0
+            w_count = len(df_w_candidate) if df_w_candidate is not None else 0
+            print(
+                f"  Keeping {repl['fallback_t']} fallback; {candidate['t']} history "
+                f"insufficient ({d_count}/{LOOKBACK + 1} daily, {w_count}/{LOOKBACK_W + 1} weekly bars)."
+            )
+
+    regular_etfs = [e for e in ETF_INFO if not e.get("basket")]
+    basket_etfs = [e for e in ETF_INFO if e.get("basket") and e.get("h")]
 
     def process_ticker(ticker, df):
         """Process a single ticker (ETF or component) and return metrics dict."""
