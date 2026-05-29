@@ -121,6 +121,7 @@ ETF_INFO = [
     {"t":"LIDAR","n":"LiDAR","fn":"Custom Basket","h":"OUST,AEVA,HSAI,TDY","basket":True},
     {"t":"PSEMI","n":"Power Semis","fn":"Custom Basket","h":"STM,ON,MPWR,ADI,TXN,NVTS,WOLF,FLEX,POWI,VRT,ETN,AOSL,SEDG,ENPH,VICR,ALGM,IPWR,AMSC","basket":True},
     {"t":"IYR","n":"US Real Estate","fn":"iShares:US Real Estate","h":"WELL,PLD,EQIX,O,AMT,SPG,DLR,PSA,CBRE,VTR,CCI,VICI,EXR,IRM"},
+    {"t":"IDGT","n":"Data Infrastructure & Real Estate","fn":"IDGT ETF","h":"EQIX,AMT,DLR,CRDO,NOK,SBAC,CIEN,CSCO,UNIT,QCOM,CCI,NTAP,CRWV,SMCI,ANET,EXTR,ERIC,UI,FSLY,CALX,MSI,VISN,ATEN,ADTN,CLFD"},
 ]
 
 
