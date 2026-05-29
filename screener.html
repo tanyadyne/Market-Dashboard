@@ -1484,7 +1484,7 @@ function prioritizeTickerMatches(items, f){
 }
 function applyScreenerFilters(items,isW){
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
-  if(filterNotExtended)items=items.filter(e=>e.ax!=null&&e.ax<800);
+  if(filterNotExtended)items=items.filter(e=>e.ax!=null&&e.ax<700);
   if(filterTopOnly){
     const rkKey=isW?'w_rk':'rk';
     const rankedTotal=DATA.e.reduce((count,e)=>count+(e[rkKey]!=null?1:0),0);
