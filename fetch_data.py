@@ -119,6 +119,228 @@ ETF_INFO = [
     {"t":"IDGT","n":"Data Infrastructure & Real Estate","fn":"IDGT ETF","h":"EQIX,AMT,DLR,CRDO,NOK,SBAC,CIEN,CSCO,UNIT,QCOM,CCI,NTAP,CRWV,SMCI,ANET,EXTR,ERIC,UI,FSLY,CALX,MSI,VISN,ATEN,ADTN,CLFD"},
 ]
 
+CUSTOM_ETF_DESCRIPTIONS = {'MAGS': 'This theme tracks the dominant U.S. mega-cap technology platforms across AI, cloud infrastructure, digital '
+         'advertising, consumer devices, e-commerce, software, and electric vehicles. These companies often act as '
+         'broad market leadership proxies because they combine scale, profitability, global distribution, and heavy '
+         'exposure to secular technology adoption.',
+ 'XOP': 'This theme tracks companies involved in oil and gas exploration, production, refining, and upstream energy '
+        'operations. It is designed to capture exposure to crude oil prices, shale activity, refining margins, '
+        'drilling cycles, and the broader profitability of traditional hydrocarbon producers.',
+ 'REMX': 'This theme tracks companies exposed to rare earths, lithium, uranium, and other strategic minerals used in '
+         'electrification, defense, batteries, and advanced industrial supply chains. It is designed to represent the '
+         'resource layer behind energy transition, national security, and critical-materials reshoring trends.',
+ 'ITA': 'This theme tracks aerospace manufacturers, defense contractors, aircraft suppliers, weapons systems, space '
+        'companies, and security technology providers. It is designed to represent demand from military modernization, '
+        'geopolitical tension, commercial aerospace cycles, and national security spending.',
+ 'FCG': 'This theme tracks natural gas producers and related energy companies exposed to U.S. gas production, shale '
+        'development, LNG demand, and power generation fuel needs. It is designed to capture companies that benefit '
+        'when natural gas demand rises from utilities, industrial users, export markets, and data-center-driven '
+        'electricity growth.',
+ 'BOAT': 'This theme tracks maritime shipping companies across tankers, dry bulk, container shipping, and freight '
+         'transport. It is designed to represent global trade flows, commodity transportation, shipping-rate cycles, '
+         'and the supply-demand balance for vessels.',
+ 'XLE': 'This theme tracks major energy companies across integrated oil, exploration and production, refining, '
+        'oilfield services, pipelines, and hydrocarbon infrastructure. It is designed to represent the broad '
+        'traditional energy complex and its sensitivity to oil prices, refining margins, capital discipline, and '
+        'global energy demand.',
+ 'AMLP': 'This theme tracks midstream energy infrastructure companies operating pipelines, storage, processing, '
+         'fractionation, and transportation assets. It is designed to represent toll-like exposure to energy volumes '
+         'rather than direct commodity prices, with sensitivity to natural gas, crude, and refined-product flows.',
+ 'IYZ': 'This theme tracks telecommunications, broadband, wireless infrastructure, optical networking, satellite '
+        'communications, media distribution, and digital connectivity providers. It is designed to represent the '
+        'companies supporting voice, video, data, mobile networks, fiber, and communications infrastructure.',
+ 'XLI': 'This theme tracks diversified industrial companies across aerospace, machinery, transport, automation, '
+        'logistics, electrical equipment, construction, and business services. It is designed to capture economically '
+        'sensitive businesses tied to capital spending, infrastructure investment, manufacturing activity, and goods '
+        'movement.',
+ 'FAN': 'This theme tracks companies connected to wind power generation, renewable utilities, electrical equipment, '
+        'and infrastructure supporting clean electricity production. It is designed to represent the wind-energy value '
+        'chain, including operators, equipment suppliers, and grid-adjacent businesses.',
+ 'IYT': 'This theme tracks airlines, railroads, trucking, logistics providers, parcel delivery, freight brokers, and '
+        'mobility platforms. It is designed to represent the movement of goods and people, making it sensitive to '
+        'economic activity, fuel costs, travel demand, and freight volumes.',
+ 'XES': 'This theme tracks oilfield equipment, drilling contractors, rigs, pressure pumping, offshore services, and '
+        'energy service providers. It is designed to represent the capital spending cycle of oil and gas producers, '
+        'especially when drilling, completion, and production activity accelerates.',
+ 'GDX': 'This theme tracks larger gold miners and precious-metals royalty companies exposed to gold prices, production '
+        'costs, reserve replacement, and mine operating leverage. It is designed to represent equity exposure to '
+        'gold-market strength, often with higher volatility than the metal itself.',
+ 'GDXJ': 'This theme tracks smaller gold miners and exploration-oriented precious-metals producers. It is designed to '
+         'capture higher-beta exposure to gold prices, discovery potential, mine development, financing conditions, '
+         'and investor appetite for resource risk.',
+ 'SIL': 'This theme tracks silver mining companies and precious-metals producers exposed to both monetary demand and '
+        'industrial silver consumption. It is designed to represent silver-price leverage through equities, including '
+        'companies with sensitivity to mine costs, production growth, and metals cycles.',
+ 'SILJ': 'This theme tracks smaller silver miners and exploration-stage precious-metals companies. It is designed to '
+         'capture high-beta exposure to silver prices, exploration success, development progress, and speculative '
+         'interest in the silver mining cycle.',
+ 'XLU': 'This theme tracks regulated utilities, independent power producers, electric grids, gas utilities, and '
+        'renewable power operators. It is designed to represent electricity demand, power generation, transmission '
+        'investment, rate-base growth, and the defensive income characteristics of utility companies.',
+ 'AIPO': 'This theme tracks companies building the electrical, power, cooling, nuclear, semiconductor, and '
+         'infrastructure backbone needed for AI data centers. It is designed to represent the physical layer of AI '
+         'growth, including grid upgrades, power equipment, energy supply, and high-density compute infrastructure.',
+ 'OIH': 'This theme tracks oilfield service companies providing drilling, offshore rigs, well completion, production '
+        'equipment, and technical services to energy producers. It is designed to capture the spending cycle of '
+        'upstream energy companies, especially when exploration and production budgets expand.',
+ 'KIE': 'This theme tracks property, casualty, life, reinsurance, specialty insurance, and insurance brokerage '
+        'companies. It is designed to represent underwriting cycles, premium pricing, catastrophe exposure, claims '
+        'trends, and investment income sensitivity.',
+ 'SLX': 'This theme tracks steel producers, metallurgical coal, iron ore, and metal manufacturers. It is designed to '
+        'represent industrial production, construction demand, manufacturing cycles, commodity prices, and global '
+        'steel supply discipline.',
+ 'XHE': 'This theme tracks medical device, diagnostics, surgical equipment, monitoring, imaging, and healthcare '
+        'technology companies. It is designed to represent businesses selling tools and equipment into hospitals, '
+        'clinics, labs, and patient-care settings.',
+ 'XLV': 'This theme tracks large healthcare companies across pharmaceuticals, biotechnology, managed care, medical '
+        'devices, diagnostics, hospitals, and life science tools. It is designed to represent the broad healthcare '
+        'sector, combining defensive demand with innovation-driven growth.',
+ 'COPX': 'This theme tracks copper miners and related resource companies exposed to electrification, construction, '
+         'grid expansion, and industrial demand. It is designed to represent the copper supply chain, where long-term '
+         'demand from power infrastructure and EVs meets constrained mine supply.',
+ 'JEDI': 'This theme tracks companies exposed to drones, space systems, autonomous defense platforms, battlefield '
+         'software, aerospace hardware, and modern warfare technologies. It is designed to represent the shift toward '
+         'unmanned systems, sensor networks, defense autonomy, and next-generation military infrastructure.',
+ 'URA': 'This theme tracks uranium miners, nuclear fuel companies, reactor technology, and nuclear power '
+        'infrastructure. It is designed to represent energy security, low-carbon baseload electricity, reactor '
+        'restarts, new nuclear development, and demand for uranium supply.',
+ 'UFO': 'This theme tracks space launch, satellites, communications, geospatial data, aerospace systems, and defense '
+        'contractors involved in the commercial space economy. It is designed to represent companies enabling orbital '
+        'infrastructure, satellite connectivity, Earth observation, and space-related defense capabilities.',
+ 'PAVE': 'This theme tracks companies tied to U.S. infrastructure construction, engineering, machinery, materials, '
+         'transport networks, and electrification buildouts. It is designed to represent businesses that benefit from '
+         'public and private investment in roads, bridges, utilities, industrial facilities, and grid modernization.',
+ 'LIT': 'This theme tracks lithium producers, battery manufacturers, energy storage companies, and EV supply-chain '
+        'businesses. It is designed to represent the battery economy, including raw materials, cell production, '
+        'storage systems, and electrification demand.',
+ 'XLB': 'This theme tracks diversified materials companies across chemicals, metals, mining, packaging, coatings, and '
+        'industrial inputs. It is designed to represent the upstream materials layer of the economy, with sensitivity '
+        'to construction, manufacturing, commodity prices, and global industrial demand.',
+ 'XPH': 'This theme tracks drug developers, specialty pharmaceuticals, large pharma, animal health, and therapeutic '
+        'companies. It is designed to represent medicine development and commercialization, including branded drugs, '
+        'specialty therapies, generics, and pipeline-driven growth.',
+ 'PBJ': 'This theme tracks food producers, beverage companies, grocers, distributors, restaurants, and agricultural '
+        'product businesses. It is designed to represent consumer food demand, packaged goods, distribution networks, '
+        'restaurant activity, and food supply-chain economics.',
+ 'XLP': 'This theme tracks defensive consumer staples companies across food, beverages, household products, discount '
+        'retail, tobacco, and everyday consumer goods. It is designed to represent essential consumption, pricing '
+        'power, brand durability, and businesses with relatively stable demand through economic cycles.',
+ 'ROBO': 'This theme tracks robotics, automation, industrial controls, autonomous systems, surgical robotics, sensors, '
+         'and AI-enabled hardware companies. It is designed to represent the automation layer across factories, '
+         'healthcare, logistics, mobility, and machine-vision applications.',
+ 'ARKW': 'This theme tracks internet platforms, cloud software, digital assets, streaming, e-commerce, AI '
+         'infrastructure, and next-generation digital business models. It is designed to represent companies reshaping '
+         'how consumers and enterprises transact, communicate, compute, and consume media online.',
+ 'HYDR': 'This theme tracks hydrogen fuel cells, electrolyzers, clean hydrogen infrastructure, and industrial '
+         'companies exposed to hydrogen adoption. It is designed to represent the emerging hydrogen economy, including '
+         'clean fuels, backup power, heavy transport, and decarbonization of industrial processes.',
+ 'PEJ': 'This theme tracks leisure, entertainment, travel, restaurants, cruises, gaming, live events, and consumer '
+        'experience companies. It is designed to represent discretionary spending on travel, dining, entertainment, '
+        'and experiences, making it sensitive to consumer confidence and reopening cycles.',
+ 'EEM': 'This theme tracks major emerging-market internet, e-commerce, financial technology, and consumer platform '
+        'companies. It is designed to represent growth businesses tied to rising digital adoption, expanding middle '
+        'classes, and regional economic development outside the U.S.',
+ 'MOO': 'This theme tracks agriculture equipment, fertilizers, crop inputs, food processors, animal health, and '
+        'companies supporting global food production. It is designed to represent the business ecosystem behind '
+        'farming productivity, crop yields, livestock health, and agricultural supply chains.',
+ 'XME': 'This theme tracks diversified miners, steel producers, aluminum, coal, uranium, precious metals, and '
+        'industrial metals companies. It is designed to represent broad mining and metals exposure, with sensitivity '
+        'to commodity cycles, infrastructure demand, and resource scarcity.',
+ 'ARKF': 'This theme tracks digital payments, crypto platforms, online brokerage, financial software, e-commerce '
+         'finance, and technology-led financial services companies. It is designed to represent the modernization of '
+         'banking, payments, investing, lending, and consumer finance through software and platforms.',
+ 'EWZ': 'This theme tracks Brazilian and Brazil-linked companies exposed to Latin American consumer growth, digital '
+        'finance, e-commerce, and regional market cycles. It is designed to represent Brazil-specific equity exposure, '
+        'with sensitivity to commodities, currencies, rates, domestic demand, and political risk.',
+ 'XBI': 'This theme tracks biotechnology companies developing therapies, genetic medicines, diagnostics, and drug '
+        'platforms. It is designed to represent innovation in oncology, rare disease, immunology, precision medicine, '
+        'and clinical-stage drug development.',
+ 'XSD': 'This theme tracks semiconductor designers, chip manufacturers, equipment makers, analog suppliers, and '
+        'computing hardware companies. It is designed to represent the semiconductor value chain powering AI, data '
+        'centers, autos, industrial automation, consumer electronics, and communications infrastructure.',
+ 'ARKG': 'This theme tracks genomics, gene editing, diagnostics, sequencing, precision medicine, and life science '
+         'platform companies. It is designed to represent the convergence of biology, data, and therapeutics as '
+         'healthcare shifts toward molecular diagnosis and targeted treatment.',
+ 'GBTC': 'This theme tracks Bitcoin and digital-asset exposure through Bitcoin vehicles, crypto exchanges, miners, '
+         'treasury companies, and blockchain infrastructure. It is designed to represent sensitivity to Bitcoin '
+         'prices, institutional crypto adoption, mining economics, and digital-asset market cycles.',
+ 'IGV': 'This theme tracks software companies across cloud applications, cybersecurity, infrastructure software, AI '
+        'platforms, design tools, and enterprise automation. It is designed to represent the software layer of the '
+        'economy, where recurring revenue, digital transformation, and AI adoption drive growth.',
+ 'GRID': 'This theme tracks smart grid, electrical equipment, power management, networking, and automation companies '
+         'supporting grid modernization. It is designed to represent investment in electrification, transmission '
+         'capacity, distributed energy, and the digital control systems needed for a more complex power grid.',
+ 'PHO': 'This theme tracks water technology, filtration, testing, pumps, utilities, infrastructure equipment, and '
+        'companies supporting water quality and conservation. It is designed to represent demand for clean water, '
+        'industrial water management, municipal infrastructure, and resource efficiency.',
+ 'BLOK': 'This theme tracks blockchain infrastructure, crypto exchanges, miners, digital asset managers, payment '
+         'networks, and companies building blockchain-enabled financial systems. It is designed to represent '
+         'businesses exposed to tokenization, crypto market infrastructure, mining economics, and digital settlement '
+         'networks.',
+ 'WCLD': 'This theme tracks cloud software, data platforms, cybersecurity, developer tools, observability, and '
+         'internet infrastructure companies. It is designed to represent the migration of enterprise workloads, data '
+         'management, applications, and security functions into cloud-native platforms.',
+ 'WGMI': 'This theme tracks Bitcoin miners, crypto infrastructure, high-performance data centers, power-intensive '
+         'compute operators, and AI/crypto hosting platforms. It is designed to represent companies monetizing '
+         'electricity, compute capacity, mining hardware, and data-center infrastructure.',
+ 'IBUY': 'This theme tracks e-commerce, online marketplaces, travel platforms, digital shopping, delivery, resale, and '
+         'internet-enabled consumer commerce companies. It is designed to represent the shift from physical retail to '
+         'digital purchasing, marketplace platforms, and direct-to-consumer channels.',
+ 'TAN': 'This theme tracks solar manufacturers, installers, renewable developers, inverter suppliers, and companies '
+        'exposed to solar generation. It is designed to represent the solar power value chain, including equipment '
+        'demand, utility-scale deployment, residential adoption, and clean-energy policy support.',
+ 'KCE': 'This theme tracks exchanges, brokers, asset managers, investment banks, market data providers, and financial '
+        'infrastructure companies. It is designed to represent businesses tied to trading volumes, market activity, '
+        'asset prices, capital raising, and financial intermediation.',
+ 'IPAY': 'This theme tracks payment networks, processors, fintech platforms, card issuers, digital wallets, and '
+         'companies enabling electronic transactions. It is designed to represent the global shift away from cash '
+         'toward digital, card-based, mobile, and embedded payments.',
+ 'ITB': 'This theme tracks homebuilders, building products, home improvement retailers, construction materials, and '
+        'housing-related suppliers. It is designed to represent demand for residential construction, renovation, '
+        'housing turnover, mortgage affordability, and household formation.',
+ 'WOOD': 'This theme tracks timber REITs, forestry products, paper, packaging, lumber, and wood-related materials '
+         'companies. It is designed to represent exposure to housing, packaging demand, forestry assets, and the '
+         'pricing cycle for timber and wood products.',
+ 'ICLN': 'This theme tracks renewable energy, clean power generation, solar, hydrogen, energy storage, and companies '
+         'supporting the energy transition. It is designed to represent businesses tied to decarbonization, '
+         'electrification, clean electricity demand, and renewable infrastructure spending.',
+ 'KRE': 'This theme tracks U.S. regional banks exposed to lending, deposits, credit cycles, net interest margins, and '
+        'local economic activity. It is designed to represent the health of smaller and mid-sized financial '
+        'institutions, which are sensitive to rates, loan growth, and credit quality.',
+ 'CIBR': 'This theme tracks cybersecurity software, identity, network security, endpoint protection, threat detection, '
+         'and digital infrastructure defense companies. It is designed to represent demand for protecting enterprises, '
+         'governments, cloud systems, and consumer data from increasingly sophisticated cyber threats.',
+ 'XRT': 'This theme tracks retailers across apparel, discount, specialty, auto, department stores, online retail, and '
+        'consumer-facing merchandise channels. It is designed to represent consumer spending, inventory cycles, '
+        'merchandising execution, and the health of discretionary and value-oriented retail formats.',
+ 'XLF': 'This theme tracks large financial companies across banks, insurers, exchanges, payment networks, brokers, '
+        'asset managers, and financial services platforms. It is designed to represent the broader financial sector, '
+        'including credit, capital markets, insurance, payments, and rate sensitivity.',
+ 'SOCL': 'This theme tracks social media, online communities, creator platforms, streaming audio, internet '
+         'advertising, and digital engagement companies. It is designed to represent how users spend time online and '
+         'how platforms monetize attention through ads, subscriptions, commerce, and content.',
+ 'JETS': 'This theme tracks airlines, travel booking platforms, aircraft manufacturers, and travel infrastructure '
+         'companies. It is designed to represent passenger volumes, airfare trends, business travel, tourism demand, '
+         'fuel costs, and the operating leverage of travel recovery cycles.',
+ 'KBE': 'This theme tracks banks, lenders, financial institutions, and mortgage-related companies exposed to deposits, '
+        'credit, loan growth, and interest-rate cycles. It is designed to represent traditional banking profitability '
+        'and the balance between net interest income, credit risk, and funding costs.',
+ 'FXI': 'This theme tracks large China-linked internet, e-commerce, gaming, travel, electric vehicle, and consumer '
+        'platform companies. It is designed to represent major Chinese equity exposure, with sensitivity to domestic '
+        'consumption, regulation, currency moves, and investor sentiment toward China.',
+ 'XLY': 'This theme tracks discretionary consumer companies across e-commerce, autos, restaurants, hotels, apparel, '
+        'home improvement, travel, and entertainment. It is designed to represent spending that is more sensitive to '
+        'income growth, employment, consumer confidence, and financing conditions.',
+ 'MSOS': 'This theme tracks cannabis, hemp, alternative wellness, and related consumer or pharmaceutical companies '
+         'exposed to legalization and adoption trends. It is designed to represent a speculative consumer and '
+         'regulatory theme where fundamentals depend heavily on policy, financing access, and market growth.',
+ 'IYR': 'This theme tracks U.S. real estate owners and REITs across data centers, towers, logistics, healthcare, '
+        'retail, self-storage, offices, and diversified property assets. It is designed to represent income-producing '
+        'real estate exposure, with sensitivity to interest rates, occupancy, rent growth, and property-sector cycles.',
+ 'IDGT': 'This theme tracks data centers, telecom towers, networking equipment, cloud infrastructure, and real estate '
+         'assets supporting digital infrastructure growth. It is designed to represent the physical footprint of the '
+         'internet and AI economy, including compute facilities, connectivity, and communications infrastructure.'}
+
 
 # ─── Math Helpers ───────────────────────────────────────────────────────────
 
@@ -501,58 +723,6 @@ def load_dynamic_holdings():
     return {}
 
 
-def load_existing_etf_descriptions():
-    """Reuse ETF descriptions already persisted in data.json."""
-    try:
-        if os.path.exists("data.json"):
-            with open("data.json") as f:
-                data = json.load(f)
-            return {
-                r.get("t"): r.get("d")
-                for r in data.get("e", [])
-                if r.get("t") and isinstance(r.get("d"), str) and r.get("d").strip()
-            }
-    except Exception as e:
-        print(f"  [WARN] Could not load cached ETF descriptions: {e}")
-    return {}
-
-
-def fetch_etf_descriptions(regular_etfs):
-    """Fetch Yahoo longBusinessSummary for regular ETFs, using data.json as a cache."""
-    descriptions = load_existing_etf_descriptions()
-    missing = [info for info in regular_etfs if not descriptions.get(info["t"])]
-    if not missing:
-        print(f"ETF descriptions: reused {len(descriptions)} cached summaries")
-        return descriptions
-
-    print(f"ETF descriptions: fetching {len(missing)} missing summary profile(s)...")
-
-    def _fetch_one(info):
-        tk = info.get("yt", info["t"])
-        try:
-            ticker = yf.Ticker(tk, session=_session) if _session else yf.Ticker(tk)
-            summary = (ticker.get_info() or {}).get("longBusinessSummary")
-            if isinstance(summary, str):
-                summary = " ".join(summary.split())
-                if summary:
-                    return info["t"], summary
-        except Exception as e:
-            print(f"  [WARN] ETF description fetch failed for {info['t']}: {e}")
-        return info["t"], None
-
-    fetched = 0
-    with ThreadPoolExecutor(max_workers=6) as ex:
-        futs = [ex.submit(_fetch_one, info) for info in missing]
-        for fut in as_completed(futs):
-            tk, summary = fut.result()
-            if summary:
-                descriptions[tk] = summary
-                fetched += 1
-
-    print(f"ETF descriptions: fetched {fetched}/{len(missing)} missing summaries")
-    return descriptions
-
-
 def close_on_or_before(df_index, closes, target_date):
     """Find the close of the most recent trading day at or before target_date.
     Returns a float or None. Used for calendar-based 1W/1M baselines that match
@@ -793,9 +963,8 @@ def main():
     # Separate regular ETFs and baskets
     regular_etfs = [e for e in ETF_INFO if not e.get("basket")]
     basket_etfs = [e for e in ETF_INFO if e.get("basket") and e.get("h")]
-    etf_descriptions = fetch_etf_descriptions(regular_etfs)
     for info in regular_etfs:
-        desc = etf_descriptions.get(info["t"])
+        desc = CUSTOM_ETF_DESCRIPTIONS.get(info["t"])
         if desc:
             info["d"] = desc
 
