@@ -107,15 +107,15 @@ ETF_INFO = [
     {"t":"MSOS","n":"Cannabis","fn":"AdvsrShs Pure USCannabis","h":"VFF,MNMD,TLRY,MO,CRON,GTBIF,TCNNF"},
     {"t":"BJK","n":"Casinos & Gaming","fn":"VanEck Gaming ETF","h":"LVS,FLUT,VICI,DKNG,WYNN,CHDN,GLPI,MGM,BYD"},
     # ─── Custom Baskets (no ETF ticker — synthetic metrics from components) ──
-    {"t":"NURS","n":"Medical/Nursing Services","fn":"Custom Basket","h":"LH,FMS,ENSG,SOLV,GH,EHC,DVA,BTSG,RDNT,OPCH,HIMS,BLLN,CON,LFST,WGS","basket":True},
-    {"t":"CHEMG","n":"Chemicals (Agricultural)","fn":"Custom Basket","h":"NTR,CF,MOS,ICL,SMG,FMC,UAN,LXU","basket":True},
-    {"t":"CHEMS","n":"Chemicals (Specialty)","fn":"Custom Basket","h":"LIN,ECL,APD,DOW,LYB,ALB,SQM,WLK,EMN,NEU,CE,MEOH,CBT,HWKN,CC,KWR,GEL,MTX,ROG,SHW,DD,SOLS,OLN,AXTA","basket":True},
-    {"t":"QNTM","n":"Quantum","fn":"Custom Basket","h":"SKYT,ARQQ,QSI,QUBT,QBTS,RGTI,IONQ","basket":True},
-    {"t":"COOL","n":"HVAC / Cooling","fn":"Custom Basket","h":"FIX,EME,JCI,TT,WSO,VRT,CARR,LII,SPXC,AAON","basket":True},
-    {"t":"AGENT","n":"Agentic AI","fn":"Custom Basket","h":"GTLB,ASAN,PATH,BRZE,VERI,AI,SOUN,BBAI,LAW,CRNC","basket":True},
-    {"t":"OPTIC","n":"Photonics","fn":"Custom Basket","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM,LRCX,CIEN,AXTI,NVMI,IPGP","basket":True},
-    {"t":"LIDAR","n":"LiDAR","fn":"Custom Basket","h":"OUST,AEVA,HSAI,TDY","basket":True},
-    {"t":"PSEMI","n":"Power Semis","fn":"Custom Basket","h":"STM,ON,MPWR,ADI,TXN,NVTS,WOLF,FLEX,POWI,VRT,ETN,AOSL,SEDG,ENPH,VICR,ALGM,IPWR,AMSC","basket":True},
+    {"t":"NURS","n":"Medical/Nursing Services","fn":"Custom Basket","h":"LH,FMS,ENSG,SOLV,GH,EHC,DVA,BTSG,RDNT,OPCH,HIMS,BLLN,CON,LFST,WGS","d":"The basket tracks companies tied to healthcare delivery, diagnostics, patient services, nursing care, dialysis, home health, and medical support infrastructure. It is designed to represent businesses that benefit from rising healthcare utilization, outsourced care delivery, and demand for clinical services across hospitals, outpatient networks, and home-based care.","basket":True},
+    {"t":"CHEMG","n":"Chemicals (Agricultural)","fn":"Custom Basket","h":"NTR,CF,MOS,ICL,SMG,FMC,UAN,LXU","d":"The basket tracks companies involved in agricultural chemicals, crop nutrients, fertilizers, and related inputs used in food production. It is designed to represent the agriculture chemical supply chain, including nitrogen, phosphate, potash, and specialty crop-treatment exposure.","basket":True},
+    {"t":"CHEMS","n":"Chemicals (Specialty)","fn":"Custom Basket","h":"LIN,ECL,APD,DOW,LYB,ALB,SQM,WLK,EMN,NEU,CE,MEOH,CBT,HWKN,CC,KWR,GEL,MTX,ROG,SHW,DD,SOLS,OLN,AXTA","d":"The basket tracks specialty chemical companies serving industrial, materials, coatings, refining, electronics, energy, and consumer end markets. It is designed to represent higher-value chemical production and formulation businesses where performance is driven by pricing power, process expertise, and demand across diversified industrial applications.","basket":True},
+    {"t":"QNTM","n":"Quantum","fn":"Custom Basket","h":"SKYT,ARQQ,QSI,QUBT,QBTS,RGTI,IONQ","d":"The basket tracks companies with exposure to quantum computing hardware, quantum software, enabling infrastructure, and adjacent advanced computing technologies. It is designed to represent early-stage commercial development in quantum systems, cloud-accessible quantum platforms, and specialized components needed for next-generation computing.","basket":True},
+    {"t":"COOL","n":"HVAC / Cooling","fn":"Custom Basket","h":"FIX,EME,JCI,TT,WSO,VRT,CARR,LII,SPXC,AAON","d":"The basket tracks companies tied to heating, ventilation, air conditioning, electrical contracting, thermal management, and cooling infrastructure. It is designed to represent demand from building systems, industrial cooling, data center thermal management, electrification, and efficiency upgrades.","basket":True},
+    {"t":"AGENT","n":"Agentic AI","fn":"Custom Basket","h":"GTLB,ASAN,PATH,BRZE,VERI,AI,SOUN,BBAI,LAW,CRNC","d":"The basket tracks software and AI infrastructure companies associated with workflow automation, enterprise copilots, voice AI, autonomous task execution, and AI-enabled business operations. It is designed to represent companies positioned around agentic AI adoption, where software systems can increasingly act, automate, and coordinate work on behalf of users.","basket":True},
+    {"t":"OPTIC","n":"Photonics","fn":"Custom Basket","h":"LITE,COHR,AAOI,POET,ALMU,LWLG,MTSI,GLW,FN,GFS,TSEM,LRCX,CIEN,AXTI,NVMI,IPGP","d":"The basket tracks companies involved in optical networking, lasers, photonic components, fiber infrastructure, semiconductor equipment, and advanced optical manufacturing. It is designed to represent the photonics supply chain supporting data centers, telecom networks, high-speed connectivity, precision manufacturing, and optical semiconductor applications.","basket":True},
+    {"t":"LIDAR","n":"LiDAR","fn":"Custom Basket","h":"OUST,AEVA,HSAI,TDY","d":"The basket tracks companies developing LiDAR sensors, perception systems, and adjacent sensing technologies used in autonomy, mapping, robotics, industrial measurement, and advanced transportation. It is designed to represent the commercialization of 3D sensing and machine-vision systems across automotive and non-automotive markets.","basket":True},
+    {"t":"PSEMI","n":"Power Semis","fn":"Custom Basket","h":"STM,ON,MPWR,ADI,TXN,NVTS,WOLF,FLEX,POWI,VRT,ETN,AOSL,SEDG,ENPH,VICR,ALGM,IPWR,AMSC","d":"The basket tracks companies involved in power semiconductors, analog chips, power management and energy conversion. Power semiconductors are specialized electronic components designed to efficiently control, convert, and manage high electrical power. The theme has broad exposure to industrial power systems, data center power delivery, and high-efficiency electrical infrastructure.","basket":True},
     {"t":"IYR","n":"US Real Estate","fn":"iShares:US Real Estate","h":"WELL,PLD,EQIX,O,AMT,SPG,DLR,PSA,CBRE,VTR,CCI,VICI,EXR,IRM"},
     {"t":"IDGT","n":"Data Infrastructure & Real Estate","fn":"IDGT ETF","h":"EQIX,AMT,DLR,CRDO,NOK,SBAC,CIEN,CSCO,UNIT,QCOM,CCI,NTAP,CRWV,SMCI,ANET,EXTR,ERIC,UI,FSLY,CALX,MSI,VISN,ATEN,ADTN,CLFD"},
 ]
@@ -502,6 +502,58 @@ def load_dynamic_holdings():
     return {}
 
 
+def load_existing_etf_descriptions():
+    """Reuse ETF descriptions already persisted in data.json."""
+    try:
+        if os.path.exists("data.json"):
+            with open("data.json") as f:
+                data = json.load(f)
+            return {
+                r.get("t"): r.get("d")
+                for r in data.get("e", [])
+                if r.get("t") and isinstance(r.get("d"), str) and r.get("d").strip()
+            }
+    except Exception as e:
+        print(f"  [WARN] Could not load cached ETF descriptions: {e}")
+    return {}
+
+
+def fetch_etf_descriptions(regular_etfs):
+    """Fetch Yahoo longBusinessSummary for regular ETFs, using data.json as a cache."""
+    descriptions = load_existing_etf_descriptions()
+    missing = [info for info in regular_etfs if not descriptions.get(info["t"])]
+    if not missing:
+        print(f"ETF descriptions: reused {len(descriptions)} cached summaries")
+        return descriptions
+
+    print(f"ETF descriptions: fetching {len(missing)} missing summary profile(s)...")
+
+    def _fetch_one(info):
+        tk = info.get("yt", info["t"])
+        try:
+            ticker = yf.Ticker(tk, session=_session) if _session else yf.Ticker(tk)
+            summary = (ticker.get_info() or {}).get("longBusinessSummary")
+            if isinstance(summary, str):
+                summary = " ".join(summary.split())
+                if summary:
+                    return info["t"], summary
+        except Exception as e:
+            print(f"  [WARN] ETF description fetch failed for {info['t']}: {e}")
+        return info["t"], None
+
+    fetched = 0
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        futs = [ex.submit(_fetch_one, info) for info in missing]
+        for fut in as_completed(futs):
+            tk, summary = fut.result()
+            if summary:
+                descriptions[tk] = summary
+                fetched += 1
+
+    print(f"ETF descriptions: fetched {fetched}/{len(missing)} missing summaries")
+    return descriptions
+
+
 def close_on_or_before(df_index, closes, target_date):
     """Find the close of the most recent trading day at or before target_date.
     Returns a float or None. Used for calendar-based 1W/1M baselines that match
@@ -742,6 +794,11 @@ def main():
     # Separate regular ETFs and baskets
     regular_etfs = [e for e in ETF_INFO if not e.get("basket")]
     basket_etfs = [e for e in ETF_INFO if e.get("basket") and e.get("h")]
+    etf_descriptions = fetch_etf_descriptions(regular_etfs)
+    for info in regular_etfs:
+        desc = etf_descriptions.get(info["t"])
+        if desc:
+            info["d"] = desc
 
     # Collect basket component tickers for download
     basket_components = set()
