@@ -20,6 +20,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from zoneinfo import ZoneInfo
 import numpy as np
 import yfinance as yf
 
@@ -788,12 +789,9 @@ def is_us_market_open():
     yf.download is the canonical source of truth.
     """
     try:
-        from datetime import timezone
-        now_utc = datetime.now(timezone.utc)
-        et_hour = (now_utc.hour - 4) % 24
-        et_min  = now_utc.minute
-        et_min_of_day = et_hour * 60 + et_min
-        if now_utc.weekday() >= 5:
+        now_et = datetime.now(ZoneInfo("America/New_York"))
+        et_min_of_day = now_et.hour * 60 + now_et.minute
+        if now_et.weekday() >= 5:
             return False
         # 9:30am (570) to 3:55pm (955) ET — stop 5 min early so the 4:00pm scheduled
         # run uses the EOD df values instead.
@@ -928,9 +926,10 @@ def strip_internal_fields_etfs(results, *extra_dicts):
 # ─── Main ───────────────────────────────────────────────────────────────────
 
 def main():
-    # ─── Holiday check ────────────────────────────────────────────
-    # If today (ET) is a US market holiday, exit cleanly without doing any work.
-    from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+    # ─── Market-hours guard ───────────────────────────────────────
+    # Preserve the prior EOD snapshot before the next regular session opens.
+    # FORCE_ETF_UPDATE=1 permits an intentional weekday maintenance run outside
+    # the normal window, while weekends and market holidays remain blocked.
     # Hardcoded list — must match fetch_leaders.py's US_MARKET_HOLIDAYS exactly.
     # Last updated: 2026-04-29 (covers through 2028).
     _US_MARKET_HOLIDAYS = {
@@ -942,7 +941,8 @@ def main():
         "2028-07-04","2028-09-04","2028-11-23","2028-12-25",
     }
     _US_HOLIDAYS_VALID_THROUGH = 2028
-    _et_today = _dt.now(_tz.utc).astimezone(_tz(_td(hours=-4))).date().isoformat()
+    _et_now = datetime.now(ZoneInfo("America/New_York"))
+    _et_today = _et_now.date().isoformat()
     _year = int(_et_today[:4])
     if _year > _US_HOLIDAYS_VALID_THROUGH:
         print(f"  [WARNING] Holiday list expires after {_US_HOLIDAYS_VALID_THROUGH}; "
@@ -950,6 +950,18 @@ def main():
     if _et_today in _US_MARKET_HOLIDAYS:
         print(f"\n[holiday] {_et_today} is a US market holiday — exiting without changes.")
         return
+    if _et_now.weekday() >= 5:
+        print(f"\n[market hours] Weekend ({_et_now:%A %H:%M %Z}) — exiting without changes.")
+        return
+
+    _force_update = os.environ.get("FORCE_ETF_UPDATE") == "1"
+    _et_minute = _et_now.hour * 60 + _et_now.minute
+    if not _force_update and not 570 <= _et_minute <= 961:
+        print(f"\n[market hours] Outside market update window ({_et_now:%H:%M %Z}) "
+              "— exiting without changes.")
+        return
+    if _force_update:
+        print(f"\n[market hours] Forced weekday update at {_et_now:%H:%M %Z}.")
 
     # Override dynamic ETF holdings (e.g. BUZZ) from dynamic file. Any keys in
     # the dynamic file for ETFs no longer in ETF_INFO (e.g. FFTY, removed) are
