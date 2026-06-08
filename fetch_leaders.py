@@ -81,6 +81,7 @@ MANUAL_INCLUDE = {
 # or just personal preference).
 MANUAL_EXCLUDE = {
     "FPS", "ARES", "GBTG", "MASI", "RAMP", "JHG",
+    "EA", "GSAT", "HCC", "THR", "BK", "IEX", "AIR", "HAL",
 }
 
 # ─── ADR-collapse filter ───────────────────────────────────────────────────────
