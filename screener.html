@@ -281,10 +281,12 @@ tr:hover{background:var(--bg3)}
 .chart-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}
 .chart-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 [data-theme="light"] .chart-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-.chart-card-hdr{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr2)}
+.chart-card-hdr{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--bdr2)}
+.chart-card-meta{display:flex;align-items:baseline;gap:7px;min-width:0;white-space:nowrap}
 .chart-card-tk{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.5px}
-.chart-card-rs{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
-.chart-card-rk{font-family:'JetBrains Mono',monospace;color:var(--t3);font-size:10px;margin-right:6px}
+.chart-card-price{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--t2)}
+.chart-card-change{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600}
+.chart-card-rs{flex:0 0 auto;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .chart-card-body{height:260px;width:100%}
 /* Profile box (chart LHS + company info RHS) */
 .profile-box{display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:20px}
@@ -302,7 +304,7 @@ tr:hover{background:var(--bg3)}
 .hist-delta .up{color:var(--g)}
 .hist-delta .dn{color:var(--r)}
 .hist-delta .fl{color:var(--t4)}
-@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.tab-btn{padding:8px 18px;font-size:11px}.chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.chart-card-body{height:200px}}
+@media(max-width:768px){.hdr{padding:10px 12px}.srch{width:120px}td,th{padding:4px 3px;font-size:10px}.tab-btn{padding:8px 18px;font-size:11px}.chart-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.chart-card-hdr{padding:7px 9px;gap:6px}.chart-card-meta{gap:4px}.chart-card-tk{font-size:11px}.chart-card-price{font-size:9px}.chart-card-change{font-size:8px}.chart-card-rs{padding:2px 5px;font-size:8px}.chart-card-body{height:200px}}
 /* Mobile info-box layout: all three sections (RS Score | RS Rank | Theme) merge
    into one continuous bordered box with floating vertical dividers between them. */
 [data-view="mobile"] .info-boxes{display:block;margin-bottom:14px}
@@ -1592,13 +1594,17 @@ function renderChartView(){
   grid.innerHTML='';
   pageItems.forEach(e=>{
     const rs=e[rsKey];
-    const rk=isW?e.w_rk:e.rk;
+    const price=e.p!=null?'$'+e.p.toFixed(2):'—';
     const card=document.createElement('div');
     card.className='chart-card';
     card.innerHTML=`
       <div class="chart-card-hdr">
-        <div><span class="chart-card-rk">#${rk||'—'}</span><span class="chart-card-tk tk-link" onclick="openProfile('${esc(e.t)}')" title="View ${esc(e.t)} profile">${esc(e.t)}</span></div>
-        <span class="chart-card-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span>
+        <div class="chart-card-meta">
+          <span class="chart-card-tk tk-link" onclick="openProfile('${esc(e.t)}')" title="View ${esc(e.t)} profile">${esc(e.t)}</span>
+          <span class="chart-card-price">${price}</span>
+          <span class="chart-card-change ${chgClass(e.ch)}">(${chgText(e.ch)})</span>
+        </div>
+        <span class="chart-card-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">RS ${rs!=null?rs:'—'}</span>
       </div>
       <div class="chart-card-body tv-chart" id="svc-${e.t}"></div>`;
     grid.appendChild(card);
