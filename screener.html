@@ -1604,7 +1604,7 @@ function renderChartView(){
           <span class="chart-card-price">${price}</span>
           <span class="chart-card-change ${chgClass(e.ch)}">(${chgText(e.ch)})</span>
         </div>
-        <span class="chart-card-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">RS ${rs!=null?rs:'—'}</span>
+        <span class="chart-card-rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span>
       </div>
       <div class="chart-card-body tv-chart" id="svc-${e.t}"></div>`;
     grid.appendChild(card);

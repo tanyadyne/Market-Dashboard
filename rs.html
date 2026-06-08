@@ -369,7 +369,10 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-theme="light"] .chart-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .chart-card-hdr{padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr2);gap:6px}
 .chart-card-l{display:flex;align-items:center;gap:6px;min-width:0}
+.chart-card-meta{display:flex;align-items:baseline;gap:7px;min-width:0;white-space:nowrap}
 .chart-card-tk{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.5px;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chart-card-price{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--t2)}
+.chart-card-change{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600}
 .chart-card-tier{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .chart-card-tier.gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);border:1px solid #d97706}
 .chart-card-tier.silver{background:linear-gradient(135deg,#b0b7c0,#7d8590);border:1px solid #4b5563}
@@ -406,8 +409,14 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 [data-view="mobile"] .profile-desc{max-height:82px}
 [data-view="mobile"] .profile-holdings{max-height:140px}
 [data-view="mobile"] .chart-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+[data-view="mobile"] .chart-card-hdr{padding:7px 9px;gap:6px}
+[data-view="mobile"] .chart-card-l{gap:4px}
+[data-view="mobile"] .chart-card-meta{gap:4px}
 [data-view="mobile"] .chart-card-body{height:200px}
 [data-view="mobile"] .chart-card-tk{font-size:11px}
+[data-view="mobile"] .chart-card-price{font-size:9px}
+[data-view="mobile"] .chart-card-change{font-size:8px}
+[data-view="mobile"] .chart-card-rs{padding:2px 5px;font-size:8px}
 [data-view="mobile"] .tier-btn{padding:5px 10px;font-size:10px;letter-spacing:.3px}
 [data-view="mobile"] .profile-search{font-size:13px;padding:9px 14px}
 [data-view="mobile"] .profile-search-row{grid-template-columns:30px 60px 1fr 50px;font-size:11px;padding:7px 10px}
@@ -529,7 +538,7 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
   <div id="profileContent"></div>
 </div>
 <script>
-let DATA=null,HISTORY=null,sortKey='rk',sortDir=1;
+let DATA=null,HISTORY=null,STOCK_DATA=new Map(),sortKey='rk',sortDir=1;
 let isMobile=false,isWeekly=false;
 // Charts view state.
 // `currentView` controls List vs Charts on the RS Ranking tab. `chartPage` is the
@@ -1179,14 +1188,16 @@ function isInScreener(ticker){
 }
 async function loadData(){
   try{
-    const [dataRes,namesRes,histRes,scrRes]=await Promise.all([
+    const [dataRes,namesRes,histRes,scrRes,leadersRes]=await Promise.all([
       fetch('data.json?_='+Date.now()),
       fetch('names.json?_='+Date.now()).catch(()=>null),
       fetch('data_score_history.json?_='+Date.now()).catch(()=>null),
       // Lightweight (~4KB) list of tickers that have a Stock Screener profile.
       // Used to gate cross-app navigation (see isInScreener / pill rendering).
       // .catch → null so a missing/failed file never breaks data loading.
-      fetch('screener_tickers.json?_='+Date.now()).catch(()=>null)
+      fetch('screener_tickers.json?_='+Date.now()).catch(()=>null),
+      // Live stock snapshots for the holding-chart headers in Individual Profile.
+      fetch('leaders.json?_='+Date.now()).catch(()=>null)
     ]);
     if(!dataRes.ok)throw new Error('data.json not found');
     DATA=await dataRes.json();
@@ -1197,6 +1208,12 @@ async function loadData(){
         const sj=await scrRes.json();
         if(sj&&Array.isArray(sj.tickers)) SCREENER_TICKERS=new Set(sj.tickers);
       }catch(e){SCREENER_TICKERS=null;}
+    }
+    if(leadersRes&&leadersRes.ok){
+      try{
+        const lj=await leadersRes.json();
+        if(lj&&Array.isArray(lj.e)) STOCK_DATA=new Map(lj.e.map(stock=>[stock.t,stock]));
+      }catch(e){STOCK_DATA=new Map();}
     }
     onDataLoaded();
   }
@@ -1779,6 +1796,10 @@ function renderProfile(){
   }else{
     html+='<div class="chart-grid">';
     tierStocks.forEach(tk=>{
+      const stock=STOCK_DATA.get(tk);
+      const stockRs=stock?(isWeekly?stock.w_rs:stock.rs):null;
+      const priceTxt=stock&&stock.p!=null?'$'+stock.p.toFixed(2):'—';
+      const changeVal=stock?stock.ch:null;
       // Ticker label is clickable only if the stock has a screener profile.
       // Same visual either way; non-screener tickers just aren't interactive.
       const tkSpan=isInScreener(tk)
@@ -1786,7 +1807,15 @@ function renderProfile(){
         : `<span class="chart-card-tk" style="cursor:default">${esc(tk)}</span>`;
       html+=`<div class="chart-card">
         <div class="chart-card-hdr">
-          <div class="chart-card-l"><span class="chart-card-tier ${profileTier}"></span>${tkSpan}</div>
+          <div class="chart-card-l">
+            <span class="chart-card-tier ${profileTier}"></span>
+            <div class="chart-card-meta">
+              ${tkSpan}
+              <span class="chart-card-price">${priceTxt}</span>
+              <span class="chart-card-change ${chgClass(changeVal)}">(${chgText(changeVal)})</span>
+            </div>
+          </div>
+          <span class="chart-card-rs" style="background:${getRSBg(stockRs)};color:${getRSCol(stockRs)}">${stockRs!=null?stockRs:'—'}</span>
         </div>
         <div class="chart-card-body tv-chart" id="tvc-stk-${esc(tk)}"></div>
       </div>`;
