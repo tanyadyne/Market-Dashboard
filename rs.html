@@ -1797,7 +1797,9 @@ function renderProfile(){
     html+='<div class="chart-grid">';
     tierStocks.forEach(tk=>{
       const stock=STOCK_DATA.get(tk);
-      const stockRs=stock?(isWeekly?stock.w_rs:stock.rs):null;
+      // Stock Screener RS is weekly-only; keep the holding score visible in both
+      // Theme Tracker frequency modes instead of looking for the retired daily field.
+      const stockRs=stock?stock.w_rs:null;
       const priceTxt=stock&&stock.p!=null?'$'+stock.p.toFixed(2):'—';
       const changeVal=stock?stock.ch:null;
       // Ticker label is clickable only if the stock has a screener profile.
