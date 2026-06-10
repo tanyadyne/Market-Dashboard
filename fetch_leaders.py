@@ -55,7 +55,7 @@ CSV_EXTRAS = [
     # via MANUAL_INCLUDE so they survive those gates.
     "TSLA","NVDA","QCOM","XPEV","AMZN","AMD","TER","GOOGL","BABA",
     "MBLY","HSAI","ROK","TKR","RBC","ABB","AEVA",
-    "NTSK","SAIL",
+    "NTSK","SAIL","HIMS",
 ]
 
 # MANUAL_INCLUDE — tickers that bypass all filtering (liquidity, market cap, pharma/biotech).
@@ -72,7 +72,7 @@ MANUAL_INCLUDE = {
     # drop them, so their pills stay clickable in ROBO's profile.
     "AEVA", "MBLY", "HSAI", "RBC", "TKR", "XPEV",
     # Recent IPOs — force-kept so the liquidity/$2B mcap gates don't drop them.
-    "NTSK", "SAIL",
+    "NTSK", "SAIL", "HIMS",
 }
 
 # MANUAL_EXCLUDE — tickers dropped from the universe before any filtering or data
