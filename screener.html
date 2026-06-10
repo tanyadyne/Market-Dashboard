@@ -479,6 +479,24 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
         </span>
         <input class="filter-check" id="filterTopOnly" type="checkbox" onchange="toggleTopOnly(this)">
       </div>
+      <div class="filter-item filter-choice">
+        <span class="filter-label">Positive
+          <select class="filter-select" id="positiveDeltaSelect" onchange="updatePositiveDeltaDays(this)">
+            <option value="1" selected>1D</option>
+            <option value="2">2D</option>
+            <option value="3">3D</option>
+            <option value="4">4D</option>
+            <option value="5">5D</option>
+            <option value="6">6D</option>
+            <option value="7">7D</option>
+            <option value="8">8D</option>
+            <option value="9">9D</option>
+            <option value="10">10D</option>
+          </select>
+          delta only
+        </span>
+        <input class="filter-check" id="filterPositiveDelta" type="checkbox" onchange="togglePositiveDelta(this)">
+      </div>
       <div style="border-top:1px solid var(--bdr);margin:6px 0"></div>
       <div class="filter-item" onclick="clearFilters()" style="color:var(--t3);font-size:11px">Clear All Filters</div>
     </div>
@@ -542,6 +560,8 @@ let activeFilters=0; // bitmask of required setup flags
 let filterNotExtended=false;
 let filterTopOnly=false;
 let topOnlyPercent=50;
+let filterPositiveDelta=false;
+let positiveDeltaDays=1;
 let currentView='list'; // 'list' or 'chart'
 let chartPage=1;
 let profileHistoryPage=1;
@@ -708,7 +728,7 @@ function filterChanged(){
   renderActiveScreenerView();
 }
 function updateFilterButton(){
-  const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly);
+  const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly||filterPositiveDelta);
   document.getElementById('filterBtn').className=hasFilter?'filter-btn has-filter':'filter-btn';
 }
 function toggleSetupFilter(el){
@@ -729,6 +749,14 @@ function updateTopOnlyPercent(el){
   topOnlyPercent=parseInt(el.value,10)||50;
   if(filterTopOnly)filterChanged();
 }
+function togglePositiveDelta(el){
+  filterPositiveDelta=el.checked;
+  filterChanged();
+}
+function updatePositiveDeltaDays(el){
+  positiveDeltaDays=parseInt(el.value,10)||1;
+  if(filterPositiveDelta)filterChanged();
+}
 function handleScreenerSearch(){
   currentPage=1;
   chartPage=1;
@@ -739,9 +767,13 @@ function clearFilters(){
   filterNotExtended=false;
   filterTopOnly=false;
   topOnlyPercent=50;
+  filterPositiveDelta=false;
+  positiveDeltaDays=1;
   document.querySelectorAll('.filter-check').forEach(el=>el.checked=false);
   const topSelect=document.getElementById('topOnlySelect');
   if(topSelect)topSelect.value='50';
+  const positiveDeltaSelect=document.getElementById('positiveDeltaSelect');
+  if(positiveDeltaSelect)positiveDeltaSelect.value='1';
   updateFilterButton();
   document.getElementById('filterMenu').classList.remove('open');
   currentPage=1;
@@ -845,9 +877,9 @@ function getExcludedWeeklyForTicker(ticker){
   return EXCLUDED_DATES_WEEKLY_BY_TICKER[ticker] || EXCLUDED_DATES_WEEKLY_GLOBAL;
 }
 
-function getRankDeltaVal(ticker){
+function getRankDeltaVal(ticker,lookback=rankLookback){
   // Use HISTORY (per-day weekly rank snapshots from leaders_score_history.json).
-  // rankLookback = number of TRADING DAYS back (1 = yesterday, 2 = two trading days ago, etc).
+  // lookback = number of TRADING DAYS back (1 = yesterday, 2 = two trading days ago, etc).
   // EXCLUDED dates (per-ticker) are skipped entirely — they don't count toward the
   // lookback distance, and they aren't valid comparison points.
   if(!HISTORY||!HISTORY.dates||!HISTORY.d||!HISTORY.d[ticker])return null;
@@ -856,18 +888,18 @@ function getRankDeltaVal(ticker){
   const dates=HISTORY.dates;
   if(!arr||!arr.length)return null;
   // Walk backward from the most recent entry, skipping excluded dates, until we've
-  // counted `rankLookback` valid trading days back.
+  // counted `lookback` valid trading days back.
   let stepsBack=0;
   let idx=arr.length-1;
   // First, if today's entry itself is excluded (rare), step back past it
   while(idx>=0 && excluded.has(dates[idx]))idx--;
   // Then walk back the requested number of valid days
-  while(idx>=0 && stepsBack<rankLookback){
+  while(idx>=0 && stepsBack<lookback){
     idx--;
     if(idx<0)break;
     if(!excluded.has(dates[idx]))stepsBack++;
   }
-  if(idx<0||stepsBack<rankLookback)return null;
+  if(idx<0||stepsBack<lookback)return null;
   const prevRk=arr[idx];if(prevRk==null)return null;
   const etf=DATA&&DATA.e&&DATA.e.find(e=>e.t===ticker);if(!etf)return null;
   const curRk=etf.w_rk;if(curRk==null)return null;
@@ -1127,7 +1159,7 @@ function copyTop600(btn){
     flashCopyBtn(btn,'No data');
     return;
   }
-  const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly);
+  const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly||filterPositiveDelta);
   let copyItems=[...DATA.e];
   if(hasFilter)copyItems=applyScreenerFilters(copyItems,true);
   const top600=copyItems.filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,500);
@@ -1487,6 +1519,10 @@ function prioritizeTickerMatches(items, f){
 function applyScreenerFilters(items,isW){
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
   if(filterNotExtended)items=items.filter(e=>e.ax!=null&&e.ax<700);
+  if(filterPositiveDelta)items=items.filter(e=>{
+    const delta=getRankDeltaVal(e.t,positiveDeltaDays);
+    return delta!=null&&delta>=0;
+  });
   if(filterTopOnly){
     const rkKey=isW?'w_rk':'rk';
     const rankedTotal=DATA.e.reduce((count,e)=>count+(e[rkKey]!=null?1:0),0);
