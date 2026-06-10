@@ -1159,9 +1159,7 @@ function copyTop600(btn){
     flashCopyBtn(btn,'No data');
     return;
   }
-  const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly||filterPositiveDelta);
-  let copyItems=[...DATA.e];
-  if(hasFilter)copyItems=applyScreenerFilters(copyItems,true);
+  const copyItems=getCurrentScreenerResults(true);
   const top600=copyItems.filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,500);
   const tickers=top600.map(e=>e.t);
   if(!tickers.length){
@@ -1532,13 +1530,20 @@ function applyScreenerFilters(items,isW){
   return items;
 }
 
+function getCurrentScreenerResults(isW){
+  if(!DATA||!Array.isArray(DATA.e))return[];
+  const searchEl=document.getElementById('si');
+  const f=searchEl?searchEl.value.trim().toLowerCase():'';
+  let items=[...DATA.e];
+  if(f)items=items.filter(e=>matchesSearch(e,f));
+  return applyScreenerFilters(items,isW);
+}
+
 function render(){
   if(!DATA)return;
   const isW=currentTab==='weekly';
   const f=document.getElementById('si').value.toLowerCase();
-  let items=DATA.e;
-  if(f)items=items.filter(e=>matchesSearch(e,f));
-  items=applyScreenerFilters(items,isW);
+  let items=getCurrentScreenerResults(isW);
 
   // Sort
   const dk=k=>{if(!isW)return k;const m={rv:'w_rv',am:'w_am',rs:'w_rs',vs:'w_vs'};return m[k]||k;};
@@ -1612,9 +1617,7 @@ function renderChartView(){
   const f=document.getElementById('si').value.toLowerCase();
 
   // Filter and sort by rank (use adjusted RS for daily, w_rs for weekly)
-  let items=DATA.e.slice();
-  if(f)items=items.filter(e=>matchesSearch(e,f));
-  items=applyScreenerFilters(items,isW);
+  let items=getCurrentScreenerResults(isW);
   // Sort by rank ascending (top stocks first)
   items.sort((a,b)=>(isW?(a.w_rk||9999)-(b.w_rk||9999):(a.rk||9999)-(b.rk||9999)));
   // Bubble ticker matches to the top (after rank sort)
