@@ -12,23 +12,96 @@
 (function(){try{const t=localStorage.getItem('dashboardTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
 <style>
-:root,[data-theme="dark"]{--bg:#0a0a0a;--card:#111111;--card-hover:#141414;--bdr:#1f1f1f;--bdr-hover:#333;--t1:#e8e8e8;--t2:#888;--t3:#666;--t4:#444}
-[data-theme="light"]{--bg:#f7f7f8;--card:#ffffff;--card-hover:#f3f4f6;--bdr:#e5e7eb;--bdr-hover:#d1d5db;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--t4:#9ca3af}
+:root,[data-theme="dark"]{--bg:#0a0a0a;--bg2:#111111;--bg3:#161616;--bg4:#1f1f1f;--card:#111111;--card-hover:#141414;--bdr:#1f1f1f;--bdr2:#2a2a2a;--bdr-hover:#333;--t1:#e8e8e8;--t2:#888;--t3:#666;--t4:#444;--g:#22c55e;--r:#ef4444;--amber:#f59e0b;--blue:#60a5fa;--pill:#1f2937;--shadow:rgba(0,0,0,.35)}
+[data-theme="light"]{--bg:#f7f7f8;--bg2:#ffffff;--bg3:#f3f4f6;--bg4:#e5e7eb;--card:#ffffff;--card-hover:#f3f4f6;--bdr:#e5e7eb;--bdr2:#eef0f3;--bdr-hover:#d1d5db;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--t4:#9ca3af;--g:#15803d;--r:#b91c1c;--amber:#d97706;--blue:#2563eb;--pill:#eef2f7;--shadow:rgba(15,23,42,.08)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;transition:background .2s,color .2s}
-.topbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--bdr)}
+body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;transition:background .2s,color .2s;font-size:13px}
+.topbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--bdr);background:var(--bg)}
 .btn-back{width:36px;height:36px;border-radius:10px;border:1px solid var(--bdr);background:var(--card);color:var(--t2);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;transition:all .2s ease}
 .btn-back:hover{border-color:var(--bdr-hover);background:var(--card-hover);color:var(--t1)}
 [data-theme="light"] .btn-back{box-shadow:0 1px 2px rgba(0,0,0,0.05)}
 .hdr-t{position:absolute;left:50%;transform:translateX(-50%);font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t1)}
-.pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#000;transition:background .25s ease}
+.pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#000;transition:background .25s ease;flex-shrink:0}
 [data-theme="light"] .pill-toggle{background:#e0e0e0}
 .pill-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.3);left:32px}
 [data-theme="light"] .pill-toggle .knob{left:2px}
 .pill-toggle .knob::before{content:"🌙"}
 [data-theme="light"] .pill-toggle .knob::before{content:"☀"}
-.page{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:24px}
-.coming-soon{font-size:18px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t2)}
+.page{width:100%;max-width:1560px;margin:0 auto;padding:18px 20px 34px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:4px 0 28px}
+.tabs{display:inline-flex;align-items:center;border:1px solid var(--bdr);border-radius:8px;background:var(--bg2);overflow:hidden}
+.tab-btn{min-width:112px;padding:10px 22px;border:0;background:transparent;color:var(--t3);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.tab-btn:hover{color:var(--t1);background:var(--bg3)}
+.tab-btn.active{background:#f5b23c;color:#111827}
+[data-theme="dark"] .tab-btn.active{background:#f5b23c;color:#111827}
+.refresh-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;background:transparent;color:var(--t2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:8px 10px;border-radius:7px;transition:.15s}
+.refresh-btn:hover{border-color:var(--bdr);background:var(--bg2);color:var(--t1)}
+.refresh-icon{font-size:18px;line-height:1}
+.nav-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;margin-bottom:18px}
+.nav-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:max-content;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);font-family:inherit;font-size:13px;font-weight:700;border-radius:8px;padding:9px 14px;cursor:pointer;transition:.15s}
+.nav-btn:hover{border-color:var(--bdr-hover);background:var(--bg3);color:var(--t1)}
+.nav-btn.next{justify-self:end}
+.week-title{text-align:center}
+.week-title h1{font-size:18px;font-weight:800;letter-spacing:-.2px;color:var(--t1)}
+.week-title p{font-size:13px;color:var(--t3);margin-top:2px}
+.meta-strip{display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-bottom:12px;color:var(--t3);font-size:11px}
+.meta-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.calendar-card{border:1px solid var(--bdr);background:var(--bg2);border-radius:10px;overflow:hidden;box-shadow:0 8px 24px var(--shadow)}
+.table-shell{overflow-x:auto}
+table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:1180px}
+th{background:var(--bg2);border-bottom:1px solid var(--bdr2);color:var(--t3);font-size:11px;font-weight:800;text-align:left;text-transform:uppercase;letter-spacing:.7px;padding:12px 14px;white-space:nowrap}
+td{border-bottom:1px solid var(--bdr2);padding:12px 14px;color:var(--t2);font-size:13px;vertical-align:middle}
+tr:hover td{background:var(--bg3)}
+.day-row td{background:var(--bg3)!important;color:var(--t1);font-size:16px;font-weight:800;text-align:center;padding:14px;border-top:1px solid var(--bdr)}
+.empty-row td{text-align:center;color:var(--t3);font-size:14px;padding:24px}
+.ticker{font-family:'JetBrains Mono','SF Mono',Consolas,monospace;color:var(--amber);font-weight:800;letter-spacing:.4px}
+.ticker-link{text-decoration:none;transition:color .15s}
+.ticker-link:hover{color:var(--t1);text-decoration:underline;text-underline-offset:3px}
+.company{color:var(--t1);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subtle{color:var(--t3)}
+.mono{font-family:'JetBrains Mono','SF Mono',Consolas,monospace}
+.time-tag{font-family:'JetBrains Mono','SF Mono',Consolas,monospace;font-weight:800;color:var(--amber)}
+.time-tag.amc{color:var(--blue)}
+.pos{color:var(--g);font-weight:700}
+.neg{color:var(--r);font-weight:700}
+.event-name{color:var(--t1);font-weight:700}
+.country{display:inline-flex;align-items:center;gap:8px;color:var(--t2);font-weight:700}
+.mobile-list{display:none}
+.mobile-day{border-top:1px solid var(--bdr);background:var(--bg3);padding:11px 14px;font-size:14px;font-weight:800;text-align:center;color:var(--t1)}
+.mobile-item{display:grid;grid-template-columns:1fr auto;gap:8px 12px;padding:13px 14px;border-top:1px solid var(--bdr2);background:var(--bg2)}
+.mobile-item:hover{background:var(--bg3)}
+.mobile-main{min-width:0}
+.mobile-title{font-size:14px;font-weight:800;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mobile-sub{font-size:11px;color:var(--t3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mobile-metric{font-family:'JetBrains Mono','SF Mono',Consolas,monospace;font-size:12px;text-align:right;color:var(--t2)}
+.mobile-grid{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:2px}
+.mobile-stat{border:1px solid var(--bdr);border-radius:6px;background:var(--bg3);padding:7px}
+.mobile-stat span{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);font-weight:800;margin-bottom:2px}
+.mobile-stat b{font-family:'JetBrains Mono','SF Mono',Consolas,monospace;font-size:11px;color:var(--t2);font-weight:700}
+.hidden{display:none!important}
+@media(max-width:900px){
+  .page{padding:14px 12px 28px}
+  .toolbar{margin-bottom:18px}
+  .tab-btn{min-width:96px;padding:9px 14px;font-size:13px}
+  .nav-row{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .week-title{grid-column:1 / -1;grid-row:1;text-align:left}
+  .nav-btn{grid-row:2}
+  .nav-btn.next{justify-self:end}
+  .table-shell{display:none}
+  .mobile-list{display:block}
+  .calendar-card{border-radius:8px}
+  .meta-strip{justify-content:flex-start}
+}
+@media(max-width:560px){
+  .topbar{padding:0 14px}
+  .hdr-t{font-size:13px}
+  .toolbar{gap:8px}
+  .tabs{flex:1}
+  .tab-btn{flex:1;min-width:0}
+  .refresh-btn{padding:8px 6px}
+  .refresh-btn span:last-child{display:none}
+  .mobile-grid{grid-template-columns:1fr 1fr}
+}
 </style>
 </head>
 <body>
@@ -40,10 +113,69 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 </div>
 
 <main class="page">
-  <div class="coming-soon">Coming soon</div>
+  <section class="toolbar">
+    <div class="tabs" aria-label="Calendar type">
+      <button class="tab-btn active" id="economicTab" onclick="switchCalendar('economic')">Economic</button>
+      <button class="tab-btn" id="earningsTab" onclick="switchCalendar('earnings')">Earnings</button>
+    </div>
+    <button class="refresh-btn" onclick="flashRefresh()" title="Refresh prototype data">
+      <span class="refresh-icon">↻</span>
+      <span>Refresh</span>
+    </button>
+  </section>
+
+  <section class="nav-row">
+    <button class="nav-btn" onclick="shiftWeek(-1)">‹ Prev</button>
+    <div class="week-title">
+      <h1 id="weekLabel">This week</h1>
+      <p id="rangeLabel">June 16, 2026 - June 19, 2026</p>
+    </div>
+    <button class="nav-btn next" onclick="shiftWeek(1)">Next ›</button>
+  </section>
+
+  <section class="meta-strip">
+    <div class="meta-right">
+      <span id="updatedText">Updated: 16/06/2026, 08:30 SGT</span>
+    </div>
+  </section>
+
+  <section class="calendar-card">
+    <div class="table-shell">
+      <table id="calendarTable"></table>
+    </div>
+    <div class="mobile-list" id="mobileList"></div>
+  </section>
 </main>
 
 <script>
+const ECONOMIC_EVENTS=[
+  {date:'2026-06-16',day:'Tuesday, June 16, 2026',time:'08:30 PM',country:'US',event:'Building Permits Prel',period:'MAY',actual:'-',previous:'1.423M',consensus:'1.42M',forecast:'1.41M'},
+  {date:'2026-06-16',day:'Tuesday, June 16, 2026',time:'08:30 PM',country:'US',event:'Housing Starts',period:'MAY',actual:'-',previous:'1.465M',consensus:'1.43M',forecast:'1.44M'},
+  {date:'2026-06-17',day:'Wednesday, June 17, 2026',time:'08:30 PM',country:'US',event:'Retail Sales MoM',period:'MAY',actual:'-',previous:'0.5%',consensus:'0.5%',forecast:'0.6%'},
+  {date:'2026-06-18',day:'Thursday, June 18, 2026',time:'02:00 AM',country:'US',event:'Fed Interest Rate Decision',period:'',actual:'-',previous:'3.75%',consensus:'3.75%',forecast:'3.75%'},
+  {date:'2026-06-18',day:'Thursday, June 18, 2026',time:'02:00 AM',country:'US',event:'FOMC Economic Projections',period:'',actual:'-',previous:'-',consensus:'-',forecast:'-'},
+  {date:'2026-06-18',day:'Thursday, June 18, 2026',time:'02:30 AM',country:'US',event:'Fed Press Conference',period:'',actual:'-',previous:'-',consensus:'-',forecast:'-'}
+];
+
+const EARNINGS_EVENTS=[
+  {date:'2026-06-17',day:'Wednesday, June 17, 2026',ticker:'PGR',company:'Progressive Corporation',group:'Insurance - Property & Casualty',time:'BMO',vol:'$598M',adr:'2.5%',mcap:'$118.91B',epsEst:'-',epsAct:'-',epsSurp:'-',revEst:'-',revAct:'-',revSurp:'-'},
+  {date:'2026-06-17',day:'Wednesday, June 17, 2026',ticker:'JBL',company:'Jabil Inc.',group:'Electronic Components',time:'BMO',vol:'$481M',adr:'4.3%',mcap:'$40.68B',epsEst:'3.11',epsAct:'-',epsSurp:'-',revEst:'$8.64B',revAct:'-',revSurp:'-'},
+  {date:'2026-06-17',day:'Wednesday, June 17, 2026',ticker:'KMX',company:'CarMax, Inc.',group:'Auto & Truck Dealerships',time:'BMO',vol:'$170M',adr:'4.6%',mcap:'$7.40B',epsEst:'0.94',epsAct:'-',epsSurp:'-',revEst:'$7.46B',revAct:'-',revSurp:'-'},
+  {date:'2026-06-18',day:'Thursday, June 18, 2026',ticker:'ACN',company:'Accenture plc',group:'Information Technology Services',time:'BMO',vol:'$1.0B',adr:'4.0%',mcap:'$101.52B',epsEst:'3.75',epsAct:'-',epsSurp:'-',revEst:'$18.96B',revAct:'-',revSurp:'-'},
+  {date:'2026-06-18',day:'Thursday, June 18, 2026',ticker:'KR',company:'Kroger Co.',group:'Grocery Stores',time:'BMO',vol:'$386M',adr:'2.3%',mcap:'$39.50B',epsEst:'1.64',epsAct:'-',epsSurp:'-',revEst:'$46.78B',revAct:'-',revSurp:'-'}
+];
+
+const DAYS=[
+  {date:'2026-06-15',label:'Monday, June 15, 2026'},
+  {date:'2026-06-16',label:'Tuesday, June 16, 2026'},
+  {date:'2026-06-17',label:'Wednesday, June 17, 2026'},
+  {date:'2026-06-18',label:'Thursday, June 18, 2026'},
+  {date:'2026-06-19',label:'Friday, June 19, 2026'}
+];
+
+let activeCalendar='economic';
+let weekOffset=0;
+
 function setTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
   try{localStorage.setItem('dashboardTheme',theme);}catch(e){}
@@ -52,6 +184,137 @@ function toggleTheme(){
   const current=document.documentElement.getAttribute('data-theme')||'light';
   setTheme(current==='dark'?'light':'dark');
 }
+function switchCalendar(type){
+  activeCalendar=type;
+  document.getElementById('economicTab').classList.toggle('active',type==='economic');
+  document.getElementById('earningsTab').classList.toggle('active',type==='earnings');
+  renderCalendar();
+}
+function shiftWeek(delta){
+  weekOffset+=delta;
+  renderCalendar();
+}
+function flashRefresh(){
+  const el=document.getElementById('updatedText');
+  el.textContent='Updated: just now';
+  setTimeout(()=>renderCalendar(),450);
+}
+function esc(v){
+  return String(v==null?'-':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+function timeClass(v){
+  return String(v).toUpperCase()==='AMC'?'time-tag amc':'time-tag';
+}
+function renderCalendar(){
+  const weekLabel=document.getElementById('weekLabel');
+  const rangeLabel=document.getElementById('rangeLabel');
+  if(weekOffset===0){
+    weekLabel.textContent='This week';
+    rangeLabel.textContent='June 15, 2026 - June 19, 2026';
+  }else{
+    weekLabel.textContent=weekOffset>0?`Prototype week +${weekOffset}`:`Prototype week ${weekOffset}`;
+    rangeLabel.textContent='Sample data is only populated for the current prototype week';
+  }
+  document.getElementById('updatedText').textContent='Updated: 16/06/2026, 08:30 SGT';
+  if(activeCalendar==='economic')renderEconomic();
+  else renderEarnings();
+}
+function dayEvents(events,day){
+  if(weekOffset!==0)return [];
+  return events.filter(e=>e.date===day.date);
+}
+function screenerProfileUrl(ticker){
+  return `screener.html?profile=${encodeURIComponent(ticker)}`;
+}
+function renderEconomic(){
+  const table=document.getElementById('calendarTable');
+  table.innerHTML=`<colgroup>
+    <col style="width:120px"><col style="width:90px"><col><col style="width:120px"><col style="width:150px"><col style="width:150px"><col style="width:150px">
+  </colgroup><thead><tr>
+    <th>Time (SGT)</th><th>Country</th><th>Event</th><th>Actual</th><th>Previous</th><th>Consensus</th><th>Forecast</th>
+  </tr></thead><tbody>${DAYS.map(day=>{
+    const rows=dayEvents(ECONOMIC_EVENTS,day);
+    return `<tr class="day-row"><td colspan="7">${esc(day.label)}</td></tr>`+(rows.length?rows.map(e=>`
+      <tr>
+        <td><span class="time-tag">${esc(e.time)}</span></td>
+        <td><span class="country">US</span></td>
+        <td><span class="event-name">${esc(e.event)}</span> <span class="subtle">${esc(e.period)}</span></td>
+        <td class="mono">${esc(e.actual)}</td>
+        <td class="mono pos">${esc(e.previous)}</td>
+        <td class="mono">${esc(e.consensus)}</td>
+        <td class="mono">${esc(e.forecast)}</td>
+      </tr>`).join(''):`<tr class="empty-row"><td colspan="7">No high impact U.S. events scheduled</td></tr>`);
+  }).join('')}</tbody>`;
+  renderEconomicMobile();
+}
+function renderEarnings(){
+  const table=document.getElementById('calendarTable');
+  table.innerHTML=`<colgroup>
+    <col style="width:82px"><col style="width:250px"><col style="width:220px"><col style="width:84px"><col style="width:90px"><col style="width:90px"><col style="width:110px"><col style="width:92px"><col style="width:92px"><col style="width:100px"><col style="width:110px"><col style="width:110px"><col style="width:110px">
+  </colgroup><thead><tr>
+    <th>Ticker</th><th>Company</th><th>Group</th><th>Time</th><th>AVG. $VOL</th><th>ADR</th><th>Mkt Cap</th><th>EPS Est</th><th>EPS Act</th><th>EPS Surp</th><th>Rev Est</th><th>Rev Act</th><th>Rev Surp</th>
+  </tr></thead><tbody>${DAYS.map(day=>{
+    const rows=dayEvents(EARNINGS_EVENTS,day);
+    return `<tr class="day-row"><td colspan="13">${esc(day.label)}</td></tr>`+(rows.length?rows.map(e=>`
+      <tr>
+        <td><a class="ticker ticker-link" href="${screenerProfileUrl(e.ticker)}">${esc(e.ticker)}</a></td>
+        <td><span class="company">${esc(e.company)}</span></td>
+        <td>${esc(e.group)}</td>
+        <td><span class="${timeClass(e.time)}">${esc(e.time)}</span></td>
+        <td class="mono">${esc(e.vol)}</td>
+        <td class="mono">${esc(e.adr)}</td>
+        <td class="mono">${esc(e.mcap)}</td>
+        <td class="mono">${esc(e.epsEst)}</td>
+        <td class="mono">${esc(e.epsAct)}</td>
+        <td class="mono">${esc(e.epsSurp)}</td>
+        <td class="mono">${esc(e.revEst)}</td>
+        <td class="mono">${esc(e.revAct)}</td>
+        <td class="mono">${esc(e.revSurp)}</td>
+      </tr>`).join(''):`<tr class="empty-row"><td colspan="13">No screener-universe earnings scheduled</td></tr>`);
+  }).join('')}</tbody>`;
+  renderEarningsMobile();
+}
+function renderEconomicMobile(){
+  const el=document.getElementById('mobileList');
+  el.innerHTML=DAYS.map(day=>{
+    const rows=dayEvents(ECONOMIC_EVENTS,day);
+    return `<div class="mobile-day">${esc(day.label)}</div>`+(rows.length?rows.map(e=>`
+      <div class="mobile-item">
+        <div class="mobile-main">
+          <div class="mobile-title">${esc(e.event)} <span class="subtle">${esc(e.period)}</span></div>
+          <div class="mobile-sub">US high impact · ${esc(e.time)} SGT</div>
+        </div>
+        <div class="mobile-metric">US</div>
+        <div class="mobile-grid">
+          <div class="mobile-stat"><span>Actual</span><b>${esc(e.actual)}</b></div>
+          <div class="mobile-stat"><span>Previous</span><b>${esc(e.previous)}</b></div>
+          <div class="mobile-stat"><span>Consensus</span><b>${esc(e.consensus)}</b></div>
+          <div class="mobile-stat"><span>Forecast</span><b>${esc(e.forecast)}</b></div>
+        </div>
+      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No high impact U.S. events scheduled</div></div></div>`);
+  }).join('');
+}
+function renderEarningsMobile(){
+  const el=document.getElementById('mobileList');
+  el.innerHTML=DAYS.map(day=>{
+    const rows=dayEvents(EARNINGS_EVENTS,day);
+    return `<div class="mobile-day">${esc(day.label)}</div>`+(rows.length?rows.map(e=>`
+      <div class="mobile-item">
+        <div class="mobile-main">
+          <div class="mobile-title"><a class="ticker ticker-link" href="${screenerProfileUrl(e.ticker)}">${esc(e.ticker)}</a> ${esc(e.company)}</div>
+          <div class="mobile-sub">${esc(e.group)} · <span class="${timeClass(e.time)}">${esc(e.time)}</span></div>
+        </div>
+        <div class="mobile-metric">${esc(e.mcap)}</div>
+        <div class="mobile-grid">
+          <div class="mobile-stat"><span>AVG. $VOL</span><b>${esc(e.vol)}</b></div>
+          <div class="mobile-stat"><span>ADR</span><b>${esc(e.adr)}</b></div>
+          <div class="mobile-stat"><span>EPS Est</span><b>${esc(e.epsEst)}</b></div>
+          <div class="mobile-stat"><span>Rev Est</span><b>${esc(e.revEst)}</b></div>
+        </div>
+      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No screener-universe earnings scheduled</div></div></div>`);
+  }).join('');
+}
+renderCalendar();
 </script>
 
 </body>
