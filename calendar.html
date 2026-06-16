@@ -37,10 +37,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .refresh-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;background:transparent;color:var(--t2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:8px 10px;border-radius:7px;transition:.15s}
 .refresh-btn:hover{border-color:var(--bdr);background:var(--bg2);color:var(--t1)}
 .refresh-icon{font-size:18px;line-height:1}
-.nav-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;margin-bottom:18px}
-.nav-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:max-content;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);font-family:inherit;font-size:13px;font-weight:700;border-radius:8px;padding:9px 14px;cursor:pointer;transition:.15s}
-.nav-btn:hover{border-color:var(--bdr-hover);background:var(--bg3);color:var(--t1)}
-.nav-btn.next{justify-self:end}
+.nav-row{display:flex;align-items:center;justify-content:center;margin-bottom:18px}
 .week-title{text-align:center}
 .week-title h1{font-size:18px;font-weight:800;letter-spacing:-.2px;color:var(--t1)}
 .week-title p{font-size:13px;color:var(--t3);margin-top:2px}
@@ -65,7 +62,6 @@ tr:hover td{background:var(--bg3)}
 .pos{color:var(--g);font-weight:700}
 .neg{color:var(--r);font-weight:700}
 .event-name{color:var(--t1);font-weight:700}
-.country{display:inline-flex;align-items:center;gap:8px;color:var(--t2);font-weight:700}
 .mobile-list{display:none}
 .mobile-day{border-top:1px solid var(--bdr);background:var(--bg3);padding:11px 14px;font-size:14px;font-weight:800;text-align:center;color:var(--t1)}
 .mobile-item{display:grid;grid-template-columns:1fr auto;gap:8px 12px;padding:13px 14px;border-top:1px solid var(--bdr2);background:var(--bg2)}
@@ -83,10 +79,8 @@ tr:hover td{background:var(--bg3)}
   .page{padding:14px 12px 28px}
   .toolbar{margin-bottom:18px}
   .tab-btn{min-width:96px;padding:9px 14px;font-size:13px}
-  .nav-row{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-  .week-title{grid-column:1 / -1;grid-row:1;text-align:left}
-  .nav-btn{grid-row:2}
-  .nav-btn.next{justify-self:end}
+  .nav-row{justify-content:flex-start;margin-bottom:12px}
+  .week-title{text-align:left}
   .table-shell{display:none}
   .mobile-list{display:block}
   .calendar-card{border-radius:8px}
@@ -125,12 +119,10 @@ tr:hover td{background:var(--bg3)}
   </section>
 
   <section class="nav-row">
-    <button class="nav-btn" onclick="shiftWeek(-1)">‹ Prev</button>
     <div class="week-title">
       <h1 id="weekLabel">This week</h1>
       <p id="rangeLabel">June 16, 2026 - June 19, 2026</p>
     </div>
-    <button class="nav-btn next" onclick="shiftWeek(1)">Next ›</button>
   </section>
 
   <section class="meta-strip">
@@ -149,12 +141,12 @@ tr:hover td{background:var(--bg3)}
 
 <script>
 const ECONOMIC_EVENTS=[
-  {date:'2026-06-16',day:'Tuesday, June 16, 2026',time:'08:30 PM',country:'US',event:'Building Permits Prel',period:'MAY',actual:'-',previous:'1.423M',consensus:'1.42M',forecast:'1.41M'},
-  {date:'2026-06-16',day:'Tuesday, June 16, 2026',time:'08:30 PM',country:'US',event:'Housing Starts',period:'MAY',actual:'-',previous:'1.465M',consensus:'1.43M',forecast:'1.44M'},
-  {date:'2026-06-17',day:'Wednesday, June 17, 2026',time:'08:30 PM',country:'US',event:'Retail Sales MoM',period:'MAY',actual:'-',previous:'0.5%',consensus:'0.5%',forecast:'0.6%'},
-  {date:'2026-06-18',day:'Thursday, June 18, 2026',time:'02:00 AM',country:'US',event:'Fed Interest Rate Decision',period:'',actual:'-',previous:'3.75%',consensus:'3.75%',forecast:'3.75%'},
-  {date:'2026-06-18',day:'Thursday, June 18, 2026',time:'02:00 AM',country:'US',event:'FOMC Economic Projections',period:'',actual:'-',previous:'-',consensus:'-',forecast:'-'},
-  {date:'2026-06-18',day:'Thursday, June 18, 2026',time:'02:30 AM',country:'US',event:'Fed Press Conference',period:'',actual:'-',previous:'-',consensus:'-',forecast:'-'}
+  {date:'2026-06-16',day:'Tuesday, June 16, 2026',time:'08:30 PM',event:'Building Permits Prel',period:'MAY',actual:'-',previous:'1.423M',consensus:'1.42M',forecast:'1.41M'},
+  {date:'2026-06-16',day:'Tuesday, June 16, 2026',time:'08:30 PM',event:'Housing Starts',period:'MAY',actual:'-',previous:'1.465M',consensus:'1.43M',forecast:'1.44M'},
+  {date:'2026-06-17',day:'Wednesday, June 17, 2026',time:'08:30 PM',event:'Retail Sales MoM',period:'MAY',actual:'-',previous:'0.5%',consensus:'0.5%',forecast:'0.6%'},
+  {date:'2026-06-18',day:'Thursday, June 18, 2026',time:'02:00 AM',event:'Fed Interest Rate Decision',period:'',actual:'-',previous:'3.75%',consensus:'3.75%',forecast:'3.75%'},
+  {date:'2026-06-18',day:'Thursday, June 18, 2026',time:'02:00 AM',event:'FOMC Economic Projections',period:'',actual:'-',previous:'-',consensus:'-',forecast:'-'},
+  {date:'2026-06-18',day:'Thursday, June 18, 2026',time:'02:30 AM',event:'Fed Press Conference',period:'',actual:'-',previous:'-',consensus:'-',forecast:'-'}
 ];
 
 const EARNINGS_EVENTS=[
@@ -174,7 +166,6 @@ const DAYS=[
 ];
 
 let activeCalendar='economic';
-let weekOffset=0;
 
 function setTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
@@ -188,10 +179,6 @@ function switchCalendar(type){
   activeCalendar=type;
   document.getElementById('economicTab').classList.toggle('active',type==='economic');
   document.getElementById('earningsTab').classList.toggle('active',type==='earnings');
-  renderCalendar();
-}
-function shiftWeek(delta){
-  weekOffset+=delta;
   renderCalendar();
 }
 function flashRefresh(){
@@ -208,19 +195,13 @@ function timeClass(v){
 function renderCalendar(){
   const weekLabel=document.getElementById('weekLabel');
   const rangeLabel=document.getElementById('rangeLabel');
-  if(weekOffset===0){
-    weekLabel.textContent='This week';
-    rangeLabel.textContent='June 15, 2026 - June 19, 2026';
-  }else{
-    weekLabel.textContent=weekOffset>0?`Prototype week +${weekOffset}`:`Prototype week ${weekOffset}`;
-    rangeLabel.textContent='Sample data is only populated for the current prototype week';
-  }
+  weekLabel.textContent='This week';
+  rangeLabel.textContent='June 15, 2026 - June 19, 2026';
   document.getElementById('updatedText').textContent='Updated: 16/06/2026, 08:30 SGT';
   if(activeCalendar==='economic')renderEconomic();
   else renderEarnings();
 }
 function dayEvents(events,day){
-  if(weekOffset!==0)return [];
   return events.filter(e=>e.date===day.date);
 }
 function screenerProfileUrl(ticker){
@@ -229,21 +210,20 @@ function screenerProfileUrl(ticker){
 function renderEconomic(){
   const table=document.getElementById('calendarTable');
   table.innerHTML=`<colgroup>
-    <col style="width:120px"><col style="width:90px"><col><col style="width:120px"><col style="width:150px"><col style="width:150px"><col style="width:150px">
+    <col style="width:120px"><col><col style="width:120px"><col style="width:150px"><col style="width:150px"><col style="width:150px">
   </colgroup><thead><tr>
-    <th>Time (SGT)</th><th>Country</th><th>Event</th><th>Actual</th><th>Previous</th><th>Consensus</th><th>Forecast</th>
+    <th>Time (SGT)</th><th>Event</th><th>Actual</th><th>Previous</th><th>Consensus</th><th>Forecast</th>
   </tr></thead><tbody>${DAYS.map(day=>{
     const rows=dayEvents(ECONOMIC_EVENTS,day);
-    return `<tr class="day-row"><td colspan="7">${esc(day.label)}</td></tr>`+(rows.length?rows.map(e=>`
+    return `<tr class="day-row"><td colspan="6">${esc(day.label)}</td></tr>`+(rows.length?rows.map(e=>`
       <tr>
         <td><span class="time-tag">${esc(e.time)}</span></td>
-        <td><span class="country">US</span></td>
         <td><span class="event-name">${esc(e.event)}</span> <span class="subtle">${esc(e.period)}</span></td>
         <td class="mono">${esc(e.actual)}</td>
         <td class="mono pos">${esc(e.previous)}</td>
         <td class="mono">${esc(e.consensus)}</td>
         <td class="mono">${esc(e.forecast)}</td>
-      </tr>`).join(''):`<tr class="empty-row"><td colspan="7">No high impact U.S. events scheduled</td></tr>`);
+      </tr>`).join(''):`<tr class="empty-row"><td colspan="6">No high impact U.S. events scheduled</td></tr>`);
   }).join('')}</tbody>`;
   renderEconomicMobile();
 }
