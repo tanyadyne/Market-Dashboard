@@ -223,7 +223,7 @@ function renderEconomic(){
         <td class="mono pos">${esc(e.previous)}</td>
         <td class="mono">${esc(e.consensus)}</td>
         <td class="mono">${esc(e.forecast)}</td>
-      </tr>`).join(''):`<tr class="empty-row"><td colspan="6">No high impact U.S. events scheduled</td></tr>`);
+      </tr>`).join(''):`<tr class="empty-row"><td colspan="6">No major economic events scheduled</td></tr>`);
   }).join('')}</tbody>`;
   renderEconomicMobile();
 }
@@ -250,7 +250,7 @@ function renderEarnings(){
         <td class="mono">${esc(e.revEst)}</td>
         <td class="mono">${esc(e.revAct)}</td>
         <td class="mono">${esc(e.revSurp)}</td>
-      </tr>`).join(''):`<tr class="empty-row"><td colspan="13">No screener-universe earnings scheduled</td></tr>`);
+      </tr>`).join(''):`<tr class="empty-row"><td colspan="13">No major earnings scheduled</td></tr>`);
   }).join('')}</tbody>`;
   renderEarningsMobile();
 }
@@ -271,7 +271,7 @@ function renderEconomicMobile(){
           <div class="mobile-stat"><span>Consensus</span><b>${esc(e.consensus)}</b></div>
           <div class="mobile-stat"><span>Forecast</span><b>${esc(e.forecast)}</b></div>
         </div>
-      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No high impact U.S. events scheduled</div></div></div>`);
+      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No major economic events scheduled</div></div></div>`);
   }).join('');
 }
 function renderEarningsMobile(){
@@ -291,7 +291,7 @@ function renderEarningsMobile(){
           <div class="mobile-stat"><span>EPS Est</span><b>${esc(e.epsEst)}</b></div>
           <div class="mobile-stat"><span>Rev Est</span><b>${esc(e.revEst)}</b></div>
         </div>
-      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No screener-universe earnings scheduled</div></div></div>`);
+      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No major earnings scheduled</div></div></div>`);
   }).join('');
 }
 renderCalendar();
