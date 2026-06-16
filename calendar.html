@@ -112,7 +112,7 @@ tr:hover td{background:var(--bg3)}
       <button class="tab-btn active" id="economicTab" onclick="switchCalendar('economic')">Economic</button>
       <button class="tab-btn" id="earningsTab" onclick="switchCalendar('earnings')">Earnings</button>
     </div>
-    <button class="refresh-btn" onclick="flashRefresh()" title="Refresh prototype data">
+    <button class="refresh-btn" onclick="refreshCalendar()" title="Refresh calendar data">
       <span class="refresh-icon">↻</span>
       <span>Refresh</span>
     </button>
@@ -139,8 +139,9 @@ tr:hover td{background:var(--bg3)}
   </section>
 </main>
 
+<script src="economic_calendar.js"></script>
 <script>
-const ECONOMIC_EVENTS=[
+const FALLBACK_ECONOMIC_EVENTS=[
   {date:'2026-06-16',day:'Tuesday, June 16, 2026',time:'08:30 PM',event:'Building Permits Prel',period:'MAY',actual:'-',previous:'1.423M',consensus:'1.42M',forecast:'1.41M'},
   {date:'2026-06-16',day:'Tuesday, June 16, 2026',time:'08:30 PM',event:'Housing Starts',period:'MAY',actual:'-',previous:'1.465M',consensus:'1.43M',forecast:'1.44M'},
   {date:'2026-06-17',day:'Wednesday, June 17, 2026',time:'08:30 PM',event:'Retail Sales MoM',period:'MAY',actual:'-',previous:'0.5%',consensus:'0.5%',forecast:'0.6%'},
@@ -157,13 +158,21 @@ const EARNINGS_EVENTS=[
   {date:'2026-06-18',day:'Thursday, June 18, 2026',ticker:'KR',company:'Kroger Co.',group:'Grocery Stores',time:'BMO',vol:'$386M',adr:'2.3%',mcap:'$39.50B',epsEst:'1.64',epsAct:'-',epsSurp:'-',revEst:'$46.78B',revAct:'-',revSurp:'-'}
 ];
 
-const DAYS=[
+const FALLBACK_DAYS=[
   {date:'2026-06-15',label:'Monday, June 15, 2026'},
   {date:'2026-06-16',label:'Tuesday, June 16, 2026'},
   {date:'2026-06-17',label:'Wednesday, June 17, 2026'},
   {date:'2026-06-18',label:'Thursday, June 18, 2026'},
   {date:'2026-06-19',label:'Friday, June 19, 2026'}
 ];
+
+const FALLBACK_ECONOMIC_DATA={
+  generated_at_sgt:'16/06/2026, 08:30 SGT',
+  week_label:'This week',
+  range_label:'June 15, 2026 - June 19, 2026',
+  days:FALLBACK_DAYS,
+  events:FALLBACK_ECONOMIC_EVENTS
+};
 
 let activeCalendar='economic';
 
@@ -181,10 +190,8 @@ function switchCalendar(type){
   document.getElementById('earningsTab').classList.toggle('active',type==='earnings');
   renderCalendar();
 }
-function flashRefresh(){
-  const el=document.getElementById('updatedText');
-  el.textContent='Updated: just now';
-  setTimeout(()=>renderCalendar(),450);
+function refreshCalendar(){
+  window.location.reload();
 }
 function esc(v){
   return String(v==null?'-':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
@@ -195,11 +202,18 @@ function timeClass(v){
 function renderCalendar(){
   const weekLabel=document.getElementById('weekLabel');
   const rangeLabel=document.getElementById('rangeLabel');
-  weekLabel.textContent='This week';
-  rangeLabel.textContent='June 15, 2026 - June 19, 2026';
-  document.getElementById('updatedText').textContent='Updated: 16/06/2026, 08:30 SGT';
-  if(activeCalendar==='economic')renderEconomic();
-  else renderEarnings();
+  if(activeCalendar==='economic'){
+    const economicData=currentEconomicData();
+    weekLabel.textContent=economicWeekLabel(economicData);
+    rangeLabel.textContent=economicData.range_label || '';
+    document.getElementById('updatedText').textContent=`Updated: ${economicData.generated_at_sgt || FALLBACK_ECONOMIC_DATA.generated_at_sgt}`;
+    renderEconomic();
+  }else{
+    weekLabel.textContent='This week';
+    rangeLabel.textContent='June 15, 2026 - June 19, 2026';
+    document.getElementById('updatedText').textContent='Updated: 16/06/2026, 08:30 SGT';
+    renderEarnings();
+  }
 }
 function dayEvents(events,day){
   return events.filter(e=>e.date===day.date);
@@ -207,14 +221,31 @@ function dayEvents(events,day){
 function screenerProfileUrl(ticker){
   return `screener.html?profile=${encodeURIComponent(ticker)}`;
 }
+function currentEconomicData(){
+  const live=window.ECONOMIC_CALENDAR_DATA;
+  if(live && Array.isArray(live.days) && Array.isArray(live.events)) return live;
+  return FALLBACK_ECONOMIC_DATA;
+}
+function economicWeekLabel(economicData){
+  const first=economicData?.days?.[0]?.date;
+  const last=economicData?.days?.[economicData.days.length-1]?.date;
+  if(!first || !last) return economicData?.week_label || 'This week';
+  const today=new Date();
+  const nowDate=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  if(nowDate < first) return 'Upcoming week';
+  if(nowDate > last) return 'Previous week';
+  return 'This week';
+}
 function renderEconomic(){
+  const economicData=currentEconomicData();
+  const days=economicData.days;
   const table=document.getElementById('calendarTable');
   table.innerHTML=`<colgroup>
     <col style="width:120px"><col><col style="width:120px"><col style="width:150px"><col style="width:150px"><col style="width:150px">
   </colgroup><thead><tr>
     <th>Time (SGT)</th><th>Event</th><th>Actual</th><th>Previous</th><th>Consensus</th><th>Forecast</th>
-  </tr></thead><tbody>${DAYS.map(day=>{
-    const rows=dayEvents(ECONOMIC_EVENTS,day);
+  </tr></thead><tbody>${days.map(day=>{
+    const rows=dayEvents(economicData.events,day);
     return `<tr class="day-row"><td colspan="6">${esc(day.label)}</td></tr>`+(rows.length?rows.map(e=>`
       <tr>
         <td><span class="time-tag">${esc(e.time)}</span></td>
@@ -228,12 +259,13 @@ function renderEconomic(){
   renderEconomicMobile();
 }
 function renderEarnings(){
+  const days=FALLBACK_DAYS;
   const table=document.getElementById('calendarTable');
   table.innerHTML=`<colgroup>
     <col style="width:82px"><col style="width:250px"><col style="width:220px"><col style="width:84px"><col style="width:90px"><col style="width:90px"><col style="width:110px"><col style="width:92px"><col style="width:92px"><col style="width:100px"><col style="width:110px"><col style="width:110px"><col style="width:110px">
   </colgroup><thead><tr>
     <th>Ticker</th><th>Company</th><th>Group</th><th>Time</th><th>AVG. $VOL</th><th>ADR</th><th>Mkt Cap</th><th>EPS Est</th><th>EPS Act</th><th>EPS Surp</th><th>Rev Est</th><th>Rev Act</th><th>Rev Surp</th>
-  </tr></thead><tbody>${DAYS.map(day=>{
+  </tr></thead><tbody>${days.map(day=>{
     const rows=dayEvents(EARNINGS_EVENTS,day);
     return `<tr class="day-row"><td colspan="13">${esc(day.label)}</td></tr>`+(rows.length?rows.map(e=>`
       <tr>
@@ -255,9 +287,11 @@ function renderEarnings(){
   renderEarningsMobile();
 }
 function renderEconomicMobile(){
+  const economicData=currentEconomicData();
+  const days=economicData.days;
   const el=document.getElementById('mobileList');
-  el.innerHTML=DAYS.map(day=>{
-    const rows=dayEvents(ECONOMIC_EVENTS,day);
+  el.innerHTML=days.map(day=>{
+    const rows=dayEvents(economicData.events,day);
     return `<div class="mobile-day">${esc(day.label)}</div>`+(rows.length?rows.map(e=>`
       <div class="mobile-item">
         <div class="mobile-main">
@@ -275,8 +309,9 @@ function renderEconomicMobile(){
   }).join('');
 }
 function renderEarningsMobile(){
+  const days=FALLBACK_DAYS;
   const el=document.getElementById('mobileList');
-  el.innerHTML=DAYS.map(day=>{
+  el.innerHTML=days.map(day=>{
     const rows=dayEvents(EARNINGS_EVENTS,day);
     return `<div class="mobile-day">${esc(day.label)}</div>`+(rows.length?rows.map(e=>`
       <div class="mobile-item">
