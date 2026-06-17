@@ -1,77 +1,30 @@
 {
-  "generated_at_utc": "2026-06-16 13:42 UTC",
-  "generated_at_sgt": "16/06/2026, 21:42 SGT",
+  "generated_at_utc": "2026-06-17 05:56 UTC",
+  "generated_at_sgt": "17/06/2026, 13:56 SGT",
   "week_label": "This week",
-  "range_label": "June 22, 2026 - June 26, 2026",
+  "range_label": "June 15, 2026 - June 19, 2026",
   "days": [
     {
-      "date": "2026-06-22",
-      "label": "Monday, June 22, 2026"
+      "date": "2026-06-15",
+      "label": "Monday, June 15, 2026"
     },
     {
-      "date": "2026-06-23",
-      "label": "Tuesday, June 23, 2026"
+      "date": "2026-06-16",
+      "label": "Tuesday, June 16, 2026"
     },
     {
-      "date": "2026-06-24",
-      "label": "Wednesday, June 24, 2026"
+      "date": "2026-06-17",
+      "label": "Wednesday, June 17, 2026"
     },
     {
-      "date": "2026-06-25",
-      "label": "Thursday, June 25, 2026"
+      "date": "2026-06-18",
+      "label": "Thursday, June 18, 2026"
     },
     {
-      "date": "2026-06-26",
-      "label": "Friday, June 26, 2026"
+      "date": "2026-06-19",
+      "label": "Friday, June 19, 2026"
     }
   ],
-  "events": [
-    {
-      "key": "gdp",
-      "event": "GDP (quarterly)",
-      "source_event": "GDP Final",
-      "date": "2026-06-25",
-      "day": "Thursday, June 25, 2026",
-      "time": "08:30 PM",
-      "period": "Q1",
-      "actual": "-",
-      "consensus": "-",
-      "previous": "1.6",
-      "forecast": "-",
-      "revised": "-"
-    },
-    {
-      "key": "pce",
-      "event": "PCE inflation",
-      "source_event": "PCE Price Index MM",
-      "date": "2026-06-25",
-      "day": "Thursday, June 25, 2026",
-      "time": "08:30 PM",
-      "period": "MAY",
-      "actual": "-",
-      "consensus": "-",
-      "previous": "0.4",
-      "forecast": "-",
-      "revised": "-"
-    },
-    {
-      "key": "uom_sentiment",
-      "event": "Consumer sentiment (UoM)",
-      "source_event": "U Mich Sentiment Final",
-      "date": "2026-06-26",
-      "day": "Friday, June 26, 2026",
-      "time": "10:00 PM",
-      "period": "JUN",
-      "actual": "-",
-      "consensus": "-",
-      "previous": "48.9",
-      "forecast": "-",
-      "revised": "-"
-    }
-  ],
-  "event_keys": [
-    "gdp",
-    "pce",
-    "uom_sentiment"
-  ]
+  "events": [],
+  "event_keys": []
 }

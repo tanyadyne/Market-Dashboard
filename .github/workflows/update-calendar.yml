@@ -26,7 +26,7 @@ jobs:
         run: pip install --retries 5 --timeout 60 yfinance curl_cffi pandas
 
       - name: Fetch major economic events
-        run: CALENDAR_WEEK_MODE=next python fetch_economic_calendar.py
+        run: python fetch_economic_calendar.py
 
       - name: Commit and push calendar data
         run: |
