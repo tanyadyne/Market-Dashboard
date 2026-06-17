@@ -19,7 +19,6 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable
 from zoneinfo import ZoneInfo
 
 import yfinance as yf
@@ -46,11 +45,16 @@ class EventMatcher:
 
 
 MAJOR_EVENTS: tuple[EventMatcher, ...] = (
-    EventMatcher("retail_sales", "Retail sales", (r"\bretail sales\b",)),
+    EventMatcher("retail_sales", "Retail sales", (r"\bretail sales mm\b", r"\bretail sales\b")),
     EventMatcher(
         "fomc_rate",
         "FOMC interest rate decision",
-        (r"\bfed interest rate decision\b", r"\bfomc.*rate decision\b", r"\brate decision\b"),
+        (
+            r"\bfed funds tgt rate\b",
+            r"\bfed interest rate decision\b",
+            r"\bfomc.*rate decision\b",
+            r"\brate decision\b",
+        ),
     ),
     EventMatcher(
         "fed_press",
@@ -194,12 +198,52 @@ def _build_days(start_sgt_date: datetime.date) -> list[dict]:
     return days
 
 
+def _iter_calendar_rows(rows):
+    if hasattr(rows, "iterrows"):
+        return rows.iterrows()
+    return iter(rows or [])
+
+
+def _payload_from_row(key: str, label: str, source_event: str, event_time: datetime, row) -> dict:
+    event_time_sgt = event_time.astimezone(TZ_SGT)
+    return {
+        "key": key,
+        "event": label,
+        "source_event": source_event,
+        "date": event_time_sgt.date().isoformat(),
+        "day": _day_label(event_time_sgt),
+        "time": event_time_sgt.strftime("%I:%M %p"),
+        "period": _period_text(row.get("For")),
+        "actual": _clean_number(row.get("Actual")),
+        "consensus": _clean_number(row.get("Expected")),
+        "previous": _clean_number(row.get("Last")),
+        "forecast": _clean_number(row.get("Expected")),
+        "revised": _clean_number(row.get("Revised")),
+    }
+
+
+def _synthetic_fomc_press(rate_payload: dict, rate_time_sgt: datetime) -> dict:
+    press_time = rate_time_sgt + timedelta(minutes=30)
+    return {
+        "key": "fed_press",
+        "event": "Fed chair press conference",
+        "source_event": "Synthetic FOMC press conference",
+        "date": press_time.date().isoformat(),
+        "day": _day_label(press_time),
+        "time": press_time.strftime("%I:%M %p"),
+        "period": rate_payload.get("period", ""),
+        "actual": "-",
+        "consensus": "-",
+        "previous": "-",
+        "forecast": "-",
+        "revised": "-",
+    }
+
+
 def _select_major_events(df) -> list[dict]:
-    if not hasattr(df, "iterrows"):
-        return []
     chosen: dict[str, tuple[tuple[datetime, int, str], dict]] = {}
 
-    for event_name, row in df.iterrows():
+    for event_name, row in _iter_calendar_rows(df):
         if str(row.get("Region", "")).upper() != "US":
             continue
 
@@ -214,40 +258,37 @@ def _select_major_events(df) -> list[dict]:
                 continue
 
             event_time_sgt = event_time.astimezone(TZ_SGT)
-            payload = {
-                "key": matcher.key,
-                "event": matcher.label,
-                "source_event": name,
-                "date": event_time_sgt.date().isoformat(),
-                "day": _day_label(event_time_sgt),
-                "time": event_time_sgt.strftime("%I:%M %p"),
-                "period": _period_text(row.get("For")),
-                "actual": _clean_number(row.get("Actual")),
-                "consensus": _clean_number(row.get("Expected")),
-                "previous": _clean_number(row.get("Last")),
-                "forecast": _clean_number(row.get("Expected")),
-                "revised": _clean_number(row.get("Revised")),
-            }
+            payload = _payload_from_row(matcher.key, matcher.label, name, event_time, row)
             sort_key = (event_time_sgt, priority, name)
             current = chosen.get(matcher.key)
             if current is None or sort_key < current[0]:
                 chosen[matcher.key] = (sort_key, payload)
             break
 
+    if "fomc_rate" in chosen and "fed_press" not in chosen:
+        rate_time_sgt = chosen["fomc_rate"][0][0]
+        press_payload = _synthetic_fomc_press(chosen["fomc_rate"][1], rate_time_sgt)
+        chosen["fed_press"] = ((rate_time_sgt + timedelta(minutes=30), 0, "Synthetic FOMC press conference"), press_payload)
+
     selected = [item[1] for item in sorted(chosen.values(), key=lambda item: item[0])]
     return selected
 
 
 def _fetch_calendar_rows(start_et: datetime, end_et: datetime):
-    inclusive_end = end_et + timedelta(days=1)
-    calendars = yf.Calendars(
-        start=start_et.strftime("%Y-%m-%d"),
-        end=inclusive_end.strftime("%Y-%m-%d"),
-        session=_build_session(),
-    )
-    rows = calendars.get_economic_events_calendar(limit=100, force=True)
-    if rows is None:
-        return []
+    session = _build_session()
+    rows = []
+    day = start_et.date()
+    end_day = end_et.date()
+    while day <= end_day:
+        next_day = day + timedelta(days=1)
+        calendars = yf.Calendars(
+            start=day.isoformat(),
+            end=next_day.isoformat(),
+            session=session,
+        )
+        daily_rows = calendars.get_economic_events_calendar(limit=100, force=True)
+        rows.extend(list(_iter_calendar_rows(daily_rows)))
+        day = next_day
     return rows
 
 

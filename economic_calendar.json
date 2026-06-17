@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-06-17 05:56 UTC",
-  "generated_at_sgt": "17/06/2026, 13:56 SGT",
+  "generated_at_utc": "2026-06-17 06:12 UTC",
+  "generated_at_sgt": "17/06/2026, 14:12 SGT",
   "week_label": "This week",
   "range_label": "June 15, 2026 - June 19, 2026",
   "days": [
@@ -25,6 +25,53 @@
       "label": "Friday, June 19, 2026"
     }
   ],
-  "events": [],
-  "event_keys": []
+  "events": [
+    {
+      "key": "retail_sales",
+      "event": "Retail sales",
+      "source_event": "Retail Sales MM",
+      "date": "2026-06-17",
+      "day": "Wednesday, June 17, 2026",
+      "time": "08:30 PM",
+      "period": "MAY",
+      "actual": "-",
+      "consensus": "-",
+      "previous": "0.5",
+      "forecast": "-",
+      "revised": "-"
+    },
+    {
+      "key": "fomc_rate",
+      "event": "FOMC interest rate decision",
+      "source_event": "Fed Funds Tgt Rate",
+      "date": "2026-06-18",
+      "day": "Thursday, June 18, 2026",
+      "time": "02:00 AM",
+      "period": "",
+      "actual": "-",
+      "consensus": "-",
+      "previous": "3.62",
+      "forecast": "-",
+      "revised": "-"
+    },
+    {
+      "key": "fed_press",
+      "event": "Fed chair press conference",
+      "source_event": "Synthetic FOMC press conference",
+      "date": "2026-06-18",
+      "day": "Thursday, June 18, 2026",
+      "time": "02:30 AM",
+      "period": "",
+      "actual": "-",
+      "consensus": "-",
+      "previous": "-",
+      "forecast": "-",
+      "revised": "-"
+    }
+  ],
+  "event_keys": [
+    "retail_sales",
+    "fomc_rate",
+    "fed_press"
+  ]
 }
