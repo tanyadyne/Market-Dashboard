@@ -16,49 +16,53 @@
 [data-theme="light"]{--bg:#f7f7f8;--bg2:#ffffff;--bg3:#f3f4f6;--bg4:#e5e7eb;--card:#ffffff;--card-hover:#f3f4f6;--bdr:#e5e7eb;--bdr2:#eef0f3;--bdr-hover:#d1d5db;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--t4:#9ca3af;--g:#15803d;--r:#b91c1c;--amber:#d97706;--blue:#2563eb;--pill:#eef2f7;--shadow:rgba(15,23,42,.08)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;transition:background .2s,color .2s;font-size:13px}
-.topbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--bdr);background:var(--bg)}
+.topbar{height:64px;display:flex;align-items:center;justify-content:flex-start;gap:12px;padding:0 20px;border-bottom:1px solid var(--bdr);background:var(--bg)}
 .btn-back{width:36px;height:36px;border-radius:10px;border:1px solid var(--bdr);background:var(--card);color:var(--t2);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;transition:all .2s ease}
 .btn-back:hover{border-color:var(--bdr-hover);background:var(--card-hover);color:var(--t1)}
 [data-theme="light"] .btn-back{box-shadow:0 1px 2px rgba(0,0,0,0.05)}
-.hdr-t{position:absolute;left:50%;transform:translateX(-50%);font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t1)}
+.hdr-t{font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t1)}
 .pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#000;transition:background .25s ease;flex-shrink:0}
+.topbar .pill-toggle{margin-left:auto}
 [data-theme="light"] .pill-toggle{background:#e0e0e0}
 .pill-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.3);left:32px}
 [data-theme="light"] .pill-toggle .knob{left:2px}
 .pill-toggle .knob::before{content:"🌙"}
 [data-theme="light"] .pill-toggle .knob::before{content:"☀"}
 .page{width:100%;max-width:1560px;margin:0 auto;padding:18px 20px 34px}
-.toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:4px 0 28px}
-.tabs{display:inline-flex;align-items:center;border:1px solid var(--bdr);border-radius:8px;background:var(--bg2);overflow:hidden}
-.tab-btn{min-width:112px;padding:10px 22px;border:0;background:transparent;color:var(--t3);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
-.tab-btn:hover{color:var(--t1);background:var(--bg3)}
-.tab-btn.active{background:#f5b23c;color:#111827}
-[data-theme="dark"] .tab-btn.active{background:#f5b23c;color:#111827}
-.refresh-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;background:transparent;color:var(--t2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:8px 10px;border-radius:7px;transition:.15s}
-.refresh-btn:hover{border-color:var(--bdr);background:var(--bg2);color:var(--t1)}
-.refresh-icon{font-size:18px;line-height:1}
-.nav-row{display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.nav-row{display:flex;align-items:center;justify-content:center;margin:4px 0 18px}
 .week-title{text-align:center}
 .week-title h1{font-size:18px;font-weight:800;letter-spacing:-.2px;color:var(--t1)}
 .week-title p{font-size:13px;color:var(--t3);margin-top:2px}
-.meta-strip{display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-bottom:12px;color:var(--t3);font-size:11px}
-.meta-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.date-strip-wrap{margin:0 0 18px;position:relative}
+.date-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(154px,1fr));gap:10px}
+.date-tile{min-height:86px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg2);color:var(--t1);padding:14px 14px 12px;text-align:left;cursor:pointer;font-family:inherit;transition:border-color .15s,background .15s,box-shadow .15s}
+.date-tile:hover{border-color:var(--bdr-hover);background:var(--card-hover)}
+.date-tile.active{border-color:var(--bdr-hover);background:var(--bg3);box-shadow:0 0 0 1px var(--bdr-hover) inset}
+.date-label{display:block;font-size:14px;font-weight:800;letter-spacing:-.1px;color:var(--t1);white-space:nowrap}
+.date-count{display:inline-flex;align-items:center;justify-content:center;margin-top:18px;padding:4px 9px;border:1px solid var(--bdr);border-radius:999px;color:var(--t2);font-size:11px;font-weight:700;background:var(--bg)}
+.date-count.empty{color:var(--t4)}
+.calendar-grid{display:grid;grid-template-columns:minmax(360px,.82fr) minmax(620px,1.18fr);gap:18px;align-items:start}
+.calendar-panel{min-width:0}
+.panel-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.panel-head h2{font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t1)}
 .calendar-card{border:1px solid var(--bdr);background:var(--bg2);border-radius:10px;overflow:hidden;box-shadow:0 8px 24px var(--shadow)}
 .table-shell{overflow-x:auto}
-table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:1180px}
-th{background:var(--bg2);border-bottom:1px solid var(--bdr2);color:var(--t3);font-size:11px;font-weight:800;text-align:left;text-transform:uppercase;letter-spacing:.7px;padding:12px 14px;white-space:nowrap}
-td{border-bottom:1px solid var(--bdr2);padding:12px 14px;color:var(--t2);font-size:13px;vertical-align:middle}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+.economic-table{min-width:420px}
+.earnings-table{min-width:620px}
+th{background:var(--bg2);border-bottom:1px solid var(--bdr2);color:var(--t3);font-size:10px;font-weight:800;text-align:left;text-transform:uppercase;letter-spacing:.7px;padding:10px 12px;white-space:nowrap}
+td{border-bottom:1px solid var(--bdr2);padding:10px 12px;color:var(--t2);font-size:12px;vertical-align:middle}
 tr:hover td{background:var(--bg3)}
-.day-row td{background:var(--bg3)!important;color:var(--t1);font-size:16px;font-weight:800;text-align:center;padding:14px;border-top:1px solid var(--bdr)}
-.empty-row td{text-align:center;color:var(--t3);font-size:14px;padding:24px}
-.ticker{font-family:'JetBrains Mono','SF Mono',Consolas,monospace;color:var(--amber);font-weight:800;letter-spacing:.4px}
+.day-row td{background:var(--bg3)!important;color:var(--t1);font-size:14px;font-weight:800;text-align:center;padding:12px;border-top:1px solid var(--bdr)}
+.empty-row td{text-align:center;color:var(--t3);font-size:13px;padding:22px}
+.ticker{font-family:'JetBrains Mono','SF Mono',Consolas,monospace;color:var(--t1);font-weight:800;letter-spacing:.4px}
 .ticker-link{text-decoration:none;transition:color .15s}
-.ticker-link:hover{color:var(--t1);text-decoration:underline;text-underline-offset:3px}
+.ticker-link:hover{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
 .company{color:var(--t1);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .subtle{color:var(--t3)}
 .mono{font-family:'JetBrains Mono','SF Mono',Consolas,monospace}
-.time-tag{font-family:'JetBrains Mono','SF Mono',Consolas,monospace;font-weight:800;color:var(--amber)}
-.time-tag.amc{color:var(--blue)}
+.time-tag{font-family:'JetBrains Mono','SF Mono',Consolas,monospace;font-weight:600;color:var(--t2)}
+.time-tag.amc{color:var(--t2)}
 .pos{color:var(--g);font-weight:700}
 .neg{color:var(--r);font-weight:700}
 .event-name{color:var(--t1);font-weight:700}
@@ -77,23 +81,18 @@ tr:hover td{background:var(--bg3)}
 .hidden{display:none!important}
 @media(max-width:900px){
   .page{padding:14px 12px 28px}
-  .toolbar{margin-bottom:18px}
-  .tab-btn{min-width:96px;padding:9px 14px;font-size:13px}
   .nav-row{justify-content:flex-start;margin-bottom:12px}
   .week-title{text-align:left}
+  .date-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity}
+  .date-tile{flex:0 0 152px;scroll-snap-align:start}
+  .calendar-grid{grid-template-columns:1fr;gap:16px}
   .table-shell{display:none}
   .mobile-list{display:block}
   .calendar-card{border-radius:8px}
-  .meta-strip{justify-content:flex-start}
 }
 @media(max-width:560px){
   .topbar{padding:0 14px}
   .hdr-t{font-size:13px}
-  .toolbar{gap:8px}
-  .tabs{flex:1}
-  .tab-btn{flex:1;min-width:0}
-  .refresh-btn{padding:8px 6px}
-  .refresh-btn span:last-child{display:none}
   .mobile-grid{grid-template-columns:1fr 1fr}
 }
 </style>
@@ -107,17 +106,6 @@ tr:hover td{background:var(--bg3)}
 </div>
 
 <main class="page">
-  <section class="toolbar">
-    <div class="tabs" aria-label="Calendar type">
-      <button class="tab-btn active" id="economicTab" onclick="switchCalendar('economic')">Economic</button>
-      <button class="tab-btn" id="earningsTab" onclick="switchCalendar('earnings')">Earnings</button>
-    </div>
-    <button class="refresh-btn" onclick="refreshCalendar()" title="Refresh calendar data">
-      <span class="refresh-icon">↻</span>
-      <span>Refresh</span>
-    </button>
-  </section>
-
   <section class="nav-row">
     <div class="week-title">
       <h1 id="weekLabel">This week</h1>
@@ -125,17 +113,34 @@ tr:hover td{background:var(--bg3)}
     </div>
   </section>
 
-  <section class="meta-strip">
-    <div class="meta-right">
-      <span id="updatedText">Updated: 16/06/2026, 08:30 SGT</span>
-    </div>
+  <section class="date-strip-wrap" aria-label="Calendar dates">
+    <div class="date-strip" id="dateStrip"></div>
   </section>
 
-  <section class="calendar-card">
-    <div class="table-shell">
-      <table id="calendarTable"></table>
+  <section class="calendar-grid">
+    <div class="calendar-panel">
+      <div class="panel-head">
+        <h2>Economic</h2>
+      </div>
+      <div class="calendar-card">
+        <div class="table-shell">
+          <table class="economic-table" id="economicTable"></table>
+        </div>
+        <div class="mobile-list" id="economicMobileList"></div>
+      </div>
     </div>
-    <div class="mobile-list" id="mobileList"></div>
+
+    <div class="calendar-panel">
+      <div class="panel-head">
+        <h2>Earnings</h2>
+      </div>
+      <div class="calendar-card">
+        <div class="table-shell">
+          <table class="earnings-table" id="earningsTable"></table>
+        </div>
+        <div class="mobile-list" id="earningsMobileList"></div>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -174,7 +179,7 @@ const FALLBACK_ECONOMIC_DATA={
   events:FALLBACK_ECONOMIC_EVENTS
 };
 
-let activeCalendar='economic';
+let selectedDate=null;
 
 function setTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
@@ -184,15 +189,6 @@ function toggleTheme(){
   const current=document.documentElement.getAttribute('data-theme')||'light';
   setTheme(current==='dark'?'light':'dark');
 }
-function switchCalendar(type){
-  activeCalendar=type;
-  document.getElementById('economicTab').classList.toggle('active',type==='economic');
-  document.getElementById('earningsTab').classList.toggle('active',type==='earnings');
-  renderCalendar();
-}
-function refreshCalendar(){
-  window.location.reload();
-}
 function esc(v){
   return String(v==null?'-':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 }
@@ -200,23 +196,22 @@ function timeClass(v){
   return String(v).toUpperCase()==='AMC'?'time-tag amc':'time-tag';
 }
 function renderCalendar(){
+  const economicData=currentEconomicData();
+  const days=calendarDays(economicData);
+  if(!selectedDate || !days.some(day=>day.date===selectedDate)){
+    selectedDate=defaultSelectedDate(days,economicData.events,EARNINGS_EVENTS);
+  }
   const weekLabel=document.getElementById('weekLabel');
   const rangeLabel=document.getElementById('rangeLabel');
-  if(activeCalendar==='economic'){
-    const economicData=currentEconomicData();
-    weekLabel.textContent=economicWeekLabel(economicData);
-    rangeLabel.textContent=economicData.range_label || '';
-    document.getElementById('updatedText').textContent=`Updated: ${economicData.generated_at_sgt || FALLBACK_ECONOMIC_DATA.generated_at_sgt}`;
-    renderEconomic();
-  }else{
-    weekLabel.textContent='This week';
-    rangeLabel.textContent='June 15, 2026 - June 19, 2026';
-    document.getElementById('updatedText').textContent='Updated: 16/06/2026, 08:30 SGT';
-    renderEarnings();
-  }
+  weekLabel.textContent=economicWeekLabel(economicData);
+  rangeLabel.textContent=economicData.range_label || '';
+  renderDateStrip(days,economicData.events,EARNINGS_EVENTS);
+  renderEconomic(selectedDate);
+  renderEarnings(selectedDate);
 }
 function dayEvents(events,day){
-  return events.filter(e=>e.date===day.date);
+  const date=typeof day==='string'?day:day.date;
+  return events.filter(e=>e.date===date);
 }
 function screenerProfileUrl(ticker){
   return `screener.html?profile=${encodeURIComponent(ticker)}`;
@@ -225,6 +220,55 @@ function currentEconomicData(){
   const live=window.ECONOMIC_CALENDAR_DATA;
   if(live && Array.isArray(live.days) && Array.isArray(live.events)) return live;
   return FALLBACK_ECONOMIC_DATA;
+}
+function compactDate(dateText){
+  const dt=new Date(`${dateText}T00:00:00`);
+  if(Number.isNaN(dt.getTime())) return dateText || '-';
+  return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+function todayIso(){
+  const now=new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+}
+function calendarDays(economicData){
+  const byDate=new Map();
+  for(const day of economicData.days || []){
+    byDate.set(day.date,{date:day.date,label:day.label || longDate(day.date)});
+  }
+  for(const e of economicData.events || []){
+    if(!byDate.has(e.date)) byDate.set(e.date,{date:e.date,label:e.day || longDate(e.date)});
+  }
+  for(const e of EARNINGS_EVENTS){
+    if(!byDate.has(e.date)) byDate.set(e.date,{date:e.date,label:e.day || longDate(e.date)});
+  }
+  return [...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date));
+}
+function longDate(dateText){
+  const dt=new Date(`${dateText}T00:00:00`);
+  if(Number.isNaN(dt.getTime())) return dateText || '-';
+  return dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+}
+function defaultSelectedDate(days,economicEvents,earningsEvents){
+  if(!days.length) return null;
+  const today=todayIso();
+  if(days.some(day=>day.date===today)) return today;
+  const firstWithEvents=days.find(day=>dayEvents(economicEvents,day).length+dayEvents(earningsEvents,day).length>0);
+  return (firstWithEvents || days[0]).date;
+}
+function selectDate(date){
+  selectedDate=date;
+  renderCalendar();
+}
+function renderDateStrip(days,economicEvents,earningsEvents){
+  const el=document.getElementById('dateStrip');
+  el.innerHTML=days.map(day=>{
+    const count=dayEvents(economicEvents,day).length+dayEvents(earningsEvents,day).length;
+    const active=day.date===selectedDate?' active':'';
+    return `<button class="date-tile${active}" type="button" onclick="selectDate('${esc(day.date)}')" aria-pressed="${day.date===selectedDate?'true':'false'}">
+      <span class="date-label">${esc(compactDate(day.date))}</span>
+      <span class="date-count${count?'':' empty'}">${count} event${count===1?'':'s'}</span>
+    </button>`;
+  }).join('');
 }
 function economicWeekLabel(economicData){
   const first=economicData?.days?.[0]?.date;
@@ -236,98 +280,63 @@ function economicWeekLabel(economicData){
   if(nowDate > last) return 'Previous week';
   return 'This week';
 }
-function renderEconomic(){
+function renderEconomic(date){
   const economicData=currentEconomicData();
-  const days=economicData.days;
-  const table=document.getElementById('calendarTable');
+  const events=dayEvents(economicData.events,date).sort((a,b)=>String(a.time).localeCompare(String(b.time)));
+  const table=document.getElementById('economicTable');
   table.innerHTML=`<colgroup>
-    <col style="width:120px"><col><col style="width:120px"><col style="width:150px"><col style="width:150px"><col style="width:150px">
+    <col style="width:110px"><col style="width:105px"><col>
   </colgroup><thead><tr>
-    <th>Time (SGT)</th><th>Event</th><th>Actual</th><th>Previous</th><th>Consensus</th><th>Forecast</th>
-  </tr></thead><tbody>${days.map(day=>{
-    const rows=dayEvents(economicData.events,day);
-    return `<tr class="day-row"><td colspan="6">${esc(day.label)}</td></tr>`+(rows.length?rows.map(e=>`
+    <th>Date</th><th>Time (SGT)</th><th>Event</th>
+  </tr></thead><tbody>${events.length?events.map(e=>`
       <tr>
+        <td class="mono">${esc(compactDate(e.date))}</td>
         <td><span class="time-tag">${esc(e.time)}</span></td>
         <td><span class="event-name">${esc(e.event)}</span> <span class="subtle">${esc(e.period)}</span></td>
-        <td class="mono">${esc(e.actual)}</td>
-        <td class="mono pos">${esc(e.previous)}</td>
-        <td class="mono">${esc(e.consensus)}</td>
-        <td class="mono">${esc(e.forecast)}</td>
-      </tr>`).join(''):`<tr class="empty-row"><td colspan="6">No major economic events scheduled</td></tr>`);
-  }).join('')}</tbody>`;
-  renderEconomicMobile();
+      </tr>`).join(''):`<tr class="empty-row"><td colspan="3">No major economic events scheduled</td></tr>`}</tbody>`;
+  renderEconomicMobile(date);
 }
-function renderEarnings(){
-  const days=FALLBACK_DAYS;
-  const table=document.getElementById('calendarTable');
+function renderEarnings(date){
+  const rows=dayEvents(EARNINGS_EVENTS,date).sort((a,b)=>String(a.time).localeCompare(String(b.time)) || a.ticker.localeCompare(b.ticker));
+  const table=document.getElementById('earningsTable');
   table.innerHTML=`<colgroup>
-    <col style="width:82px"><col style="width:250px"><col style="width:220px"><col style="width:84px"><col style="width:90px"><col style="width:90px"><col style="width:110px"><col style="width:92px"><col style="width:92px"><col style="width:100px"><col style="width:110px"><col style="width:110px"><col style="width:110px">
+    <col style="width:100px"><col style="width:84px"><col style="width:82px"><col><col style="width:190px">
   </colgroup><thead><tr>
-    <th>Ticker</th><th>Company</th><th>Group</th><th>Time</th><th>AVG. $VOL</th><th>ADR</th><th>Mkt Cap</th><th>EPS Est</th><th>EPS Act</th><th>EPS Surp</th><th>Rev Est</th><th>Rev Act</th><th>Rev Surp</th>
-  </tr></thead><tbody>${days.map(day=>{
-    const rows=dayEvents(EARNINGS_EVENTS,day);
-    return `<tr class="day-row"><td colspan="13">${esc(day.label)}</td></tr>`+(rows.length?rows.map(e=>`
+    <th>Date</th><th>Time</th><th>Ticker</th><th>Company</th><th>Group</th>
+  </tr></thead><tbody>${rows.length?rows.map(e=>`
       <tr>
+        <td class="mono">${esc(compactDate(e.date))}</td>
+        <td><span class="${timeClass(e.time)}">${esc(e.time)}</span></td>
         <td><a class="ticker ticker-link" href="${screenerProfileUrl(e.ticker)}">${esc(e.ticker)}</a></td>
         <td><span class="company">${esc(e.company)}</span></td>
         <td>${esc(e.group)}</td>
-        <td><span class="${timeClass(e.time)}">${esc(e.time)}</span></td>
-        <td class="mono">${esc(e.vol)}</td>
-        <td class="mono">${esc(e.adr)}</td>
-        <td class="mono">${esc(e.mcap)}</td>
-        <td class="mono">${esc(e.epsEst)}</td>
-        <td class="mono">${esc(e.epsAct)}</td>
-        <td class="mono">${esc(e.epsSurp)}</td>
-        <td class="mono">${esc(e.revEst)}</td>
-        <td class="mono">${esc(e.revAct)}</td>
-        <td class="mono">${esc(e.revSurp)}</td>
-      </tr>`).join(''):`<tr class="empty-row"><td colspan="13">No major earnings scheduled</td></tr>`);
-  }).join('')}</tbody>`;
-  renderEarningsMobile();
+      </tr>`).join(''):`<tr class="empty-row"><td colspan="5">No major earnings scheduled</td></tr>`}</tbody>`;
+  renderEarningsMobile(date);
 }
-function renderEconomicMobile(){
+function renderEconomicMobile(date){
   const economicData=currentEconomicData();
-  const days=economicData.days;
-  const el=document.getElementById('mobileList');
-  el.innerHTML=days.map(day=>{
-    const rows=dayEvents(economicData.events,day);
-    return `<div class="mobile-day">${esc(day.label)}</div>`+(rows.length?rows.map(e=>`
+  const events=dayEvents(economicData.events,date).sort((a,b)=>String(a.time).localeCompare(String(b.time)));
+  const el=document.getElementById('economicMobileList');
+  el.innerHTML=events.length?events.map(e=>`
       <div class="mobile-item">
         <div class="mobile-main">
           <div class="mobile-title">${esc(e.event)} <span class="subtle">${esc(e.period)}</span></div>
-          <div class="mobile-sub">US high impact · ${esc(e.time)} SGT</div>
+          <div class="mobile-sub">${esc(compactDate(e.date))} · ${esc(e.time)} SGT</div>
         </div>
-        <div class="mobile-metric">US</div>
-        <div class="mobile-grid">
-          <div class="mobile-stat"><span>Actual</span><b>${esc(e.actual)}</b></div>
-          <div class="mobile-stat"><span>Previous</span><b>${esc(e.previous)}</b></div>
-          <div class="mobile-stat"><span>Consensus</span><b>${esc(e.consensus)}</b></div>
-          <div class="mobile-stat"><span>Forecast</span><b>${esc(e.forecast)}</b></div>
-        </div>
-      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No major economic events scheduled</div></div></div>`);
-  }).join('');
+        <div class="mobile-metric">${esc(e.time)}</div>
+      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No major economic events scheduled</div></div></div>`;
 }
-function renderEarningsMobile(){
-  const days=FALLBACK_DAYS;
-  const el=document.getElementById('mobileList');
-  el.innerHTML=days.map(day=>{
-    const rows=dayEvents(EARNINGS_EVENTS,day);
-    return `<div class="mobile-day">${esc(day.label)}</div>`+(rows.length?rows.map(e=>`
+function renderEarningsMobile(date){
+  const rows=dayEvents(EARNINGS_EVENTS,date).sort((a,b)=>String(a.time).localeCompare(String(b.time)) || a.ticker.localeCompare(b.ticker));
+  const el=document.getElementById('earningsMobileList');
+  el.innerHTML=rows.length?rows.map(e=>`
       <div class="mobile-item">
         <div class="mobile-main">
           <div class="mobile-title"><a class="ticker ticker-link" href="${screenerProfileUrl(e.ticker)}">${esc(e.ticker)}</a> ${esc(e.company)}</div>
-          <div class="mobile-sub">${esc(e.group)} · <span class="${timeClass(e.time)}">${esc(e.time)}</span></div>
+          <div class="mobile-sub">${esc(compactDate(e.date))} · <span class="${timeClass(e.time)}">${esc(e.time)}</span> · ${esc(e.group)}</div>
         </div>
-        <div class="mobile-metric">${esc(e.mcap)}</div>
-        <div class="mobile-grid">
-          <div class="mobile-stat"><span>AVG. $VOL</span><b>${esc(e.vol)}</b></div>
-          <div class="mobile-stat"><span>ADR</span><b>${esc(e.adr)}</b></div>
-          <div class="mobile-stat"><span>EPS Est</span><b>${esc(e.epsEst)}</b></div>
-          <div class="mobile-stat"><span>Rev Est</span><b>${esc(e.revEst)}</b></div>
-        </div>
-      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No major earnings scheduled</div></div></div>`);
-  }).join('');
+        <div class="mobile-metric">${esc(e.time)}</div>
+      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No major earnings scheduled</div></div></div>`;
 }
 renderCalendar();
 </script>
