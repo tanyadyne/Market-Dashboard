@@ -33,7 +33,6 @@ ROOT = Path(__file__).resolve().parent
 OUT_JSON = ROOT / "economic_calendar.json"
 OUT_JS = ROOT / "economic_calendar.js"
 TZ_ET = ZoneInfo("America/New_York")
-TZ_SGT = ZoneInfo("Asia/Singapore")
 
 
 @dataclass(frozen=True)
@@ -170,8 +169,8 @@ def _period_text(value) -> str:
     return text.upper()
 
 
-def _day_label(dt_sgt: datetime) -> str:
-    return dt_sgt.strftime("%A, %B ") + str(dt_sgt.day) + dt_sgt.strftime(", %Y")
+def _day_label(dt_et: datetime) -> str:
+    return dt_et.strftime("%A, %B ") + str(dt_et.day) + dt_et.strftime(", %Y")
 
 
 def _range_label(days: list[dict]) -> str:
@@ -190,10 +189,10 @@ def _range_label(days: list[dict]) -> str:
     )
 
 
-def _build_days(start_sgt_date: datetime.date) -> list[dict]:
+def _build_days(start_et_date: datetime.date) -> list[dict]:
     days = []
     for offset in range(5):
-        dt = datetime.combine(start_sgt_date + timedelta(days=offset), datetime.min.time())
+        dt = datetime.combine(start_et_date + timedelta(days=offset), datetime.min.time())
         days.append({"date": dt.date().isoformat(), "label": _day_label(dt)})
     return days
 
@@ -205,14 +204,14 @@ def _iter_calendar_rows(rows):
 
 
 def _payload_from_row(key: str, label: str, source_event: str, event_time: datetime, row) -> dict:
-    event_time_sgt = event_time.astimezone(TZ_SGT)
+    event_time_et = event_time.astimezone(TZ_ET)
     return {
         "key": key,
         "event": label,
         "source_event": source_event,
-        "date": event_time_sgt.date().isoformat(),
-        "day": _day_label(event_time_sgt),
-        "time": event_time_sgt.strftime("%I:%M %p"),
+        "date": event_time_et.date().isoformat(),
+        "day": _day_label(event_time_et),
+        "time": event_time_et.strftime("%I:%M %p"),
         "period": _period_text(row.get("For")),
         "actual": _clean_number(row.get("Actual")),
         "consensus": _clean_number(row.get("Expected")),
@@ -222,8 +221,8 @@ def _payload_from_row(key: str, label: str, source_event: str, event_time: datet
     }
 
 
-def _synthetic_fomc_press(rate_payload: dict, rate_time_sgt: datetime) -> dict:
-    press_time = rate_time_sgt + timedelta(minutes=30)
+def _synthetic_fomc_press(rate_payload: dict, rate_time_et: datetime) -> dict:
+    press_time = rate_time_et + timedelta(minutes=30)
     return {
         "key": "fed_press",
         "event": "Fed chair press conference",
@@ -257,18 +256,18 @@ def _select_major_events(df) -> list[dict]:
             if priority < 0:
                 continue
 
-            event_time_sgt = event_time.astimezone(TZ_SGT)
+            event_time_et = event_time.astimezone(TZ_ET)
             payload = _payload_from_row(matcher.key, matcher.label, name, event_time, row)
-            sort_key = (event_time_sgt, priority, name)
+            sort_key = (event_time_et, priority, name)
             current = chosen.get(matcher.key)
             if current is None or sort_key < current[0]:
                 chosen[matcher.key] = (sort_key, payload)
             break
 
     if "fomc_rate" in chosen and "fed_press" not in chosen:
-        rate_time_sgt = chosen["fomc_rate"][0][0]
-        press_payload = _synthetic_fomc_press(chosen["fomc_rate"][1], rate_time_sgt)
-        chosen["fed_press"] = ((rate_time_sgt + timedelta(minutes=30), 0, "Synthetic FOMC press conference"), press_payload)
+        rate_time_et = chosen["fomc_rate"][0][0]
+        press_payload = _synthetic_fomc_press(chosen["fomc_rate"][1], rate_time_et)
+        chosen["fed_press"] = ((rate_time_et + timedelta(minutes=30), 0, "Synthetic FOMC press conference"), press_payload)
 
     selected = [item[1] for item in sorted(chosen.values(), key=lambda item: item[0])]
     return selected
@@ -298,13 +297,12 @@ def build_payload(now_et: datetime | None = None) -> dict:
     rows = _fetch_calendar_rows(week_start_et, week_end_et)
     events = _select_major_events(rows)
 
-    week_start_sgt = week_start_et.astimezone(TZ_SGT).date()
-    days = _build_days(week_start_sgt)
+    days = _build_days(week_start_et.date())
 
-    generated_sgt = now_et.astimezone(TZ_SGT)
     payload = {
         "generated_at_utc": datetime.now(TZ_ET).astimezone(ZoneInfo("UTC")).strftime("%Y-%m-%d %H:%M UTC"),
-        "generated_at_sgt": generated_sgt.strftime("%d/%m/%Y, %H:%M SGT"),
+        "generated_at_et": now_et.strftime("%d/%m/%Y, %H:%M %Z"),
+        "timezone": "America/New_York",
         "week_label": "This week",
         "range_label": _range_label(days),
         "days": days,
