@@ -298,7 +298,7 @@ function renderEconomic(date){
   table.innerHTML=`<colgroup>
     <col style="width:110px"><col style="width:105px"><col>
   </colgroup><thead><tr>
-    <th>Date</th><th>Time (ET)</th><th>Event</th>
+    <th>Date</th><th>Time (EST)</th><th>Event</th>
   </tr></thead><tbody>${events.length?events.map(e=>`
       <tr>
         <td class="mono">${esc(compactDate(e.date))}</td>
