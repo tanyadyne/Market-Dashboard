@@ -56,6 +56,7 @@ CSV_EXTRAS = [
     "TSLA","NVDA","QCOM","XPEV","AMZN","AMD","TER","GOOGL","BABA",
     "MBLY","HSAI","ROK","TKR","RBC","ABB","AEVA",
     "NTSK","SAIL","HIMS",
+    "OKTA",
 ]
 
 # MANUAL_INCLUDE — tickers that bypass all filtering (liquidity, market cap, pharma/biotech).
@@ -73,6 +74,8 @@ MANUAL_INCLUDE = {
     "AEVA", "MBLY", "HSAI", "RBC", "TKR", "XPEV",
     # Recent IPOs — force-kept so the liquidity/$2B mcap gates don't drop them.
     "NTSK", "SAIL", "HIMS",
+    # Protected tracking name — keep the Cybersecurity profile in the universe.
+    "OKTA",
 }
 
 # MANUAL_EXCLUDE — tickers dropped from the universe before any filtering or data
@@ -487,7 +490,7 @@ def build_universe():
     print(f"  Added {added} new tickers from Russell 3000 (total universe before mcap filter: {len(stocks)})")
 
     # Diagnostic: check if specific tickers are present in the starting universe
-    DEBUG_TICKERS_UNIV = {"RIG"}
+    DEBUG_TICKERS_UNIV = {"RIG", "OKTA"}
     for tk in DEBUG_TICKERS_UNIV:
         if tk in stocks:
             etfs_for_tk = stock_to_etfs.get(tk, [])
@@ -2206,7 +2209,31 @@ def main():
 
         missing = [t for t in tickers if t not in all_dfs]
         if missing:
-            print(f"  {len(missing)} tickers still missing after recovery (will retry next run)")
+            print(f"  Recovery pass 3: retrying {len(missing)} still-missing tickers individually...")
+            for tk in missing:
+                for attempt in range(3):
+                    try:
+                        df = yf.download(
+                            tk,
+                            auto_adjust=False,
+                            session=_session,
+                            threads=False,
+                            progress=False,
+                            **kwargs,
+                        )
+                        if not df.empty:
+                            flat = flatten_single(df.copy()).dropna(subset=['Close'])
+                            if not flat.empty:
+                                all_dfs[tk] = flat
+                                break
+                    except Exception as e:
+                        if attempt == 2:
+                            print(f"    {tk}: single-ticker recovery failed: {e}")
+                    time.sleep(5)
+
+        missing = [t for t in tickers if t not in all_dfs]
+        if missing:
+            print(f"  {len(missing)} tickers still missing after recovery: {missing}")
         else:
             print(f"  All {len(tickers)} tickers successfully fetched")
 
@@ -2320,7 +2347,7 @@ def main():
     print(f"\nPre-filtering by liquidity (price × avg_vol_10d >= ${MIN_DOLLAR_VOL/1e6:.0f}M, or ${MIN_DOLLAR_VOL_SMALL_CAP/1e6:.0f}M for small caps < ${SMALL_CAP_THRESHOLD/1e9:.0f}B)...")
 
     # Tickers to log verbosely through each filter (for debugging why a stock is missing)
-    DEBUG_TICKERS = {"RIG"}
+    DEBUG_TICKERS = {"RIG", "OKTA"}
 
     grace_state = load_universe_grace_state()
     grace_records = grace_state.setdefault("tickers", {})
