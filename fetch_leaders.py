@@ -1022,7 +1022,14 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         tr = max(h[i] - l[i], abs(h[i] - c[i-1]), abs(l[i] - c[i-1]))
         trs.append(tr)
     atr = float(np.mean(trs)) if trs else 0
-    valid_c = [x for x in c if x is not None]
+    valid_c = []
+    for x in c:
+        try:
+            value = float(x)
+            if np.isfinite(value):
+                valid_c.append(value)
+        except (TypeError, ValueError):
+            continue
     sma50 = np.mean(valid_c[-50:]) if len(valid_c) >= 50 else np.mean(valid_c)
     if atr > 0 and sma50 > 0:
         gain_pct = (c[-1] - sma50) / sma50 * 100
@@ -1041,6 +1048,38 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
 
     vols = [x for x in v if x is not None and x > 0]
     rvol = (vols[-1] / np.mean(vols[:-1][-20:])) if len(vols) > 1 and np.mean(vols[:-1][-20:]) > 0 else None
+
+    # Compact fundamentals/technical fields used by the screener table and filters.
+    # These all come from the daily bars already downloaded for RS, so they add no
+    # extra Yahoo calls to either the full or intraday workflow.
+    avg_dollar_vol = None
+    try:
+        recent_volumes = [float(x) for x in v[-10:] if x is not None and np.isfinite(float(x)) and float(x) >= 0]
+        if recent_volumes:
+            # Match the universe liquidity gate: latest price × 10-day average volume.
+            avg_dollar_vol = price * float(np.mean(recent_volumes))
+    except (TypeError, ValueError):
+        avg_dollar_vol = None
+
+    avg_range_pct = None
+    adr_samples = []
+    for i in range(max(0, n - 14), n):
+        try:
+            close_i, high_i, low_i = float(c[i]), float(h[i]), float(l[i])
+            if all(np.isfinite(x) for x in (close_i, high_i, low_i)) and close_i > 0:
+                adr_samples.append((high_i - low_i) / close_i * 100)
+        except (TypeError, ValueError):
+            continue
+    if adr_samples:
+        avg_range_pct = float(np.mean(adr_samples))
+
+    sma_values = {}
+    ma_flags = 0
+    for bit, period in ((1, 10), (2, 20), (4, 50), (8, 200)):
+        sma = float(np.mean(valid_c[-period:])) if len(valid_c) >= period else None
+        sma_values[period] = sma
+        if sma is not None and price > sma:
+            ma_flags |= bit
 
     # ─── Trailing 5-day R.Vol (rolling, week-of-day-agnostic) ────────────────
     # Unlike `w_rv` (week-to-date, resets every Monday), this is a rolling 5-session
@@ -1079,6 +1118,9 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "t5_rv": round(t5_rvol * 100) if t5_rvol else None,
                 "am": round(atr_mult * 100),
                 "ax": round(atr_ext * 100), "ch": round(change, 2),
+                "dv": round(avg_dollar_vol) if avg_dollar_vol is not None else None,
+                "ad": round(avg_range_pct, 2) if avg_range_pct is not None else None,
+                "ma": ma_flags,
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
                 "ytd": round(ytd, 2) if ytd is not None else None,
@@ -1092,6 +1134,10 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "_5b": w_base,
                 "_20b": m_base,
                 "_yb": ytd_base,
+                "_sma10": sma_values[10],
+                "_sma20": sma_values[20],
+                "_sma50": sma_values[50],
+                "_sma200": sma_values[200],
                 **_setup_base}
 
     # Handle IPOs with <252 bars: use actual bar count (mirrors Pine's "n63/n126/n189/n252" logic)
@@ -1278,6 +1324,9 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "t5_rv": round(t5_rvol * 100) if t5_rvol else None,
         "am": round(atr_mult * 100), "ax": round(atr_ext * 100),
         "ch": round(change, 2),
+        "dv": round(avg_dollar_vol) if avg_dollar_vol is not None else None,
+        "ad": round(avg_range_pct, 2) if avg_range_pct is not None else None,
+        "ma": ma_flags,
         "c5": round(c5, 2) if c5 is not None else None,
         "c20": round(c20, 2) if c20 is not None else None,
         "ytd": round(ytd, 2) if ytd is not None else None,
@@ -1296,6 +1345,10 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "_5b": w_base,
         "_20b": m_base,
         "_yb": ytd_base,
+        "_sma10": sma_values[10],
+        "_sma20": sma_values[20],
+        "_sma50": sma_values[50],
+        "_sma200": sma_values[200],
         **setup_base,
     }
 
@@ -1748,7 +1801,7 @@ def is_us_market_open():
 
 
 def apply_intraday_overlay(results):
-    """Refresh ch/c5/c20/ytd/p with live intraday price. Only runs during regular session.
+    """Refresh price-dependent fields with live quotes during the regular session.
 
     Validation:
       - `live` must be finite and positive
@@ -1787,6 +1840,18 @@ def apply_intraday_overlay(results):
         # Apply overlay
         r["p"] = round(live, 2)
         r["ch"] = round(candidate_ch, 2)
+        atr = r.get("_atr")
+        sma50 = r.get("_sma50")
+        if atr and sma50 and atr > 0 and sma50 > 0:
+            gain_pct = (live - sma50) / sma50 * 100
+            atr_pct = atr / live * 100
+            r["ax"] = round((gain_pct / atr_pct) * 100) if atr_pct > 0 else r.get("ax")
+        ma_flags = 0
+        for bit, key in ((1, "_sma10"), (2, "_sma20"), (4, "_sma50"), (8, "_sma200")):
+            sma = r.get(key)
+            if sma and live > sma:
+                ma_flags |= bit
+        r["ma"] = ma_flags
         if r.get("_5b") and r["_5b"] > 0:
             r["c5"] = round((live / r["_5b"] - 1) * 100, 2)
         if r.get("_20b") and r["_20b"] > 0:
@@ -1807,6 +1872,7 @@ def write_intraday_baselines(results):
         "p", "w_fr", "w_vs", "w_rs", "w_rk",
         "w_pen_engulf", "w_pen_crash5",
         "_pc", "_5b", "_20b", "_yb", "_atr", "_hi52",
+        "_sma10", "_sma20", "_sma50", "_sma200",
         "_setup_ema9", "_setup_ema21", "_setup_adr",
         "_w_deltas", "_w_week", "_w_date",
         "_w_stock_prev", "_w_stock_last", "_w_stock_atr",
@@ -2641,7 +2707,8 @@ def main():
             if d_metrics is None:
                 continue
             processed += 1
-            entry = {"t": tk, "n": metadata_name(tk), "d": metadata_desc(tk), "th": industry_label.get(tk, "General"), "thm": theme_map.get(tk, "General"), **d_metrics, **w_metrics}
+            market_cap = int(mcap_cache.get(tk, 0) or 0)
+            entry = {"t": tk, "n": metadata_name(tk), "d": metadata_desc(tk), "th": industry_label.get(tk, "General"), "thm": theme_map.get(tk, "General"), "mc": market_cap or None, **d_metrics, **w_metrics}
             results.append(entry)
         except Exception:
             continue
@@ -2660,7 +2727,7 @@ def main():
     )
 
     # ─── Intraday overlay: replace EOD price with live quote when market is open ──
-    # Updates p / ch / c5 / c20 / ytd to reflect the current intraday move. RS scores
+    # Updates p / ch / c5 / c20 / ytd / ax / ma to reflect the current intraday move. RS scores
     # remain anchored to the last completed daily bar (recomputing intraday would require
     # re-running the full VARS pipeline, which is expensive).
     apply_intraday_overlay(results)

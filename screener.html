@@ -85,7 +85,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .filter-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
 .filter-btn:hover{background:var(--bg3);color:var(--t1)}
 .filter-btn.has-filter{border-color:#f59e0b;color:#fbbf24}
-.filter-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:8px 0;min-width:240px;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.filter-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:8px 0;min-width:280px;max-height:calc(100vh - 80px);overflow-y:auto;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.4)}
 .filter-menu.open{display:block}
 .filter-menu-hdr{padding:6px 16px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t4);font-weight:700}
 .filter-item{padding:7px 16px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--t2);transition:.1s}
@@ -95,6 +95,11 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .filter-label{display:flex;align-items:center;gap:6px;min-width:0}
 .filter-check{margin:0;accent-color:var(--t3);cursor:pointer;flex-shrink:0}
 .filter-select{background:var(--bg3);border:1px solid var(--bdr);border-radius:5px;color:var(--t1);font-family:inherit;font-size:11px;font-weight:700;padding:2px 18px 2px 6px}
+.filter-group{padding:7px 16px;color:var(--t2)}
+.filter-group-label{font-size:12px;margin-bottom:7px}
+.filter-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.filter-option{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:4px 6px;border:1px solid var(--bdr);border-radius:5px;background:var(--bg3);font-size:10px;font-weight:600;white-space:nowrap;cursor:pointer}
+.filter-option:hover{border-color:var(--t4);color:var(--t1)}
 /* Table */
 table{width:100%;border-collapse:collapse}
 th{position:sticky;top:var(--top-h);background:var(--bg3);padding:8px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;border-bottom:1px solid var(--bdr);white-space:nowrap;z-index:2}
@@ -455,11 +460,11 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
     <div class="filter-menu" id="filterMenu">
       <div class="filter-menu-hdr">Filters</div>
       <label class="filter-item filter-choice">
-        <span class="filter-label">9/21 EMA COILED</span>
+        <span class="filter-label">Coiled EMAs</span>
         <input class="filter-check" id="filterCoiled" type="checkbox" data-bit="128" onchange="toggleSetupFilter(this)">
       </label>
       <label class="filter-item filter-choice">
-        <span class="filter-label">Not extended</span>
+        <span class="filter-label">Not Extended (&lt;6x)</span>
         <input class="filter-check" id="filterNotExtended" type="checkbox" onchange="toggleNotExtended(this)">
       </label>
       <div class="filter-item filter-choice">
@@ -496,6 +501,38 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
           delta
         </span>
         <input class="filter-check" id="filterPositiveDelta" type="checkbox" onchange="togglePositiveDelta(this)">
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-label">Positive % Change</div>
+        <div class="filter-options">
+          <label class="filter-option">1D<input class="filter-check positive-change-check" type="checkbox" data-period="ch" onchange="togglePositiveChangePeriod(this)"></label>
+          <label class="filter-option">1W<input class="filter-check positive-change-check" type="checkbox" data-period="c5" onchange="togglePositiveChangePeriod(this)"></label>
+          <label class="filter-option">1M<input class="filter-check positive-change-check" type="checkbox" data-period="c20" onchange="togglePositiveChangePeriod(this)"></label>
+          <label class="filter-option">YTD<input class="filter-check positive-change-check" type="checkbox" data-period="ytd" onchange="togglePositiveChangePeriod(this)"></label>
+        </div>
+      </div>
+      <div class="filter-item filter-choice">
+        <span class="filter-label">MCap
+          <select class="filter-select" id="marketCapSelect" onchange="updateMarketCapBand(this)">
+            <option value="gt2" selected>&gt;2B</option>
+            <option value="2to10">2B to 10B</option>
+            <option value="gt10">&gt;10B</option>
+            <option value="10to100">10B to 100B</option>
+            <option value="gt100">&gt;100B</option>
+            <option value="gt200">&gt;200B</option>
+            <option value="gt500">&gt;500B</option>
+          </select>
+        </span>
+        <input class="filter-check" id="filterMarketCap" type="checkbox" onchange="toggleMarketCap(this)">
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-label">Price Above</div>
+        <div class="filter-options">
+          <label class="filter-option">10 SMA<input class="filter-check price-above-check" type="checkbox" data-bit="1" onchange="togglePriceAbove(this)"></label>
+          <label class="filter-option">20 SMA<input class="filter-check price-above-check" type="checkbox" data-bit="2" onchange="togglePriceAbove(this)"></label>
+          <label class="filter-option">50 SMA<input class="filter-check price-above-check" type="checkbox" data-bit="4" onchange="togglePriceAbove(this)"></label>
+          <label class="filter-option">200 SMA<input class="filter-check price-above-check" type="checkbox" data-bit="8" onchange="togglePriceAbove(this)"></label>
+        </div>
       </div>
       <div style="border-top:1px solid var(--bdr);margin:6px 0"></div>
       <div class="filter-item" onclick="clearFilters()" style="color:var(--t3);font-size:11px">Clear All Filters</div>
@@ -562,6 +599,10 @@ let filterTopOnly=false;
 let topOnlyPercent=50;
 let filterPositiveDelta=false;
 let positiveDeltaDays=1;
+let positiveChangePeriods=new Set();
+let filterMarketCap=false;
+let marketCapBand='gt2';
+let priceAboveMask=0;
 let currentView='list'; // 'list' or 'chart'
 let chartPage=1;
 let profileHistoryPage=1;
@@ -728,7 +769,7 @@ function filterChanged(){
   renderActiveScreenerView();
 }
 function updateFilterButton(){
-  const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly||filterPositiveDelta);
+  const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly||filterPositiveDelta||positiveChangePeriods.size||filterMarketCap||priceAboveMask);
   document.getElementById('filterBtn').className=hasFilter?'filter-btn has-filter':'filter-btn';
 }
 function toggleSetupFilter(el){
@@ -757,6 +798,25 @@ function updatePositiveDeltaDays(el){
   positiveDeltaDays=parseInt(el.value,10)||1;
   if(filterPositiveDelta)filterChanged();
 }
+function togglePositiveChangePeriod(el){
+  if(el.checked)positiveChangePeriods.add(el.dataset.period);
+  else positiveChangePeriods.delete(el.dataset.period);
+  filterChanged();
+}
+function toggleMarketCap(el){
+  filterMarketCap=el.checked;
+  filterChanged();
+}
+function updateMarketCapBand(el){
+  marketCapBand=el.value||'gt2';
+  if(filterMarketCap)filterChanged();
+}
+function togglePriceAbove(el){
+  const bit=parseInt(el.dataset.bit,10)||0;
+  if(el.checked)priceAboveMask|=bit;
+  else priceAboveMask&=~bit;
+  filterChanged();
+}
 function handleScreenerSearch(){
   currentPage=1;
   chartPage=1;
@@ -769,11 +829,17 @@ function clearFilters(){
   topOnlyPercent=50;
   filterPositiveDelta=false;
   positiveDeltaDays=1;
+  positiveChangePeriods.clear();
+  filterMarketCap=false;
+  marketCapBand='gt2';
+  priceAboveMask=0;
   document.querySelectorAll('.filter-check').forEach(el=>el.checked=false);
   const topSelect=document.getElementById('topOnlySelect');
   if(topSelect)topSelect.value='50';
   const positiveDeltaSelect=document.getElementById('positiveDeltaSelect');
   if(positiveDeltaSelect)positiveDeltaSelect.value='1';
+  const marketCapSelect=document.getElementById('marketCapSelect');
+  if(marketCapSelect)marketCapSelect.value='gt2';
   updateFilterButton();
   document.getElementById('filterMenu').classList.remove('open');
   currentPage=1;
@@ -797,6 +863,16 @@ function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 function chgClass(v){return v>0?'cp':v<0?'cn':'cz';}
 function chgText(v){return v!=null?(v>0?'+':'')+v.toFixed(2)+'%':'—';}
 function multText(v){return v!=null?(v/100).toFixed(2)+'x':'—';}
+function moneyText(v){
+  if(v==null||!Number.isFinite(Number(v)))return'—';
+  const n=Number(v),a=Math.abs(n);
+  if(a>=1e12)return'$'+(n/1e12).toFixed(2)+'T';
+  if(a>=1e9)return'$'+(n/1e9).toFixed(2)+'B';
+  if(a>=1e6)return'$'+(n/1e6).toFixed(0)+'M';
+  if(a>=1e3)return'$'+(n/1e3).toFixed(0)+'K';
+  return'$'+n.toFixed(0);
+}
+function adrText(v){return v!=null?Number(v).toFixed(2)+'%':'—';}
 function getRSBg(rs){if(rs==null)return'var(--bg4)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--gbg)';if(rs>=80)return d?'#1a3a2a':'#dcfce7';if(rs>=60)return'var(--bg4)';if(rs>=40)return d?'#292524':'#fef3c7';if(rs>=20)return d?'#2c1810':'#ffedd5';return'var(--rbg)';}
 function getRSCol(rs){if(rs==null)return'var(--t3)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--g)';if(rs>=80)return'var(--g2)';if(rs>=60)return'var(--t2)';if(rs>=40)return d?'#d4a373':'#92400e';if(rs>=20)return d?'#fb923c':'#c2410c';return'var(--r)';}
 function atrExtBars(val){
@@ -1339,7 +1415,8 @@ function buildHeader(){
   let cols=[
     {key:'rk',label:'#',w:'36px',mw:'7%'},{key:'rd',label:'Δ',w:'56px',mw:'11%'},
     {key:'t',label:'Ticker',w:'64px',al:'l',mw:'14%'},{key:'n',label:'Company Name',w:'160px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l',mw:''},
-    {key:'rv',label:'R.Vol',w:'70px'},{key:'am',label:'ATR Mult',w:'70px'},
+    {key:'rv',label:'R.Vol',w:'70px'},{key:'mc',label:'MCap',w:'76px'},
+    {key:'dv',label:'Avg$Vol',w:'76px',title:'Average Dollar Volume'},{key:'ad',label:'ADR',w:'62px',title:'Average Daily Range'},
     {key:'ax',label:'ATR Ext',w:'70px'},{key:'ch',label:'1D',w:'60px',mw:'13%'},
     {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},{key:'ytd',label:'YTD',w:'60px',mw:'13%'},
     {key:'rs',label:'RS',w:'56px',mw:'11%'}
@@ -1357,6 +1434,7 @@ function buildHeader(){
     if(!isMobile){
       th.style.width=col.w;
     }
+    if(col.title)th.title=col.title;
     if(col.key==='rd'){
       const opts=[1,2,3,4,5,6,7,8,9,10].map(v=>`<option value="${v}"${v===rankLookback?' selected':''}>${v}D</option>`).join('');
       th.innerHTML=`Δ <select class="streak-sel" onchange="event.stopPropagation();rankLookback=parseInt(this.value);render();" style="font-size:9px;padding:1px 2px">${opts}</select>`;
@@ -1516,7 +1594,7 @@ function prioritizeTickerMatches(items, f){
 }
 function applyScreenerFilters(items,isW){
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
-  if(filterNotExtended)items=items.filter(e=>e.ax!=null&&e.ax<700);
+  if(filterNotExtended)items=items.filter(e=>e.ax!=null&&e.ax<600);
   if(filterPositiveDelta)items=items.filter(e=>{
     const delta=getRankDeltaVal(e.t,positiveDeltaDays);
     return delta!=null&&delta>=0;
@@ -1527,6 +1605,24 @@ function applyScreenerFilters(items,isW){
     const rankLimit=Math.ceil(rankedTotal*(topOnlyPercent/100));
     items=items.filter(e=>e[rkKey]!=null&&e[rkKey]<=rankLimit);
   }
+  if(positiveChangePeriods.size){
+    const periods=[...positiveChangePeriods];
+    items=items.filter(e=>periods.every(key=>e[key]!=null&&e[key]>0));
+  }
+  if(filterMarketCap){
+    const bands={
+      gt2:mc=>mc>2e9,
+      '2to10':mc=>mc>=2e9&&mc<=10e9,
+      gt10:mc=>mc>10e9,
+      '10to100':mc=>mc>=10e9&&mc<=100e9,
+      gt100:mc=>mc>100e9,
+      gt200:mc=>mc>200e9,
+      gt500:mc=>mc>500e9,
+    };
+    const matches=bands[marketCapBand]||bands.gt2;
+    items=items.filter(e=>e.mc!=null&&matches(Number(e.mc)));
+  }
+  if(priceAboveMask)items=items.filter(e=>((e.ma||0)&priceAboveMask)===priceAboveMask);
   return items;
 }
 
@@ -1546,7 +1642,7 @@ function render(){
   let items=getCurrentScreenerResults(isW);
 
   // Sort
-  const dk=k=>{if(!isW)return k;const m={rv:'w_rv',am:'w_am',rs:'w_rs',vs:'w_vs'};return m[k]||k;};
+  const dk=k=>{if(!isW)return k;const m={rv:'w_rv',rs:'w_rs',vs:'w_vs'};return m[k]||k;};
   if(sortKey==='rd'){
     items=[...items].sort((a,b)=>{const av=getRankDeltaVal(a.t)??-Infinity,bv=getRankDeltaVal(b.t)??-Infinity;return sortDir*(av>bv?1:av<bv?-1:0);});
   }else if(sortKey==='rk'){
@@ -1568,16 +1664,15 @@ function render(){
   const start=(currentPage-1)*PAGE_SIZE;
   const pageItems=items.slice(start,start+PAGE_SIZE);
 
-  const rvKey=isW?'w_rv':'rv',amKey=isW?'w_am':'am',rsKey=isW?'w_rs':'rs',vsKey=isW?'w_vs':'vs';
-  const mxRV=Math.max(...DATA.e.map(e=>e[rvKey]||0)),mxAM=Math.max(...DATA.e.map(e=>e[amKey]||0));
+  const rvKey=isW?'w_rv':'rv',rsKey=isW?'w_rs':'rs',vsKey=isW?'w_vs':'vs';
+  const mxRV=Math.max(...DATA.e.map(e=>e[rvKey]||0));
 
   let html='';
   for(const e of pageItems){
     // Use the original rank stored on the stock object (preserved across filters/searches)
     const origRank=isW?(e.w_rk||'—'):(e.rk||'—');
-    const rv=e[rvKey],am=e[amKey],rs=e[rsKey],vs=e[vsKey];
+    const rv=e[rvKey],rs=e[rsKey],vs=e[vsKey];
     const rvP=rv!=null?Math.min(rv/mxRV*100,100):0;
-    const amP=am!=null?Math.min(am/mxAM*100,100):0;
     const cellMap={
       rk:`<td class="rk">${origRank}</td>`,
       rd:rankDelta(e.t),
@@ -1585,7 +1680,9 @@ function render(){
       n:`<td class="sc2" title="${esc(e.n||'')}">${esc(e.n||'—')}</td>`,
       th:`<td class="sc2" title="${esc(e.th||'')}">${esc(e.th||'—')}</td>`,
       rv:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf i" style="width:${rvP}%"></div></div><span class="bv">${multText(rv)}</span></div></td>`,
-      am:`<td class="c"><div class="bc" style="justify-content:center"><div class="bt"><div class="bf p" style="width:${amP}%"></div></div><span class="bv">${multText(am)}</span></div></td>`,
+      mc:`<td class="c m">${moneyText(e.mc)}</td>`,
+      dv:`<td class="c m">${moneyText(e.dv)}</td>`,
+      ad:`<td class="c m">${adrText(e.ad)}</td>`,
       ax:`<td class="c"><div class="bc" style="justify-content:center;gap:4px">${atrExtBars(e.ax)}<span class="bv">${multText(e.ax)}</span></div></td>`,
       ch:`<td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>`,
       c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
@@ -1593,7 +1690,7 @@ function render(){
       ytd:`<td class="c m ${chgClass(e.ytd)}">${chgText(e.ytd)}</td>`,
       rs:`<td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span></td>`
     };
-    const rowKeys=isMobile?['rk','rd','t','th','ch','ytd','rs']:['rk','rd','t','n','th','rv','am','ax','ch','c5','c20','ytd','rs'];
+    const rowKeys=isMobile?['rk','rd','t','th','ch','ytd','rs']:['rk','rd','t','n','th','rv','mc','dv','ad','ax','ch','c5','c20','ytd','rs'];
     html+=`<tr>${rowKeys.map(k=>cellMap[k]||'').join('')}</tr>`;
   }
   document.getElementById('tb').innerHTML=html;
