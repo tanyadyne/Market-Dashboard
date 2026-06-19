@@ -68,8 +68,10 @@ button{font:inherit}
 .theme-list{margin:12px -22px -18px;display:flex;flex:1;flex-direction:column}
 .theme-row{display:flex;flex:1;align-items:center;padding:8px 22px;border-top:1px solid var(--bdr2)}
 .theme-row:hover{background:var(--card-hover)}
-.theme-name{font-size:13px;font-weight:800;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.theme-name{display:block;font-size:13px;font-weight:800;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.theme-name:hover{color:var(--accent2)}
 .theme-holdings{font-size:11px;font-weight:800;color:var(--orange);letter-spacing:.3px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.theme-holding:hover{color:var(--t1)}
 .positive{color:var(--green2)}.negative{color:var(--red)}.neutral{color:var(--t3)}
 .table-card{overflow:hidden}
 .table-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 22px 12px}
@@ -145,11 +147,11 @@ button{font:inherit}
         <div class="main-col">
           <section class="summary-grid" aria-label="Leading themes">
             <article class="card card-pad theme-card">
-              <div class="card-title">Top 5 themes (daily)</div>
+              <div class="card-title">Top 5 themes (this week)</div>
               <div class="theme-list" id="weeklyThemes"><div class="loading">Loading themes...</div></div>
             </article>
             <article class="card card-pad theme-card">
-              <div class="card-title">Top 5 themes (weekly)</div>
+              <div class="card-title">Top 5 themes (this year)</div>
               <div class="theme-list" id="yearThemes"><div class="loading">Loading themes...</div></div>
             </article>
           </section>
@@ -298,12 +300,15 @@ function renderThemeList(targetId,items){
   }
   target.innerHTML=items.map(theme=>{
     const holdings=topHoldingsFor(theme);
-    return `<a class="theme-row" href="${themeUrl(theme.t)}" title="${esc(theme.n||theme.t)}">
+    const holdingsHtml=holdings.length
+      ? holdings.map(ticker=>`<a class="theme-holding" href="${profileUrl(ticker)}">${esc(ticker)}</a>`).join(' · ')
+      : '-';
+    return `<div class="theme-row">
       <div>
-        <div class="theme-name">${esc(theme.n||theme.t)}</div>
-        <div class="theme-holdings">${holdings.length?esc(holdings.join(' · ')):'-'}</div>
+        <a class="theme-name" href="${themeUrl(theme.t)}" title="${esc(theme.n||theme.t)}">${esc(theme.n||theme.t)}</a>
+        <div class="theme-holdings">${holdingsHtml}</div>
       </div>
-    </a>`;
+    </div>`;
   }).join('');
 }
 function renderThemes(){
