@@ -26,6 +26,8 @@
   --accent:#2b00e8;--accent2:#2f80ed;--orange:#ff8a34;--green:#22c55e;--green2:#15803d;--red:#ff3b4f;--yellow:#9ac400;
   --shadow:rgba(15,23,42,.08);--chart-grid:#e2e5e9;
 }
+:root,[data-theme="dark"]{--mobile-bg:#0a0a0a;--mobile-card:#111;--mobile-card-hover:#141414;--mobile-bdr:#1f1f1f;--mobile-bdr-hover:#333;--mobile-t1:#e8e8e8;--mobile-t2:#888;--mobile-t3:#666;--mobile-t4:#444}
+[data-theme="light"]{--mobile-bg:#f7f7f8;--mobile-card:#fff;--mobile-card-hover:#f3f4f6;--mobile-bdr:#e5e7eb;--mobile-bdr-hover:#d1d5db;--mobile-t1:#111827;--mobile-t2:#4b5563;--mobile-t3:#6b7280;--mobile-t4:#9ca3af}
 *{margin:0;padding:0;box-sizing:border-box}
 html{background:var(--bg)}
 body{min-height:100vh;background:var(--page);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;font-size:12px;transition:background .2s,color .2s}
@@ -105,6 +107,28 @@ button{font:inherit}
 .news-widget-host .tradingview-widget-copyright a{color:var(--accent2);text-decoration:none}
 .news-widget-host .trademark{margin-left:3px}
 .loading{padding:24px;color:var(--t3);font-weight:700}
+.mobile-landing{display:none}
+.mobile-theme-toggle-wrap{display:flex;justify-content:flex-end;width:100%;max-width:520px;padding:20px 24px 0}
+.mobile-theme-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--mobile-bdr);cursor:pointer;background:#000;transition:background .25s ease}
+[data-theme="light"] .mobile-theme-toggle{background:#e0e0e0}
+.mobile-theme-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 3px rgba(0,0,0,.3);left:32px;color:#111}
+[data-theme="light"] .mobile-theme-toggle .knob{left:2px}
+.mobile-theme-toggle .knob::before{content:"\263E"}
+[data-theme="light"] .mobile-theme-toggle .knob::before{content:"\2600"}
+.mobile-header{padding:48px 24px 16px;text-align:center;width:100%;max-width:520px}
+.mobile-header h1{font-size:28px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mobile-t1)}
+.mobile-grid{display:flex;flex-direction:column;gap:16px;padding:40px 24px;width:100%;max-width:520px}
+.mobile-card{display:flex;align-items:center;gap:16px;padding:22px 24px;border-radius:14px;border:1px solid var(--mobile-bdr);background:var(--mobile-card);cursor:pointer;transition:all .2s ease;color:inherit}
+[data-theme="light"] .mobile-card{box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.mobile-card:hover{border-color:var(--mobile-bdr-hover);background:var(--mobile-card-hover);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.3)}
+[data-theme="light"] .mobile-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.mobile-card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:var(--mobile-card-hover);border:1px solid var(--mobile-t4)}
+.mobile-card-body{flex:1;min-width:0}
+.mobile-card-title{font-size:15px;font-weight:700;letter-spacing:.3px;margin-bottom:3px;color:var(--mobile-t1)}
+.mobile-card-desc{font-size:11px;color:var(--mobile-t3);line-height:1.4}
+.mobile-card-arrow{color:var(--mobile-t4);font-size:18px;transition:color .2s,transform .2s}
+.mobile-card:hover .mobile-card-arrow{color:var(--mobile-t2);transform:translateX(3px)}
+.mobile-footer{margin-top:auto;padding:24px;text-align:center;font-size:10px;color:var(--mobile-t4);letter-spacing:.5px}
 @media(max-width:1100px){
   .app{grid-template-columns:1fr}
   .sidebar{position:static;padding:18px 20px;gap:18px;border-right:0;border-bottom:1px solid var(--bdr)}
@@ -114,9 +138,9 @@ button{font:inherit}
   .side-col{display:block}
 }
 @media(max-width:760px){
-  .content{padding:18px 14px 28px}.summary-grid{grid-template-columns:1fr}
-  .card-pad{padding:18px}.theme-card{height:auto}.theme-list{margin:14px -18px -18px}.theme-row{padding:12px 18px}
-  .stocks-shell{max-height:none;overflow-x:auto}.stocks-table{min-width:720px}
+  body{background:var(--mobile-bg);color:var(--mobile-t1)}
+  .app{display:none}
+  .mobile-landing{display:flex;min-height:100vh;flex-direction:column;align-items:center;background:var(--mobile-bg)}
 }
 </style>
 </head>
@@ -201,6 +225,56 @@ button{font:inherit}
   </main>
 </div>
 
+<div class="mobile-landing">
+  <div class="mobile-theme-toggle-wrap">
+    <div class="mobile-theme-toggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
+  </div>
+
+  <div class="mobile-header">
+    <h1>Market Dashboard</h1>
+  </div>
+
+  <div class="mobile-grid">
+    <a class="mobile-card" href="rs.html">
+      <div class="mobile-card-icon">📊</div>
+      <div class="mobile-card-body">
+        <div class="mobile-card-title">Theme Tracker</div>
+        <div class="mobile-card-desc">Track the leading themes and sectors</div>
+      </div>
+      <span class="mobile-card-arrow">→</span>
+    </a>
+
+    <a class="mobile-card" href="screener.html">
+      <div class="mobile-card-icon">📈</div>
+      <div class="mobile-card-body">
+        <div class="mobile-card-title">Stock Screener</div>
+        <div class="mobile-card-desc">Scan for the leading stocks in the market</div>
+      </div>
+      <span class="mobile-card-arrow">→</span>
+    </a>
+
+    <a class="mobile-card" href="breadth.html">
+      <div class="mobile-card-icon">🌡️</div>
+      <div class="mobile-card-body">
+        <div class="mobile-card-title">Market Health</div>
+        <div class="mobile-card-desc">Monitor market breadth and NAAIM exposure</div>
+      </div>
+      <span class="mobile-card-arrow">→</span>
+    </a>
+
+    <a class="mobile-card" href="calendar.html">
+      <div class="mobile-card-icon">📅</div>
+      <div class="mobile-card-body">
+        <div class="mobile-card-title">Calendar</div>
+        <div class="mobile-card-desc">View upcoming market events</div>
+      </div>
+      <span class="mobile-card-arrow">→</span>
+    </a>
+  </div>
+
+  <div class="mobile-footer">Market Dashboard · Data from Yahoo Finance &amp; TradingView</div>
+</div>
+
 <script src="economic_calendar.js"></script>
 <script>
 const EARNINGS_EVENTS=[
@@ -215,8 +289,7 @@ let THEME_DATA=null,LEADER_DATA=null,HISTORY=null;
 function setTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
   try{localStorage.setItem('dashboardTheme',theme);}catch(e){}
-  renderTickerTape(theme);
-  renderNewsWidget(theme);
+  syncResponsiveDashboard();
 }
 function toggleTheme(){
   const current=document.documentElement.getAttribute('data-theme')||'light';
@@ -395,9 +468,25 @@ async function loadDashboard(){
     renderEvents();
   }
 }
-renderTickerTape(document.documentElement.getAttribute('data-theme')||'light');
-renderNewsWidget(document.documentElement.getAttribute('data-theme')||'light');
-loadDashboard();
+const mobileLandingQuery=window.matchMedia('(max-width:760px)');
+let dashboardLoaded=false;
+function syncResponsiveDashboard(){
+  const theme=document.documentElement.getAttribute('data-theme')||'light';
+  if(mobileLandingQuery.matches){
+    document.getElementById('tickerTapeWrap')?.replaceChildren();
+    document.getElementById('newsWidget')?.replaceChildren();
+    return;
+  }
+  renderTickerTape(theme);
+  renderNewsWidget(theme);
+  if(!dashboardLoaded){
+    dashboardLoaded=true;
+    loadDashboard();
+  }
+}
+if(mobileLandingQuery.addEventListener)mobileLandingQuery.addEventListener('change',syncResponsiveDashboard);
+else mobileLandingQuery.addListener(syncResponsiveDashboard);
+syncResponsiveDashboard();
 </script>
 </body>
 </html>
