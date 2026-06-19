@@ -1416,8 +1416,8 @@ function buildHeader(){
     {key:'rk',label:'#',w:'36px',mw:'7%'},{key:'rd',label:'Δ',w:'56px',mw:'11%'},
     {key:'t',label:'Ticker',w:'64px',al:'l',mw:'14%'},{key:'n',label:'Company Name',w:'160px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l',mw:''},
     {key:'mc',label:'MCap',w:'76px'},{key:'dv',label:'Avg$Vol',w:'76px',title:'Average Dollar Volume'},
-    {key:'rv',label:'R.Vol',w:'62px'},{key:'ad',label:'ADR',w:'62px',title:'Average Daily Range'},
-    {key:'ax',label:'ATR Ext',w:'70px'},{key:'ch',label:'1D',w:'60px',mw:'13%'},
+    {key:'rv',label:'R.Vol',w:'62px'},{key:'ax',label:'ATR Ext',w:'70px'},
+    {key:'ch',label:'1D',w:'60px',mw:'13%'},
     {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},{key:'ytd',label:'YTD',w:'60px',mw:'13%'},
     {key:'rs',label:'RS',w:'56px',mw:'11%'}
   ];
@@ -1679,7 +1679,6 @@ function render(){
       rv:`<td class="c m">${multText(rv)}</td>`,
       mc:`<td class="c m">${moneyText(e.mc)}</td>`,
       dv:`<td class="c m">${moneyText(e.dv)}</td>`,
-      ad:`<td class="c m">${adrText(e.ad)}</td>`,
       ax:`<td class="c"><div class="bc" style="justify-content:center;gap:4px">${atrExtBars(e.ax)}<span class="bv">${multText(e.ax)}</span></div></td>`,
       ch:`<td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>`,
       c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
@@ -1687,7 +1686,7 @@ function render(){
       ytd:`<td class="c m ${chgClass(e.ytd)}">${chgText(e.ytd)}</td>`,
       rs:`<td class="c"><span class="rs" style="background:${getRSBg(rs)};color:${getRSCol(rs)}">${rs!=null?rs:'—'}</span></td>`
     };
-    const rowKeys=isMobile?['rk','rd','t','th','ch','ytd','rs']:['rk','rd','t','n','th','mc','dv','rv','ad','ax','ch','c5','c20','ytd','rs'];
+    const rowKeys=isMobile?['rk','rd','t','th','ch','ytd','rs']:['rk','rd','t','n','th','mc','dv','rv','ax','ch','c5','c20','ytd','rs'];
     html+=`<tr>${rowKeys.map(k=>cellMap[k]||'').join('')}</tr>`;
   }
   document.getElementById('tb').innerHTML=html;
