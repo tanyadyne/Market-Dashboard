@@ -17,9 +17,6 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;transition:background .2s,color .2s;font-size:13px}
 .topbar{height:64px;display:flex;align-items:center;justify-content:flex-start;gap:12px;padding:0 20px;border-bottom:1px solid var(--bdr);background:var(--bg)}
-.btn-back{width:36px;height:36px;border-radius:10px;border:1px solid var(--bdr);background:var(--card);color:var(--t2);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;transition:all .2s ease}
-.btn-back:hover{border-color:var(--bdr-hover);background:var(--card-hover);color:var(--t1)}
-[data-theme="light"] .btn-back{box-shadow:0 1px 2px rgba(0,0,0,0.05)}
 .hdr-t{font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t1)}
 .pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#000;transition:background .25s ease;flex-shrink:0}
 .topbar .pill-toggle{margin-left:auto}
@@ -97,11 +94,22 @@ tr:hover td{background:var(--bg3)}
   .mobile-grid{grid-template-columns:1fr 1fr}
 }
 </style>
+<link rel="stylesheet" href="sidebar.css">
 </head>
-<body>
+<body class="global-shell">
+
+<aside class="global-sidebar" aria-label="Primary navigation">
+  <a class="global-brand" href="index.html" aria-label="Market Dashboard"><span class="global-brand-mark" aria-hidden="true"></span><span class="global-brand-name">Market</span></a>
+  <nav class="global-nav">
+    <a class="global-nav-link" href="index.html"><span class="global-nav-icon dashboard"></span>Dashboard</a>
+    <a class="global-nav-link" href="rs.html"><span class="global-nav-icon theme"></span>Theme tracker</a>
+    <a class="global-nav-link" href="screener.html"><span class="global-nav-icon stock"></span>Stock screener</a>
+    <a class="global-nav-link" href="breadth.html"><span class="global-nav-icon gauge"></span>Market Gauge</a>
+    <a class="global-nav-link active" href="calendar.html"><span class="global-nav-icon calendar"></span>Calendar</a>
+  </nav>
+</aside>
 
 <div class="topbar">
-  <a href="index.html" class="btn-back" title="Back to Market Dashboard">←</a>
   <div class="hdr-t">Calendar</div>
   <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
 </div>

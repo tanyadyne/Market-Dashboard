@@ -8,111 +8,391 @@
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-ticker-tape.js"></script>
 <script>
-// Apply persisted theme before any content renders (avoids flash)
 (function(){try{const t=localStorage.getItem('dashboardTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
 <style>
-:root,[data-theme="dark"]{--bg:#0a0a0a;--card:#111111;--card-hover:#141414;--bdr:#1f1f1f;--bdr-hover:#333;--t1:#e8e8e8;--t2:#888;--t3:#666;--t4:#444}
-[data-theme="light"]{--bg:#f7f7f8;--card:#ffffff;--card-hover:#f3f4f6;--bdr:#e5e7eb;--bdr-hover:#d1d5db;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--t4:#9ca3af}
+:root,[data-theme="dark"]{
+  --bg:#050505;--shell:#000;--page:#0a0a0a;--card:#222;--card2:#242424;--card-hover:#292929;
+  --bdr:#333;--bdr2:#2b2b2b;--bdr3:#3a3a3a;--t1:#f5f5f5;--t2:#c8c8c8;--t3:#8a8a8a;--t4:#5e5e5e;
+  --accent:#2b00f5;--accent2:#2f80ed;--orange:#ff8a34;--green:#77e58a;--green2:#22c55e;--red:#ff5a66;--yellow:#c7f000;
+  --shadow:rgba(0,0,0,.38);--chart-grid:#363636;
+}
+[data-theme="light"]{
+  --bg:#f5f5f5;--shell:#ffffff;--page:#f7f7f7;--card:#ffffff;--card2:#ffffff;--card-hover:#fbfbfb;
+  --bdr:#d8d8d8;--bdr2:#e6e6e6;--bdr3:#cfcfcf;--t1:#111827;--t2:#343b45;--t3:#737985;--t4:#9da3ad;
+  --accent:#2b00e8;--accent2:#2f80ed;--orange:#ff8a34;--green:#22c55e;--green2:#15803d;--red:#ff3b4f;--yellow:#9ac400;
+  --shadow:rgba(15,23,42,.08);--chart-grid:#e2e5e9;
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background .2s,color .2s}
-
-.header{padding:48px 24px 16px;text-align:center;width:100%;max-width:520px}
-.header h1{font-size:28px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t1)}
-.theme-toggle-wrap{display:flex;justify-content:flex-end;width:100%;max-width:520px;padding:20px 24px 0}
-.pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#000;transition:background .25s ease}
+html{background:var(--bg)}
+body{min-height:100vh;background:var(--page);color:var(--t1);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;font-size:12px;transition:background .2s,color .2s}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+.app{display:grid;grid-template-columns:206px minmax(0,1fr);min-height:100vh;background:var(--page)}
+.sidebar{background:var(--shell);border-right:1px solid var(--bdr);padding:32px 14px;display:flex;flex-direction:column;gap:36px}
+.brand{display:flex;align-items:center;gap:12px;padding:0 10px}
+.brand-mark{width:30px;height:30px;border-radius:9px;background:conic-gradient(from 45deg,#1ed3b6 0 25%,#128de8 0 50%,transparent 0);position:relative}
+.brand-mark:after{content:"";position:absolute;inset:8px 0 0 8px;border-radius:6px 0 8px 0;background:var(--shell)}
+.brand-name{font-size:20px;font-weight:800;letter-spacing:-.7px;color:var(--t1)}
+.nav{display:flex;flex-direction:column;gap:11px}
+.nav-link{height:35px;border-radius:4px;display:flex;align-items:center;gap:10px;padding:0 11px;color:var(--t3);font-size:12px;font-weight:700;transition:background .15s,color .15s}
+.nav-link:hover{background:var(--card-hover);color:var(--t1)}
+.nav-link.active{background:var(--accent);color:#fff}
+.nav-icon{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px;position:relative;opacity:.95;flex:0 0 auto}
+.nav-icon.dashboard:before{content:"";position:absolute;left:4px;right:4px;bottom:3px;height:5px;border-radius:2px;background:currentColor}
+.nav-icon.theme{border-radius:50%}.nav-icon.theme:before{content:"";position:absolute;inset:4px;border-radius:50%;border:1.4px solid currentColor}
+.nav-icon.stock:before{content:"";position:absolute;left:3px;right:3px;bottom:4px;height:7px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:skew(-22deg)}
+.nav-icon.gauge{border-radius:50%}.nav-icon.gauge:before{content:"";position:absolute;width:8px;height:2px;background:currentColor;left:7px;top:9px;transform-origin:left center;transform:rotate(-35deg)}
+.nav-icon.calendar:before{content:"";position:absolute;left:3px;right:3px;top:6px;border-top:1.5px solid currentColor}.nav-icon.calendar:after{content:"";position:absolute;left:4px;right:4px;top:2px;height:2px;border-left:1.5px solid currentColor;border-right:1.5px solid currentColor}
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{height:48px;border-bottom:1px solid var(--bdr);background:var(--shell);display:flex;align-items:center;padding:0 32px;gap:24px}
+.ticker-tape-wrap{flex:1;min-width:0;height:100%;display:flex;align-items:center;overflow:hidden}
+.ticker-tape-wrap tv-ticker-tape{display:block;width:100%;max-width:100%}
+.pill-toggle{position:relative;width:56px;height:28px;border-radius:999px;border:1px solid var(--bdr);cursor:pointer;background:#0f0f0f;transition:background .25s ease;flex-shrink:0}
 [data-theme="light"] .pill-toggle{background:#e0e0e0}
-.pill-toggle .knob{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.3);left:32px}
-[data-theme="light"] .pill-toggle .knob{left:2px}
-.pill-toggle .knob::before{content:"🌙"}
-[data-theme="light"] .pill-toggle .knob::before{content:"☀"}
-
-.grid{display:flex;flex-direction:column;gap:16px;padding:40px 24px;width:100%;max-width:520px}
-
-.card{display:flex;align-items:center;gap:16px;padding:22px 24px;border-radius:14px;border:1px solid var(--bdr);background:var(--card);cursor:pointer;transition:all .2s ease;text-decoration:none;color:inherit}
-[data-theme="light"] .card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-.card:hover{border-color:var(--bdr-hover);background:var(--card-hover);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
-[data-theme="light"] .card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
-.card.disabled{opacity:.35;cursor:default;pointer-events:none}
-
-.card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:var(--card-hover);border:1px solid var(--t4)}
-
-.card-body{flex:1;min-width:0}
-.card-title{font-size:15px;font-weight:700;letter-spacing:.3px;margin-bottom:3px}
-.card-desc{font-size:11px;color:var(--t3);line-height:1.4}
-
-.card-arrow{color:var(--t4);font-size:18px;transition:color .2s,transform .2s}
-.card:hover .card-arrow{color:var(--t2);transform:translateX(3px)}
-
-.tag{display:inline-block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;border-radius:4px;margin-top:6px}
-.tag.live{background:#0a2818;color:#22c55e}
-.tag.soon{background:var(--bdr);color:var(--t3)}
-
-.footer{margin-top:auto;padding:24px;text-align:center;font-size:10px;color:var(--t4);letter-spacing:.5px}
+.pill-toggle .knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 4px rgba(0,0,0,.3);left:31px;color:#111}
+[data-theme="light"] .pill-toggle .knob{left:3px}
+.pill-toggle .knob::before{content:"*";font-weight:800;font-size:13px}
+.content{padding:28px 28px 38px;max-width:1440px;width:100%;margin:0 auto}
+.dashboard-grid{display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:28px;align-items:stretch}
+.main-col,.side-col{display:flex;flex-direction:column;gap:26px;min-width:0}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;height:100%}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:10px;box-shadow:0 8px 24px var(--shadow);min-width:0}
+.card-pad{padding:22px 22px 18px}
+.card-title{font-size:16px;font-weight:800;letter-spacing:-.1px;color:var(--t1)}
+.card-subtitle{font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:4px}
+.theme-card{height:100%;overflow:hidden;display:flex;flex-direction:column}
+.theme-list{margin:12px -22px -18px;display:flex;flex:1;flex-direction:column}
+.theme-row{display:flex;flex:1;align-items:center;padding:8px 22px;border-top:1px solid var(--bdr2)}
+.theme-row:hover{background:var(--card-hover)}
+.theme-name{font-size:13px;font-weight:800;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.theme-holdings{font-size:11px;font-weight:800;color:var(--orange);letter-spacing:.3px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.positive{color:var(--green2)}.negative{color:var(--red)}.neutral{color:var(--t3)}
+.table-card{overflow:hidden}
+.table-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 22px 12px}
+.stocks-shell{max-height:505px;overflow:auto}
+.stocks-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.stocks-table th{position:sticky;top:0;background:var(--card);z-index:2;color:var(--t3);font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;text-align:left;font-weight:800;padding:9px 14px;border-bottom:1px solid var(--bdr2)}
+.stocks-table td{padding:9px 14px;border-bottom:1px solid var(--bdr2);font-size:11px;color:var(--t2);vertical-align:middle}
+.stocks-table tr:hover td{background:var(--card-hover)}
+.rank{font-family:'JetBrains Mono',monospace;color:var(--t3);font-weight:700}
+.ticker{font-family:'JetBrains Mono',monospace;color:var(--t1);font-weight:800;letter-spacing:.5px}
+.ticker:hover{color:var(--accent2)}
+.theme-cell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mono{font-family:'JetBrains Mono',monospace;font-weight:700}
+.rs-pill{display:inline-flex;align-items:center;justify-content:center;min-width:34px;border-radius:6px;padding:4px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:800;background:var(--bdr2);color:var(--t2)}
+.rs-strong{background:rgba(34,197,94,.16);color:var(--green2)}
+.rs-mid{background:rgba(148,163,184,.16);color:var(--t2)}
+.rs-weak{background:rgba(255,90,102,.14);color:var(--red)}
+.events-card{min-height:278px;display:flex;flex-direction:column}
+.events-section{padding:18px 20px;min-height:132px}
+.events-section + .events-section{border-top:1px solid var(--bdr2)}
+.events-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;color:var(--t3);margin-bottom:12px}
+.event-list{display:flex;flex-direction:column;gap:10px}
+.event-item{display:flex;align-items:center;gap:9px;color:var(--t2);font-weight:700;line-height:1.25}
+.event-dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);flex:0 0 auto}
+.event-item.earnings .event-dot{background:var(--orange)}
+.empty-state{color:var(--t4);font-size:12px;font-weight:700}
+.news-card{min-height:430px;overflow:hidden;padding:0;align-self:stretch}
+.news-widget-host,.news-widget-host .tradingview-widget-container{width:100%;height:100%}
+.news-widget-host .tradingview-widget-container__widget{width:100%;height:calc(100% - 28px)}
+.news-widget-host .tradingview-widget-copyright{height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--t3);background:var(--card)}
+.news-widget-host .tradingview-widget-copyright a{color:var(--accent2);text-decoration:none}
+.news-widget-host .trademark{margin-left:3px}
+.loading{padding:24px;color:var(--t3);font-weight:700}
+@media(max-width:1100px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:static;padding:18px 20px;gap:18px;border-right:0;border-bottom:1px solid var(--bdr)}
+  .brand{padding:0}.nav{flex-direction:row;flex-wrap:wrap;gap:8px}.nav-link{height:34px}
+  .topbar{height:36px;padding:0 20px}
+  .dashboard-grid{grid-template-columns:1fr}
+  .side-col{display:block}
+}
+@media(max-width:760px){
+  .content{padding:18px 14px 28px}.summary-grid{grid-template-columns:1fr}
+  .card-pad{padding:18px}.theme-card{height:auto}.theme-list{margin:14px -18px -18px}.theme-row{padding:12px 18px}
+  .stocks-shell{max-height:none;overflow-x:auto}.stocks-table{min-width:720px}
+}
 </style>
 </head>
 <body>
+<div class="app">
+  <aside class="sidebar" aria-label="Primary navigation">
+    <a class="brand" href="index.html" aria-label="Market Dashboard">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Market</span>
+    </a>
+    <nav class="nav">
+      <a class="nav-link active" href="index.html"><span class="nav-icon dashboard"></span>Dashboard</a>
+      <a class="nav-link" href="rs.html"><span class="nav-icon theme"></span>Theme tracker</a>
+      <a class="nav-link" href="screener.html"><span class="nav-icon stock"></span>Stock screener</a>
+      <a class="nav-link" href="breadth.html"><span class="nav-icon gauge"></span>Market Gauge</a>
+      <a class="nav-link" href="calendar.html"><span class="nav-icon calendar"></span>Calendar</a>
+    </nav>
+  </aside>
 
-<div class="theme-toggle-wrap">
-  <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
+  <main class="main">
+    <header class="topbar">
+      <div class="ticker-tape-wrap" id="tickerTapeWrap"></div>
+      <div class="pill-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"><div class="knob"></div></div>
+    </header>
+
+    <section class="content">
+      <div class="dashboard-grid">
+        <div class="main-col">
+          <section class="summary-grid" aria-label="Leading themes">
+            <article class="card card-pad theme-card">
+              <div class="card-title">Top 5 themes (daily)</div>
+              <div class="theme-list" id="weeklyThemes"><div class="loading">Loading themes...</div></div>
+            </article>
+            <article class="card card-pad theme-card">
+              <div class="card-title">Top 5 themes (weekly)</div>
+              <div class="theme-list" id="yearThemes"><div class="loading">Loading themes...</div></div>
+            </article>
+          </section>
+        </div>
+
+        <aside class="side-col">
+          <section class="card events-card">
+            <div class="card-pad" style="padding-bottom:0">
+              <div class="card-title">Today's events</div>
+              <div class="card-subtitle" id="todayLabel">Today</div>
+            </div>
+            <div class="events-section">
+              <div class="events-label">Economic data</div>
+              <div class="event-list" id="economicToday"><div class="empty-state">Loading events...</div></div>
+            </div>
+            <div class="events-section">
+              <div class="events-label">Earnings</div>
+              <div class="event-list" id="earningsToday"><div class="empty-state">Loading earnings...</div></div>
+            </div>
+          </section>
+
+        </aside>
+
+        <section class="card table-card">
+          <div class="table-head">
+            <div>
+              <div class="card-title">Leading stocks</div>
+              <div class="card-subtitle">Top 40 strongest stocks</div>
+            </div>
+          </div>
+          <div class="stocks-shell">
+            <table class="stocks-table">
+              <colgroup>
+                <col style="width:54px"><col style="width:92px"><col><col style="width:78px"><col style="width:78px"><col style="width:78px"><col style="width:86px"><col style="width:62px">
+              </colgroup>
+              <thead><tr><th>#</th><th>Ticker</th><th>Theme</th><th>1D</th><th>1W</th><th>Streak</th><th>% Since</th><th>RS</th></tr></thead>
+              <tbody id="leadingStocks"><tr><td colspan="8" class="loading">Loading stocks...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card news-card" aria-label="Market news">
+          <div class="news-widget-host" id="newsWidget"></div>
+        </section>
+      </div>
+    </section>
+  </main>
 </div>
 
-<div class="header">
-  <h1>Market Dashboard</h1>
-</div>
-
-<div class="grid">
-  <a class="card" href="rs.html">
-    <div class="card-icon">📊</div>
-    <div class="card-body">
-      <div class="card-title">Theme Tracker</div>
-      <div class="card-desc">Track the leading themes and sectors</div>
-    </div>
-    <span class="card-arrow">→</span>
-  </a>
-
-  <a class="card" href="screener.html">
-    <div class="card-icon">📈</div>
-    <div class="card-body">
-      <div class="card-title">Stock Screener</div>
-      <div class="card-desc">Scan for the leading stocks in the market</div>
-    </div>
-    <span class="card-arrow">→</span>
-  </a>
-
-  <a class="card" href="breadth.html">
-    <div class="card-icon">🌡️</div>
-    <div class="card-body">
-      <div class="card-title">Market Health</div>
-      <div class="card-desc">Monitor market breadth and NAAIM exposure</div>
-    </div>
-    <span class="card-arrow">→</span>
-  </a>
-
-  <a class="card" href="calendar.html">
-    <div class="card-icon">📅</div>
-    <div class="card-body">
-      <div class="card-title">Calendar</div>
-      <div class="card-desc">View upcoming market events</div>
-    </div>
-    <span class="card-arrow">→</span>
-  </a>
-</div>
-
-<div class="footer">Market Dashboard · Data from Yahoo Finance & TradingView</div>
-
+<script src="economic_calendar.js"></script>
 <script>
+const EARNINGS_EVENTS=[
+  {date:'2026-06-17',ticker:'PGR',company:'Progressive Corporation',group:'Insurance - Property & Casualty',time:'BMO'},
+  {date:'2026-06-17',ticker:'JBL',company:'Jabil Inc.',group:'Electronic Components',time:'BMO'},
+  {date:'2026-06-17',ticker:'KMX',company:'CarMax, Inc.',group:'Auto & Truck Dealerships',time:'BMO'},
+  {date:'2026-06-18',ticker:'ACN',company:'Accenture plc',group:'Information Technology Services',time:'BMO'},
+  {date:'2026-06-18',ticker:'KR',company:'Kroger Co.',group:'Grocery Stores',time:'BMO'}
+];
+let THEME_DATA=null,LEADER_DATA=null,HISTORY=null;
+
 function setTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
   try{localStorage.setItem('dashboardTheme',theme);}catch(e){}
+  renderTickerTape(theme);
+  renderNewsWidget(theme);
 }
 function toggleTheme(){
   const current=document.documentElement.getAttribute('data-theme')||'light';
   setTheme(current==='dark'?'light':'dark');
 }
+function renderTickerTape(theme){
+  const wrap=document.getElementById('tickerTapeWrap');
+  if(!wrap)return;
+  const tape=document.createElement('tv-ticker-tape');
+  tape.setAttribute('symbols','BITSTAMP:BTCUSD,BITSTAMP:ETHUSD,AMEX:SPY,NASDAQ:QQQ,AMEX:DIA,AMEX:IWM,CAPITALCOM:DXY,CFI:WTI,CAPITALCOM:VIX');
+  tape.setAttribute('line-chart-type','Baseline');
+  tape.setAttribute('item-size','compact');
+  tape.setAttribute('theme',theme==='dark'?'dark':'light');
+  wrap.replaceChildren(tape);
+}
+function renderNewsWidget(theme){
+  const host=document.getElementById('newsWidget');
+  if(!host)return;
+  const container=document.createElement('div');
+  container.className='tradingview-widget-container';
+  const widget=document.createElement('div');
+  widget.className='tradingview-widget-container__widget';
+  const copyright=document.createElement('div');
+  copyright.className='tradingview-widget-copyright';
+  copyright.innerHTML='<a href="https://www.tradingview.com/news/top-providers/tradingview/" rel="noopener nofollow" target="_blank"><span class="blue-text">Top stories</span></a><span class="trademark"> by TradingView</span>';
+  const script=document.createElement('script');
+  script.type='text/javascript';
+  script.src='https://s3.tradingview.com/external-embedding/embed-widget-timeline.js';
+  script.async=true;
+  script.text=JSON.stringify({
+    displayMode:'compact',
+    feedMode:'all_symbols',
+    colorTheme:theme==='dark'?'dark':'light',
+    isTransparent:false,
+    locale:'en',
+    width:'100%',
+    height:'100%'
+  });
+  container.append(widget,copyright,script);
+  host.replaceChildren(container);
+}
+function esc(value){
+  return String(value==null?'':value).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+function isNum(v){return v!=null&&Number.isFinite(Number(v));}
+function pctText(v,digits=1){
+  if(!isNum(v))return '-';
+  const n=Number(v);
+  return (n>0?'+':'')+n.toFixed(digits)+'%';
+}
+function pctClass(v){return Number(v)>0?'positive':Number(v)<0?'negative':'neutral';}
+function rsClass(rs){return rs>=90?'rs-strong':rs>=60?'rs-mid':'rs-weak';}
+function profileUrl(ticker){return 'screener.html?profile='+encodeURIComponent(String(ticker||'').toUpperCase());}
+function themeUrl(ticker){return 'rs.html?tab=profile&tk='+encodeURIComponent(String(ticker||'').toUpperCase());}
+function todayEtIso(){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+function compactDate(dateText){
+  const dt=new Date(`${dateText}T00:00:00`);
+  if(Number.isNaN(dt.getTime()))return dateText||'Today';
+  return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+function topHoldingsFor(theme){
+  const holdings=String(theme.h||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+  const grades=theme.hg||{};
+  const gradeRank={g:0,s:1,b:2};
+  return holdings
+    .map((ticker,index)=>({ticker,index,grade:grades[ticker]||'b'}))
+    .sort((a,b)=>(gradeRank[a.grade]??2)-(gradeRank[b.grade]??2)||a.index-b.index)
+    .slice(0,3)
+    .map(item=>item.ticker);
+}
+function renderThemeList(targetId,items){
+  const target=document.getElementById(targetId);
+  if(!target)return;
+  if(!items.length){
+    target.innerHTML='<div class="loading">No theme data</div>';
+    return;
+  }
+  target.innerHTML=items.map(theme=>{
+    const holdings=topHoldingsFor(theme);
+    return `<a class="theme-row" href="${themeUrl(theme.t)}" title="${esc(theme.n||theme.t)}">
+      <div>
+        <div class="theme-name">${esc(theme.n||theme.t)}</div>
+        <div class="theme-holdings">${holdings.length?esc(holdings.join(' · ')):'-'}</div>
+      </div>
+    </a>`;
+  }).join('');
+}
+function renderThemes(){
+  const items=(THEME_DATA&&Array.isArray(THEME_DATA.e))?THEME_DATA.e:[];
+  const daily=[...items].filter(e=>isNum(e.rk)).sort((a,b)=>Number(a.rk)-Number(b.rk)).slice(0,5);
+  const weekly=[...items].filter(e=>isNum(e.w_rk)).sort((a,b)=>Number(a.w_rk)-Number(b.w_rk)).slice(0,5);
+  renderThemeList('weeklyThemes',daily);
+  renderThemeList('yearThemes',weekly);
+}
+function getTop40Stats(tk,currentPrice){
+  if(!HISTORY||!HISTORY.d||!HISTORY.d[tk])return {streak:null,pctSince:null};
+  const te=HISTORY.d[tk].te;
+  if(!te||!te.d||te.p==null)return {streak:null,pctSince:null};
+  const dates=HISTORY.dates||[];
+  let streak=0;
+  for(let i=dates.length-1;i>=0;i--){
+    if(dates[i]>=te.d)streak++;
+    else break;
+  }
+  const pct=(isNum(currentPrice)&&Number(te.p)>0)?((Number(currentPrice)-Number(te.p))/Number(te.p)*100):null;
+  return {streak,pctSince:pct};
+}
+function streakText(n){
+  if(n==null||n<=0)return '-';
+  if(n===1)return 'NEW';
+  return n+'d';
+}
+function pctSinceText(pct,streak){
+  if(pct==null||streak===1)return '-';
+  return pctText(pct,1);
+}
+function renderStocks(){
+  const tbody=document.getElementById('leadingStocks');
+  const rows=(LEADER_DATA&&Array.isArray(LEADER_DATA.e)?LEADER_DATA.e:[])
+    .filter(e=>isNum(e.w_rk))
+    .sort((a,b)=>Number(a.w_rk)-Number(b.w_rk))
+    .slice(0,40);
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="8" class="loading">No stock data</td></tr>';
+    return;
+  }
+  tbody.innerHTML=rows.map(stock=>{
+    const stats=getTop40Stats(stock.t,stock.p);
+    return `<tr>
+      <td class="rank">#${esc(stock.w_rk)}</td>
+      <td><a class="ticker" href="${profileUrl(stock.t)}">${esc(stock.t)}</a></td>
+      <td class="theme-cell" title="${esc(stock.th||'-')}">${esc(stock.th||'-')}</td>
+      <td class="mono ${pctClass(stock.ch)}">${pctText(stock.ch,2)}</td>
+      <td class="mono ${pctClass(stock.c5)}">${pctText(stock.c5,2)}</td>
+      <td class="mono ${stats.streak===1?'positive':''}">${esc(streakText(stats.streak))}</td>
+      <td class="mono ${pctClass(stats.pctSince)}">${esc(pctSinceText(stats.pctSince,stats.streak))}</td>
+      <td><span class="rs-pill ${rsClass(stock.w_rs)}">${stock.w_rs!=null?esc(stock.w_rs):'-'}</span></td>
+    </tr>`;
+  }).join('');
+}
+function renderEvents(){
+  const today=todayEtIso();
+  document.getElementById('todayLabel').textContent=compactDate(today)+' ET';
+  const econ=(window.ECONOMIC_CALENDAR_DATA?.events||[]).filter(e=>e.date===today);
+  const earn=EARNINGS_EVENTS.filter(e=>e.date===today);
+  document.getElementById('economicToday').innerHTML=econ.length
+    ? econ.map(e=>`<div class="event-item"><span class="event-dot"></span><span>${esc(e.event)}</span></div>`).join('')
+    : '<div class="empty-state">No major economic events scheduled</div>';
+  document.getElementById('earningsToday').innerHTML=earn.length
+    ? earn.map(e=>`<a class="event-item earnings" href="${profileUrl(e.ticker)}"><span class="event-dot"></span><span class="ticker">${esc(e.ticker)}</span></a>`).join('')
+    : '<div class="empty-state">No major earnings scheduled</div>';
+}
+async function loadDashboard(){
+  try{
+    const [themeRes,leadersRes,histRes]=await Promise.all([
+      fetch('data.json?_='+Date.now()),
+      fetch('leaders.json?_='+Date.now()),
+      fetch('leaders_score_history.json?_='+Date.now()).catch(()=>null)
+    ]);
+    if(themeRes.ok)THEME_DATA=await themeRes.json();
+    if(leadersRes.ok)LEADER_DATA=await leadersRes.json();
+    if(histRes&&histRes.ok){try{HISTORY=await histRes.json();}catch(e){HISTORY=null;}}
+    renderThemes();
+    renderStocks();
+    renderEvents();
+  }catch(err){
+    document.getElementById('weeklyThemes').innerHTML='<div class="loading">Unable to load dashboard data</div>';
+    document.getElementById('leadingStocks').innerHTML='<tr><td colspan="8" class="loading">Unable to load stock data</td></tr>';
+    renderEvents();
+  }
+}
+renderTickerTape(document.documentElement.getAttribute('data-theme')||'light');
+renderNewsWidget(document.documentElement.getAttribute('data-theme')||'light');
+loadDashboard();
 </script>
-
 </body>
 </html>

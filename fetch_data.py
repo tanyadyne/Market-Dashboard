@@ -74,7 +74,6 @@ ETF_INFO = [
     {"t":"ARKW","n":"Next Gen Internet","fn":"ARK Next Generation Internet ETF","h":"AMD,TSLA,HOOD,CRCL,ROKU,SHOP,AMZN,GOOG,CRWV,COIN,XYZ,PLTR,CRWD,RBLX,DDOG,AVGO,TSM,META,NET,BLSH,P,BMNR,RBRK,FIG,NFLX,SPOT,NVDA,GTLB,BABA,TOST,GENI,CBRS,BIDU,DKNG,DASH,MELI,ABNB,SLMT"},
     {"t":"HYDR","n":"Hydrogen","fn":"Glbl X Hydrogen ETF","h":"BE,PLUG,BLDP,SLDP,FCEL,CMI,APD"},
     {"t":"PEJ","n":"Leisure & Ent","fn":"Invesco Leisure and Ent","h":"WBD,LVS,SYY,CCL,DASH,LYV,RCL,FLUT,LYFT,LION,EXPE,FOXA,CNK,TKO,CPA,USFD,PSKY,CART,BYD,EAT,BH,RRR,DPZ,MGM,ACEL"},
-    {"t":"EEM","n":"Emerging Markets","fn":"iShares:MSCI Em Mkts","h":"PDD,BABA,NU,MELI,DLO,JMIA"},
     {"t":"MOO","n":"Agribusiness","fn":"VanEck:Agribusiness","h":"DE,ZTS,CTVA,ADM,TSN,CF,BG,ELAN,MOS,CNH,DAR,TTC,AGCO,CAT"},
     {"t":"XME","n":"Metals & Mining","fn":"SS SPDR S&P Metals&Mng","h":"HL,AA,HCC,STLD,NEM,LEU,CDE,NUE,CLF,CMC,RGLD,BTU,CNR,RS,FCX,UEC,MP,AMR,MTRN,CENX,IE,KALU,USAR,WS,MUX"},
     {"t":"ARKF","n":"Fintech Innovation","fn":"ARK BC & Fintech Innov","h":"SHOP,COIN,HOOD,PLTR,TOST,SOFI,XYZ,RBLX,ROKU,CRCL,MELI,AMD,DKNG,META,AMZN,BMNR,PINS,NU,KLAR,SE,BLSH,FUTU,Z"},
@@ -117,7 +116,7 @@ ETF_INFO = [
     {"t":"LIDAR","n":"LiDAR","fn":"Custom Basket","h":"OUST,AEVA,HSAI,TDY","d":"This custom basket tracks companies developing LiDAR sensors, perception systems, and adjacent sensing technologies used in autonomy, mapping, robotics, industrial measurement, and advanced transportation. It is designed to represent the commercialization of 3D sensing and machine-vision systems across automotive and non-automotive markets.","basket":True},
     {"t":"PSEMI","n":"Power Semis","fn":"Custom Basket","h":"STM,ON,MPWR,ADI,TXN,NVTS,WOLF,FLEX,POWI,VRT,ETN,AOSL,SEDG,ENPH,VICR,ALGM,IPWR,AMSC","d":"This custom basket tracks companies involved in power semiconductors, analog chips, power management and energy conversion. Power semiconductors are specialized electronic components designed to efficiently control, convert, and manage high electrical power. The theme has broad exposure to industrial power systems, data center power delivery, and high-efficiency electrical infrastructure.","basket":True},
     {"t":"IYR","n":"US Real Estate","fn":"iShares:US Real Estate","h":"WELL,PLD,EQIX,O,AMT,SPG,DLR,PSA,CBRE,VTR,CCI,VICI,EXR,IRM"},
-    {"t":"IDGT","n":"Data Infrastructure & Real Estate","fn":"IDGT ETF","h":"EQIX,AMT,DLR,CRDO,NOK,SBAC,CIEN,CSCO,UNIT,QCOM,CCI,NTAP,CRWV,SMCI,ANET,EXTR,ERIC,UI,FSLY,CALX,MSI,VISN,ATEN,ADTN,CLFD"},
+    {"t":"IDGT","n":"Digital Infrastructure","fn":"IDGT ETF","h":"EQIX,AMT,DLR,CRDO,NOK,SBAC,CIEN,CSCO,UNIT,QCOM,CCI,NTAP,CRWV,SMCI,ANET,EXTR,ERIC,UI,FSLY,CALX,MSI,VISN,ATEN,ADTN,CLFD"},
 ]
 
 CUSTOM_ETF_DESCRIPTIONS = {'MAGS': 'This theme tracks the dominant U.S. mega-cap technology platforms across AI, cloud infrastructure, digital '
@@ -238,9 +237,6 @@ CUSTOM_ETF_DESCRIPTIONS = {'MAGS': 'This theme tracks the dominant U.S. mega-cap
  'PEJ': 'This theme tracks leisure, entertainment, travel, restaurants, cruises, gaming, live events, and consumer '
         'experience companies. It is designed to represent discretionary spending on travel, dining, entertainment, '
         'and experiences, making it sensitive to consumer confidence and reopening cycles.',
- 'EEM': 'This theme tracks major emerging-market internet, e-commerce, financial technology, and consumer platform '
-        'companies. It is designed to represent growth businesses tied to rising digital adoption, expanding middle '
-        'classes, and regional economic development outside the U.S.',
  'MOO': 'This theme tracks agriculture equipment, fertilizers, crop inputs, food processors, animal health, and '
         'companies supporting global food production. It is designed to represent the business ecosystem behind '
         'farming productivity, crop yields, livestock health, and agricultural supply chains.',
