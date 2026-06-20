@@ -452,10 +452,10 @@ function renderEvents(){
   const earn=EARNINGS_EVENTS.filter(e=>e.date===today);
   document.getElementById('economicToday').innerHTML=econ.length
     ? econ.map(e=>`<div class="event-item"><span class="event-dot"></span><span>${esc(e.event)}</span></div>`).join('')
-    : '<div class="empty-state">No major economic events scheduled</div>';
+    : '<div class="empty-state">No economic releases scheduled</div>';
   document.getElementById('earningsToday').innerHTML=earn.length
     ? earn.map(e=>`<a class="event-item earnings" href="${profileUrl(e.ticker)}"><span class="event-dot"></span><span class="ticker">${esc(e.ticker)}</span></a>`).join('')
-    : '<div class="empty-state">No major earnings scheduled</div>';
+    : '<div class="empty-state">No earnings scheduled</div>';
 }
 async function loadDashboard(){
   try{
