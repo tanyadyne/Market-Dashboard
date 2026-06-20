@@ -370,13 +370,13 @@ function renderEconomic(date,week){
   table.innerHTML=`<colgroup>
     <col style="width:110px"><col style="width:105px"><col>
   </colgroup><thead><tr>
-    <th>Date</th><th>Time (EST)</th><th>Event</th>
+    <th>Date</th><th>Time (EST)</th><th>Data</th>
   </tr></thead><tbody>${events.length?events.map(e=>`
       <tr>
         <td class="mono">${esc(compactDate(e.date))}</td>
         <td><span class="time-tag">${esc(e.time)}</span></td>
         <td><span class="event-name">${esc(e.event)}</span> <span class="subtle">${esc(e.period)}</span></td>
-      </tr>`).join(''):`<tr class="empty-row"><td colspan="3">No major economic events scheduled</td></tr>`}</tbody>`;
+      </tr>`).join(''):`<tr class="empty-row"><td colspan="3">No economic data releases scheduled</td></tr>`}</tbody>`;
   renderEconomicMobile(date,week);
 }
 function renderEarnings(date,week){
@@ -406,7 +406,7 @@ function renderEconomicMobile(date,week){
           <div class="mobile-sub">${esc(compactDate(e.date))} · ${esc(e.time)} ET</div>
         </div>
         <div class="mobile-metric">${esc(e.time)}</div>
-      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No major economic events scheduled</div></div></div>`;
+      </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No economic data releases scheduled</div></div></div>`;
 }
 function renderEarningsMobile(date,week){
   const rows=dayEvents(week.earnings_events,date).sort((a,b)=>String(a.time).localeCompare(String(b.time)) || a.ticker.localeCompare(b.ticker));
