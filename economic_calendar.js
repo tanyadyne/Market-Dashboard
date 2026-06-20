@@ -6,7 +6,7 @@ window.ECONOMIC_CALENDAR_DATA = {
   "weeks": [
     {
       "key": "previous",
-      "week_label": "Previous week",
+      "week_label": "Last week",
       "range_label": "June 15, 2026 - June 19, 2026",
       "days": [
         {

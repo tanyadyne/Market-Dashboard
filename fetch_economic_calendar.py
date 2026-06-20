@@ -442,7 +442,7 @@ def build_payload(now_et: datetime | None = None) -> dict:
     earnings = _select_universe_earnings(earnings_rows, universe, metadata)
 
     weeks = [
-        _week_payload("previous", "Previous week", previous_start, events, earnings),
+        _week_payload("previous", "Last week", previous_start, events, earnings),
         _week_payload("current", "This week", current_start, events, earnings),
         _week_payload("next", "Next week", next_start, events, earnings),
     ]

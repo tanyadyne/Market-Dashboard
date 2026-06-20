@@ -272,7 +272,7 @@ function rangeForDays(days){
 function buildFallbackWeeks(data){
   const monday=referenceMonday();
   const starts=[addDays(monday,-7),monday,addDays(monday,7)];
-  const labels=['Previous week','This week','Next week'];
+  const labels=['Last week','This week','Next week'];
   return starts.map((start,index)=>{
     const days=buildWeekDays(start);
     const dates=new Set(days.map(day=>day.date));
@@ -291,7 +291,7 @@ function calendarWeeks(){
   if(live && Array.isArray(live.weeks) && live.weeks.length===3){
     return live.weeks.map((week,index)=>({
       ...week,
-      week_label:week.week_label||['Previous week','This week','Next week'][index],
+      week_label:week.week_label||['Last week','This week','Next week'][index],
       events:Array.isArray(week.events)?week.events:[],
       earnings_events:Array.isArray(week.earnings_events)?week.earnings_events:[]
     }));
