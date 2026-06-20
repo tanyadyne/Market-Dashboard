@@ -26,8 +26,12 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',-apple-system,Bl
 .pill-toggle .knob::before{content:"🌙"}
 [data-theme="light"] .pill-toggle .knob::before{content:"☀"}
 .page{width:100%;max-width:1560px;margin:0 auto;padding:18px 20px 34px}
-.nav-row{display:flex;align-items:center;justify-content:center;margin:4px 0 18px}
-.week-title{text-align:center}
+.nav-row{display:flex;align-items:center;justify-content:center;gap:18px;margin:4px 0 18px}
+.week-nav{width:34px;height:34px;border:1px solid var(--bdr);border-radius:7px;background:var(--bg2);color:var(--t1);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.week-nav:hover:not(:disabled){background:var(--card-hover);border-color:var(--bdr-hover)}
+.week-nav:disabled{opacity:.28;cursor:default}
+.week-nav svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.week-title{text-align:center;min-width:220px}
 .week-title h1{font-size:18px;font-weight:800;letter-spacing:-.2px;color:var(--t1)}
 .week-title p{font-size:13px;color:var(--t3);margin-top:2px}
 .date-strip-wrap{margin:0 0 18px;position:relative}
@@ -79,8 +83,8 @@ tr:hover td{background:var(--bg3)}
 .hidden{display:none!important}
 @media(max-width:900px){
   .page{padding:14px 12px 28px}
-  .nav-row{justify-content:flex-start;margin-bottom:12px}
-  .week-title{text-align:left}
+  .nav-row{justify-content:center;margin-bottom:12px;gap:10px}
+  .week-title{text-align:center;min-width:190px}
   .date-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity}
   .date-tile{flex:0 0 152px;scroll-snap-align:start}
   .calendar-grid{grid-template-columns:1fr;gap:16px}
@@ -116,10 +120,16 @@ tr:hover td{background:var(--bg3)}
 
 <main class="page">
   <section class="nav-row">
+    <button class="week-nav" id="previousWeekButton" type="button" onclick="changeWeek(-1)" aria-label="Show previous week">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
     <div class="week-title">
       <h1 id="weekLabel">This week</h1>
-      <p id="rangeLabel">June 16, 2026 - June 19, 2026</p>
+      <p id="rangeLabel"></p>
     </div>
+    <button class="week-nav" id="nextWeekButton" type="button" onclick="changeWeek(1)" aria-label="Show next week">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
   </section>
 
   <section class="date-strip-wrap" aria-label="Calendar dates">
@@ -164,7 +174,7 @@ const FALLBACK_ECONOMIC_EVENTS=[
   {date:'2026-06-17',day:'Wednesday, June 17, 2026',time:'02:30 PM',event:'Fed Press Conference',period:'',actual:'-',previous:'-',consensus:'-',forecast:'-'}
 ];
 
-const EARNINGS_EVENTS=[
+const FALLBACK_EARNINGS_EVENTS=[
   {date:'2026-06-17',day:'Wednesday, June 17, 2026',ticker:'PGR',company:'Progressive Corporation',group:'Insurance - Property & Casualty',time:'BMO',vol:'$598M',adr:'2.5%',mcap:'$118.91B',epsEst:'-',epsAct:'-',epsSurp:'-',revEst:'-',revAct:'-',revSurp:'-'},
   {date:'2026-06-17',day:'Wednesday, June 17, 2026',ticker:'JBL',company:'Jabil Inc.',group:'Electronic Components',time:'BMO',vol:'$481M',adr:'4.3%',mcap:'$40.68B',epsEst:'3.11',epsAct:'-',epsSurp:'-',revEst:'$8.64B',revAct:'-',revSurp:'-'},
   {date:'2026-06-17',day:'Wednesday, June 17, 2026',ticker:'KMX',company:'CarMax, Inc.',group:'Auto & Truck Dealerships',time:'BMO',vol:'$170M',adr:'4.6%',mcap:'$7.40B',epsEst:'0.94',epsAct:'-',epsSurp:'-',revEst:'$7.46B',revAct:'-',revSurp:'-'},
@@ -190,6 +200,7 @@ const FALLBACK_ECONOMIC_DATA={
 };
 
 let selectedDate=null;
+let selectedWeekIndex=1;
 
 function setTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
@@ -206,18 +217,22 @@ function timeClass(v){
   return String(v).toUpperCase()==='AMC'?'time-tag amc':'time-tag';
 }
 function renderCalendar(){
-  const economicData=currentEconomicData();
-  const days=calendarDays(economicData);
+  const weeks=calendarWeeks();
+  selectedWeekIndex=Math.max(0,Math.min(selectedWeekIndex,weeks.length-1));
+  const week=weeks[selectedWeekIndex];
+  const days=calendarDays(week);
   if(!selectedDate || !days.some(day=>day.date===selectedDate)){
-    selectedDate=defaultSelectedDate(days,economicData.events,EARNINGS_EVENTS);
+    selectedDate=defaultSelectedDate(days,week.events,week.earnings_events);
   }
   const weekLabel=document.getElementById('weekLabel');
   const rangeLabel=document.getElementById('rangeLabel');
-  weekLabel.textContent=economicWeekLabel(economicData);
-  rangeLabel.textContent=economicData.range_label || '';
-  renderDateStrip(days,economicData.events,EARNINGS_EVENTS);
-  renderEconomic(selectedDate);
-  renderEarnings(selectedDate);
+  weekLabel.textContent=week.week_label;
+  rangeLabel.textContent=week.range_label || '';
+  document.getElementById('previousWeekButton').disabled=selectedWeekIndex===0;
+  document.getElementById('nextWeekButton').disabled=selectedWeekIndex===weeks.length-1;
+  renderDateStrip(days,week.events,week.earnings_events);
+  renderEconomic(selectedDate,week);
+  renderEarnings(selectedDate,week);
 }
 function dayEvents(events,day){
   const date=typeof day==='string'?day:day.date;
@@ -226,10 +241,62 @@ function dayEvents(events,day){
 function screenerProfileUrl(ticker){
   return `screener.html?profile=${encodeURIComponent(ticker)}`;
 }
-function currentEconomicData(){
+function isoDate(date){
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+function addDays(dateText,days){
+  const date=new Date(`${dateText}T12:00:00`);
+  date.setDate(date.getDate()+days);
+  return isoDate(date);
+}
+function referenceMonday(){
+  const now=new Date();
+  const weekday=now.getDay();
+  const shift=weekday===0?1:weekday===6?2:1-weekday;
+  now.setDate(now.getDate()+shift);
+  return isoDate(now);
+}
+function buildWeekDays(start){
+  return Array.from({length:5},(_,index)=>{
+    const date=addDays(start,index);
+    return {date,label:longDate(date)};
+  });
+}
+function rangeForDays(days){
+  if(!days.length) return '';
+  const options={month:'long',day:'numeric',year:'numeric'};
+  const first=new Date(`${days[0].date}T12:00:00`).toLocaleDateString('en-US',options);
+  const last=new Date(`${days[days.length-1].date}T12:00:00`).toLocaleDateString('en-US',options);
+  return `${first} - ${last}`;
+}
+function buildFallbackWeeks(data){
+  const monday=referenceMonday();
+  const starts=[addDays(monday,-7),monday,addDays(monday,7)];
+  const labels=['Previous week','This week','Next week'];
+  return starts.map((start,index)=>{
+    const days=buildWeekDays(start);
+    const dates=new Set(days.map(day=>day.date));
+    return {
+      key:['previous','current','next'][index],
+      week_label:labels[index],
+      range_label:rangeForDays(days),
+      days,
+      events:(data.events||[]).filter(event=>dates.has(event.date)),
+      earnings_events:FALLBACK_EARNINGS_EVENTS.filter(event=>dates.has(event.date))
+    };
+  });
+}
+function calendarWeeks(){
   const live=window.ECONOMIC_CALENDAR_DATA;
-  if(live && Array.isArray(live.days) && Array.isArray(live.events)) return live;
-  return FALLBACK_ECONOMIC_DATA;
+  if(live && Array.isArray(live.weeks) && live.weeks.length===3){
+    return live.weeks.map((week,index)=>({
+      ...week,
+      week_label:week.week_label||['Previous week','This week','Next week'][index],
+      events:Array.isArray(week.events)?week.events:[],
+      earnings_events:Array.isArray(week.earnings_events)?week.earnings_events:[]
+    }));
+  }
+  return buildFallbackWeeks(live&&Array.isArray(live.events)?live:FALLBACK_ECONOMIC_DATA);
 }
 function compactDate(dateText){
   const dt=new Date(`${dateText}T00:00:00`);
@@ -258,7 +325,7 @@ function calendarDays(economicData){
   for(const e of economicData.events || []){
     if(!byDate.has(e.date)) byDate.set(e.date,{date:e.date,label:e.day || longDate(e.date)});
   }
-  for(const e of EARNINGS_EVENTS){
+  for(const e of economicData.earnings_events || []){
     if(!byDate.has(e.date)) byDate.set(e.date,{date:e.date,label:e.day || longDate(e.date)});
   }
   return [...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date));
@@ -279,6 +346,13 @@ function selectDate(date){
   selectedDate=date;
   renderCalendar();
 }
+function changeWeek(direction){
+  const next=Math.max(0,Math.min(selectedWeekIndex+direction,calendarWeeks().length-1));
+  if(next===selectedWeekIndex) return;
+  selectedWeekIndex=next;
+  selectedDate=null;
+  renderCalendar();
+}
 function renderDateStrip(days,economicEvents,earningsEvents){
   const el=document.getElementById('dateStrip');
   el.innerHTML=days.map(day=>{
@@ -290,18 +364,8 @@ function renderDateStrip(days,economicEvents,earningsEvents){
     </button>`;
   }).join('');
 }
-function economicWeekLabel(economicData){
-  const first=economicData?.days?.[0]?.date;
-  const last=economicData?.days?.[economicData.days.length-1]?.date;
-  if(!first || !last) return economicData?.week_label || 'This week';
-  const nowDate=todayIso();
-  if(nowDate < first) return 'Upcoming week';
-  if(nowDate > last) return 'Previous week';
-  return 'This week';
-}
-function renderEconomic(date){
-  const economicData=currentEconomicData();
-  const events=dayEvents(economicData.events,date).sort((a,b)=>timeSortValue(a.time)-timeSortValue(b.time));
+function renderEconomic(date,week){
+  const events=dayEvents(week.events,date).sort((a,b)=>timeSortValue(a.time)-timeSortValue(b.time));
   const table=document.getElementById('economicTable');
   table.innerHTML=`<colgroup>
     <col style="width:110px"><col style="width:105px"><col>
@@ -313,10 +377,10 @@ function renderEconomic(date){
         <td><span class="time-tag">${esc(e.time)}</span></td>
         <td><span class="event-name">${esc(e.event)}</span> <span class="subtle">${esc(e.period)}</span></td>
       </tr>`).join(''):`<tr class="empty-row"><td colspan="3">No major economic events scheduled</td></tr>`}</tbody>`;
-  renderEconomicMobile(date);
+  renderEconomicMobile(date,week);
 }
-function renderEarnings(date){
-  const rows=dayEvents(EARNINGS_EVENTS,date).sort((a,b)=>String(a.time).localeCompare(String(b.time)) || a.ticker.localeCompare(b.ticker));
+function renderEarnings(date,week){
+  const rows=dayEvents(week.earnings_events,date).sort((a,b)=>String(a.time).localeCompare(String(b.time)) || a.ticker.localeCompare(b.ticker));
   const table=document.getElementById('earningsTable');
   table.innerHTML=`<colgroup>
     <col style="width:130px"><col style="width:84px"><col style="width:82px"><col><col style="width:280px">
@@ -330,11 +394,10 @@ function renderEarnings(date){
         <td><span class="company">${esc(e.company)}</span></td>
         <td class="group-cell">${esc(e.group)}</td>
       </tr>`).join(''):`<tr class="empty-row"><td colspan="5">No major earnings scheduled</td></tr>`}</tbody>`;
-  renderEarningsMobile(date);
+  renderEarningsMobile(date,week);
 }
-function renderEconomicMobile(date){
-  const economicData=currentEconomicData();
-  const events=dayEvents(economicData.events,date).sort((a,b)=>timeSortValue(a.time)-timeSortValue(b.time));
+function renderEconomicMobile(date,week){
+  const events=dayEvents(week.events,date).sort((a,b)=>timeSortValue(a.time)-timeSortValue(b.time));
   const el=document.getElementById('economicMobileList');
   el.innerHTML=events.length?events.map(e=>`
       <div class="mobile-item">
@@ -345,8 +408,8 @@ function renderEconomicMobile(date){
         <div class="mobile-metric">${esc(e.time)}</div>
       </div>`).join(''):`<div class="mobile-item"><div class="mobile-main"><div class="mobile-title subtle">No major economic events scheduled</div></div></div>`;
 }
-function renderEarningsMobile(date){
-  const rows=dayEvents(EARNINGS_EVENTS,date).sort((a,b)=>String(a.time).localeCompare(String(b.time)) || a.ticker.localeCompare(b.ticker));
+function renderEarningsMobile(date,week){
+  const rows=dayEvents(week.earnings_events,date).sort((a,b)=>String(a.time).localeCompare(String(b.time)) || a.ticker.localeCompare(b.ticker));
   const el=document.getElementById('earningsMobileList');
   el.innerHTML=rows.length?rows.map(e=>`
       <div class="mobile-item">

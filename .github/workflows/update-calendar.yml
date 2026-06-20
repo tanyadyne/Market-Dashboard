@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: pip install --retries 5 --timeout 60 yfinance curl_cffi pandas
 
-      - name: Fetch major economic events
+      - name: Fetch economic and earnings events
         run: python fetch_economic_calendar.py
 
       - name: Commit and push calendar data

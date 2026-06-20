@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Fetch upcoming major US economic events from Yahoo Finance's free economic
-calendar feed, normalize them into a compact weekly payload, and write:
+Fetch major US economic events and stock-universe earnings from Yahoo Finance,
+normalize them into a three-week payload, and write:
 
 - economic_calendar.json
 - economic_calendar.js
@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -32,6 +31,8 @@ except ImportError:  # pragma: no cover - optional optimization only
 ROOT = Path(__file__).resolve().parent
 OUT_JSON = ROOT / "economic_calendar.json"
 OUT_JS = ROOT / "economic_calendar.js"
+SCREENER_TICKERS = ROOT / "screener_tickers.json"
+LEADERS_JSON = ROOT / "leaders.json"
 TZ_ET = ZoneInfo("America/New_York")
 
 
@@ -116,16 +117,15 @@ def _build_session():
         return None
 
 
-def _week_bounds(now_et: datetime) -> tuple[datetime, datetime]:
-    mode = os.getenv("CALENDAR_WEEK_MODE", "auto").strip().lower()
-    if mode == "next":
-        days_until_monday = 7 - now_et.weekday() if now_et.weekday() < 5 else 7 - now_et.weekday()
-        start = (now_et + timedelta(days=days_until_monday)).date()
-    elif now_et.weekday() >= 5:
-        days_until_monday = 7 - now_et.weekday()
-        start = (now_et + timedelta(days=days_until_monday)).date()
-    else:
-        start = (now_et - timedelta(days=now_et.weekday())).date()
+def _reference_monday(now_et: datetime) -> datetime.date:
+    """Return this trading week's Monday, rolling weekends to next Monday."""
+    if now_et.weekday() >= 5:
+        return (now_et + timedelta(days=7 - now_et.weekday())).date()
+    return (now_et - timedelta(days=now_et.weekday())).date()
+
+
+def _week_bounds(now_et: datetime, offset: int = 0) -> tuple[datetime, datetime]:
+    start = _reference_monday(now_et) + timedelta(days=offset * 7)
     end = start + timedelta(days=4)
     start_dt = datetime.combine(start, datetime.min.time(), tzinfo=TZ_ET)
     end_dt = datetime.combine(end, datetime.max.time().replace(microsecond=0), tzinfo=TZ_ET)
@@ -240,7 +240,7 @@ def _synthetic_fomc_press(rate_payload: dict, rate_time_et: datetime) -> dict:
 
 
 def _select_major_events(df) -> list[dict]:
-    chosen: dict[str, tuple[tuple[datetime, int, str], dict]] = {}
+    chosen: dict[tuple[str, str], tuple[tuple[datetime, int, str], dict]] = {}
 
     for event_name, row in _iter_calendar_rows(df):
         if str(row.get("Region", "")).upper() != "US":
@@ -259,15 +259,24 @@ def _select_major_events(df) -> list[dict]:
             event_time_et = event_time.astimezone(TZ_ET)
             payload = _payload_from_row(matcher.key, matcher.label, name, event_time, row)
             sort_key = (event_time_et, priority, name)
-            current = chosen.get(matcher.key)
+            identity = (matcher.key, event_time_et.date().isoformat())
+            current = chosen.get(identity)
             if current is None or sort_key < current[0]:
-                chosen[matcher.key] = (sort_key, payload)
+                chosen[identity] = (sort_key, payload)
             break
 
-    if "fomc_rate" in chosen and "fed_press" not in chosen:
-        rate_time_et = chosen["fomc_rate"][0][0]
-        press_payload = _synthetic_fomc_press(chosen["fomc_rate"][1], rate_time_et)
-        chosen["fed_press"] = ((rate_time_et + timedelta(minutes=30), 0, "Synthetic FOMC press conference"), press_payload)
+    rate_items = [item for identity, item in chosen.items() if identity[0] == "fomc_rate"]
+    press_dates = {identity[1] for identity in chosen if identity[0] == "fed_press"}
+    for rate_sort, rate_payload in rate_items:
+        rate_time_et = rate_sort[0]
+        rate_date = rate_time_et.date().isoformat()
+        if rate_date in press_dates:
+            continue
+        press_payload = _synthetic_fomc_press(rate_payload, rate_time_et)
+        chosen[("fed_press", rate_date)] = (
+            (rate_time_et + timedelta(minutes=30), 0, "Synthetic FOMC press conference"),
+            press_payload,
+        )
 
     selected = [item[1] for item in sorted(chosen.values(), key=lambda item: item[0])]
     return selected
@@ -291,23 +300,167 @@ def _fetch_calendar_rows(start_et: datetime, end_et: datetime):
     return rows
 
 
+def _load_stock_metadata() -> tuple[set[str], dict[str, dict]]:
+    with SCREENER_TICKERS.open(encoding="utf-8") as handle:
+        universe_data = json.load(handle)
+    universe = {str(ticker).upper() for ticker in universe_data.get("tickers", [])}
+
+    metadata: dict[str, dict] = {}
+    if LEADERS_JSON.exists():
+        with LEADERS_JSON.open(encoding="utf-8") as handle:
+            leaders = json.load(handle)
+        for row in leaders.get("e", []):
+            ticker = str(row.get("t", "")).upper()
+            if ticker:
+                metadata[ticker] = {
+                    "company": row.get("n") or ticker,
+                    "group": row.get("th") or "-",
+                }
+    return universe, metadata
+
+
+def _row_value(row, *names):
+    for name in names:
+        value = row.get(name)
+        if value is not None and str(value).strip().lower() not in {"", "nan", "nat", "none"}:
+            return value
+    return None
+
+
+def _as_datetime(value) -> datetime | None:
+    if value is None:
+        return None
+    if hasattr(value, "to_pydatetime"):
+        value = value.to_pydatetime()
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            return value.replace(tzinfo=TZ_ET)
+        return value.astimezone(TZ_ET)
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=TZ_ET)
+    return parsed.astimezone(TZ_ET)
+
+
+def _earnings_time(row, event_time: datetime) -> str:
+    raw = _row_value(row, "Timing", "Earnings Call Time", "Call Time", "Time")
+    text = str(raw or "").strip().upper()
+    aliases = {
+        "BEFORE MARKET OPEN": "BMO",
+        "BEFORE OPEN": "BMO",
+        "PRE-MARKET": "BMO",
+        "AFTER MARKET CLOSE": "AMC",
+        "AFTER CLOSE": "AMC",
+        "POST-MARKET": "AMC",
+        "TIME NOT SUPPLIED": "TNS",
+        "NOT SUPPLIED": "TNS",
+    }
+    if text in {"BMO", "AMC", "TNS"}:
+        return text
+    if text in aliases:
+        return aliases[text]
+    if event_time.hour < 12:
+        return "BMO"
+    if event_time.hour >= 16:
+        return "AMC"
+    return "TNS"
+
+
+def _fetch_earnings_rows(start_et: datetime, end_et: datetime):
+    session = _build_session()
+    calendar = yf.Calendars(start=start_et.date(), end=end_et.date() + timedelta(days=1), session=session)
+    rows = []
+    limit = 100
+    max_pages = 20
+    for page in range(max_pages):
+        batch = calendar.get_earnings_calendar(
+            filter_most_active=False,
+            limit=limit,
+            offset=page * limit,
+            force=page == 0,
+        )
+        page_rows = list(_iter_calendar_rows(batch))
+        rows.extend(page_rows)
+        if len(page_rows) < limit:
+            break
+    return rows
+
+
+def _select_universe_earnings(rows, universe: set[str], metadata: dict[str, dict]) -> list[dict]:
+    selected: dict[tuple[str, str], dict] = {}
+    for index, row in rows:
+        ticker = str(_row_value(row, "Symbol", "Ticker") or index or "").strip().upper()
+        if ticker not in universe:
+            continue
+        event_time = _as_datetime(
+            _row_value(row, "Event Start Date", "Earnings Date", "Event Time", "Start Date")
+        )
+        if event_time is None:
+            continue
+        profile = metadata.get(ticker, {})
+        company = _row_value(row, "Company", "Company Name") or profile.get("company") or ticker
+        selected[(ticker, event_time.date().isoformat())] = {
+            "date": event_time.date().isoformat(),
+            "day": _day_label(event_time),
+            "ticker": ticker,
+            "company": str(company),
+            "group": str(profile.get("group") or "-"),
+            "time": _earnings_time(row, event_time),
+        }
+    return sorted(selected.values(), key=lambda item: (item["date"], item["time"], item["ticker"]))
+
+
+def _week_payload(key: str, label: str, start_et: datetime, events: list[dict], earnings: list[dict]) -> dict:
+    days = _build_days(start_et.date())
+    dates = {day["date"] for day in days}
+    week_events = [event for event in events if event["date"] in dates]
+    week_earnings = [event for event in earnings if event["date"] in dates]
+    return {
+        "key": key,
+        "week_label": label,
+        "range_label": _range_label(days),
+        "days": days,
+        "events": week_events,
+        "earnings_events": week_earnings,
+        "event_keys": [event["key"] for event in week_events],
+    }
+
+
 def build_payload(now_et: datetime | None = None) -> dict:
     now_et = now_et or datetime.now(TZ_ET)
-    week_start_et, week_end_et = _week_bounds(now_et)
-    rows = _fetch_calendar_rows(week_start_et, week_end_et)
-    events = _select_major_events(rows)
+    previous_start, _ = _week_bounds(now_et, -1)
+    current_start, _ = _week_bounds(now_et, 0)
+    next_start, next_end = _week_bounds(now_et, 1)
 
-    days = _build_days(week_start_et.date())
+    rows = _fetch_calendar_rows(previous_start, next_end)
+    events = _select_major_events(rows)
+    universe, metadata = _load_stock_metadata()
+    earnings_rows = _fetch_earnings_rows(previous_start, next_end)
+    earnings = _select_universe_earnings(earnings_rows, universe, metadata)
+
+    weeks = [
+        _week_payload("previous", "Previous week", previous_start, events, earnings),
+        _week_payload("current", "This week", current_start, events, earnings),
+        _week_payload("next", "Next week", next_start, events, earnings),
+    ]
+    current_week = weeks[1]
 
     payload = {
         "generated_at_utc": datetime.now(TZ_ET).astimezone(ZoneInfo("UTC")).strftime("%Y-%m-%d %H:%M UTC"),
         "generated_at_et": now_et.strftime("%d/%m/%Y, %H:%M %Z"),
         "timezone": "America/New_York",
-        "week_label": "This week",
-        "range_label": _range_label(days),
-        "days": days,
-        "events": events,
-        "event_keys": [event["key"] for event in events],
+        "default_week_index": 1,
+        "weeks": weeks,
+        # Keep current-week fields for the dashboard landing page.
+        "week_label": current_week["week_label"],
+        "range_label": current_week["range_label"],
+        "days": current_week["days"],
+        "events": current_week["events"],
+        "earnings_events": current_week["earnings_events"],
+        "event_keys": current_week["event_keys"],
     }
     return payload
 
@@ -321,7 +474,12 @@ def write_outputs(payload: dict) -> None:
 def main() -> None:
     payload = build_payload()
     write_outputs(payload)
-    print(f"Wrote {OUT_JSON.name} and {OUT_JS.name} with {len(payload['events'])} event(s)")
+    total_economic = sum(len(week["events"]) for week in payload["weeks"])
+    total_earnings = sum(len(week["earnings_events"]) for week in payload["weeks"])
+    print(
+        f"Wrote {OUT_JSON.name} and {OUT_JS.name} with "
+        f"{total_economic} economic event(s) and {total_earnings} earnings event(s)"
+    )
     missing = [matcher.label for matcher in MAJOR_EVENTS if matcher.key not in payload["event_keys"]]
     if missing:
         print("Missing this week:")
