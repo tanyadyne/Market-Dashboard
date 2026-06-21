@@ -411,15 +411,22 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 [data-view="mobile"] .seg-toggle .lbl-text{display:none}
 [data-view="mobile"] .seg-toggle .lbl-icon{display:inline-block}
 [data-view="mobile"] .filter-btn{padding:4px 8px;font-size:10px}
-/* Filter popup on mobile: open downward + to the RIGHT of the button so it doesn't
-   get clipped off the left edge of the screen. Constrain width to viewport. */
+/* Keep the mobile filter panel fixed to the visible viewport so an empty result
+   table cannot collapse its containing layout and clip the controls. */
 [data-view="mobile"] .filter-menu{
+  position:fixed;
   right:auto;
-  left:0;
-  min-width:220px;
-  max-width:calc(100vw - 24px);
-  max-height:calc(100vh - 120px);
+  left:12px;
+  right:12px;
+  top:var(--filter-menu-top,160px);
+  width:auto;
+  min-width:0;
+  max-width:none;
+  max-height:calc(100vh - var(--filter-menu-top,160px) - 12px);
+  max-height:calc(100dvh - var(--filter-menu-top,160px) - 12px);
   overflow-y:auto;
+  overscroll-behavior:contain;
+  padding-bottom:max(8px,env(safe-area-inset-bottom));
 }
 </style>
 <link rel="stylesheet" href="sidebar.css">
@@ -794,7 +801,15 @@ function switchView(view){
 function toggleFilterMenu(){
   const menu=document.getElementById('filterMenu');
   menu.classList.toggle('open');
-  if(!menu.classList.contains('open'))closeSmaDropdown();
+  if(menu.classList.contains('open'))positionMobileFilterMenu();
+  else closeSmaDropdown();
+}
+function positionMobileFilterMenu(){
+  const menu=document.getElementById('filterMenu');
+  const button=document.getElementById('filterBtn');
+  if(!menu||!button||document.documentElement.getAttribute('data-view')!=='mobile')return;
+  const buttonRect=button.getBoundingClientRect();
+  menu.style.setProperty('--filter-menu-top',`${Math.ceil(buttonRect.bottom+6)}px`);
 }
 function renderActiveScreenerView(){
   if(currentView==='chart'&&currentTab!=='overview'&&currentTab!=='search')renderChartView();
@@ -940,6 +955,14 @@ document.addEventListener('click',e=>{
   }
   const smaDropdown=document.getElementById('priceSmaDropdown');
   if(smaDropdown && !smaDropdown.contains(e.target))closeSmaDropdown();
+});
+window.addEventListener('resize',()=>{
+  const menu=document.getElementById('filterMenu');
+  if(menu&&menu.classList.contains('open'))positionMobileFilterMenu();
+});
+if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>{
+  const menu=document.getElementById('filterMenu');
+  if(menu&&menu.classList.contains('open'))positionMobileFilterMenu();
 });
 updatePriceFilterControls();
 
