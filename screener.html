@@ -97,6 +97,18 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .filter-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
 .filter-option{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:4px 6px;border:1px solid var(--bdr);border-radius:5px;background:var(--bg3);font-size:10px;font-weight:600;white-space:nowrap;cursor:pointer}
 .filter-option:hover{border-color:var(--t4);color:var(--t1)}
+.price-proximity-row{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:11px}
+.price-dropdown{position:relative}
+.price-dropdown-btn{height:25px;min-width:70px;max-width:92px;padding:0 20px 0 7px;border:1px solid var(--bdr);border-radius:5px;background:var(--bg3);color:var(--t1);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
+.price-dropdown-btn::after{content:"";position:absolute;right:7px;top:8px;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg)}
+.price-dropdown-btn:hover,.price-dropdown-btn[aria-expanded="true"]{border-color:var(--t4)}
+.sma-dropdown-menu{display:none;position:absolute;left:0;bottom:calc(100% + 5px);z-index:110;min-width:92px;padding:4px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg2);box-shadow:0 8px 22px rgba(0,0,0,.28)}
+.sma-dropdown-menu.open{display:grid;gap:3px}
+.sma-dropdown-option{height:25px;padding:0 8px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--t2);font-family:inherit;font-size:10px;font-weight:700;text-align:left;cursor:pointer}
+.sma-dropdown-option:hover{background:var(--bg3);color:var(--t1)}
+.sma-dropdown-option.selected{background:#2563eb;border-color:#3b82f6;color:#fff}
+.price-adr-select{height:25px;min-width:55px;padding-top:0;padding-bottom:0}
+.price-adr-select:disabled{opacity:.38;cursor:not-allowed;color:var(--t3)}
 /* Table */
 table{width:100%;border-collapse:collapse}
 th{position:sticky;top:var(--top-h);background:var(--bg3);padding:8px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;border-bottom:1px solid var(--bdr);white-space:nowrap;z-index:2}
@@ -534,12 +546,27 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
         <input class="filter-check" id="filterMarketCap" type="checkbox" onchange="toggleMarketCap(this)">
       </div>
       <div class="filter-group">
-        <div class="filter-group-label">Price Above</div>
-        <div class="filter-options">
-          <label class="filter-option">10 SMA<input class="filter-check price-above-check" type="checkbox" data-bit="1" onchange="togglePriceAbove(this)"></label>
-          <label class="filter-option">20 SMA<input class="filter-check price-above-check" type="checkbox" data-bit="2" onchange="togglePriceAbove(this)"></label>
-          <label class="filter-option">50 SMA<input class="filter-check price-above-check" type="checkbox" data-bit="4" onchange="togglePriceAbove(this)"></label>
-          <label class="filter-option">200 SMA<input class="filter-check price-above-check" type="checkbox" data-bit="8" onchange="togglePriceAbove(this)"></label>
+        <div class="price-proximity-row">
+          <span>Price &gt;</span>
+          <div class="price-dropdown" id="priceSmaDropdown">
+            <button class="price-dropdown-btn" id="priceSmaButton" type="button" aria-expanded="false" onclick="toggleSmaDropdown(event)">Select</button>
+            <div class="sma-dropdown-menu" id="priceSmaMenu">
+              <button class="sma-dropdown-option" type="button" data-bit="1" data-label="10sma" onclick="togglePriceAboveOption(event,this)">10sma</button>
+              <button class="sma-dropdown-option" type="button" data-bit="2" data-label="20sma" onclick="togglePriceAboveOption(event,this)">20sma</button>
+              <button class="sma-dropdown-option" type="button" data-bit="4" data-label="50sma" onclick="togglePriceAboveOption(event,this)">50sma</button>
+              <button class="sma-dropdown-option" type="button" data-bit="8" data-label="200sma" onclick="togglePriceAboveOption(event,this)">200sma</button>
+            </div>
+          </div>
+          <span>by &lt;</span>
+          <select class="filter-select price-adr-select" id="priceAdrSelect" onchange="updatePriceAdrLimit(this)" disabled>
+            <option value="1" selected>1x</option>
+            <option value="0.5">0.5x</option>
+            <option value="0.4">0.4x</option>
+            <option value="0.3">0.3x</option>
+            <option value="0.2">0.2x</option>
+            <option value="0.1">0.1x</option>
+          </select>
+          <span>ADR</span>
         </div>
       </div>
       <div style="border-top:1px solid var(--bdr);margin:6px 0"></div>
@@ -611,6 +638,7 @@ let positiveChangePeriods=new Set();
 let filterMarketCap=false;
 let marketCapBand='gt2';
 let priceAboveMask=0;
+let priceAdrLimit=1;
 let currentView='list'; // 'list' or 'chart'
 let chartPage=1;
 let profileHistoryPage=1;
@@ -764,7 +792,9 @@ function switchView(view){
 }
 
 function toggleFilterMenu(){
-  document.getElementById('filterMenu').classList.toggle('open');
+  const menu=document.getElementById('filterMenu');
+  menu.classList.toggle('open');
+  if(!menu.classList.contains('open'))closeSmaDropdown();
 }
 function renderActiveScreenerView(){
   if(currentView==='chart'&&currentTab!=='overview'&&currentTab!=='search')renderChartView();
@@ -819,11 +849,52 @@ function updateMarketCapBand(el){
   marketCapBand=el.value||'gt2';
   if(filterMarketCap)filterChanged();
 }
-function togglePriceAbove(el){
-  const bit=parseInt(el.dataset.bit,10)||0;
-  if(el.checked)priceAboveMask|=bit;
-  else priceAboveMask&=~bit;
+const SMA_FILTERS=[
+  {bit:1,label:'10sma',index:0},
+  {bit:2,label:'20sma',index:1},
+  {bit:4,label:'50sma',index:2},
+  {bit:8,label:'200sma',index:3},
+];
+function selectedSmaFilters(){
+  return SMA_FILTERS.filter(option=>(priceAboveMask&option.bit)!==0);
+}
+function closeSmaDropdown(){
+  const menu=document.getElementById('priceSmaMenu');
+  const button=document.getElementById('priceSmaButton');
+  if(menu)menu.classList.remove('open');
+  if(button)button.setAttribute('aria-expanded','false');
+}
+function toggleSmaDropdown(event){
+  event.stopPropagation();
+  const menu=document.getElementById('priceSmaMenu');
+  const button=document.getElementById('priceSmaButton');
+  const isOpen=menu.classList.toggle('open');
+  button.setAttribute('aria-expanded',isOpen?'true':'false');
+}
+function togglePriceAboveOption(event,el){
+  event.stopPropagation();
+  priceAboveMask^=parseInt(el.dataset.bit,10)||0;
+  updatePriceFilterControls();
   filterChanged();
+}
+function updatePriceAdrLimit(el){
+  priceAdrLimit=Number(el.value)||1;
+  if(selectedSmaFilters().length===1)filterChanged();
+}
+function updatePriceFilterControls(){
+  const selected=selectedSmaFilters();
+  const button=document.getElementById('priceSmaButton');
+  const adrSelect=document.getElementById('priceAdrSelect');
+  if(button)button.textContent=selected.length===0?'Select':selected.length===1?selected[0].label:`${selected.length} selected`;
+  document.querySelectorAll('.sma-dropdown-option').forEach(option=>{
+    const isSelected=(priceAboveMask&(parseInt(option.dataset.bit,10)||0))!==0;
+    option.classList.toggle('selected',isSelected);
+    option.setAttribute('aria-pressed',isSelected?'true':'false');
+  });
+  if(adrSelect){
+    adrSelect.disabled=selected.length!==1;
+    adrSelect.title=selected.length===1?'Maximum distance above the selected SMA':'Select exactly one SMA to use ADR proximity';
+  }
 }
 function handleScreenerSearch(){
   currentPage=1;
@@ -841,6 +912,7 @@ function clearFilters(){
   filterMarketCap=false;
   marketCapBand='gt2';
   priceAboveMask=0;
+  priceAdrLimit=1;
   document.querySelectorAll('.filter-check').forEach(el=>el.checked=false);
   const topSelect=document.getElementById('topOnlySelect');
   if(topSelect)topSelect.value='50';
@@ -848,6 +920,10 @@ function clearFilters(){
   if(positiveDeltaSelect)positiveDeltaSelect.value='1';
   const marketCapSelect=document.getElementById('marketCapSelect');
   if(marketCapSelect)marketCapSelect.value='gt2';
+  const priceAdrSelect=document.getElementById('priceAdrSelect');
+  if(priceAdrSelect)priceAdrSelect.value='1';
+  updatePriceFilterControls();
+  closeSmaDropdown();
   updateFilterButton();
   document.getElementById('filterMenu').classList.remove('open');
   currentPage=1;
@@ -860,8 +936,12 @@ document.addEventListener('click',e=>{
   const btn=document.getElementById('filterBtn');
   if(wrap && !wrap.contains(e.target) && e.target!==btn){
     wrap.classList.remove('open');
+    closeSmaDropdown();
   }
+  const smaDropdown=document.getElementById('priceSmaDropdown');
+  if(smaDropdown && !smaDropdown.contains(e.target))closeSmaDropdown();
 });
+updatePriceFilterControls();
 
 function toSGT(utcStr){
   try{const s=utcStr.replace(' UTC','Z').replace(' ','T');const d=new Date(s);if(isNaN(d))return utcStr;
@@ -1630,7 +1710,17 @@ function applyScreenerFilters(items,isW){
     const matches=bands[marketCapBand]||bands.gt2;
     items=items.filter(e=>e.mc!=null&&matches(Number(e.mc)));
   }
-  if(priceAboveMask)items=items.filter(e=>((e.ma||0)&priceAboveMask)===priceAboveMask);
+  if(priceAboveMask){
+    items=items.filter(e=>((e.ma||0)&priceAboveMask)===priceAboveMask);
+    const selected=selectedSmaFilters();
+    if(selected.length===1){
+      const distanceIndex=selected[0].index;
+      items=items.filter(e=>{
+        const distance=Array.isArray(e.md)?Number(e.md[distanceIndex]):NaN;
+        return Number.isFinite(distance)&&distance>=0&&distance<priceAdrLimit;
+      });
+    }
+  }
   return items;
 }
 

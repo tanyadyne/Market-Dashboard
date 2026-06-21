@@ -43,6 +43,7 @@ from fetch_leaders import (
     MAX_HISTORY_DAYS,
     SETUP_COILED_FLAG,
     is_us_market_holiday,
+    sma_adr_distances,
 )
 
 LEADERS_FILE = "leaders.json"
@@ -391,6 +392,11 @@ def update_change_fields(entry, base, quote):
         if sma and live > sma:
             ma_flags |= bit
     entry["ma"] = ma_flags
+    entry["md"] = sma_adr_distances(
+        live,
+        entry.get("ad"),
+        {period: finite_num(base.get(key)) for period, key in ((10, "_sma10"), (20, "_sma20"), (50, "_sma50"), (200, "_sma200"))},
+    )
 
 
 def next_ema(prev_ema, price, period):

@@ -954,6 +954,26 @@ def close_on_or_before(df_index, closes, target_date):
     return None
 
 
+def sma_adr_distances(price, avg_range_pct, sma_values):
+    """Return price-to-SMA distances in ADR multiples for 10/20/50/200 SMA."""
+    try:
+        price = float(price)
+        adr_dollars = price * float(avg_range_pct) / 100
+    except (TypeError, ValueError):
+        return [None, None, None, None]
+    if not np.isfinite(price) or not np.isfinite(adr_dollars) or price <= 0 or adr_dollars <= 0:
+        return [None, None, None, None]
+    distances = []
+    for period in (10, 20, 50, 200):
+        sma = sma_values.get(period)
+        try:
+            value = (price - float(sma)) / adr_dollars
+            distances.append(round(value, 3) if np.isfinite(value) else None)
+        except (TypeError, ValueError):
+            distances.append(None)
+    return distances
+
+
 def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map):
     """Process daily metrics for one stock. Returns dict or None.
     Liquidity/delisted/flat-price filters are applied upstream in main().
@@ -1083,6 +1103,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         sma_values[period] = sma
         if sma is not None and price > sma:
             ma_flags |= bit
+    ma_distances = sma_adr_distances(price, avg_range_pct, sma_values)
 
     # ─── Trailing 5-day R.Vol (rolling, week-of-day-agnostic) ────────────────
     # Unlike `w_rv` (week-to-date, resets every Monday), this is a rolling 5-session
@@ -1124,6 +1145,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "dv": round(avg_dollar_vol) if avg_dollar_vol is not None else None,
                 "ad": round(avg_range_pct, 2) if avg_range_pct is not None else None,
                 "ma": ma_flags,
+                "md": ma_distances,
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
                 "ytd": round(ytd, 2) if ytd is not None else None,
@@ -1330,6 +1352,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "dv": round(avg_dollar_vol) if avg_dollar_vol is not None else None,
         "ad": round(avg_range_pct, 2) if avg_range_pct is not None else None,
         "ma": ma_flags,
+        "md": ma_distances,
         "c5": round(c5, 2) if c5 is not None else None,
         "c20": round(c20, 2) if c20 is not None else None,
         "ytd": round(ytd, 2) if ytd is not None else None,
@@ -1855,6 +1878,11 @@ def apply_intraday_overlay(results):
             if sma and live > sma:
                 ma_flags |= bit
         r["ma"] = ma_flags
+        r["md"] = sma_adr_distances(
+            live,
+            r.get("ad"),
+            {period: r.get(key) for period, key in ((10, "_sma10"), (20, "_sma20"), (50, "_sma50"), (200, "_sma200"))},
+        )
         if r.get("_5b") and r["_5b"] > 0:
             r["c5"] = round((live / r["_5b"] - 1) * 100, 2)
         if r.get("_20b") and r["_20b"] > 0:
