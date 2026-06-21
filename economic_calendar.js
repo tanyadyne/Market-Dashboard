@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-06-20 13:51 UTC",
-  "generated_at_et": "20/06/2026, 09:51 EDT",
+  "generated_at_utc": "2026-06-21 13:30 UTC",
+  "generated_at_et": "21/06/2026, 09:30 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
