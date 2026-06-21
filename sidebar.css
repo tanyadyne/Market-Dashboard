@@ -11,6 +11,7 @@
   border-right:1px solid #d8d8d8;
   color:#111827;
   font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  transition:width .28s ease,padding .28s ease;
 }
 .global-brand{
   display:flex;
@@ -27,7 +28,7 @@
   object-fit:contain;
   flex:0 0 auto;
 }
-.global-brand-name{display:flex;flex-direction:column;line-height:1}
+.global-brand-name{display:flex;flex-direction:column;line-height:1;max-width:120px;opacity:1;overflow:hidden;white-space:nowrap;transition:max-width .2s ease,opacity .16s ease,transform .2s ease}
 .global-brand-name-main{font-size:17px;font-weight:800;letter-spacing:-.4px}
 .global-brand-name-sub{font-size:12px;font-weight:700;letter-spacing:.2px;margin-top:4px}
 .global-nav{display:flex;flex-direction:column;gap:11px}
@@ -43,7 +44,9 @@
   font-weight:700;
   text-decoration:none;
   transition:background .15s,color .15s;
+  position:relative;
 }
+.sidebar-label{display:inline-block;max-width:140px;opacity:1;overflow:hidden;white-space:nowrap;transition:max-width .22s ease,opacity .16s ease,transform .22s ease}
 .global-nav-link:hover{background:#f3f4f6;color:#111827}
 .global-nav-link.active{background:#2b00e8;color:#fff}
 .global-nav-icon{
@@ -67,7 +70,53 @@
 .global-nav-icon.calendar::before{content:"";position:absolute;left:4px;top:-3px;width:2px;height:5px;border-radius:2px;background:currentColor;box-shadow:6px 0 currentColor}
 .global-nav-icon.calendar::after{content:"";position:absolute;left:0;right:0;top:5px;border-top:1.6px solid currentColor}
 
-body.global-shell{padding-left:206px}
+body.global-shell{padding-left:206px;transition:padding-left .28s ease}
+
+.sidebar-toggle{
+  position:fixed;
+  z-index:1100;
+  left:193px;
+  top:50%;
+  width:26px;
+  height:62px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:13px;
+  background:#7d7f82;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.16);
+  transform:translateY(-50%);
+  transition:left .28s ease,background .15s ease,box-shadow .15s ease;
+}
+.sidebar-toggle:hover{background:#696b6e;box-shadow:0 3px 10px rgba(0,0,0,.22)}
+.sidebar-toggle span{display:block;width:13px;height:2px;border-radius:2px;background:currentColor}
+.sidebar-toggle:focus-visible{outline:2px solid #2f80ed;outline-offset:2px}
+
+@media(min-width:1101px){
+  html.sidebar-collapsed .global-sidebar{width:72px;padding-left:10px;padding-right:10px}
+  html.sidebar-collapsed body.global-shell{padding-left:72px}
+  html.sidebar-collapsed .global-brand{justify-content:center;padding-left:0;padding-right:0;gap:0}
+  html.sidebar-collapsed .global-brand-name,
+  html.sidebar-collapsed .sidebar .brand-name{max-width:0;opacity:0;transform:translateX(-6px);pointer-events:none}
+  html.sidebar-collapsed .global-nav-link,
+  html.sidebar-collapsed .sidebar .nav-link{justify-content:center;gap:0;padding-left:0;padding-right:0;background:transparent}
+  html.sidebar-collapsed .global-nav-link.active,
+  html.sidebar-collapsed .sidebar .nav-link.active{background:transparent;color:#2f80ed}
+  html.sidebar-collapsed .global-nav-link.active::before,
+  html.sidebar-collapsed .sidebar .nav-link.active::before{content:"";position:absolute;left:-10px;top:4px;width:3px;height:27px;border-radius:0 2px 2px 0;background:#2b00f5}
+  html.sidebar-collapsed .sidebar-label{max-width:0;opacity:0;transform:translateX(-6px);pointer-events:none}
+  html.sidebar-collapsed .sidebar-toggle{left:59px}
+
+  html.sidebar-collapsed .app{grid-template-columns:72px minmax(0,1fr)}
+  html.sidebar-collapsed .sidebar{padding-left:10px;padding-right:10px}
+  html.sidebar-collapsed .sidebar .brand{justify-content:center;padding-left:0;padding-right:0;gap:0}
+}
 
 html[data-theme="dark"] .global-sidebar,
 body[data-theme="dark"] .global-sidebar{
@@ -83,6 +132,7 @@ html[data-theme="dark"] .global-nav-link.active,
 body[data-theme="dark"] .global-nav-link.active{background:#2b00f5;color:#fff}
 
 @media(max-width:1100px){
+  .sidebar-toggle{display:none}
   .global-sidebar{display:none}
   body.global-shell{padding-left:0}
 }
