@@ -1,0 +1,1 @@
+{"meta":{"updated":"2026-06-22 19:32:00 UTC","count":2,"grace_runs":10},"tickers":{"OKTA":{"first_failed":"2026-06-19","last_failed":"2026-06-19","consecutive_failures":1,"reason":"daily_history_fetch","previous_rank":113},"ON":{"first_failed":"2026-06-19","last_failed":"2026-06-19","consecutive_failures":1,"reason":"daily_history_fetch","previous_rank":38}}}

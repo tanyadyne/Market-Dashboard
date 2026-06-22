@@ -36,7 +36,12 @@ ATR_PERIOD = 14
 MAX_HISTORY_DAYS = 90
 INTRADAY_BASELINES_FILE = "leaders_intraday_baselines.json"
 UNIVERSE_GRACE_FILE = "leaders_universe_grace.json"
+REPAIR_QUEUE_FILE = "leaders_missing_tickers.json"
 UNIVERSE_GRACE_DAYS = 10
+DATA_FAILURE_GRACE_RUNS = 10
+MIN_HISTORY_FETCH_COVERAGE = 0.90
+MIN_OUTPUT_RETENTION = 0.90
+TARGETED_REPAIR_COOLDOWN_SECONDS = int(os.environ.get("TARGETED_REPAIR_COOLDOWN_SECONDS", "60"))
 WEEKLY_RETRY_ATTEMPTS = 3
 STRICT_WEEKLY_RANK_RECOVERY = os.environ.get("STRICT_WEEKLY_RANK_RECOVERY", "1") != "0"
 SETUP_COILED_FLAG = 128
@@ -2012,6 +2017,74 @@ def write_universe_grace_state(state, today_str):
         json.dump(payload, f, separators=(",", ":"))
 
 
+def load_previous_leaders_state():
+    """Load prior rows and intraday baselines for safe data-failure carry-forward."""
+    entries = {}
+    baselines = {}
+    try:
+        with open("leaders.json") as f:
+            payload = json.load(f)
+        entries = {
+            row.get("t"): row
+            for row in payload.get("e", [])
+            if isinstance(row, dict) and row.get("t")
+        }
+    except (OSError, ValueError, TypeError):
+        entries = {}
+    try:
+        with open(INTRADAY_BASELINES_FILE) as f:
+            payload = json.load(f)
+        baselines = {
+            tk: row
+            for tk, row in payload.get("d", {}).items()
+            if isinstance(row, dict)
+        }
+    except (OSError, ValueError, TypeError):
+        baselines = {}
+    return entries, baselines
+
+
+def load_repair_queue():
+    try:
+        with open(REPAIR_QUEUE_FILE) as f:
+            payload = json.load(f)
+        records = payload.get("tickers", {})
+        return records if isinstance(records, dict) else {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def write_repair_queue(records):
+    cleaned = {tk: records[tk] for tk in sorted(records) if isinstance(records.get(tk), dict)}
+    payload = {
+        "meta": {
+            "updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "count": len(cleaned),
+            "grace_runs": DATA_FAILURE_GRACE_RUNS,
+        },
+        "tickers": cleaned,
+    }
+    with open(REPAIR_QUEUE_FILE, "w") as f:
+        json.dump(payload, f, separators=(",", ":"))
+
+
+def build_carried_entry(ticker, previous_entry, previous_baseline):
+    """Rehydrate a prior public row so it can be reranked and retain its baseline."""
+    if not isinstance(previous_entry, dict):
+        return None
+    entry = dict(previous_entry)
+    if isinstance(previous_baseline, dict):
+        for key, value in previous_baseline.items():
+            if key.startswith("_") or key in {"w_pen_engulf", "w_pen_crash5"}:
+                entry[key] = value
+    if entry.get("w_fr") is None:
+        return None
+    entry["t"] = ticker
+    entry["_data_stale"] = True
+    entry["_stale_reason"] = "daily_history_fetch"
+    return entry
+
+
 def get_position_label(rank, total):
     """Map rank to position label."""
     if rank <= 50: return "Strong Leader"
@@ -2058,6 +2131,9 @@ def main():
         print(f"\n[holiday] {_et_today} is a US market holiday — exiting without changes.")
         return
 
+    previous_entries, previous_baselines = load_previous_leaders_state()
+    repair_records = load_repair_queue()
+
     all_tickers, stock_to_etfs = build_universe()
     # Drop tickers in MANUAL_EXCLUDE before any further processing.
     if MANUAL_EXCLUDE:
@@ -2069,6 +2145,15 @@ def main():
         actually_removed = sorted(before_set & MANUAL_EXCLUDE)
         if actually_removed:
             print(f"  MANUAL_EXCLUDE: dropped {len(actually_removed)} ticker(s): {actually_removed}")
+    # Fetch unresolved data failures first. Yahoo's rate limits often arrive late in
+    # a long alphabetical run; front-loading the small repair set prevents the same
+    # symbols from repeatedly landing behind the rate-limit wall.
+    queued_first = [tk for tk in repair_records if tk in all_tickers]
+    if queued_first:
+        queued_set = set(queued_first)
+        all_tickers = queued_first + [tk for tk in all_tickers if tk not in queued_set]
+        print(f"  Repair queue: prioritizing {len(queued_first)} ticker(s): {queued_first[:40]}")
+    starting_universe = list(all_tickers)
     print(f"Universe: {len(all_tickers)} stocks, {len(set(name for etfs in stock_to_etfs.values() for name, _ in etfs))} unique ETF themes")
 
     # ─── Download SPY (daily + weekly) ────────────────────────
@@ -2275,6 +2360,74 @@ def main():
 
     if not daily_data:
         print("ERROR: No daily data downloaded"); sys.exit(1)
+
+    data_failures = {
+        tk for tk in all_tickers
+        if tk not in daily_data or daily_data.get(tk) is None or len(daily_data.get(tk)) < 10
+    }
+    targeted_repairs = [
+        tk for tk in sorted(data_failures)
+        if tk in repair_records
+        or tk in MANUAL_INCLUDE
+        or (previous_entries.get(tk) or {}).get("w_rk") is not None
+    ]
+    if targeted_repairs:
+        print(f"  Targeted repair: cooling down {TARGETED_REPAIR_COOLDOWN_SECONDS}s before retrying "
+              f"{len(targeted_repairs)} important ticker(s): {targeted_repairs[:80]}")
+        time.sleep(TARGETED_REPAIR_COOLDOWN_SECONDS)
+        repaired = 0
+        for tk in targeted_repairs:
+            for attempt in range(3):
+                try:
+                    df = yf.download(
+                        tk,
+                        start=start.strftime("%Y-%m-%d"),
+                        end=end.strftime("%Y-%m-%d"),
+                        auto_adjust=False,
+                        session=_session,
+                        threads=False,
+                        progress=False,
+                    )
+                    if not df.empty:
+                        flat = flatten_single_download(df.copy())
+                        if flat is not None and len(flat) >= 10:
+                            daily_data[tk] = flat
+                            repaired += 1
+                            break
+                except Exception as exc:
+                    if attempt == 2:
+                        print(f"    {tk}: targeted repair failed: {exc}")
+                time.sleep(20 * (attempt + 1))
+        data_failures = {
+            tk for tk in all_tickers
+            if tk not in daily_data or daily_data.get(tk) is None or len(daily_data.get(tk)) < 10
+        }
+        print(f"  Targeted repair: recovered {repaired}/{len(targeted_repairs)} ticker(s)")
+
+    fetch_coverage = (len(all_tickers) - len(data_failures)) / max(1, len(all_tickers))
+    if fetch_coverage < MIN_HISTORY_FETCH_COVERAGE:
+        print(f"ERROR: refusing to publish; daily history coverage {fetch_coverage:.1%} "
+              f"is below the {MIN_HISTORY_FETCH_COVERAGE:.0%} safety floor")
+        sys.exit(1)
+
+    # Maintain a compact repair queue. Successful symbols leave immediately; failed
+    # symbols are prioritized at the start of the next full run.
+    starting_set = set(starting_universe)
+    for tk in list(repair_records):
+        if tk not in starting_set or tk not in data_failures:
+            repair_records.pop(tk, None)
+    for tk in sorted(data_failures):
+        rec = repair_records.setdefault(tk, {})
+        failures = int(rec.get("consecutive_failures", 0) or 0) + 1
+        rec.update({
+            "first_failed": rec.get("first_failed") or _et_today,
+            "last_failed": _et_today,
+            "consecutive_failures": failures,
+            "reason": "daily_history_fetch",
+            "previous_rank": (previous_entries.get(tk) or {}).get("w_rk"),
+        })
+    if data_failures:
+        print(f"  Repair queue: {len(data_failures)} daily-history failure(s) recorded")
 
     print(f"\nDownloading weekly data (chunked)...")
     weekly_data = chunked_download(all_tickers,
@@ -2781,6 +2934,44 @@ def main():
         spy_w_ts_map,
     )
 
+    # A transient Yahoo failure must not delete a valid, previously ranked stock.
+    # Rehydrate the prior public row with its saved intraday baseline, then let it
+    # participate in the normal cross-sectional rerank below. This applies only to
+    # explicit daily-history failures, never to stocks legitimately removed by the
+    # liquidity, market-cap, healthcare, or MANUAL_EXCLUDE rules.
+    result_tickers = {r.get("t") for r in results}
+    carried_tickers = []
+    carry_failures = []
+    for tk in sorted(data_failures):
+        if tk in result_tickers or tk not in previous_entries:
+            continue
+        previous_entry = previous_entries.get(tk) or {}
+        if previous_entry.get("w_fr") is None and previous_entry.get("w_rk") is None:
+            continue
+        failures = int((repair_records.get(tk) or {}).get("consecutive_failures", 0) or 0)
+        if failures > DATA_FAILURE_GRACE_RUNS:
+            continue
+        carried = build_carried_entry(tk, previous_entry, previous_baselines.get(tk))
+        if carried is None:
+            carry_failures.append(tk)
+            continue
+        results.append(carried)
+        result_tickers.add(tk)
+        carried_tickers.append(tk)
+
+    if carried_tickers:
+        print(f"  Data-failure carry-forward: preserved {len(carried_tickers)} prior ticker(s): {carried_tickers[:80]}")
+    if carry_failures:
+        print("ERROR: refusing to publish; prior ranked rows could not be safely carried forward")
+        print(f"  Carry-forward failures: {carry_failures[:80]}")
+        sys.exit(1)
+    if previous_entries:
+        output_retention = len(results) / len(previous_entries)
+        if output_retention < MIN_OUTPUT_RETENTION:
+            print(f"ERROR: refusing to publish; output retained only {output_retention:.1%} of the prior universe "
+                  f"(safety floor {MIN_OUTPUT_RETENTION:.0%})")
+            sys.exit(1)
+
     # ─── Intraday overlay: replace EOD price with live quote when market is open ──
     # Updates p / ch / c5 / c20 / ytd / ax / ma to reflect the current intraday move. RS scores
     # remain anchored to the last completed daily bar (recomputing intraday would require
@@ -3122,6 +3313,7 @@ def main():
         r["ts"] = theme_status.get(r.get("thm", ""), "Neutral")
 
     write_universe_grace_state(grace_state, _et_today)
+    write_repair_queue(repair_records)
 
     # ─── Output leaders.json ──────────────────────────────────
     # Strip internal _-prefixed baseline fields used by the intraday overlay so they
@@ -3134,7 +3326,9 @@ def main():
         "meta": {
             "updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
             "count": len(results),
-            "universe": len(all_tickers),
+            "universe": len(results),
+            "carried_forward": len(carried_tickers),
+            "repair_queue": len(repair_records),
         },
     }
 
