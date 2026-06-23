@@ -34,6 +34,7 @@ OUT_JSON = ROOT / "fundamentals.json"
 OUT_JS = ROOT / "fundamentals.js"
 MAX_QUARTERS = 16
 MAX_YEARS = 10
+FX_RATE_CACHE: dict[tuple[str, str], float | None] = {}
 
 
 def _build_session():
@@ -87,6 +88,16 @@ def _safe_number(value):
         return num
     except Exception:
         return None
+
+
+def _median(values: list[float]) -> float | None:
+    clean = sorted(abs(v) for v in values if math.isfinite(v) and v != 0)
+    if not clean:
+        return None
+    mid = len(clean) // 2
+    if len(clean) % 2:
+        return clean[mid]
+    return (clean[mid - 1] + clean[mid]) / 2
 
 
 def _period_label(value) -> str:
@@ -266,6 +277,101 @@ def _quarterly_estimates(
     return estimates
 
 
+def _get_ticker_currencies(ticker_obj) -> tuple[str | None, str | None]:
+    quote_currency = None
+    financial_currency = None
+
+    try:
+        fast_info = ticker_obj.fast_info
+        if fast_info:
+            quote_currency = str(fast_info.get("currency") or "").upper() or None
+    except Exception:
+        pass
+
+    try:
+        info = ticker_obj.get_info()
+    except Exception:
+        try:
+            info = ticker_obj.info
+        except Exception:
+            info = {}
+
+    if isinstance(info, dict):
+        quote_currency = str(info.get("currency") or quote_currency or "").upper() or None
+        financial_currency = str(info.get("financialCurrency") or "").upper() or None
+
+    return financial_currency, quote_currency
+
+
+def _recent_fx_close(symbol: str, session) -> float | None:
+    kwargs = {"session": session} if session is not None else {}
+    try:
+        hist = yf.Ticker(symbol, **kwargs).history(period="5d")
+        if hist is None or hist.empty or "Close" not in hist:
+            return None
+        closes = hist["Close"].dropna()
+        if closes.empty:
+            return None
+        value = _safe_number(closes.iloc[-1])
+        return value if value and value > 0 else None
+    except Exception:
+        return None
+
+
+def _fx_rate(from_currency: str | None, to_currency: str | None, session) -> float | None:
+    if not from_currency or not to_currency:
+        return None
+    from_currency = from_currency.upper()
+    to_currency = to_currency.upper()
+    if from_currency == to_currency:
+        return 1.0
+
+    key = (from_currency, to_currency)
+    if key in FX_RATE_CACHE:
+        return FX_RATE_CACHE[key]
+
+    attempts: list[tuple[str, bool]] = [
+        (f"{from_currency}{to_currency}=X", False),
+        (f"{to_currency}{from_currency}=X", True),
+    ]
+    # Yahoo commonly exposes USD cross rates like TWD=X as USD/TWD.
+    if to_currency == "USD":
+        attempts.append((f"{from_currency}=X", True))
+    if from_currency == "USD":
+        attempts.append((f"{to_currency}=X", False))
+
+    for symbol, invert in attempts:
+        close = _recent_fx_close(symbol, session)
+        if close:
+            rate = 1 / close if invert else close
+            FX_RATE_CACHE[key] = rate
+            return rate
+
+    FX_RATE_CACHE[key] = None
+    return None
+
+
+def _looks_like_eps_currency_mismatch(actual_points: list[dict], estimate_points: list[dict]) -> bool:
+    actual = _median([float(p["value"]) for p in actual_points[-4:] if not p.get("estimate")])
+    estimates = _median([float(p["value"]) for p in estimate_points if p.get("estimate")])
+    if actual is None or estimates is None or estimates <= 0:
+        return False
+    ratio = actual / estimates
+    return ratio >= 8
+
+
+def _convert_eps_points(points: list[dict], rate: float, from_currency: str, to_currency: str) -> list[dict]:
+    converted = []
+    for point in points:
+        item = dict(point)
+        if not item.get("estimate"):
+            item["value"] = round(float(item["value"]) * rate, 4)
+            item["converted_from_currency"] = from_currency
+            item["currency"] = to_currency
+        converted.append(item)
+    return converted
+
+
 def _get_income_statement(ticker_obj, frequency: str):
     accessors = (
         "quarterly_income_stmt" if frequency == "quarterly" else "income_stmt",
@@ -311,6 +417,25 @@ def _fetch_one(ticker: str, session) -> dict:
         annual=False,
         fiscal_year_end_month=fiscal_year_end_month,
     )
+    quarterly_eps_estimates = _quarterly_estimates(
+        earnings_estimate,
+        quarterly_eps,
+        fiscal_year_end_month=fiscal_year_end_month,
+    )
+    annual_eps = _series_from_income_statement(
+        annual,
+        ("Diluted EPS", "Basic EPS", "Diluted EPS Other Gains Losses"),
+        MAX_YEARS,
+        annual=True,
+        fiscal_year_end_month=fiscal_year_end_month,
+    )
+
+    if _looks_like_eps_currency_mismatch(quarterly_eps, quarterly_eps_estimates):
+        financial_currency, quote_currency = _get_ticker_currencies(ticker_obj)
+        rate = _fx_rate(financial_currency, quote_currency, session)
+        if rate and rate > 0:
+            quarterly_eps = _convert_eps_points(quarterly_eps, rate, financial_currency or "", quote_currency or "")
+            annual_eps = _convert_eps_points(annual_eps, rate, financial_currency or "", quote_currency or "")
 
     return {
         "quarterly_revenue": quarterly_revenue + _quarterly_estimates(
@@ -325,18 +450,8 @@ def _fetch_one(ticker: str, session) -> dict:
             annual=True,
             fiscal_year_end_month=fiscal_year_end_month,
         ),
-        "quarterly_eps": quarterly_eps + _quarterly_estimates(
-            earnings_estimate,
-            quarterly_eps,
-            fiscal_year_end_month=fiscal_year_end_month,
-        ),
-        "annual_eps": _series_from_income_statement(
-            annual,
-            ("Diluted EPS", "Basic EPS", "Diluted EPS Other Gains Losses"),
-            MAX_YEARS,
-            annual=True,
-            fiscal_year_end_month=fiscal_year_end_month,
-        ),
+        "quarterly_eps": quarterly_eps + quarterly_eps_estimates,
+        "annual_eps": annual_eps,
     }
 
 
@@ -360,7 +475,7 @@ def main() -> int:
             print(f"  {i}/{len(tickers)}...")
         try:
             data = _fetch_one(ticker, session)
-            if any(data.values()):
+            if any(isinstance(value, list) and value for value in data.values()):
                 payload["tickers"][ticker] = data
         except Exception as exc:
             print(f"  {ticker}: failed ({exc})")
