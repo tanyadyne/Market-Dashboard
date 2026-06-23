@@ -312,11 +312,15 @@ tr:hover{background:var(--bg3)}
 .profile-price{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;margin-top:8px}
 .profile-price .chg{font-size:13px;margin-left:8px;font-weight:500}
 .profile-desc{font-size:12px;color:var(--t2);line-height:1.5;margin-top:8px;max-height:180px;overflow-y:auto;padding-right:6px}
-.profile-subtabs{display:flex;gap:6px;margin:0 0 12px 0;border-bottom:1px solid var(--bdr);padding-bottom:8px;overflow-x:auto}
-.profile-subtab{padding:7px 12px;border:1px solid var(--bdr);border-radius:7px;background:var(--bg2);color:var(--t3);font-family:inherit;font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:.15s}
-.profile-subtab:hover{background:var(--bg3);color:var(--t1)}
-.profile-subtab.active{background:var(--bg4);color:var(--t1);border-color:var(--t3)}
-[data-theme="light"] .profile-subtab.active{background:#e5e7eb;color:#111827;border-color:#9ca3af}
+.profile-subtabs{display:grid;grid-template-columns:repeat(4,1fr);margin:0 0 16px 0;border-bottom:1px solid var(--bdr);overflow:hidden}
+.profile-subtab{position:relative;padding:11px 10px 12px;border:0;border-right:1px solid var(--bdr2);border-radius:0;background:transparent;color:var(--t3);font-family:inherit;font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:color .15s,background .15s}
+.profile-subtab:last-child{border-right:0}
+.profile-subtab::after{content:"";position:absolute;left:18px;right:18px;bottom:0;height:2px;border-radius:2px;background:transparent;transition:background .15s}
+.profile-subtab:hover{background:var(--bg2);color:var(--t1)}
+.profile-subtab.active{color:var(--t1);background:var(--bg2)}
+.profile-subtab.active::after{background:var(--t1)}
+[data-theme="light"] .profile-subtab.active{background:#f3f4f6;color:#111827}
+[data-theme="light"] .profile-subtab.active::after{background:#111827}
 .fund-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
 .fund-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;min-height:260px}
 [data-theme="light"] .fund-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
@@ -369,8 +373,9 @@ tr:hover{background:var(--bg3)}
 [data-view="mobile"] .rs-history-head{align-items:flex-start;flex-direction:column;gap:6px}
 [data-view="mobile"] .rs-history-legend{justify-content:flex-start;gap:7px}
 [data-view="mobile"] .rs-history-plot{height:210px}
-[data-view="mobile"] .profile-subtabs{gap:5px;margin-top:2px;padding-bottom:7px}
-[data-view="mobile"] .profile-subtab{padding:6px 9px;font-size:9px;letter-spacing:.5px}
+[data-view="mobile"] .profile-subtabs{margin-top:2px;margin-bottom:12px}
+[data-view="mobile"] .profile-subtab{padding:9px 5px 10px;font-size:8px;letter-spacing:.45px}
+[data-view="mobile"] .profile-subtab::after{left:10px;right:10px}
 [data-view="mobile"] .fund-grid{grid-template-columns:1fr;gap:10px;margin-top:12px}
 [data-view="mobile"] .fund-card{padding:10px;min-height:230px}
 [data-view="mobile"] .fund-chart{height:185px}
