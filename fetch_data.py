@@ -33,6 +33,7 @@ except ImportError:
 
 BENCHMARK = "SPY"
 LOOKBACK = 25
+DAILY_RS_HALF_LIFE = 5
 ATR_PERIOD = 14
 
 ETF_INFO = [
@@ -378,6 +379,27 @@ def percentrank_inc(values, x):
     if n <= 1:
         return None
     return sum(1 for v in values if v < x) / (n - 1)
+
+
+def weighted_vars_endpoint(cumulative_series, half_life=DAILY_RS_HALF_LIFE):
+    """Return a recency-weighted endpoint from a cumulative daily VARS series."""
+    if not cumulative_series:
+        return 0.0
+
+    steps = []
+    prev = 0.0
+    for current in cumulative_series:
+        steps.append(current - prev)
+        prev = current
+
+    weighted = 0.0
+    total_weight = 0.0
+    for age, step in enumerate(reversed(steps)):
+        weight = 0.5 ** (age / half_life)
+        weighted += step * weight
+        total_weight += weight
+
+    return weighted / total_weight if total_weight else 0.0
 
 
 def compute_ema_series(closes, period):
@@ -1206,7 +1228,7 @@ def main():
 
         rs_series = vars_series
         vs_series = [0.0] + vars_series
-        final_rs = rs_series[-1] if rs_series else 0
+        final_rs = weighted_vars_endpoint(rs_series)
         rs_pctrank = percentrank_inc(rs_series, final_rs) if len(rs_series) > 1 else None
 
         # ─── Setup flags + trend zone (for Overview tab VCP detection) ──
@@ -1391,7 +1413,7 @@ def main():
                 avg_vs.append(round(np.mean([vs[i] for vs in vs_lists]), 4))
 
             rs_series = avg_vs[1:] if len(avg_vs) > 1 else []
-            final_rs = rs_series[-1] if rs_series else 0
+            final_rs = weighted_vars_endpoint(rs_series)
             rs_pctrank = percentrank_inc(rs_series, final_rs) if len(rs_series) > 1 else None
 
             adv_streak = 0
