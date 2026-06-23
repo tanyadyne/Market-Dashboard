@@ -1,0 +1,37 @@
+name: Update Fundamentals Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 10 * * 6'
+
+jobs:
+  update-fundamentals:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install --retries 5 --timeout 60 yfinance pandas curl_cffi
+
+      - name: Fetch fundamentals
+        run: python fetch_fundamentals.py
+
+      - name: Commit and push fundamentals data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add fundamentals.json fundamentals.js
+          git diff --staged --quiet || git commit -m "Update fundamentals files"
+          git pull --rebase
+          git push
