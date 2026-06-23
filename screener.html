@@ -335,6 +335,11 @@ tr:hover{background:var(--bg3)}
 [data-theme="dark"] .fund-bar-neg-est{fill:#fda4af}
 .fund-label{fill:var(--t3);font-size:9px;font-family:'JetBrains Mono',monospace}
 .fund-value-label{fill:var(--t2);font-size:9px;font-family:'JetBrains Mono',monospace}
+.fund-tv-card{margin-top:12px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;min-height:440px}
+[data-theme="light"] .fund-tv-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.fund-tv-widget{height:400px;width:100%}
+.fund-tv-widget .tradingview-widget-container{height:100%;width:100%}
+.fund-tv-widget .tradingview-widget-container__widget{height:calc(100% - 32px);width:100%}
 .profile-section-empty{margin-top:16px;padding:34px 18px;border:1px dashed var(--bdr);border-radius:10px;text-align:center;color:var(--t3);font-size:12px;background:var(--bg2)}
 @media(max-width:768px){.profile-box{grid-template-columns:1fr}.profile-chart{height:240px;min-height:240px}.profile-tk{font-size:22px}.profile-price{font-size:16px}}
 /* History delta arrow */
@@ -690,6 +695,9 @@ function setTheme(theme){
   if(currentView==='chart' && DATA){
     document.querySelectorAll('.tv-chart').forEach(el=>{el.dataset.loaded='';el.innerHTML='';});
     renderChartView();
+  }
+  if(currentTab==='search'&&profileSectionTab==='fundamentals'){
+    searchStock();
   }
 }
 function toggleTheme(){
@@ -1934,6 +1942,58 @@ function injectSVCharts(){
   });
 }
 
+function tradingViewFinancialSymbol(ticker){
+  return String(ticker||'').trim().toUpperCase().replace(/\./g,'-');
+}
+
+function injectFundamentalWidgets(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const theme=isDark?'dark':'light';
+  document.querySelectorAll('.tv-financials-widget').forEach(el=>{
+    if(el.dataset.loaded)return;
+    const ticker=el.dataset.ticker||'';
+    const symbol=tradingViewFinancialSymbol(ticker);
+    if(!symbol)return;
+    el.dataset.loaded='1';
+    const wrapper=document.createElement('div');
+    wrapper.className='tradingview-widget-container';
+    const widgetDiv=document.createElement('div');
+    widgetDiv.className='tradingview-widget-container__widget';
+    wrapper.appendChild(widgetDiv);
+    const copyright=document.createElement('div');
+    copyright.className='tradingview-widget-copyright';
+    const link=document.createElement('a');
+    link.href=`https://www.tradingview.com/symbols/${encodeURIComponent(symbol)}/financials-overview/`;
+    link.rel='noopener nofollow';
+    link.target='_blank';
+    const span=document.createElement('span');
+    span.className='blue-text';
+    span.textContent=`${symbol} fundamentals`;
+    link.appendChild(span);
+    copyright.appendChild(link);
+    const trademark=document.createElement('span');
+    trademark.className='trademark';
+    trademark.textContent=' by TradingView';
+    copyright.appendChild(trademark);
+    wrapper.appendChild(copyright);
+    el.appendChild(wrapper);
+    const script=document.createElement('script');
+    script.type='text/javascript';
+    script.src='https://s3.tradingview.com/external-embedding/embed-widget-financials.js';
+    script.async=true;
+    script.innerHTML=JSON.stringify({
+      symbol,
+      colorTheme:theme,
+      displayMode:'adaptive',
+      isTransparent:false,
+      locale:'en',
+      width:'100%',
+      height:'100%'
+    });
+    wrapper.appendChild(script);
+  });
+}
+
 function getThemeRankInfo(themeName){
   // Returns {rk, total, status} for the mapped sector name, or null
   if(!ETF_DATA||!ETF_DATA.e||!themeName)return null;
@@ -2149,13 +2209,17 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12){
 
 function renderFundamentalsPanel(ticker){
   const rec=FUNDAMENTALS&&FUNDAMENTALS.tickers?FUNDAMENTALS.tickers[ticker]:null;
+  const tvWidget=`<div class="fund-tv-card">
+    <div class="fund-card-title">TradingView Financials</div>
+    <div class="fund-tv-widget tv-financials-widget" data-ticker="${esc(ticker)}"></div>
+  </div>`;
   if(!rec){
     return `<div class="fund-grid">
       ${renderFundChart('Quarterly Revenue',[], 'revenue')}
       ${renderFundChart('Annual Revenue',[], 'revenue', true)}
       ${renderFundChart('Quarterly EPS (Actual)',[], 'eps')}
       ${renderFundChart('Annual EPS (Actual)',[], 'eps', true)}
-    </div>`;
+    </div>${tvWidget}`;
   }
   const fiscalYearEndMonth=inferFiscalYearEndMonth(rec);
   return `<div class="fund-grid">
@@ -2163,7 +2227,7 @@ function renderFundamentalsPanel(ticker){
     ${renderFundChart('Annual Revenue',rec.annual_revenue,'revenue',true,fiscalYearEndMonth)}
     ${renderFundChart('Quarterly EPS (Actual)',rec.quarterly_eps,'eps',false,fiscalYearEndMonth)}
     ${renderFundChart('Annual EPS (Actual)',rec.annual_eps,'eps',true,fiscalYearEndMonth)}
-  </div>`;
+  </div>${tvWidget}`;
 }
 
 function searchStock(){
@@ -2365,6 +2429,7 @@ function searchStock(){
   box.innerHTML=html;
   // Inject the profile TradingView chart
   injectSVCharts();
+  injectFundamentalWidgets();
 }
 
 function setProfileHistoryPage(page){
