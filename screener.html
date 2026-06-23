@@ -339,9 +339,9 @@ tr:hover{background:var(--bg3)}
 [data-theme="dark"] .fund-bar-neg-est{fill:#fda4af}
 .fund-label{fill:var(--t3);font-size:9px;font-family:'JetBrains Mono',monospace}
 .fund-value-label{fill:var(--t2);font-size:9px;font-family:'JetBrains Mono',monospace}
-.fund-tv-card{margin-top:12px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;min-height:440px}
+.fund-tv-card{margin-top:12px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:0;min-height:1220px;overflow:hidden}
 [data-theme="light"] .fund-tv-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-.fund-tv-widget{height:400px;width:100%}
+.fund-tv-widget{height:1220px;width:100%}
 .fund-tv-widget .tradingview-widget-container{height:100%;width:100%}
 .fund-tv-widget .tradingview-widget-container__widget{height:calc(100% - 32px);width:100%}
 .profile-section-empty{margin-top:16px;padding:34px 18px;border:1px dashed var(--bdr);border-radius:10px;text-align:center;color:var(--t3);font-size:12px;background:var(--bg2)}
@@ -2215,23 +2215,22 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12){
 function renderFundamentalsPanel(ticker){
   const rec=FUNDAMENTALS&&FUNDAMENTALS.tickers?FUNDAMENTALS.tickers[ticker]:null;
   const tvWidget=`<div class="fund-tv-card">
-    <div class="fund-card-title">TradingView Financials</div>
     <div class="fund-tv-widget tv-financials-widget" data-ticker="${esc(ticker)}"></div>
   </div>`;
   if(!rec){
     return `<div class="fund-grid">
       ${renderFundChart('Quarterly Revenue',[], 'revenue')}
       ${renderFundChart('Annual Revenue',[], 'revenue', true)}
-      ${renderFundChart('Quarterly EPS (Actual)',[], 'eps')}
-      ${renderFundChart('Annual EPS (Actual)',[], 'eps', true)}
+      ${renderFundChart('Quarterly EPS',[], 'eps')}
+      ${renderFundChart('Annual EPS',[], 'eps', true)}
     </div>${tvWidget}`;
   }
   const fiscalYearEndMonth=inferFiscalYearEndMonth(rec);
   return `<div class="fund-grid">
     ${renderFundChart('Quarterly Revenue',rec.quarterly_revenue,'revenue',false,fiscalYearEndMonth)}
     ${renderFundChart('Annual Revenue',rec.annual_revenue,'revenue',true,fiscalYearEndMonth)}
-    ${renderFundChart('Quarterly EPS (Actual)',rec.quarterly_eps,'eps',false,fiscalYearEndMonth)}
-    ${renderFundChart('Annual EPS (Actual)',rec.annual_eps,'eps',true,fiscalYearEndMonth)}
+    ${renderFundChart('Quarterly EPS',rec.quarterly_eps,'eps',false,fiscalYearEndMonth)}
+    ${renderFundChart('Annual EPS',rec.annual_eps,'eps',true,fiscalYearEndMonth)}
   </div>${tvWidget}`;
 }
 
