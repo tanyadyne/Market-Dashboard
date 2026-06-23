@@ -326,9 +326,13 @@ tr:hover{background:var(--bg3)}
 .fund-gridline{stroke:var(--bdr2);stroke-width:1}
 .fund-zero{stroke:var(--t4);stroke-width:1;stroke-dasharray:4 4;opacity:.65}
 .fund-bar{fill:#3b82f6}
+.fund-bar-est{fill:#93c5fd}
 .fund-bar-neg{fill:#ef4444}
+.fund-bar-neg-est{fill:#fca5a5}
 [data-theme="dark"] .fund-bar{fill:#60a5fa}
+[data-theme="dark"] .fund-bar-est{fill:#93c5fd}
 [data-theme="dark"] .fund-bar-neg{fill:#fb7185}
+[data-theme="dark"] .fund-bar-neg-est{fill:#fda4af}
 .fund-label{fill:var(--t3);font-size:9px;font-family:'JetBrains Mono',monospace}
 .fund-value-label{fill:var(--t2);font-size:9px;font-family:'JetBrains Mono',monospace}
 .profile-section-empty{margin-top:16px;padding:34px 18px;border:1px dashed var(--bdr);border-radius:10px;text-align:center;color:var(--t3);font-size:12px;background:var(--bg2)}
@@ -2062,20 +2066,45 @@ function formatFundValue(value,type){
   return `${sign}$${Math.round(abs).toLocaleString()}`;
 }
 
-function shortFundPeriod(period,annual){
-  if(!period)return'';
-  const parts=String(period).split('-');
-  if(parts.length<2)return String(period);
-  if(annual)return parts[0].slice(2);
-  return `${parts[0].slice(2)}Q${Math.ceil(parseInt(parts[1],10)/3)}`;
+function parseFundDate(period){
+  if(!period)return null;
+  const parts=String(period).split('-').map(x=>parseInt(x,10));
+  if(parts.length<2||!Number.isFinite(parts[0])||!Number.isFinite(parts[1]))return null;
+  return {year:parts[0],month:parts[1]};
 }
 
-function renderFundChart(title,points,type,annual=false){
+function inferFiscalYearEndMonth(rec){
+  const counts=new Map();
+  const annualPoints=[...(rec?.annual_revenue||[]),...(rec?.annual_eps||[])];
+  annualPoints.forEach(p=>{
+    const dt=parseFundDate(p?.period);
+    if(!dt)return;
+    counts.set(dt.month,(counts.get(dt.month)||0)+1);
+  });
+  if(!counts.size)return 12;
+  return [...counts.entries()].sort((a,b)=>b[1]-a[1]||b[0]-a[0])[0][0];
+}
+
+function shortFundPeriod(pointOrPeriod,annual,fiscalYearEndMonth=12){
+  const point=typeof pointOrPeriod==='object'&&pointOrPeriod!==null?pointOrPeriod:null;
+  if(point?.label)return point.label;
+  const period=point?point.period:pointOrPeriod;
+  const dt=parseFundDate(period);
+  if(!dt)return period?String(period):'';
+  const fiscalYear=dt.month<=fiscalYearEndMonth?dt.year:dt.year+1;
+  if(annual)return `FY${String(fiscalYear).slice(2)}`;
+  const fiscalStartMonth=(fiscalYearEndMonth%12)+1;
+  const monthsSinceStart=(dt.month-fiscalStartMonth+12)%12;
+  const quarter=Math.floor(monthsSinceStart/3)+1;
+  return `${String(fiscalYear).slice(2)}Q${quarter}`;
+}
+
+function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12){
   const clean=(points||[]).filter(p=>p&&p.value!=null&&Number.isFinite(Number(p.value)));
   if(!clean.length){
     return `<div class="fund-card"><div class="fund-card-title">${esc(title)}</div><div class="profile-section-empty">No data available</div></div>`;
   }
-  const w=520,h=210,left=42,right=14,top=16,bottom=32;
+  const w=520,h=210,left=42,right=20,top=16,bottom=32;
   const plotW=w-left-right,plotH=h-top-bottom;
   const values=clean.map(p=>Number(p.value));
   let minVal=Math.min(0,...values);
@@ -2083,22 +2112,24 @@ function renderFundChart(title,points,type,annual=false){
   if(minVal===maxVal){maxVal=minVal+1;}
   const yFor=v=>top+((maxVal-v)/(maxVal-minVal))*plotH;
   const zeroY=yFor(0);
-  const gap=clean.length>10?4:7;
-  const barW=Math.max(7,(plotW-gap*(clean.length-1))/clean.length);
+  const slotW=plotW/clean.length;
+  const barW=Math.max(7,Math.min(36,slotW*.46));
   const bars=clean.map((p,i)=>{
-    const x=left+i*(barW+gap);
+    const x=left+i*slotW+(slotW-barW)/2;
     const y=yFor(Math.max(0,Number(p.value)));
     const y0=yFor(Math.min(0,Number(p.value)));
     const rectY=Math.min(y,y0);
     const rectH=Math.max(1,Math.abs(y0-y));
-    const cls=Number(p.value)<0?'fund-bar-neg':'fund-bar';
-    return `<rect class="${cls}" x="${x.toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="2"><title>${shortFundPeriod(p.period,annual)}: ${formatFundValue(Number(p.value),type)}</title></rect>`;
+    const cls=p.estimate
+      ? (Number(p.value)<0?'fund-bar-neg-est':'fund-bar-est')
+      : (Number(p.value)<0?'fund-bar-neg':'fund-bar');
+    return `<rect class="${cls}" x="${x.toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="2"><title>${shortFundPeriod(p,annual,fiscalYearEndMonth)}: ${formatFundValue(Number(p.value),type)}</title></rect>`;
   }).join('');
   const labelEvery=clean.length>10?Math.ceil(clean.length/6):1;
   const labels=clean.map((p,i)=>{
-    if(i%labelEvery!==0&&i!==clean.length-1)return'';
-    const x=left+i*(barW+gap)+barW/2;
-    return `<text class="fund-label" x="${x.toFixed(1)}" y="${h-10}" text-anchor="middle">${esc(shortFundPeriod(p.period,annual))}</text>`;
+    if(!p.estimate&&i%labelEvery!==0&&i!==clean.length-1)return'';
+    const x=left+i*slotW+slotW/2;
+    return `<text class="fund-label" x="${x.toFixed(1)}" y="${h-10}" text-anchor="middle">${esc(shortFundPeriod(p,annual,fiscalYearEndMonth))}</text>`;
   }).join('');
   return `<div class="fund-card">
     <div class="fund-card-title">${esc(title)}</div>
@@ -2126,11 +2157,12 @@ function renderFundamentalsPanel(ticker){
       ${renderFundChart('Annual EPS (Actual)',[], 'eps', true)}
     </div>`;
   }
+  const fiscalYearEndMonth=inferFiscalYearEndMonth(rec);
   return `<div class="fund-grid">
-    ${renderFundChart('Quarterly Revenue',rec.quarterly_revenue,'revenue')}
-    ${renderFundChart('Annual Revenue',rec.annual_revenue,'revenue',true)}
-    ${renderFundChart('Quarterly EPS (Actual)',rec.quarterly_eps,'eps')}
-    ${renderFundChart('Annual EPS (Actual)',rec.annual_eps,'eps',true)}
+    ${renderFundChart('Quarterly Revenue',rec.quarterly_revenue,'revenue',false,fiscalYearEndMonth)}
+    ${renderFundChart('Annual Revenue',rec.annual_revenue,'revenue',true,fiscalYearEndMonth)}
+    ${renderFundChart('Quarterly EPS (Actual)',rec.quarterly_eps,'eps',false,fiscalYearEndMonth)}
+    ${renderFundChart('Annual EPS (Actual)',rec.annual_eps,'eps',true,fiscalYearEndMonth)}
   </div>`;
 }
 
