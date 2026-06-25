@@ -104,9 +104,13 @@ button{font:inherit}
 .events-section + .events-section{border-top:1px solid var(--bdr2)}
 .events-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;color:var(--t3);margin-bottom:12px}
 .event-list{display:flex;flex-direction:column;gap:10px}
+.event-list.earnings-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:10px;align-items:start}
+.earnings-column{display:flex;flex-direction:column;gap:10px;min-width:0}
 .event-item{display:flex;align-items:center;gap:9px;color:var(--t2);font-weight:700;line-height:1.25}
 .event-dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);flex:0 0 auto}
-.event-item.earnings .event-dot{background:var(--orange)}
+.event-item.pre .event-dot{background:var(--orange)}
+.event-item.post .event-dot{background:var(--accent2)}
+.event-item.market .event-dot{background:var(--t3)}
 .empty-state{color:var(--t4);font-size:12px;font-weight:700}
 .news-card{min-height:430px;overflow:hidden;padding:0;align-self:stretch}
 .news-widget-host,.news-widget-host .tradingview-widget-container{width:100%;height:100%}
@@ -372,6 +376,32 @@ function calendarItemsForDate(key,dateText){
     return true;
   });
 }
+function minutesFromTimeLabel(value){
+  const text=String(value||'').trim().toUpperCase();
+  const match=text.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if(!match)return null;
+  let hours=Number(match[1]);
+  const minutes=Number(match[2]);
+  if(match[3]==='PM'&&hours!==12)hours+=12;
+  if(match[3]==='AM'&&hours===12)hours=0;
+  return hours*60+minutes;
+}
+function eventTimingClass(item){
+  const label=String(item?.time||'').trim().toUpperCase();
+  if(label==='BMO')return 'pre';
+  if(label==='AMC')return 'post';
+  const minutes=minutesFromTimeLabel(label);
+  if(minutes==null)return 'pre';
+  if(minutes>=9*60+30&&minutes<16*60)return 'market';
+  return minutes<9*60+30?'pre':'post';
+}
+function renderEarningsItems(items){
+  const midpoint=Math.ceil(items.length/2);
+  const columns=[items.slice(0,midpoint),items.slice(midpoint)];
+  return columns.map(column=>`<div class="earnings-column">${
+    column.map(e=>`<a class="event-item earnings ${eventTimingClass(e)}" href="${profileUrl(e.ticker)}"><span class="event-dot"></span><span class="ticker">${esc(e.ticker)}</span></a>`).join('')
+  }</div>`).join('');
+}
 function topHoldingsFor(theme){
   const holdings=String(theme.h||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
   const grades=theme.hg||{};
@@ -463,10 +493,12 @@ function renderEvents(){
   const earn=calendarItemsForDate('earnings_events',today)
     .sort((a,b)=>String(a.time||'').localeCompare(String(b.time||''))||String(a.ticker||'').localeCompare(String(b.ticker||'')));
   document.getElementById('economicToday').innerHTML=econ.length
-    ? econ.map(e=>`<div class="event-item"><span class="event-dot"></span><span>${esc(e.event)}</span></div>`).join('')
+    ? econ.map(e=>`<div class="event-item ${eventTimingClass(e)}"><span class="event-dot"></span><span>${esc(e.event)}</span></div>`).join('')
     : '<div class="empty-state">No economic releases scheduled</div>';
-  document.getElementById('earningsToday').innerHTML=earn.length
-    ? earn.map(e=>`<a class="event-item earnings" href="${profileUrl(e.ticker)}"><span class="event-dot"></span><span class="ticker">${esc(e.ticker)}</span></a>`).join('')
+  const earningsTarget=document.getElementById('earningsToday');
+  earningsTarget.classList.toggle('earnings-grid',earn.length>1);
+  earningsTarget.innerHTML=earn.length
+    ? renderEarningsItems(earn)
     : '<div class="empty-state">No earnings scheduled</div>';
 }
 async function loadDashboard(){
