@@ -1,0 +1,44 @@
+name: Update Post-Earnings Fundamentals
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: "Optional US earnings date to refresh, YYYY-MM-DD"
+        required: false
+        type: string
+  schedule:
+    - cron: '0 23 * * 1-5'
+
+jobs:
+  update-post-earnings-fundamentals:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install --retries 5 --timeout 60 yfinance pandas curl_cffi
+
+      - name: Refresh post-earnings fundamentals
+        env:
+          TARGET_EARNINGS_DATE: ${{ inputs.target_date }}
+        run: python fetch_post_earnings_fundamentals.py
+
+      - name: Commit and push fundamentals data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add fundamentals.json fundamentals.js
+          git diff --staged --quiet || git commit -m "Update fundamentals files"
+          git pull --rebase
+          git push
