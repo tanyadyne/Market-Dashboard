@@ -287,13 +287,6 @@ button{font:inherit}
 
 <script src="economic_calendar.js"></script>
 <script>
-const EARNINGS_EVENTS=[
-  {date:'2026-06-17',ticker:'PGR',company:'Progressive Corporation',group:'Insurance - Property & Casualty',time:'BMO'},
-  {date:'2026-06-17',ticker:'JBL',company:'Jabil Inc.',group:'Electronic Components',time:'BMO'},
-  {date:'2026-06-17',ticker:'KMX',company:'CarMax, Inc.',group:'Auto & Truck Dealerships',time:'BMO'},
-  {date:'2026-06-18',ticker:'ACN',company:'Accenture plc',group:'Information Technology Services',time:'BMO'},
-  {date:'2026-06-18',ticker:'KR',company:'Kroger Co.',group:'Grocery Stores',time:'BMO'}
-];
 let THEME_DATA=null,LEADER_DATA=null,HISTORY=null;
 
 function setTheme(theme){
@@ -363,6 +356,21 @@ function compactDate(dateText){
   const dt=new Date(`${dateText}T00:00:00`);
   if(Number.isNaN(dt.getTime()))return dateText||'Today';
   return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+function calendarItemsForDate(key,dateText){
+  const data=window.ECONOMIC_CALENDAR_DATA||{};
+  const direct=Array.isArray(data[key])?data[key]:[];
+  const fromWeeks=Array.isArray(data.weeks)
+    ? data.weeks.flatMap(week=>Array.isArray(week[key])?week[key]:[])
+    : [];
+  const seen=new Set();
+  return direct.concat(fromWeeks).filter(item=>{
+    if(!item||item.date!==dateText)return false;
+    const id=[item.date,item.ticker||item.event||item.key||'',item.time||''].join('|');
+    if(seen.has(id))return false;
+    seen.add(id);
+    return true;
+  });
 }
 function topHoldingsFor(theme){
   const holdings=String(theme.h||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
@@ -450,8 +458,10 @@ function renderStocks(){
 function renderEvents(){
   const today=todayEtIso();
   document.getElementById('todayLabel').textContent=compactDate(today)+' ET';
-  const econ=(window.ECONOMIC_CALENDAR_DATA?.events||[]).filter(e=>e.date===today);
-  const earn=EARNINGS_EVENTS.filter(e=>e.date===today);
+  const econ=calendarItemsForDate('events',today)
+    .sort((a,b)=>String(a.time||'').localeCompare(String(b.time||''))||String(a.event||'').localeCompare(String(b.event||'')));
+  const earn=calendarItemsForDate('earnings_events',today)
+    .sort((a,b)=>String(a.time||'').localeCompare(String(b.time||''))||String(a.ticker||'').localeCompare(String(b.ticker||'')));
   document.getElementById('economicToday').innerHTML=econ.length
     ? econ.map(e=>`<div class="event-item"><span class="event-dot"></span><span>${esc(e.event)}</span></div>`).join('')
     : '<div class="empty-state">No economic releases scheduled</div>';
