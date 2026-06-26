@@ -979,7 +979,7 @@ def sma_adr_distances(price, avg_range_pct, sma_values):
     return distances
 
 
-def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map):
+def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map, raw_df=None):
     """Process daily metrics for one stock. Returns dict or None.
     Liquidity/delisted/flat-price filters are applied upstream in main().
     """
@@ -992,6 +992,14 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     n = len(c)
 
     price = float(c[-1])
+    display_price = price
+    if raw_df is not None and len(raw_df) > 0 and "Close" in raw_df:
+        try:
+            raw_close = float(raw_df["Close"].values[-1])
+            if np.isfinite(raw_close) and raw_close > 0:
+                display_price = raw_close
+        except (TypeError, ValueError, IndexError):
+            display_price = price
     change = (c[-1] / c[-2] - 1) * 100 if n >= 2 else 0
 
     # ─── 1W / 1M via CALENDAR-date lookback ─────────────────────────
@@ -1084,8 +1092,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     try:
         recent_volumes = [float(x) for x in v[-10:] if x is not None and np.isfinite(float(x)) and float(x) >= 0]
         if recent_volumes:
-            # Match the universe liquidity gate: latest price × 10-day average volume.
-            avg_dollar_vol = price * float(np.mean(recent_volumes))
+            # Match the universe liquidity gate: latest raw price x 10-day average volume.
+            avg_dollar_vol = display_price * float(np.mean(recent_volumes))
     except (TypeError, ValueError):
         avg_dollar_vol = None
 
@@ -1154,7 +1162,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
                 "ytd": round(ytd, 2) if ytd is not None else None,
-                "rs": None, "rf": 0, "ra": 0, "p": round(price, 2), "fr": None, "vs": None,
+                "rs": None, "rf": 0, "ra": 0, "p": round(display_price, 2), "fr": None, "vs": None,
                 "sa": _sa, "sf": _sf, "tz": "neutral",
                 "w_pen_engulf": False, "w_pen_ema21": False, "w_pen_crash5": False,
                 # Internal baselines for intraday overlay (stripped before output)
@@ -1363,7 +1371,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "ytd": round(ytd, 2) if ytd is not None else None,
         "rs": None,  # Will be set cross-sectionally in main()
         "rf": dec_streak, "ra": adv_streak,
-        "p": round(price, 2), "fr": round(final_rs, 4), "vs": sma_series,
+        "p": round(display_price, 2), "fr": round(final_rs, 4), "vs": sma_series,
         "sa": setup_adj, "sf": setup_flags, "tz": trend_zone,
         # Internal scoring-only fields (stripped before output)
         "w_pen_engulf": pen_engulf,
@@ -1514,6 +1522,72 @@ def flatten_single_download(df):
     return out if not out.empty else None
 
 
+def adjust_ohlc_for_corporate_actions(df):
+    """Return OHLC adjusted by Yahoo's Adj Close factor, with volume left raw.
+
+    `auto_adjust=False` is still useful because it gives us both raw Close for
+    display and Adj Close for split/dividend-safe RS math. This recreates
+    yfinance's adjusted OHLC locally, avoiding fake RS jumps from splits while
+    keeping the published `p` field on the raw quote scale.
+    """
+    if df is None or df.empty or "Close" not in df:
+        return None
+    if "Adj Close" not in df:
+        return flatten_single_download(df)
+    try:
+        out = df.copy()
+        close = out["Close"].astype(float)
+        adj_close = out["Adj Close"].astype(float)
+        factor = adj_close / close.replace(0, np.nan)
+        for col in ("Open", "High", "Low", "Close"):
+            if col in out:
+                out[col] = out[col].astype(float) * factor
+        out = out.drop(columns=["Adj Close"], errors="ignore")
+        out = out.dropna(subset=["Close"])
+        return out if not out.empty else None
+    except Exception:
+        return flatten_single_download(df)
+
+
+def validate_corporate_action_adjustments(raw_data, adjusted_data, label):
+    """Refuse to publish if split-like raw gaps remain split-like after adjustment."""
+    split_ratios = (0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0)
+    failures = []
+    for tk, raw_df in raw_data.items():
+        adj_df = adjusted_data.get(tk)
+        if raw_df is None or adj_df is None or len(raw_df) < 2 or len(adj_df) < 2:
+            continue
+        try:
+            raw_close = raw_df["Close"].astype(float).values
+            adj_close = adj_df["Close"].astype(float).values
+            if "Adj Close" not in raw_df:
+                continue
+            factor = (raw_df["Adj Close"].astype(float) / raw_df["Close"].astype(float).replace(0, np.nan)).values
+        except Exception:
+            continue
+        span = min(20, len(raw_close) - 1, len(adj_close) - 1)
+        for offset in range(span, 0, -1):
+            raw_prev, raw_cur = raw_close[-offset - 1], raw_close[-offset]
+            adj_prev, adj_cur = adj_close[-offset - 1], adj_close[-offset]
+            if not all(np.isfinite(x) and x > 0 for x in (raw_prev, raw_cur, adj_prev, adj_cur)):
+                continue
+            factor_prev, factor_cur = factor[-offset - 1], factor[-offset]
+            if not all(np.isfinite(x) and x > 0 for x in (factor_prev, factor_cur)):
+                continue
+            corporate_action_seen = abs((factor_cur / factor_prev) - 1.0) >= 0.20
+            raw_ratio = raw_cur / raw_prev
+            adj_ratio = adj_cur / adj_prev
+            split_like = any(abs(raw_ratio - r) / r <= 0.08 for r in split_ratios)
+            still_bad = adj_ratio >= 1.8 or adj_ratio <= 0.55
+            if corporate_action_seen and split_like and still_bad:
+                failures.append((tk, round(float(raw_ratio), 4), round(float(adj_ratio), 4)))
+                break
+    if failures:
+        print(f"ERROR: refusing to publish; {label} corporate-action adjustment failed")
+        print(f"  Split-like gaps still present after adjustment: {failures[:30]}")
+        sys.exit(1)
+
+
 def daily_to_weekly(df):
     """Build Friday-ending weekly OHLCV bars from daily data as a local fallback."""
     if df is None or df.empty or "Close" not in df:
@@ -1569,7 +1643,7 @@ def download_single_weekly(ticker, start, end):
     return None
 
 
-def recover_missing_weekly_metrics(results, daily_data, w_start, end, spy_df,
+def recover_missing_weekly_metrics(results, daily_score_data, w_start, end, spy_score_df,
                                    spy_w_closes, spy_w_atr_series, spy_w_ts_map):
     """Recover weekly RS inputs for stocks whose daily data exists but weekly data failed.
 
@@ -1578,7 +1652,7 @@ def recover_missing_weekly_metrics(results, daily_data, w_start, end, spy_df,
     retries, then with weekly candles synthesized from the already-downloaded daily
     bars.
     """
-    candidates = [r for r in results if r.get("t") and r.get("w_fr") is None and daily_data.get(r.get("t")) is not None]
+    candidates = [r for r in results if r.get("t") and r.get("w_fr") is None and daily_score_data.get(r.get("t")) is not None]
     if not candidates:
         return
 
@@ -1594,15 +1668,15 @@ def recover_missing_weekly_metrics(results, daily_data, w_start, end, spy_df,
 
         retry_df = download_single_weekly(tk, w_start, end)
         if retry_df is not None:
-            retry_metrics = process_stock_weekly(tk, retry_df, spy_w_closes, spy_w_atr_series, spy_w_ts_map)
+            retry_metrics = process_stock_weekly(tk, adjust_ohlc_for_corporate_actions(retry_df), spy_w_closes, spy_w_atr_series, spy_w_ts_map)
             if retry_metrics.get("w_fr") is not None:
                 metrics = retry_metrics
                 recovered_retry += 1
 
         if metrics is None:
-            stock_weekly = daily_to_weekly(daily_data.get(tk))
+            stock_weekly = daily_to_weekly(daily_score_data.get(tk))
             if fallback_spy_df is None:
-                fallback_spy_df = daily_to_weekly(spy_df)
+                fallback_spy_df = daily_to_weekly(spy_score_df)
                 if fallback_spy_df is not None and len(fallback_spy_df) > 0:
                     _closes = fallback_spy_df["Close"].values
                     _highs = fallback_spy_df["High"].values
@@ -2170,6 +2244,9 @@ def main():
     if isinstance(spy_df.columns, type(spy_df.columns)) and hasattr(spy_df.columns, 'levels'):
         spy_df.columns = spy_df.columns.droplevel(1) if spy_df.columns.nlevels > 1 else spy_df.columns
     spy_df = spy_df.dropna(subset=["Close"])
+    spy_score_df = adjust_ohlc_for_corporate_actions(spy_df)
+    if spy_score_df is None or spy_score_df.empty:
+        print("ERROR: SPY adjusted daily data unavailable"); sys.exit(1)
     print(f"  SPY daily: {len(spy_df)} bars")
 
     spy_df_w = yf.download("SPY", session=_session, start=w_start.strftime("%Y-%m-%d"),
@@ -2178,10 +2255,13 @@ def main():
     if isinstance(spy_df_w.columns, type(spy_df_w.columns)) and hasattr(spy_df_w.columns, 'levels'):
         spy_df_w.columns = spy_df_w.columns.droplevel(1) if spy_df_w.columns.nlevels > 1 else spy_df_w.columns
     spy_df_w = spy_df_w.dropna(subset=["Close"])
+    spy_score_df_w = adjust_ohlc_for_corporate_actions(spy_df_w)
+    if spy_score_df_w is None or spy_score_df_w.empty:
+        print("ERROR: SPY adjusted weekly data unavailable"); sys.exit(1)
     print(f"  SPY weekly: {len(spy_df_w)} bars")
 
-    if len(spy_df) < LOOKBACK + 1:
-        print(f"ERROR: SPY has only {len(spy_df)} bars, need {LOOKBACK + 1}"); sys.exit(1)
+    if len(spy_score_df) < LOOKBACK + 1:
+        print(f"ERROR: SPY has only {len(spy_score_df)} adjusted bars, need {LOOKBACK + 1}"); sys.exit(1)
 
     # ─── Bulk download prices for entire universe (chunked) ──
     # yfinance's bulk download silently fails for many tickers when given >500 at once.
@@ -2361,9 +2441,16 @@ def main():
     if not daily_data:
         print("ERROR: No daily data downloaded"); sys.exit(1)
 
+    daily_score_data = {
+        tk: adjust_ohlc_for_corporate_actions(df)
+        for tk, df in daily_data.items()
+    }
+    validate_corporate_action_adjustments(daily_data, daily_score_data, "daily")
+
     data_failures = {
         tk for tk in all_tickers
-        if tk not in daily_data or daily_data.get(tk) is None or len(daily_data.get(tk)) < 10
+        if (tk not in daily_data or daily_data.get(tk) is None or len(daily_data.get(tk)) < 10
+            or daily_score_data.get(tk) is None or len(daily_score_data.get(tk)) < 10)
     }
     targeted_repairs = [
         tk for tk in sorted(data_failures)
@@ -2392,6 +2479,7 @@ def main():
                         flat = flatten_single_download(df.copy())
                         if flat is not None and len(flat) >= 10:
                             daily_data[tk] = flat
+                            daily_score_data[tk] = adjust_ohlc_for_corporate_actions(flat)
                             repaired += 1
                             break
                 except Exception as exc:
@@ -2400,7 +2488,8 @@ def main():
                 time.sleep(20 * (attempt + 1))
         data_failures = {
             tk for tk in all_tickers
-            if tk not in daily_data or daily_data.get(tk) is None or len(daily_data.get(tk)) < 10
+            if (tk not in daily_data or daily_data.get(tk) is None or len(daily_data.get(tk)) < 10
+                or daily_score_data.get(tk) is None or len(daily_score_data.get(tk)) < 10)
         }
         print(f"  Targeted repair: recovered {repaired}/{len(targeted_repairs)} ticker(s)")
 
@@ -2436,11 +2525,20 @@ def main():
                                     interval="1wk")
     print(f"  Successfully downloaded weekly data for {len(weekly_data)}/{len(all_tickers)} tickers")
 
+    weekly_score_data = {
+        tk: adjust_ohlc_for_corporate_actions(df)
+        for tk, df in weekly_data.items()
+    }
+    validate_corporate_action_adjustments(weekly_data, weekly_score_data, "weekly")
+
     def get_df(ticker):
         return daily_data.get(ticker)
 
+    def get_score_df(ticker):
+        return daily_score_data.get(ticker)
+
     def get_df_w(ticker):
-        return weekly_data.get(ticker)
+        return weekly_score_data.get(ticker)
 
     # ─── Pre-filter: dollar volume + delisted ──
     # Uses already-downloaded data — zero API cost.
@@ -2889,17 +2987,17 @@ def main():
                     print(f"  [DEBUG] {tk}: EXCLUDED by healthcare-adjacent filter (mc=${mc/1e9:.2f}B, theme='{theme}')")
 
     # ─── SPY baselines ────────────────────────────────────────
-    spy_closes = spy_df["Close"].values
-    spy_highs = spy_df["High"].values
-    spy_lows = spy_df["Low"].values
+    spy_closes = spy_score_df["Close"].values
+    spy_highs = spy_score_df["High"].values
+    spy_lows = spy_score_df["Low"].values
     spy_atr_series = compute_atr_series(spy_highs, spy_lows, spy_closes, ATR_PERIOD)
-    spy_ts_map = {ts: i for i, ts in enumerate(spy_df.index)}
+    spy_ts_map = {ts: i for i, ts in enumerate(spy_score_df.index)}
 
-    spy_w_closes = spy_df_w["Close"].values if spy_df_w is not None and len(spy_df_w) > 0 else np.array([])
-    spy_w_highs = spy_df_w["High"].values if spy_df_w is not None and len(spy_df_w) > 0 else np.array([])
-    spy_w_lows = spy_df_w["Low"].values if spy_df_w is not None and len(spy_df_w) > 0 else np.array([])
+    spy_w_closes = spy_score_df_w["Close"].values if spy_score_df_w is not None and len(spy_score_df_w) > 0 else np.array([])
+    spy_w_highs = spy_score_df_w["High"].values if spy_score_df_w is not None and len(spy_score_df_w) > 0 else np.array([])
+    spy_w_lows = spy_score_df_w["Low"].values if spy_score_df_w is not None and len(spy_score_df_w) > 0 else np.array([])
     spy_w_atr_series = compute_atr_series(spy_w_highs, spy_w_lows, spy_w_closes, ATR_PERIOD) if len(spy_w_closes) > ATR_PERIOD else []
-    spy_w_ts_map = {ts: i for i, ts in enumerate(spy_df_w.index)} if spy_df_w is not None and len(spy_df_w) > 0 else {}
+    spy_w_ts_map = {ts: i for i, ts in enumerate(spy_score_df_w.index)} if spy_score_df_w is not None and len(spy_score_df_w) > 0 else {}
 
     # ─── Process all stocks ───────────────────────────────────
     print(f"\nProcessing {len(all_tickers)} stocks...")
@@ -2909,8 +3007,8 @@ def main():
         if (i + 1) % 200 == 0:
             print(f"  {i+1}/{len(all_tickers)}...")
         try:
-            df = get_df(tk)
-            d_metrics = process_stock(tk, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map)
+            df = get_score_df(tk)
+            d_metrics = process_stock(tk, df, spy_closes, spy_highs, spy_lows, spy_atr_series, spy_ts_map, raw_df=get_df(tk))
             w_metrics = process_stock_weekly(tk, get_df_w(tk), spy_w_closes, spy_w_atr_series, spy_w_ts_map)
             if d_metrics is None:
                 continue
@@ -2925,10 +3023,10 @@ def main():
 
     recover_missing_weekly_metrics(
         results,
-        daily_data,
+        daily_score_data,
         w_start,
         end,
-        spy_df,
+        spy_score_df,
         spy_w_closes,
         spy_w_atr_series,
         spy_w_ts_map,
