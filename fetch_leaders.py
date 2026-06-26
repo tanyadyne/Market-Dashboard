@@ -45,6 +45,8 @@ TARGETED_REPAIR_COOLDOWN_SECONDS = int(os.environ.get("TARGETED_REPAIR_COOLDOWN_
 WEEKLY_RETRY_ATTEMPTS = 3
 STRICT_WEEKLY_RANK_RECOVERY = os.environ.get("STRICT_WEEKLY_RANK_RECOVERY", "1") != "0"
 SETUP_COILED_FLAG = 128
+SPLIT_LIKE_RATIOS = (0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0)
+SPLIT_GAP_TOLERANCE = 0.08
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
@@ -1533,7 +1535,7 @@ def adjust_ohlc_for_corporate_actions(df):
     if df is None or df.empty or "Close" not in df:
         return None
     if "Adj Close" not in df:
-        return flatten_single_download(df)
+        return repair_split_gaps(flatten_single_download(df))
     try:
         out = df.copy()
         close = out["Close"].astype(float)
@@ -1544,14 +1546,61 @@ def adjust_ohlc_for_corporate_actions(df):
                 out[col] = out[col].astype(float) * factor
         out = out.drop(columns=["Adj Close"], errors="ignore")
         out = out.dropna(subset=["Close"])
-        return out if not out.empty else None
+        return repair_split_gaps(out) if not out.empty else None
     except Exception:
-        return flatten_single_download(df)
+        return repair_split_gaps(flatten_single_download(df))
+
+
+def nearest_split_ratio(ratio):
+    """Return matching split ratio for a near-exact split-like close gap."""
+    try:
+        ratio = float(ratio)
+    except (TypeError, ValueError):
+        return None
+    if not np.isfinite(ratio) or ratio <= 0:
+        return None
+    for candidate in SPLIT_LIKE_RATIOS:
+        if abs(ratio - candidate) / candidate <= SPLIT_GAP_TOLERANCE:
+            return candidate
+    return None
+
+
+def repair_split_gaps(df):
+    """Manually repair split-like OHLC scale gaps that Yahoo Adj Close misses.
+
+    Yahoo occasionally leaves Close == Adj Close while raw OHLC jumps onto a new
+    split scale. DD in June 2026 did this: daily bars jumped from ~48 to ~143,
+    and weekly bars mixed old lows with new closes. For RS math, the full series
+    must live on one scale, so each detected split-like adjacent close gap
+    rescales all earlier OHLC bars by the actual close ratio.
+    """
+    if df is None or df.empty or "Close" not in df or len(df) < 2:
+        return df
+    out = df.copy()
+    ohlc_cols = [col for col in ("Open", "High", "Low", "Close") if col in out]
+    if not ohlc_cols:
+        return out
+    try:
+        close = out["Close"].astype(float)
+    except Exception:
+        return out
+    for i in range(1, len(out)):
+        prev_close = close.iloc[i - 1]
+        cur_close = close.iloc[i]
+        if not all(np.isfinite(x) and x > 0 for x in (prev_close, cur_close)):
+            continue
+        raw_ratio = cur_close / prev_close
+        if nearest_split_ratio(raw_ratio) is None:
+            continue
+        scale = float(raw_ratio)
+        prior_idx = out.index[:i]
+        out.loc[prior_idx, ohlc_cols] = out.loc[prior_idx, ohlc_cols].astype(float) * scale
+        close = out["Close"].astype(float)
+    return out
 
 
 def validate_corporate_action_adjustments(raw_data, adjusted_data, label):
     """Refuse to publish if split-like raw gaps remain split-like after adjustment."""
-    split_ratios = (0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0)
     failures = []
     for tk, raw_df in raw_data.items():
         adj_df = adjusted_data.get(tk)
@@ -1560,26 +1609,19 @@ def validate_corporate_action_adjustments(raw_data, adjusted_data, label):
         try:
             raw_close = raw_df["Close"].astype(float).values
             adj_close = adj_df["Close"].astype(float).values
-            if "Adj Close" not in raw_df:
-                continue
-            factor = (raw_df["Adj Close"].astype(float) / raw_df["Close"].astype(float).replace(0, np.nan)).values
         except Exception:
             continue
-        span = min(20, len(raw_close) - 1, len(adj_close) - 1)
+        span = min(len(raw_close) - 1, len(adj_close) - 1)
         for offset in range(span, 0, -1):
             raw_prev, raw_cur = raw_close[-offset - 1], raw_close[-offset]
             adj_prev, adj_cur = adj_close[-offset - 1], adj_close[-offset]
             if not all(np.isfinite(x) and x > 0 for x in (raw_prev, raw_cur, adj_prev, adj_cur)):
                 continue
-            factor_prev, factor_cur = factor[-offset - 1], factor[-offset]
-            if not all(np.isfinite(x) and x > 0 for x in (factor_prev, factor_cur)):
-                continue
-            corporate_action_seen = abs((factor_cur / factor_prev) - 1.0) >= 0.20
             raw_ratio = raw_cur / raw_prev
             adj_ratio = adj_cur / adj_prev
-            split_like = any(abs(raw_ratio - r) / r <= 0.08 for r in split_ratios)
+            split_like = nearest_split_ratio(raw_ratio) is not None
             still_bad = adj_ratio >= 1.8 or adj_ratio <= 0.55
-            if corporate_action_seen and split_like and still_bad:
+            if split_like and still_bad:
                 failures.append((tk, round(float(raw_ratio), 4), round(float(adj_ratio), 4)))
                 break
     if failures:
@@ -2255,7 +2297,9 @@ def main():
     if isinstance(spy_df_w.columns, type(spy_df_w.columns)) and hasattr(spy_df_w.columns, 'levels'):
         spy_df_w.columns = spy_df_w.columns.droplevel(1) if spy_df_w.columns.nlevels > 1 else spy_df_w.columns
     spy_df_w = spy_df_w.dropna(subset=["Close"])
-    spy_score_df_w = adjust_ohlc_for_corporate_actions(spy_df_w)
+    spy_score_df_w = daily_to_weekly(spy_score_df)
+    if spy_score_df_w is None or spy_score_df_w.empty:
+        spy_score_df_w = adjust_ohlc_for_corporate_actions(spy_df_w)
     if spy_score_df_w is None or spy_score_df_w.empty:
         print("ERROR: SPY adjusted weekly data unavailable"); sys.exit(1)
     print(f"  SPY weekly: {len(spy_df_w)} bars")
@@ -2526,10 +2570,15 @@ def main():
     print(f"  Successfully downloaded weekly data for {len(weekly_data)}/{len(all_tickers)} tickers")
 
     weekly_score_data = {
-        tk: adjust_ohlc_for_corporate_actions(df)
-        for tk, df in weekly_data.items()
+        tk: daily_to_weekly(df)
+        for tk, df in daily_score_data.items()
+        if df is not None
     }
-    validate_corporate_action_adjustments(weekly_data, weekly_score_data, "weekly")
+    missing_weekly_from_daily = [tk for tk, df in weekly_score_data.items() if df is None or len(df) < 5]
+    for tk in missing_weekly_from_daily:
+        retry_weekly = adjust_ohlc_for_corporate_actions(weekly_data.get(tk))
+        if retry_weekly is not None:
+            weekly_score_data[tk] = retry_weekly
 
     def get_df(ticker):
         return daily_data.get(ticker)
