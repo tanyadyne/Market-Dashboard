@@ -395,6 +395,12 @@ function eventTimingClass(item){
   if(minutes>=9*60+30&&minutes<16*60)return 'market';
   return minutes<9*60+30?'pre':'post';
 }
+function eventTimingRank(item,marketRank=1){
+  const timing=eventTimingClass(item);
+  if(timing==='pre')return 0;
+  if(timing==='post')return 2;
+  return marketRank;
+}
 function renderEarningsItems(items){
   const midpoint=Math.ceil(items.length/2);
   const columns=[items.slice(0,midpoint),items.slice(midpoint)];
@@ -489,9 +495,9 @@ function renderEvents(){
   const today=todayEtIso();
   document.getElementById('todayLabel').textContent=compactDate(today)+' ET';
   const econ=calendarItemsForDate('events',today)
-    .sort((a,b)=>String(a.time||'').localeCompare(String(b.time||''))||String(a.event||'').localeCompare(String(b.event||'')));
+    .sort((a,b)=>eventTimingRank(a)-eventTimingRank(b)||String(a.time||'').localeCompare(String(b.time||''))||String(a.event||'').localeCompare(String(b.event||'')));
   const earn=calendarItemsForDate('earnings_events',today)
-    .sort((a,b)=>String(a.time||'').localeCompare(String(b.time||''))||String(a.ticker||'').localeCompare(String(b.ticker||'')));
+    .sort((a,b)=>eventTimingRank(a)-eventTimingRank(b)||String(a.ticker||'').localeCompare(String(b.ticker||'')));
   document.getElementById('economicToday').innerHTML=econ.length
     ? econ.map(e=>`<div class="event-item ${eventTimingClass(e)}"><span class="event-dot"></span><span>${esc(e.event)}</span></div>`).join('')
     : '<div class="empty-state">No economic releases scheduled</div>';
