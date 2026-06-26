@@ -47,6 +47,8 @@ STRICT_WEEKLY_RANK_RECOVERY = os.environ.get("STRICT_WEEKLY_RANK_RECOVERY", "1")
 SETUP_COILED_FLAG = 128
 SPLIT_LIKE_RATIOS = (0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0)
 SPLIT_GAP_TOLERANCE = 0.08
+OFF_HIGH_MIN_MULTIPLIER = 0.70
+OFF_HIGH_RECOVERY_STEP = 0.05
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
@@ -941,6 +943,74 @@ def compute_intraday_setup_baseline(c, h, l, n):
     return {}
 
 
+def off_high_penalty_multiplier(high_52w, atr, price):
+    """Return smooth off-high multiplier from 1.00 down to 0.70."""
+    try:
+        high_52w = float(high_52w)
+        atr = float(atr)
+        price = float(price)
+    except (TypeError, ValueError):
+        return 1.0
+    if not all(np.isfinite(x) and x > 0 for x in (high_52w, atr, price)):
+        return 1.0
+    if price >= high_52w:
+        return 1.0
+
+    adr_pct = (atr / price) * 100
+    if adr_pct > 20:
+        threshold = 2.0
+    elif adr_pct > 10:
+        threshold = 3.0
+    elif adr_pct > 4:
+        threshold = 4.0
+    else:
+        threshold = 5.0
+
+    distance_atr = (high_52w - price) / atr
+    excess = distance_atr - threshold
+    if excess <= 0:
+        return 1.0
+    if excess >= 3:
+        return OFF_HIGH_MIN_MULTIPLIER
+    return 1.0 - (excess / 3.0) * (1.0 - OFF_HIGH_MIN_MULTIPLIER)
+
+
+def previous_off_high_multiplier(previous_baseline):
+    """Read prior persisted multiplier, with backward compatibility for old bool."""
+    if not isinstance(previous_baseline, dict):
+        return None
+    try:
+        value = float(previous_baseline.get("w_pen_mult"))
+        if np.isfinite(value):
+            return max(OFF_HIGH_MIN_MULTIPLIER, min(1.0, value))
+    except (TypeError, ValueError):
+        pass
+    if previous_baseline.get("w_pen_crash5"):
+        return OFF_HIGH_MIN_MULTIPLIER
+    return 1.0
+
+
+def cap_off_high_recovery(raw_multiplier, previous_multiplier):
+    """Allow immediate worsening, but recover at most 0.05 per daily baseline."""
+    try:
+        raw = float(raw_multiplier)
+    except (TypeError, ValueError):
+        raw = 1.0
+    raw = max(OFF_HIGH_MIN_MULTIPLIER, min(1.0, raw))
+    if previous_multiplier is None:
+        return raw
+    try:
+        prev = float(previous_multiplier)
+    except (TypeError, ValueError):
+        return raw
+    if not np.isfinite(prev):
+        return raw
+    prev = max(OFF_HIGH_MIN_MULTIPLIER, min(1.0, prev))
+    if raw > prev:
+        return min(raw, prev + OFF_HIGH_RECOVERY_STEP)
+    return raw
+
+
 def close_on_or_before(df_index, closes, target_date):
     """Find the close of the most recent trading day at or before target_date.
     Returns the close value (float) or None. Used for calendar-based 1W/1M lookups
@@ -1332,32 +1402,22 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     #   ADR% 4-10%  → 4× ATR
     #   ADR% < 4%   → 5× ATR
     #
-    # Once triggered, the penalty applies day after day as long as the condition
-    # holds — but each day's score is computed from scratch (not stacked on yesterday's
-    # already-penalised score), so it acts as a steady-state demotion, not a
-    # death-spiral. Field name kept as `pen_crash5` for history/strip compatibility.
+    # The multiplier fades from 1.00 to 0.70 across the first 3 ATR beyond the
+    # threshold. This avoids cliff jumps when a stock moves just across a tier.
+    # Field name kept as `pen_crash5` for history/strip compatibility.
     pen_crash5 = False
+    pen_multiplier = 1.0
     try:
         if n >= 1 and atr and atr > 0 and price > 0:
             # 52-week high — use the daily HIGH series over the last ~252 bars
             valid_highs = [float(x) for x in h[-min(252, n):] if x is not None and not (isinstance(x, float) and x != x)]
             high_52w = max(valid_highs) if valid_highs else 0
             if high_52w > 0:
-                adr_pct = (atr / price) * 100  # ATR as % of price
-                # Tiered ATR multiple based on ADR%
-                if adr_pct > 20:
-                    atr_mult_threshold = 2.0
-                elif adr_pct > 10:
-                    atr_mult_threshold = 3.0
-                elif adr_pct > 4:
-                    atr_mult_threshold = 4.0
-                else:
-                    atr_mult_threshold = 5.0
-                distance_from_high = high_52w - float(c[-1])
-                if distance_from_high > atr_mult_threshold * atr:
-                    pen_crash5 = True
+                pen_multiplier = off_high_penalty_multiplier(high_52w, atr, c[-1])
+                pen_crash5 = pen_multiplier < 0.999
     except Exception:
         pen_crash5 = False
+        pen_multiplier = 1.0
 
     return {
         "rv": round(rvol * 100) if rvol else None,
@@ -1379,6 +1439,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "w_pen_engulf": pen_engulf,
         "w_pen_ema21": pen_ema21,
         "w_pen_crash5": pen_crash5,
+        "w_pen_mult": round(float(pen_multiplier), 4),
         # Internal baselines for intraday overlay (stripped before output)
         "_atr": round(float(atr), 6) if atr else None,
         "_hi52": round(float(high_52w), 6) if high_52w else None,
@@ -2022,7 +2083,7 @@ def write_intraday_baselines(results):
     """
     keep = {
         "p", "w_fr", "w_vs", "w_rs", "w_rk",
-        "w_pen_engulf", "w_pen_crash5",
+        "w_pen_engulf", "w_pen_crash5", "w_pen_mult",
         "_pc", "_5b", "_20b", "_yb", "_atr", "_hi52",
         "_sma10", "_sma20", "_sma50", "_sma200",
         "_setup_ema9", "_setup_ema21", "_setup_adr",
@@ -2057,7 +2118,7 @@ def write_intraday_baselines(results):
 
 def strip_internal_fields(results):
     """Remove _-prefixed internal fields + other scoring-only fields before serializing."""
-    INTERNAL_NON_UNDERSCORE = {"w_pen_engulf", "w_pen_ema21", "w_pen_crash5"}
+    INTERNAL_NON_UNDERSCORE = {"w_pen_engulf", "w_pen_ema21", "w_pen_crash5", "w_pen_mult"}
     # Daily-RS fields no longer surfaced in the dashboard. Removing them entirely keeps
     # leaders.json clean and prevents accidental misuse on the frontend.
     DAILY_RS_FIELDS = {"rs", "rk"}
@@ -2191,7 +2252,7 @@ def build_carried_entry(ticker, previous_entry, previous_baseline):
     entry = dict(previous_entry)
     if isinstance(previous_baseline, dict):
         for key, value in previous_baseline.items():
-            if key.startswith("_") or key in {"w_pen_engulf", "w_pen_crash5"}:
+            if key.startswith("_") or key in {"w_pen_engulf", "w_pen_crash5", "w_pen_mult"}:
                 entry[key] = value
     if entry.get("w_fr") is None:
         return None
@@ -3227,17 +3288,16 @@ def main():
             r["_d_rs_raw"] = None
         if r.get("w_fr") is not None and len(all_w_rs) > 1:
             w_raw = percentrank_inc(all_w_rs, r["w_fr"]) * 100  # float, not rounded
-            # Weekly-RS penalty system. Mixes additive and multiplicative:
+            # Weekly-RS penalty system. Mixes additive and smooth multiplicative:
             #   - Bearish engulfing  → −2 raw RS points (additive)
-            #   - Off 52-week high   → ×0.70 multiplier (when ADR%-tiered ATR threshold met)
+            #   - Off 52-week high   → ×1.00 down to ×0.70 based on distance beyond
+            #     ADR%-tiered ATR threshold
             #
             # Order of operations: subtract first, then multiply. This penalises the
             # engulfing as a flat hit; the off-high multiplier compounds on top.
             #
-            # The off-high penalty persists day after day as long as the stock remains
-            # below its 52w high by the threshold amount, but it does NOT cumulate —
-            # each day's score is computed fresh from w_raw, not stacked on yesterday's.
-            # This produces a steady-state demotion, not a death spiral.
+            # Off-high recovery is capped by previous baseline multiplier so a binary
+            # threshold/tier flip cannot create a triple-digit rank jump in one refresh.
             #
             # The EMA21 break signal is still detected (in process_stock) but no longer
             # applied — the off-52w-high penalty subsumes its purpose.
@@ -3246,8 +3306,14 @@ def main():
             w_score = w_raw
             if r.get("w_pen_engulf"):
                 w_score = w_score - 2.0
-            if r.get("w_pen_crash5"):
-                w_score = w_score * 0.70
+            raw_mult = r.get("w_pen_mult")
+            if raw_mult is None:
+                raw_mult = OFF_HIGH_MIN_MULTIPLIER if r.get("w_pen_crash5") else 1.0
+            prev_mult = previous_off_high_multiplier(previous_baselines.get(r.get("t")))
+            pen_mult = cap_off_high_recovery(raw_mult, prev_mult)
+            r["w_pen_mult"] = round(float(pen_mult), 4)
+            r["w_pen_crash5"] = pen_mult < 0.999
+            w_score = w_score * pen_mult
             w_final = max(0.0, min(100.0, w_score))
             r["w_rs"] = round(w_final)            # display value (clean integer)
             r["_w_rs_raw"] = w_final              # full-precision value for ranking

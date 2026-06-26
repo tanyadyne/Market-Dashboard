@@ -42,7 +42,10 @@ from fetch_leaders import (
     MA_LENGTH_W,
     MAX_HISTORY_DAYS,
     SETUP_COILED_FLAG,
+    cap_off_high_recovery,
     is_us_market_holiday,
+    off_high_penalty_multiplier,
+    previous_off_high_multiplier,
     sma_adr_distances,
 )
 
@@ -347,24 +350,15 @@ def compute_intraday_weekly(base, live_price, spy_live, week_id):
         return None
 
 
-def live_crash_penalty(base, price):
+def live_crash_penalty_multiplier(base, price):
     high_52w = finite_num(base.get("_hi52"))
     atr = finite_num(base.get("_atr"))
     price = finite_num(price)
     if not high_52w or not atr or not price:
-        return bool(base.get("w_pen_crash5"))
-    if price >= high_52w:
-        return False
-    adr_pct = (atr / price) * 100
-    if adr_pct > 20:
-        threshold = 2.0
-    elif adr_pct > 10:
-        threshold = 3.0
-    elif adr_pct > 4:
-        threshold = 4.0
+        raw = previous_off_high_multiplier(base)
     else:
-        threshold = 5.0
-    return (high_52w - price) > threshold * atr
+        raw = off_high_penalty_multiplier(high_52w, atr, price)
+    return cap_off_high_recovery(raw, previous_off_high_multiplier(base))
 
 
 def update_change_fields(entry, base, quote):
@@ -454,7 +448,7 @@ def rerank(entries, baselines, quotes, spy_quote):
             entry["w_rf"] = w["w_rf"]
             entry["w_ra"] = w["w_ra"]
             entry["_intraday_deltas"] = w["_intraday_deltas"]
-        entry["_live_crash5"] = live_crash_penalty(base, live_price)
+        entry["_live_pen_mult"] = live_crash_penalty_multiplier(base, live_price)
 
     all_w = [e.get("w_fr") for e in entries if e.get("w_fr") is not None]
     for entry in entries:
@@ -467,8 +461,7 @@ def rerank(entries, baselines, quotes, spy_quote):
         score = raw
         if base.get("w_pen_engulf"):
             score -= 2.0
-        if entry.get("_live_crash5"):
-            score *= 0.70
+        score *= entry.get("_live_pen_mult", 1.0)
         final = max(0.0, min(100.0, score))
         entry["w_rs"] = round(final)
         entry["_w_rs_raw"] = final
@@ -490,7 +483,7 @@ def rerank(entries, baselines, quotes, spy_quote):
         entry["w_rk"] = None
 
     for entry in entries:
-        for k in ("_w_rs_raw", "_live_crash5", "_intraday_deltas"):
+        for k in ("_w_rs_raw", "_live_pen_mult", "_intraday_deltas"):
             if k in entry:
                 del entry[k]
 
