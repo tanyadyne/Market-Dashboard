@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-06-21 13:30 UTC",
-  "generated_at_et": "21/06/2026, 09:30 EDT",
+  "generated_at_utc": "2026-06-26 00:10 UTC",
+  "generated_at_et": "25/06/2026, 20:10 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -32,27 +32,13 @@ window.ECONOMIC_CALENDAR_DATA = {
       ],
       "events": [
         {
-          "key": "retail_sales",
-          "event": "Retail sales",
-          "source_event": "Retail Sales MM",
-          "date": "2026-06-17",
-          "day": "Wednesday, June 17, 2026",
-          "time": "08:30 AM",
-          "period": "MAY",
-          "actual": "0.9",
-          "consensus": "-",
-          "previous": "0.5",
-          "forecast": "-",
-          "revised": "0.4"
-        },
-        {
           "key": "fomc_rate",
           "event": "FOMC interest rate decision",
           "source_event": "Fed Funds Tgt Rate",
           "date": "2026-06-17",
           "day": "Wednesday, June 17, 2026",
           "time": "02:00 PM",
-          "period": "NAN",
+          "period": "",
           "actual": "3.75",
           "consensus": "-",
           "previous": "3.62",
@@ -66,7 +52,7 @@ window.ECONOMIC_CALENDAR_DATA = {
           "date": "2026-06-17",
           "day": "Wednesday, June 17, 2026",
           "time": "02:30 PM",
-          "period": "NAN",
+          "period": "",
           "actual": "-",
           "consensus": "-",
           "previous": "-",
@@ -94,14 +80,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-06-18",
           "day": "Thursday, June 18, 2026",
-          "ticker": "GLNG",
-          "company": "Golar LNG Limited",
-          "group": "Oil & Gas Midstream",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-06-18",
-          "day": "Thursday, June 18, 2026",
           "ticker": "ACN",
           "company": "Accenture plc",
           "group": "Information Technology Services",
@@ -117,7 +95,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         }
       ],
       "event_keys": [
-        "retail_sales",
         "fomc_rate",
         "fed_press"
       ]
@@ -157,7 +134,7 @@ window.ECONOMIC_CALENDAR_DATA = {
           "day": "Thursday, June 25, 2026",
           "time": "08:30 AM",
           "period": "Q1",
-          "actual": "-",
+          "actual": "2.1",
           "consensus": "-",
           "previous": "1.6",
           "forecast": "-",
@@ -171,7 +148,7 @@ window.ECONOMIC_CALENDAR_DATA = {
           "day": "Thursday, June 25, 2026",
           "time": "08:30 AM",
           "period": "MAY",
-          "actual": "-",
+          "actual": "0.4",
           "consensus": "-",
           "previous": "0.4",
           "forecast": "-",
@@ -207,6 +184,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "FDX",
           "company": "FedEx Corporation",
           "group": "Integrated Freight & Logistics",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-06-23",
+          "day": "Tuesday, June 23, 2026",
+          "ticker": "KBH",
+          "company": "KB Home",
+          "group": "Residential Construction",
           "time": "AMC"
         },
         {
@@ -248,14 +233,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "company": "Paychex, Inc.",
           "group": "Software - Application",
           "time": "BMO"
-        },
-        {
-          "date": "2026-06-25",
-          "day": "Thursday, June 25, 2026",
-          "ticker": "EPAC",
-          "company": "Enerpac Tool Group Corp.",
-          "group": "Specialty Industrial Machinery",
-          "time": "AMC"
         },
         {
           "date": "2026-06-25",
@@ -519,7 +496,7 @@ window.ECONOMIC_CALENDAR_DATA = {
       "day": "Thursday, June 25, 2026",
       "time": "08:30 AM",
       "period": "Q1",
-      "actual": "-",
+      "actual": "2.1",
       "consensus": "-",
       "previous": "1.6",
       "forecast": "-",
@@ -533,7 +510,7 @@ window.ECONOMIC_CALENDAR_DATA = {
       "day": "Thursday, June 25, 2026",
       "time": "08:30 AM",
       "period": "MAY",
-      "actual": "-",
+      "actual": "0.4",
       "consensus": "-",
       "previous": "0.4",
       "forecast": "-",
@@ -569,6 +546,14 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "FDX",
       "company": "FedEx Corporation",
       "group": "Integrated Freight & Logistics",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-06-23",
+      "day": "Tuesday, June 23, 2026",
+      "ticker": "KBH",
+      "company": "KB Home",
+      "group": "Residential Construction",
       "time": "AMC"
     },
     {
@@ -610,14 +595,6 @@ window.ECONOMIC_CALENDAR_DATA = {
       "company": "Paychex, Inc.",
       "group": "Software - Application",
       "time": "BMO"
-    },
-    {
-      "date": "2026-06-25",
-      "day": "Thursday, June 25, 2026",
-      "ticker": "EPAC",
-      "company": "Enerpac Tool Group Corp.",
-      "group": "Specialty Industrial Machinery",
-      "time": "AMC"
     },
     {
       "date": "2026-06-25",
