@@ -72,7 +72,6 @@ ETF_INFO = [
     {"t":"PBJ","n":"Food & Beverage","fn":"Invesco Food & Beverage","h":"MNST,HSY,KR,SYY,MDLZ,KHC,CTVA,DASH,HLF,UNFI,SEB,IMKTA,TSN,USFD,FDP,CART,CHEF,ADM,AGRO,TR,ACI,DPZ,POST,JBS,WMK"},
     {"t":"XLP","n":"Consumer Staples","fn":"Sel Sector:C SSS SPDR I","h":"ADM,CAG,CHD,CL,CLX,COST,CPB,DG,DLTR,EL,GIS,HRL,HSY,K,KDP,KHC,KMB,KO,KR,KVUE,MDLZ,MNST,MO,PEP,PG,PM,SJM,SYY,TGT,WMT"},
     {"t":"ROBO","n":"Robotics & Automation","fn":"Robo Glbl Robots & Auto","h":"SYM,TER,ISRG,SERV,IRBT,COHR,ROK,ILMN,RR,ARBE,AUR,GMED,PRCT,NOVT,PDYN,IPGP,NDSN,EMR,TSLA,NVDA,QCOM,XPEV,AMZN,AMD,GOOGL,BABA,OUST,MBLY,HSAI,ARM,TKR,RBC,ABB,AEVA"},
-    {"t":"ARKW","n":"Next Gen Internet","fn":"ARK Next Generation Internet ETF","h":"AMD,TSLA,HOOD,CRCL,ROKU,SHOP,AMZN,GOOG,CRWV,COIN,XYZ,PLTR,CRWD,RBLX,DDOG,AVGO,TSM,META,NET,BLSH,P,BMNR,RBRK,FIG,NFLX,SPOT,NVDA,GTLB,BABA,TOST,GENI,CBRS,BIDU,DKNG,DASH,MELI,ABNB,SLMT"},
     {"t":"HYDR","n":"Hydrogen","fn":"Glbl X Hydrogen ETF","h":"BE,PLUG,BLDP,SLDP,FCEL,CMI,APD"},
     {"t":"PEJ","n":"Leisure & Ent","fn":"Invesco Leisure and Ent","h":"WBD,LVS,SYY,CCL,DASH,LYV,RCL,FLUT,LYFT,LION,EXPE,FOXA,CNK,TKO,CPA,USFD,PSKY,CART,BYD,EAT,BH,RRR,DPZ,MGM,ACEL"},
     {"t":"MOO","n":"Agribusiness","fn":"VanEck:Agribusiness","h":"DE,ZTS,CTVA,ADM,TSN,CF,BG,ELAN,MOS,CNH,DAR,TTC,AGCO,CAT"},
@@ -86,7 +85,6 @@ ETF_INFO = [
     {"t":"IGV","n":"Software","fn":"iShares:Expand Tch-Sftwr","h":"ADBE,ADSK,AGYS,APP,APPN,BBAI,CDNS,CIFR,CLSK,CRM,CRNC,CRWD,CTSH,DDOG,EA,EPAM,FICO,FTNT,GDYN,HUT,IBM,IDCC,INTU,JAMF,MSFT,MSTR,NOW,ORCL,PANW,PATH,PLTR,PRO,PTC,QBTS,ROP,SNPS,TDC,TEAM,TTWO,WDAY,WK,WULF,ZM,ZS"},
     {"t":"GRID","n":"Grid Infrastructure","fn":"FT NASDAQ Clean Edge Smart Grid Infrastructure","h":"ETN,JCI,PWR,NVT,HUBB,NVDA,TSLA,CSCO,ORCL,APTV,TXN,GEV,QCOM,IBM,ADI,ENPH,MYRG,HON"},
     {"t":"PHO","n":"Water Infrastructure","fn":"Invesco Water Res","h":"WAT,FERG,ECL,ROP,AWK,MLI,IEX,WMS,XYL,PNR,VLTO,AOS,ACM,CNM,VMI,WTRG,BMI,TTEK,ITRI,WTS,ZWS,MWA,SBS,FELE,HWKN"},
-    {"t":"BLOK","n":"Blockchain","fn":"Amplify Blockchain Tech","h":"BBBY,BITB,BKKT,BLK,CAN,CIFR,CLSK,CME,CMPO,COIN,CORZ,CRCL,FBTC,FIGR,GLXY,HOOD,HUT,IBIT,IBM,MELI,NU,OPRA,PYPL,RBLX,WULF,XYZ"},
     {"t":"WCLD","n":"Cloud Computing","fn":"WisdomTree:Cloud Cmptng","h":"FSLY,MDB,DOCN,FROG,PATH,SNOW,BILL,DDOG,CFLT,WK,TWLO,CRWD,PCOR,AGYS,IOT,BRZE,QLYS,CWAN,BL,CLBT,PANW,SHOP,INTA,NET"},
     {"t":"WGMI","n":"Crypto Miners / Data Centers","fn":"CoinShares Btc Mining","h":"APLD,BTBT,BTDR,CAN,CANG,CIFR,CLSK,CORZ,CRWV,GLXY,HIVE,HUT,IREN,MARA,NBIS,NVDA,RIOT,TSM,WULF,XYZ"},
     {"t":"IBUY","n":"Online Retail","fn":"Amplify Online Retail","h":"FIGS,LQDT,CVNA,UPWK,EXPE,CART,W,RVLV,CHWY,LYFT,MSM,EBAY,BKNG,AFRM,SPOT,TRIP,ABNB,PTON,UBER,AMZN,CPRT,PYPL,HIMS,SSTK,ETSY"},
@@ -96,7 +94,6 @@ ETF_INFO = [
     {"t":"ITB","n":"Home Construction","fn":"iShares:US Home Cons ETF","h":"DHI,LEN,PHM,NVR,TOL,SHW,LOW,BLD,HD,LII,MAS,BLDR,TMHC,IBP,MTH,OC,SKY,CVCO,KBH,EXP,SSD,FND,MHO,FBIN,MHK,SGI,WMS,JCI,TT,ALLE,WSM,CARR,CSL"},
     {"t":"WOOD","n":"Timber & Forestry","fn":"iShares:Gl Timber","h":"PCH,RYN,SLVM,WY,SW,IP,CLW"},
     {"t":"ICLN","n":"Clean Energy","fn":"iShares:Gl Cl Energy","h":"AEIS,ALB,AMRC,BE,BEPC,CSIQ,CWEN,ENPH,EOSE,FLNC,FSLR,JKS,LAC,LAR,MYRG,NVTS,NXT,ORA,PLUG,PWR,RIVN,RUN,SGML,SHLS,SLDP,SLI,SQM,TE"},
-    {"t":"KRE","n":"Regional Banks","fn":"SS SPDR S&P Reg Banking","h":"CADE,VLY,COLB,CFG,TFC,PB,FNB,EWBC,FHN,FLG,WBS,ONB,MTB,PNFP,RF,HBAN,ZION,BPOP,WAL,UMBF,WTFC,SSB,CFR,HWC"},
     {"t":"CIBR","n":"Cybersecurity","fn":"FT II:Nsdq Cybersecurity","h":"AVGO,CRWD,CSCO,INFY,PANW,LDOS,FTNT,CYBR,CHKP,NET,ZS,GEN,AKAM,FFIV,OKTA,BAH,RBRK,S,CVLT,QLYS,SAIC,VRNS"},
     {"t":"XRT","n":"Retail","fn":"SS SPDR S&P Retail","h":"VSCO,REAL,KSS,M,ODP,EYE,DDS,ROST,GAP,DLTR,WMT,URBN,SBH,FIVE,PSMT,AEO,TJX,RVLV,ULTA,BOOT,ANF,CASY,SIG,CVNA,DG"},
     {"t":"XLF","n":"Financials","fn":"Sel Sector:Fin SS SPDR I","h":"AFL,AIG,AIZ,AJG,ALL,AON,AXP,BAC,BK,BLK,BRK.B,BX,C,CB,CME,COF,EG,ERIE,FDS,FI,FICO,GL,GS,HOOD,ICE,JPM,KKR,L,MA,MET,MMC,MS,PGR,PNC,PRU,SCHW,SPGI,STT,USB,V,WFC,WTW"},
@@ -229,9 +226,6 @@ CUSTOM_ETF_DESCRIPTIONS = {'MAGS': 'This theme tracks the dominant U.S. mega-cap
  'ROBO': 'This theme tracks robotics, automation, industrial controls, autonomous systems, surgical robotics, sensors, '
          'and AI-enabled hardware companies. It is designed to represent the automation layer across factories, '
          'healthcare, logistics, mobility, and machine-vision applications.',
- 'ARKW': 'This theme tracks internet platforms, cloud software, digital assets, streaming, e-commerce, AI '
-         'infrastructure, and next-generation digital business models. It is designed to represent companies reshaping '
-         'how consumers and enterprises transact, communicate, compute, and consume media online.',
  'HYDR': 'This theme tracks hydrogen fuel cells, electrolyzers, clean hydrogen infrastructure, and industrial '
          'companies exposed to hydrogen adoption. It is designed to represent the emerging hydrogen economy, including '
          'clean fuels, backup power, heavy transport, and decarbonization of industrial processes.',
@@ -271,10 +265,6 @@ CUSTOM_ETF_DESCRIPTIONS = {'MAGS': 'This theme tracks the dominant U.S. mega-cap
  'PHO': 'This theme tracks water technology, filtration, testing, pumps, utilities, infrastructure equipment, and '
         'companies supporting water quality and conservation. It is designed to represent demand for clean water, '
         'industrial water management, municipal infrastructure, and resource efficiency.',
- 'BLOK': 'This theme tracks blockchain infrastructure, crypto exchanges, miners, digital asset managers, payment '
-         'networks, and companies building blockchain-enabled financial systems. It is designed to represent '
-         'businesses exposed to tokenization, crypto market infrastructure, mining economics, and digital settlement '
-         'networks.',
  'WCLD': 'This theme tracks cloud software, data platforms, cybersecurity, developer tools, observability, and '
          'internet infrastructure companies. It is designed to represent the migration of enterprise workloads, data '
          'management, applications, and security functions into cloud-native platforms.',
@@ -302,9 +292,6 @@ CUSTOM_ETF_DESCRIPTIONS = {'MAGS': 'This theme tracks the dominant U.S. mega-cap
  'ICLN': 'This theme tracks renewable energy, clean power generation, solar, hydrogen, energy storage, and companies '
          'supporting the energy transition. It is designed to represent businesses tied to decarbonization, '
          'electrification, clean electricity demand, and renewable infrastructure spending.',
- 'KRE': 'This theme tracks U.S. regional banks exposed to lending, deposits, credit cycles, net interest margins, and '
-        'local economic activity. It is designed to represent the health of smaller and mid-sized financial '
-        'institutions, which are sensitive to rates, loan growth, and credit quality.',
  'CIBR': 'This theme tracks cybersecurity software, identity, network security, endpoint protection, threat detection, '
          'and digital infrastructure defense companies. It is designed to represent demand for protecting enterprises, '
          'governments, cloud systems, and consumer data from increasingly sophisticated cyber threats.',
