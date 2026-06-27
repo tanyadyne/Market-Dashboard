@@ -446,8 +446,8 @@ def compute_ma_status(closes):
     }
 
 
-def compute_vcp_tightness_score(c, h, l, length=7, adr_len=20, baseline=100):
-    """Return Pine-compatible VCP tightness score, where <=10 is super tight."""
+def compute_vcp_tightness_score(c, h, l, length=10, adr_len=21, baseline=100):
+    """Return Pine-compatible VCP tightness score; len=10, ADR=21, <=10 is super tight."""
     try:
         c = np.asarray(c, dtype=float)
         h = np.asarray(h, dtype=float)
