@@ -2094,6 +2094,8 @@ def write_intraday_baselines(results):
     }
     baselines = {}
     for r in results:
+        if r.get("po"):
+            continue
         tk = r.get("t")
         if not tk:
             continue
@@ -2314,6 +2316,7 @@ def main():
 
     all_tickers, stock_to_etfs = build_universe()
     theme_holding_tickers = set(stock_to_etfs)
+    theme_profile_only_tickers = set()
     if HARD_EXCLUDE:
         before_set = set(all_tickers)
         all_tickers = [t for t in all_tickers if t not in HARD_EXCLUDE]
@@ -2335,6 +2338,7 @@ def main():
                 del stock_to_etfs[t]
         actually_removed = sorted(t for t in before_set & MANUAL_EXCLUDE if t not in theme_holding_tickers)
         retained_holdings = sorted(t for t in before_set & MANUAL_EXCLUDE if t in theme_holding_tickers)
+        theme_profile_only_tickers.update(retained_holdings)
         if actually_removed:
             print(f"  MANUAL_EXCLUDE: dropped {len(actually_removed)} ticker(s): {actually_removed}")
         if retained_holdings:
@@ -2795,6 +2799,11 @@ def main():
         threshold = MIN_DOLLAR_VOL_SMALL_CAP if (cached_mcap is not None and cached_mcap < SMALL_CAP_THRESHOLD) else MIN_DOLLAR_VOL
         cap_only_policy = is_cap_only_industry(industry_cache.get(tk, ""))
         is_theme_holding = tk in theme_holding_tickers
+        if is_theme_holding and tk not in MANUAL_INCLUDE and not cap_only_policy and dollar_vol < threshold:
+            rec = grace_records.get(tk, {})
+            failures = int(rec.get("liquidity_failures", 0) or 0) + 1
+            if not (tk in grace_recent and failures <= UNIVERSE_GRACE_DAYS):
+                theme_profile_only_tickers.add(tk)
         if dollar_vol < threshold and tk not in MANUAL_INCLUDE and not is_theme_holding and not cap_only_policy and (
             tk not in mcap_cache or not industry_cache.get(tk, "")
         ):
@@ -2842,10 +2851,10 @@ def main():
         # Filter stocks whose daily range has collapsed vs its OWN history.
         # Fully relative (no absolute floor): recent ADR must be < ACR_RATIO of
         # BOTH a short (~40-bar) and a long (~120-bar) baseline measured before
-        # the recent window. MANUAL_INCLUDE, Theme Tracker holdings, and
-        # cap-only industries bypass.
+        # the recent window. MANUAL_INCLUDE and cap-only industries bypass;
+        # Theme Tracker holdings that fail are retained as profile-only.
         # See ACR_* constant block.
-        if tk not in MANUAL_INCLUDE and not is_theme_holding and not cap_only_policy:
+        if tk not in MANUAL_INCLUDE and not cap_only_policy:
             try:
                 h = df["High"].values
                 l = df["Low"].values
@@ -2876,14 +2885,17 @@ def main():
                         # post-spike normalisation (which would fail the long
                         # test because the long baseline holds true-normal data).
                         if short_ratio < ACR_RATIO and long_ratio < ACR_RATIO:
-                            excluded["adr_collapse"] += 1
-                            if tk in DEBUG_TICKERS:
-                                print(f"  [DEBUG] {tk}: EXCLUDED — ADR collapse "
-                                      f"(recent {recent_adr*100:.2f}%; short base "
-                                      f"{short_baseline*100:.2f}% r={short_ratio:.2f}; "
-                                      f"long base {long_baseline*100:.2f}% "
-                                      f"r={long_ratio:.2f}; thresh {ACR_RATIO})")
-                            continue
+                            if is_theme_holding:
+                                theme_profile_only_tickers.add(tk)
+                            else:
+                                excluded["adr_collapse"] += 1
+                                if tk in DEBUG_TICKERS:
+                                    print(f"  [DEBUG] {tk}: EXCLUDED — ADR collapse "
+                                          f"(recent {recent_adr*100:.2f}%; short base "
+                                          f"{short_baseline*100:.2f}% r={short_ratio:.2f}; "
+                                          f"long base {long_baseline*100:.2f}% "
+                                          f"r={long_ratio:.2f}; thresh {ACR_RATIO})")
+                                continue
             except Exception:
                 # Any data issue → don't filter on ADR (fail-open); the stock
                 # still had to pass the liquidity gate to reach this point.
@@ -3009,17 +3021,19 @@ def main():
         print(f"  Cache updated with {cap_only_metadata_checked} pre-liquidity metadata lookup(s)")
 
     # Final filter: standard names need >= $2B; cap-only industries need >= $1.2B.
-    # MANUAL_INCLUDE and Theme Tracker holdings bypass so ETF profile pills can
-    # deep-link into stock screener profiles.
+    # Theme Tracker holdings that fail are retained as profile-only so ETF profile
+    # pills can deep-link into stock screener profiles without affecting rankings.
     all_tickers_before_mcap = list(liquid_tickers)
     def min_mcap_for_ticker(t):
         return CAP_ONLY_MIN_MCAP if is_cap_only_industry(industry_cache.get(t, "")) else MIN_MCAP
-    all_tickers = [
-        t for t in liquid_tickers
-        if mcap_cache.get(t, 0) >= min_mcap_for_ticker(t)
-        or t in MANUAL_INCLUDE
-        or t in theme_holding_tickers
-    ]
+    all_tickers = []
+    for t in liquid_tickers:
+        passes_standard_mcap = mcap_cache.get(t, 0) >= min_mcap_for_ticker(t) or t in MANUAL_INCLUDE
+        if passes_standard_mcap:
+            all_tickers.append(t)
+        elif t in theme_holding_tickers:
+            theme_profile_only_tickers.add(t)
+            all_tickers.append(t)
     removed = len(liquid_tickers) - len(all_tickers)
     print(f"  Market cap filter: {removed} removed (< $2B standard / < $1.2B cap-only), {len(all_tickers)} remaining")
     # Diagnostic: log DEBUG_TICKERS that got filtered here
@@ -3064,22 +3078,30 @@ def main():
                 general_count += 1
     print(f"  Theme mapping: {protected_count} protected, {yahoo_count} via Yahoo, {etf_count} via ETF, {general_count} general · {len(set(theme_map.values()))} active themes")
 
-    # ─── Pharma/biotech mcap filter: require >= $20B for these themes (MANUAL_INCLUDE / Theme Tracker holdings bypass) ──
+    # ─── Pharma/biotech mcap filter: require >= $20B for these themes.
+    # Theme Tracker holdings that fail are retained as profile-only.
     PHARMA_BIOTECH_THEMES = {"Pharmaceuticals", "Biotechnology"}
     PHARMA_BIOTECH_MIN_MCAP = 20_000_000_000
     before = len(all_tickers)
-    all_tickers = [
-        t for t in all_tickers
-        if t in MANUAL_INCLUDE
-        or t in theme_holding_tickers
-        or is_cap_only_industry(industry_label.get(t, ""))
-        or theme_map.get(t) not in PHARMA_BIOTECH_THEMES
-        or mcap_cache.get(t, 0) >= PHARMA_BIOTECH_MIN_MCAP
-    ]
+    pharma_filtered = []
+    for t in all_tickers:
+        passes_pharma_filter = (
+            t in MANUAL_INCLUDE
+            or is_cap_only_industry(industry_label.get(t, ""))
+            or theme_map.get(t) not in PHARMA_BIOTECH_THEMES
+            or mcap_cache.get(t, 0) >= PHARMA_BIOTECH_MIN_MCAP
+        )
+        if passes_pharma_filter:
+            pharma_filtered.append(t)
+        elif t in theme_holding_tickers:
+            theme_profile_only_tickers.add(t)
+            pharma_filtered.append(t)
+    all_tickers = pharma_filtered
     pharma_removed = before - len(all_tickers)
     print(f"  Pharma/Biotech filter: {pharma_removed} removed (< ${PHARMA_BIOTECH_MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
 
-    # ─── Healthcare-adjacent mcap filter: require >= $12B (MANUAL_INCLUDE / Theme Tracker holdings bypass) ──
+    # ─── Healthcare-adjacent mcap filter: require >= $12B.
+    # Theme Tracker holdings that fail are retained as profile-only.
     # Same idea as the pharma/biotech filter but a lower bar, applied to the
     # broader healthcare cluster (devices, diagnostics, services, care
     # facilities). $12B keeps established large mid-caps (Align, Insulet,
@@ -3096,16 +3118,25 @@ def main():
     }
     HEALTHCARE_ADJ_MIN_MCAP = 12_000_000_000
     before_hc = len(all_tickers)
-    all_tickers = [
-        t for t in all_tickers
-        if t in MANUAL_INCLUDE
-        or t in theme_holding_tickers
-        or is_cap_only_industry(industry_label.get(t, ""))
-        or theme_map.get(t) not in HEALTHCARE_ADJ_THEMES
-        or mcap_cache.get(t, 0) >= HEALTHCARE_ADJ_MIN_MCAP
-    ]
+    healthcare_filtered = []
+    for t in all_tickers:
+        passes_healthcare_filter = (
+            t in MANUAL_INCLUDE
+            or is_cap_only_industry(industry_label.get(t, ""))
+            or theme_map.get(t) not in HEALTHCARE_ADJ_THEMES
+            or mcap_cache.get(t, 0) >= HEALTHCARE_ADJ_MIN_MCAP
+        )
+        if passes_healthcare_filter:
+            healthcare_filtered.append(t)
+        elif t in theme_holding_tickers:
+            theme_profile_only_tickers.add(t)
+            healthcare_filtered.append(t)
+    all_tickers = healthcare_filtered
     hc_removed = before_hc - len(all_tickers)
     print(f"  Healthcare-adjacent filter: {hc_removed} removed (< ${HEALTHCARE_ADJ_MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
+    theme_profile_only_tickers &= set(all_tickers)
+    if theme_profile_only_tickers:
+        print(f"  Theme holding continuity: {len(theme_profile_only_tickers)} profile-only ticker(s) excluded from RS ranking")
     # Diagnostic for DEBUG_TICKERS
     for tk in DEBUG_TICKERS:
         if tk in all_tickers:
@@ -3154,6 +3185,8 @@ def main():
             processed += 1
             market_cap = int(mcap_cache.get(tk, 0) or 0)
             entry = {"t": tk, "n": metadata_name(tk), "d": metadata_desc(tk), "th": industry_label.get(tk, "General"), "thm": theme_map.get(tk, "General"), "mc": market_cap or None, **d_metrics, **w_metrics}
+            if tk in theme_profile_only_tickers:
+                entry["po"] = True
             results.append(entry)
         except Exception:
             continue
@@ -3262,18 +3295,38 @@ def main():
         prev_tz_map = {}
 
     # ─── Cross-sectional percentrank (compare each stock vs ALL others) ──
-    all_d_rs = [r["fr"] for r in results if r.get("fr") is not None]
-    all_w_rs = [r.get("w_fr") for r in results if r.get("w_fr") is not None]
+    for r in results:
+        if r.get("po"):
+            r["fr"] = None
+            r["vs"] = None
+            r["w_fr"] = None
+            r["w_vs"] = None
+            r["rs"] = None
+            r["w_rs"] = None
+            r["_d_rs_raw"] = None
+            r["_w_rs_raw"] = None
+
+    all_d_rs = [r["fr"] for r in results if not r.get("po") and r.get("fr") is not None]
+    all_w_rs = [r.get("w_fr") for r in results if not r.get("po") and r.get("w_fr") is not None]
 
     if STRICT_WEEKLY_RANK_RECOVERY:
         recent_ranked = recently_ranked_tickers()
-        lost_recent = sorted(r["t"] for r in results if r.get("t") in recent_ranked and r.get("w_fr") is None)
+        lost_recent = sorted(
+            r["t"] for r in results
+            if not r.get("po") and r.get("t") in recent_ranked and r.get("w_fr") is None
+        )
         if lost_recent:
             print("ERROR: refusing to publish; recently ranked tickers lost weekly RS after recovery")
             print(f"  Lost weekly RS: {lost_recent[:80]}")
             sys.exit(1)
 
     for r in results:
+        if r.get("po"):
+            r["rs"] = None
+            r["_d_rs_raw"] = None
+            r["w_rs"] = None
+            r["_w_rs_raw"] = None
+            continue
         if r.get("fr") is not None and len(all_d_rs) > 1:
             raw_pctrank = percentrank_inc(all_d_rs, r["fr"]) * 100  # float, not rounded
             # Apply setup quality adjustment (bonus/penalty based on MA criteria)
@@ -3363,8 +3416,8 @@ def main():
     # data for a specific ticker) are excluded from the ranking entirely and assigned
     # w_rk = None. Otherwise their null score tiebreaks to the lowest possible value
     # and pollutes the Bottom 20 list with stocks that are actually unranked.
-    rankable = [r for r in results if r.get("_w_rs_raw") is not None]
-    unrankable = [r for r in results if r.get("_w_rs_raw") is None]
+    rankable = [r for r in results if not r.get("po") and r.get("_w_rs_raw") is not None]
+    unrankable = [r for r in results if r.get("po") or r.get("_w_rs_raw") is None]
     w_sorted = sorted(rankable, key=lambda x: (x["_w_rs_raw"],
                                                 x.get("w_fr") if x.get("w_fr") is not None else -999,
                                                 x.get("c5") if x.get("c5") is not None else -999), reverse=True)
@@ -3441,10 +3494,15 @@ def main():
         pass
     else:
         is_new_day = not dates or dates[-1] != today_str
-        results_by_tk = {r["t"]: r for r in results}
+        profile_only_tickers = {r["t"] for r in results if r.get("po")}
+        for tk in profile_only_tickers:
+            scores.pop(tk, None)
+        results_by_tk = {r["t"]: r for r in results if not r.get("po")}
         if is_new_day:
             dates.append(today_str)
             for r in results:
+                if r.get("po"):
+                    continue
                 tk = r["t"]
                 if tk not in scores:
                     scores[tk] = {"wr": []}
@@ -3465,6 +3523,8 @@ def main():
         else:
             # Same-day update: refresh today's wr in place.
             for r in results:
+                if r.get("po"):
+                    continue
                 tk = r["t"]
                 if tk not in scores:
                     scores[tk] = {"wr": []}

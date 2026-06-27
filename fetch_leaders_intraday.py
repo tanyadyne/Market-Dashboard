@@ -419,9 +419,9 @@ def rerank(entries, baselines, quotes, spy_quote):
             entry["_intraday_deltas"] = w["_intraday_deltas"]
         entry["_live_pen_mult"] = live_crash_penalty_multiplier(base, live_price)
 
-    all_w = [e.get("w_fr") for e in entries if e.get("w_fr") is not None]
+    all_w = [e.get("w_fr") for e in entries if not e.get("po") and e.get("w_fr") is not None]
     for entry in entries:
-        if entry.get("w_fr") is None or len(all_w) <= 1:
+        if entry.get("po") or entry.get("w_fr") is None or len(all_w) <= 1:
             entry["_w_rs_raw"] = None
             entry["w_rs"] = None
             continue
@@ -435,8 +435,8 @@ def rerank(entries, baselines, quotes, spy_quote):
         entry["w_rs"] = round(final)
         entry["_w_rs_raw"] = final
 
-    rankable = [e for e in entries if e.get("_w_rs_raw") is not None]
-    unrankable = [e for e in entries if e.get("_w_rs_raw") is None]
+    rankable = [e for e in entries if not e.get("po") and e.get("_w_rs_raw") is not None]
+    unrankable = [e for e in entries if e.get("po") or e.get("_w_rs_raw") is None]
     ranked = sorted(
         rankable,
         key=lambda x: (
@@ -473,6 +473,9 @@ def update_score_history(entries):
     for item in scores.values():
         if isinstance(item, dict):
             item.pop("ws", None)
+    profile_only_tickers = {e.get("t") for e in entries if e.get("po") and e.get("t")}
+    for tk in profile_only_tickers:
+        scores.pop(tk, None)
     today = et_now().date().isoformat()
     if not dates or dates[-1] != today:
         dates.append(today)
@@ -482,6 +485,8 @@ def update_score_history(entries):
 
     by_ticker = {e.get("t"): e for e in entries if e.get("t")}
     for entry in entries:
+        if entry.get("po"):
+            continue
         tk = entry.get("t")
         if not tk:
             continue

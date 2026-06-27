@@ -1767,7 +1767,7 @@ function getCurrentScreenerResults(isW){
   if(!DATA||!Array.isArray(DATA.e))return[];
   const searchEl=document.getElementById('si');
   const f=searchEl?searchEl.value.trim().toLowerCase():'';
-  let items=[...DATA.e];
+  let items=DATA.e.filter(e=>!e.po);
   if(f)items=items.filter(e=>matchesSearch(e,f));
   return applyScreenerFilters(items,isW);
 }
@@ -2227,7 +2227,7 @@ function searchStock(){
   const stock=DATA.e.find(e=>e.t===input);
   if(!stock){box.innerHTML=`<div style="text-align:center;color:var(--t3);padding:20px">No data found for "${esc(input)}"</div>`;return;}
 
-  const total=DATA.e.length;
+  const total=DATA.e.filter(e=>!e.po && e.w_rk!=null).length || DATA.e.filter(e=>!e.po).length || DATA.e.length;
   const pos=getPosition(stock.rk,total);
   const ts=stock.ts||'Mid-Range';
   // Use the full 5-tier position label (Strong Leader / Moderate Leader / Mid-Range /
@@ -2279,6 +2279,8 @@ function searchStock(){
     html+=`<div class="profile-section-empty">Earnings tab coming soon.</div>`;
   }else if(profileSectionTab==='news'){
     html+=`<div class="profile-section-empty">News tab coming soon.</div>`;
+  }else if(stock.po){
+    html+=`<div style="text-align:center;color:var(--t3);padding:20px;font-size:12px">No history data available.</div>`;
   }else{
   // History table with columns: DATE | Δ | SCORE | RANK | POSITION | THEME
   if(HISTORY&&HISTORY.dates&&HISTORY.d[input]){
