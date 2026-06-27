@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-06-26 00:10 UTC",
-  "generated_at_et": "25/06/2026, 20:10 EDT",
+  "generated_at_utc": "2026-06-27 00:09 UTC",
+  "generated_at_et": "26/06/2026, 20:09 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -30,36 +30,7 @@
           "label": "Friday, June 19, 2026"
         }
       ],
-      "events": [
-        {
-          "key": "fomc_rate",
-          "event": "FOMC interest rate decision",
-          "source_event": "Fed Funds Tgt Rate",
-          "date": "2026-06-17",
-          "day": "Wednesday, June 17, 2026",
-          "time": "02:00 PM",
-          "period": "",
-          "actual": "3.75",
-          "consensus": "-",
-          "previous": "3.62",
-          "forecast": "-",
-          "revised": "-"
-        },
-        {
-          "key": "fed_press",
-          "event": "Fed chair press conference",
-          "source_event": "Synthetic FOMC press conference",
-          "date": "2026-06-17",
-          "day": "Wednesday, June 17, 2026",
-          "time": "02:30 PM",
-          "period": "",
-          "actual": "-",
-          "consensus": "-",
-          "previous": "-",
-          "forecast": "-",
-          "revised": "-"
-        }
-      ],
+      "events": [],
       "earnings_events": [
         {
           "date": "2026-06-17",
@@ -94,10 +65,7 @@
           "time": "BMO"
         }
       ],
-      "event_keys": [
-        "fomc_rate",
-        "fed_press"
-      ]
+      "event_keys": []
     },
     {
       "key": "current",
@@ -162,7 +130,7 @@
           "day": "Friday, June 26, 2026",
           "time": "10:00 AM",
           "period": "JUN",
-          "actual": "-",
+          "actual": "49.5",
           "consensus": "-",
           "previous": "48.9",
           "forecast": "-",
@@ -170,14 +138,6 @@
         }
       ],
       "earnings_events": [
-        {
-          "date": "2026-06-23",
-          "day": "Tuesday, June 23, 2026",
-          "ticker": "CBRS",
-          "company": "Cerebras Systems Inc.",
-          "group": "Semiconductors",
-          "time": "AMC"
-        },
         {
           "date": "2026-06-23",
           "day": "Tuesday, June 23, 2026",
@@ -233,14 +193,6 @@
           "company": "Paychex, Inc.",
           "group": "Software - Application",
           "time": "BMO"
-        },
-        {
-          "date": "2026-06-25",
-          "day": "Thursday, June 25, 2026",
-          "ticker": "RR",
-          "company": "Richtech Robotics Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "AMC"
         },
         {
           "date": "2026-06-25",
@@ -351,34 +303,6 @@
           "previous": "93.1",
           "forecast": "-",
           "revised": "-"
-        },
-        {
-          "key": "adp",
-          "event": "ADP employment",
-          "source_event": "ADP National Employment",
-          "date": "2026-07-01",
-          "day": "Wednesday, July 1, 2026",
-          "time": "08:15 AM",
-          "period": "JUN",
-          "actual": "-",
-          "consensus": "-",
-          "previous": "122",
-          "forecast": "-",
-          "revised": "-"
-        },
-        {
-          "key": "unemployment",
-          "event": "Unemployment rate",
-          "source_event": "Unemployment Rate",
-          "date": "2026-07-02",
-          "day": "Thursday, July 2, 2026",
-          "time": "08:30 AM",
-          "period": "JUN",
-          "actual": "-",
-          "consensus": "-",
-          "previous": "4.3",
-          "forecast": "-",
-          "revised": "-"
         }
       ],
       "earnings_events": [
@@ -396,6 +320,14 @@
           "ticker": "CNXC",
           "company": "Concentrix Corporation",
           "group": "Information Technology Services",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-06-29",
+          "day": "Monday, June 29, 2026",
+          "ticker": "RR",
+          "company": "Richtech Robotics Inc.",
+          "group": "Specialty Industrial Machinery",
           "time": "AMC"
         },
         {
@@ -457,9 +389,7 @@
       ],
       "event_keys": [
         "chicago_pmi",
-        "consumer_confidence",
-        "adp",
-        "unemployment"
+        "consumer_confidence"
       ]
     }
   ],
@@ -524,7 +454,7 @@
       "day": "Friday, June 26, 2026",
       "time": "10:00 AM",
       "period": "JUN",
-      "actual": "-",
+      "actual": "49.5",
       "consensus": "-",
       "previous": "48.9",
       "forecast": "-",
@@ -532,14 +462,6 @@
     }
   ],
   "earnings_events": [
-    {
-      "date": "2026-06-23",
-      "day": "Tuesday, June 23, 2026",
-      "ticker": "CBRS",
-      "company": "Cerebras Systems Inc.",
-      "group": "Semiconductors",
-      "time": "AMC"
-    },
     {
       "date": "2026-06-23",
       "day": "Tuesday, June 23, 2026",
@@ -595,14 +517,6 @@
       "company": "Paychex, Inc.",
       "group": "Software - Application",
       "time": "BMO"
-    },
-    {
-      "date": "2026-06-25",
-      "day": "Thursday, June 25, 2026",
-      "ticker": "RR",
-      "company": "Richtech Robotics Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "AMC"
     },
     {
       "date": "2026-06-25",
