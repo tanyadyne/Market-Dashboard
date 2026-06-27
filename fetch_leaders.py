@@ -96,6 +96,10 @@ MANUAL_EXCLUDE = {
     "CWAN", "PAYO", "ROKU",
 }
 
+# HARD_EXCLUDE — never allow these into the stock screener, even if they are
+# listed as Theme Tracker holdings. Use sparingly for explicit removals.
+HARD_EXCLUDE = {"CWAN"}
+
 # ─── ADR-collapse filter ───────────────────────────────────────────────────────
 # Drops stocks whose Average Daily Range has collapsed to a fraction of its OWN
 # historical norm. Catches acquisition-pinned names (GSAT, JHG, etc.) without
@@ -2310,6 +2314,16 @@ def main():
 
     all_tickers, stock_to_etfs = build_universe()
     theme_holding_tickers = set(stock_to_etfs)
+    if HARD_EXCLUDE:
+        before_set = set(all_tickers)
+        all_tickers = [t for t in all_tickers if t not in HARD_EXCLUDE]
+        for t in list(stock_to_etfs.keys()):
+            if t in HARD_EXCLUDE:
+                del stock_to_etfs[t]
+        theme_holding_tickers = set(stock_to_etfs)
+        actually_removed = sorted(before_set & HARD_EXCLUDE)
+        if actually_removed:
+            print(f"  HARD_EXCLUDE: dropped {len(actually_removed)} ticker(s): {actually_removed}")
     # Drop tickers in MANUAL_EXCLUDE before any further processing unless they
     # are explicitly listed as Theme Tracker holdings. Holding continuity wins so
     # ETF profile pills can deep-link to a real stock screener profile.

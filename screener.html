@@ -1435,9 +1435,13 @@ function renderOverview(){
   // Bottom 40 weakest — by w_rk descending
   const bot=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>b.w_rk-a.w_rk).slice(0,40);
 
-  // VCP setups: Pine-style tightness score <= 10, surfaced as SF_COILED.
+  // VCP setups: VCP coil + not extended + top half RS + positive 1M + >$2B mcap.
   const vcp=items
     .filter(e=>(e.sf||0)&SF_COILED)
+    .filter(e=>e.ax!=null && Number(e.ax)<=200)
+    .filter(e=>e.w_rs!=null && Number(e.w_rs)>=50)
+    .filter(e=>e.c20!=null && Number(e.c20)>0)
+    .filter(e=>e.mc!=null && Number(e.mc)>2000000000)
     .sort((a,b)=>(a.w_rk||9999)-(b.w_rk||9999));
 
   // Volume Spikes: t5_rv >= 1.5x, ax > 0, c5 > 0, w_rs >= 55
