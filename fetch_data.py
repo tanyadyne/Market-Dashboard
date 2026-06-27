@@ -986,8 +986,8 @@ def strip_internal_fields_etfs(results, *extra_dicts):
 def main():
     # ─── Market-hours guard ───────────────────────────────────────
     # Preserve the prior EOD snapshot before the next regular session opens.
-    # FORCE_ETF_UPDATE=1 permits an intentional weekday maintenance run outside
-    # the normal window, while weekends and market holidays remain blocked.
+    # FORCE_ETF_UPDATE=1 permits intentional maintenance/data-regeneration runs,
+    # including weekends and market holidays. Normal runs stay guarded.
     # Hardcoded list — must match fetch_leaders.py's US_MARKET_HOLIDAYS exactly.
     # Last updated: 2026-04-29 (covers through 2028).
     _US_MARKET_HOLIDAYS = {
@@ -1001,25 +1001,25 @@ def main():
     _US_HOLIDAYS_VALID_THROUGH = 2028
     _et_now = datetime.now(ZoneInfo("America/New_York"))
     _et_today = _et_now.date().isoformat()
+    _force_update = os.environ.get("FORCE_ETF_UPDATE") == "1"
     _year = int(_et_today[:4])
     if _year > _US_HOLIDAYS_VALID_THROUGH:
         print(f"  [WARNING] Holiday list expires after {_US_HOLIDAYS_VALID_THROUGH}; "
               f"date {_et_today} is unchecked. Please update _US_MARKET_HOLIDAYS in fetch_data.py.")
-    if _et_today in _US_MARKET_HOLIDAYS:
+    if not _force_update and _et_today in _US_MARKET_HOLIDAYS:
         print(f"\n[holiday] {_et_today} is a US market holiday — exiting without changes.")
         return
-    if _et_now.weekday() >= 5:
+    if not _force_update and _et_now.weekday() >= 5:
         print(f"\n[market hours] Weekend ({_et_now:%A %H:%M %Z}) — exiting without changes.")
         return
 
-    _force_update = os.environ.get("FORCE_ETF_UPDATE") == "1"
     _et_minute = _et_now.hour * 60 + _et_now.minute
     if not _force_update and not 570 <= _et_minute <= 961:
         print(f"\n[market hours] Outside market update window ({_et_now:%H:%M %Z}) "
               "— exiting without changes.")
         return
     if _force_update:
-        print(f"\n[market hours] Forced weekday update at {_et_now:%H:%M %Z}.")
+        print(f"\n[market hours] Forced ETF update at {_et_now:%A %H:%M %Z}.")
 
     # Override dynamic ETF holdings (e.g. BUZZ) from dynamic file. Any keys in
     # the dynamic file for ETFs no longer in ETF_INFO (e.g. FFTY, removed) are
