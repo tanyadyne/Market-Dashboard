@@ -2312,16 +2312,22 @@ def main():
     repair_records = load_repair_queue()
 
     all_tickers, stock_to_etfs = build_universe()
-    # Drop tickers in MANUAL_EXCLUDE before any further processing.
+    theme_holding_tickers = set(stock_to_etfs)
+    # Drop tickers in MANUAL_EXCLUDE before any further processing unless they
+    # are explicitly listed as Theme Tracker holdings. Holding continuity wins so
+    # ETF profile pills can deep-link to a real stock screener profile.
     if MANUAL_EXCLUDE:
         before_set = set(all_tickers)
-        all_tickers = [t for t in all_tickers if t not in MANUAL_EXCLUDE]
+        all_tickers = [t for t in all_tickers if t not in MANUAL_EXCLUDE or t in theme_holding_tickers]
         for t in list(stock_to_etfs.keys()):
-            if t in MANUAL_EXCLUDE:
+            if t in MANUAL_EXCLUDE and t not in theme_holding_tickers:
                 del stock_to_etfs[t]
-        actually_removed = sorted(before_set & MANUAL_EXCLUDE)
+        actually_removed = sorted(t for t in before_set & MANUAL_EXCLUDE if t not in theme_holding_tickers)
+        retained_holdings = sorted(t for t in before_set & MANUAL_EXCLUDE if t in theme_holding_tickers)
         if actually_removed:
             print(f"  MANUAL_EXCLUDE: dropped {len(actually_removed)} ticker(s): {actually_removed}")
+        if retained_holdings:
+            print(f"  Theme holding continuity: retained {len(retained_holdings)} MANUAL_EXCLUDE ticker(s): {retained_holdings}")
     # Fetch unresolved data failures first. Yahoo's rate limits often arrive late in
     # a long alphabetical run; front-loading the small repair set prevents the same
     # symbols from repeatedly landing behind the rate-limit wall.
@@ -2777,7 +2783,8 @@ def main():
         cached_mcap = mcap_cache.get(tk)
         threshold = MIN_DOLLAR_VOL_SMALL_CAP if (cached_mcap is not None and cached_mcap < SMALL_CAP_THRESHOLD) else MIN_DOLLAR_VOL
         cap_only_policy = is_cap_only_industry(industry_cache.get(tk, ""))
-        if dollar_vol < threshold and tk not in MANUAL_INCLUDE and not cap_only_policy and (
+        is_theme_holding = tk in theme_holding_tickers
+        if dollar_vol < threshold and tk not in MANUAL_INCLUDE and not is_theme_holding and not cap_only_policy and (
             tk not in mcap_cache or not industry_cache.get(tk, "")
         ):
             mc, industry, name, desc = fetch_ticker_metadata(tk)
@@ -2791,7 +2798,7 @@ def main():
         if cap_only_policy:
             cap_only_prefilter_kept += 1
             grace_records.pop(tk, None)
-        elif dollar_vol < threshold and tk not in MANUAL_INCLUDE:
+        elif dollar_vol < threshold and tk not in MANUAL_INCLUDE and not is_theme_holding:
             rec = grace_records.setdefault(tk, {})
             failures = int(rec.get("liquidity_failures", 0) or 0) + 1
             rec.update({
@@ -2824,9 +2831,10 @@ def main():
         # Filter stocks whose daily range has collapsed vs its OWN history.
         # Fully relative (no absolute floor): recent ADR must be < ACR_RATIO of
         # BOTH a short (~40-bar) and a long (~120-bar) baseline measured before
-        # the recent window. MANUAL_INCLUDE and cap-only industries bypass.
+        # the recent window. MANUAL_INCLUDE, Theme Tracker holdings, and
+        # cap-only industries bypass.
         # See ACR_* constant block.
-        if tk not in MANUAL_INCLUDE and not cap_only_policy:
+        if tk not in MANUAL_INCLUDE and not is_theme_holding and not cap_only_policy:
             try:
                 h = df["High"].values
                 l = df["Low"].values
@@ -2872,7 +2880,9 @@ def main():
         liquid_tickers.append(tk)
         if tk in DEBUG_TICKERS:
             print(f"  [DEBUG] {tk}: PASSED pre-filter (price ${last_price:.2f}, dollar_vol ${dollar_vol/1e6:.1f}M, threshold ${threshold/1e6:.0f}M)")
+    theme_holding_prefilter_kept = sum(1 for t in liquid_tickers if t in theme_holding_tickers)
     print(f"  Pre-filter: {len(all_tickers)} → {len(liquid_tickers)} (excluded: {excluded['no_data']} no data, {excluded['stale']} delisted, {excluded['illiquid']} illiquid, {excluded['adr_collapse']} ADR collapse)")
+    print(f"  Theme holding continuity: kept {theme_holding_prefilter_kept}/{len(theme_holding_tickers)} listed holding ticker(s) through liquidity/ADR filters")
     if cap_only_prefilter_kept:
         print(f"  Cap-only industries: kept {cap_only_prefilter_kept} ticker(s) through liquidity/ADR filters ({cap_only_metadata_checked} metadata lookup(s))")
     if grace_kept or grace_expired:
@@ -2988,11 +2998,17 @@ def main():
         print(f"  Cache updated with {cap_only_metadata_checked} pre-liquidity metadata lookup(s)")
 
     # Final filter: standard names need >= $2B; cap-only industries need >= $1.2B.
-    # MANUAL_INCLUDE bypasses.
+    # MANUAL_INCLUDE and Theme Tracker holdings bypass so ETF profile pills can
+    # deep-link into stock screener profiles.
     all_tickers_before_mcap = list(liquid_tickers)
     def min_mcap_for_ticker(t):
         return CAP_ONLY_MIN_MCAP if is_cap_only_industry(industry_cache.get(t, "")) else MIN_MCAP
-    all_tickers = [t for t in liquid_tickers if mcap_cache.get(t, 0) >= min_mcap_for_ticker(t) or t in MANUAL_INCLUDE]
+    all_tickers = [
+        t for t in liquid_tickers
+        if mcap_cache.get(t, 0) >= min_mcap_for_ticker(t)
+        or t in MANUAL_INCLUDE
+        or t in theme_holding_tickers
+    ]
     removed = len(liquid_tickers) - len(all_tickers)
     print(f"  Market cap filter: {removed} removed (< $2B standard / < $1.2B cap-only), {len(all_tickers)} remaining")
     # Diagnostic: log DEBUG_TICKERS that got filtered here
@@ -3037,13 +3053,14 @@ def main():
                 general_count += 1
     print(f"  Theme mapping: {protected_count} protected, {yahoo_count} via Yahoo, {etf_count} via ETF, {general_count} general · {len(set(theme_map.values()))} active themes")
 
-    # ─── Pharma/biotech mcap filter: require >= $20B for these themes (MANUAL_INCLUDE bypasses) ──
+    # ─── Pharma/biotech mcap filter: require >= $20B for these themes (MANUAL_INCLUDE / Theme Tracker holdings bypass) ──
     PHARMA_BIOTECH_THEMES = {"Pharmaceuticals", "Biotechnology"}
     PHARMA_BIOTECH_MIN_MCAP = 20_000_000_000
     before = len(all_tickers)
     all_tickers = [
         t for t in all_tickers
         if t in MANUAL_INCLUDE
+        or t in theme_holding_tickers
         or is_cap_only_industry(industry_label.get(t, ""))
         or theme_map.get(t) not in PHARMA_BIOTECH_THEMES
         or mcap_cache.get(t, 0) >= PHARMA_BIOTECH_MIN_MCAP
@@ -3051,7 +3068,7 @@ def main():
     pharma_removed = before - len(all_tickers)
     print(f"  Pharma/Biotech filter: {pharma_removed} removed (< ${PHARMA_BIOTECH_MIN_MCAP/1e9:.0f}B), {len(all_tickers)} remaining")
 
-    # ─── Healthcare-adjacent mcap filter: require >= $12B (MANUAL_INCLUDE bypasses) ──
+    # ─── Healthcare-adjacent mcap filter: require >= $12B (MANUAL_INCLUDE / Theme Tracker holdings bypass) ──
     # Same idea as the pharma/biotech filter but a lower bar, applied to the
     # broader healthcare cluster (devices, diagnostics, services, care
     # facilities). $12B keeps established large mid-caps (Align, Insulet,
@@ -3071,6 +3088,7 @@ def main():
     all_tickers = [
         t for t in all_tickers
         if t in MANUAL_INCLUDE
+        or t in theme_holding_tickers
         or is_cap_only_industry(industry_label.get(t, ""))
         or theme_map.get(t) not in HEALTHCARE_ADJ_THEMES
         or mcap_cache.get(t, 0) >= HEALTHCARE_ADJ_MIN_MCAP
