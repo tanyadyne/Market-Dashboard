@@ -41,7 +41,6 @@ from fetch_leaders import (
     LOOKBACK_W,
     MA_LENGTH_W,
     MAX_HISTORY_DAYS,
-    SETUP_COILED_FLAG,
     cap_off_high_recovery,
     is_us_market_holiday,
     off_high_penalty_multiplier,
@@ -392,39 +391,11 @@ def update_change_fields(entry, base, quote):
         {period: finite_num(base.get(key)) for period, key in ((10, "_sma10"), (20, "_sma20"), (50, "_sma50"), (200, "_sma200"))},
     )
 
-
-def next_ema(prev_ema, price, period):
-    mult = 2.0 / (period + 1.0)
-    return (price - prev_ema) * mult + prev_ema
-
-
-def update_intraday_setup_flags(entry, base, live_price):
-    ema9_prev = finite_num(base.get("_setup_ema9"))
-    ema21_prev = finite_num(base.get("_setup_ema21"))
-    adr = finite_num(base.get("_setup_adr"))
-    live = finite_num(live_price)
-    if not ema9_prev or not ema21_prev or not adr or not live:
-        return False
-
-    ema9_live = next_ema(ema9_prev, live, 9)
-    ema21_live = next_ema(ema21_prev, live, 21)
-    coiled = abs(ema9_live - ema21_live) < (0.5 * adr)
-
-    flags = int(entry.get("sf") or 0)
-    if coiled:
-        flags |= SETUP_COILED_FLAG
-    else:
-        flags &= ~SETUP_COILED_FLAG
-    entry["sf"] = flags
-    return True
-
-
 def rerank(entries, baselines, quotes, spy_quote):
     week_id, _ = current_week_id()
     spy_live = spy_quote["last"]
     updated = 0
     stale = []
-    setup_updated = 0
 
     for entry in entries:
         tk = entry.get("t")
@@ -432,8 +403,6 @@ def rerank(entries, baselines, quotes, spy_quote):
         quote = valid_quote(tk, quotes.get(tk), entry.get("p"))
         if quote:
             update_change_fields(entry, base, quote)
-            if update_intraday_setup_flags(entry, base, quote["last"]):
-                setup_updated += 1
             updated += 1
         else:
             stale.append(tk)
@@ -486,9 +455,6 @@ def rerank(entries, baselines, quotes, spy_quote):
         for k in ("_w_rs_raw", "_live_pen_mult", "_intraday_deltas"):
             if k in entry:
                 del entry[k]
-
-    if setup_updated:
-        print(f"  Intraday setup flags: refreshed 9/21 EMA coiled for {setup_updated}/{len(entries)} entries")
 
     return updated, stale
 

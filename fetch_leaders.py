@@ -26,7 +26,7 @@ except ImportError:
     _session = None
 
 # Import shared functions from fetch_data.py
-from fetch_data import ETF_INFO, compute_atr, compute_atr_series, percentrank_inc
+from fetch_data import ETF_INFO, compute_atr, compute_atr_series, compute_vcp_tightness_score, percentrank_inc
 
 LOOKBACK = 50      # daily: compute deltas for last 50 bars
 MA_LENGTH = 20     # daily: SMA of deltas (smoothing)
@@ -44,7 +44,6 @@ MIN_OUTPUT_RETENTION = 0.90
 TARGETED_REPAIR_COOLDOWN_SECONDS = int(os.environ.get("TARGETED_REPAIR_COOLDOWN_SECONDS", "60"))
 WEEKLY_RETRY_ATTEMPTS = 3
 STRICT_WEEKLY_RANK_RECOVERY = os.environ.get("STRICT_WEEKLY_RANK_RECOVERY", "1") != "0"
-SETUP_COILED_FLAG = 128
 SPLIT_LIKE_RATIOS = (0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0)
 SPLIT_GAP_TOLERANCE = 0.08
 OFF_HIGH_MIN_MULTIPLIER = 0.70
@@ -797,7 +796,7 @@ def compute_setup_adjustment(c, h, l, n):
       S3: 200SMA rising (positive slope)
 
     Bronze criteria (+0.5 each met, no penalty):
-      B1: 9EMA and 21EMA coiled within 0.5x ADR
+      B1: VCP tightness score <= 10
       B2: Price > 200SMA
     """
     price = float(c[-1])
@@ -837,7 +836,7 @@ def compute_setup_adjustment(c, h, l, n):
     #   S1=16  Price>SMA100
     #   S2=32  SMA50>SMA100
     #   S3=64  SMA200 rising
-    #   B1=128 EMA9/EMA21 coiled (|EMA9-EMA21| < 0.5*ADR)
+    #   B1=128 VCP tightness score <= 10
     #   B2=256 Price>SMA200
     #   X1=512 Price>EMA9          (added for Overview-tab medal tier check)
     #   X2=1024 EMA9>EMA21         (added for Overview-tab medal tier check)
@@ -894,12 +893,11 @@ def compute_setup_adjustment(c, h, l, n):
     # Bronze criteria (bonus only, no penalty)
     BRONZE_BONUS = 0.5
 
-    # B1: 9EMA and 21EMA coiled within 0.5x ADR
-    if adr > 0:
-        coiled = abs(ema9 - ema21) < (0.5 * adr)
-        if coiled:
-            adj += BRONZE_BONUS
-            flags |= 128
+    # B1: VCP tightness score <= 10 (Pine-compatible logic)
+    vcp_score = compute_vcp_tightness_score(c, h, l)
+    if vcp_score is not None and vcp_score <= 10:
+        adj += BRONZE_BONUS
+        flags |= 128
 
     # B2: Price > 200SMA
     if sma200 is not None:
@@ -907,7 +905,7 @@ def compute_setup_adjustment(c, h, l, n):
             adj += BRONZE_BONUS
             flags |= 256
 
-    # ─── Overview-tab medal-tier flags (no scoring impact) ─────
+    # ─── Extra setup flags (no scoring impact) ─────
     # X1: Price > EMA9
     if price > ema9:
         flags |= 512
@@ -917,9 +915,8 @@ def compute_setup_adjustment(c, h, l, n):
     # X3: SMA50 > SMA200
     if sma200 is not None and sma50 > sma200:
         flags |= 2048
-    # X4: EMA21 rising. Used by Silver tier (replaces the older X2 EMA9>EMA21
-    # requirement — see SF_SILVER in the front-end). `ema21_rising` is None when
-    # there's insufficient history for a stable slope read.
+    # X4: EMA21 rising. `ema21_rising` is None when there's insufficient history
+    # for a stable slope read.
     if ema21_rising:
         flags |= 4096
 
