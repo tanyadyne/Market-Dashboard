@@ -1435,14 +1435,21 @@ function renderOverview(){
   // Bottom 40 weakest — by w_rk descending
   const bot=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>b.w_rk-a.w_rk).slice(0,40);
 
-  // VCP setups: VCP coil + not extended + top half RS + positive 1M + >$2B mcap.
+  // VCP setups: mirrors the manual RS Ranking filters for
+  // VCP coil + Not Extended (<6x) + Top 50% + positive 1M + MCap > $2B,
+  // with the extra requirement that price is above both the 20sma and 50sma.
+  const rankedTotal=items.reduce((count,e)=>count+(e.w_rk!=null?1:0),0);
+  const topHalfLimit=Math.ceil(rankedTotal*0.5);
+  const priceAbove20And50=2|4;
   const vcp=items
-    .filter(e=>(e.sf||0)&SF_COILED)
-    .filter(e=>e.ax!=null && Number(e.ax)<=200)
-    .filter(e=>e.w_rs!=null && Number(e.w_rs)>=50)
+    .filter(e=>!e.po)
+    .filter(e=>((e.sf||0)&SF_COILED)===SF_COILED)
+    .filter(e=>e.ax!=null && Number(e.ax)<600)
+    .filter(e=>e.w_rk!=null && e.w_rk<=topHalfLimit)
     .filter(e=>e.c20!=null && Number(e.c20)>0)
     .filter(e=>e.mc!=null && Number(e.mc)>2000000000)
-    .sort((a,b)=>(a.w_rk||9999)-(b.w_rk||9999));
+    .filter(e=>((e.ma||0)&priceAbove20And50)===priceAbove20And50)
+    .sort((a,b)=>a.w_rk-b.w_rk);
 
   // Volume Spikes: t5_rv >= 1.5x, ax > 0, c5 > 0, w_rs >= 55
   // Sorted purely by trailing-5d R.Vol descending — the column shown in the box.
