@@ -1786,7 +1786,7 @@ function render(){
   let items=getCurrentScreenerResults(isW);
 
   // Sort
-  const dk=k=>{if(!isW)return k;const m={rv:'w_rv',rs:'w_rs',vs:'w_vs'};return m[k]||k;};
+  const dk=k=>{if(!isW)return k;const m={rs:'w_rs',vs:'w_vs'};return m[k]||k;};
   if(sortKey==='rd'){
     items=[...items].sort((a,b)=>{const av=getRankDeltaVal(a.t)??-Infinity,bv=getRankDeltaVal(b.t)??-Infinity;return sortDir*(av>bv?1:av<bv?-1:0);});
   }else if(sortKey==='rk'){
@@ -1808,7 +1808,7 @@ function render(){
   const start=(currentPage-1)*PAGE_SIZE;
   const pageItems=items.slice(start,start+PAGE_SIZE);
 
-  const rvKey=isW?'w_rv':'rv',rsKey=isW?'w_rs':'rs',vsKey=isW?'w_vs':'vs';
+  const rvKey='rv',rsKey=isW?'w_rs':'rs',vsKey=isW?'w_vs':'vs';
   let html='';
   for(const e of pageItems){
     // Use the original rank stored on the stock object (preserved across filters/searches)

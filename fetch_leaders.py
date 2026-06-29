@@ -1159,19 +1159,16 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         high_52w = 0
 
     vols = [x for x in v if x is not None and x > 0]
-    rvol = (vols[-1] / np.mean(vols[:-1][-20:])) if len(vols) > 1 and np.mean(vols[:-1][-20:]) > 0 else None
+    avg_vol_30d = float(np.mean(vols[-30:])) if len(vols) >= 10 else None
+    rvol_base_30d = float(np.mean(vols[:-1][-30:])) if len(vols) > 30 else None
+    rvol = (vols[-1] / rvol_base_30d) if rvol_base_30d and rvol_base_30d > 0 else None
 
     # Compact fundamentals/technical fields used by the screener table and filters.
     # These all come from the daily bars already downloaded for RS, so they add no
     # extra Yahoo calls to either the full or intraday workflow.
     avg_dollar_vol = None
-    try:
-        recent_volumes = [float(x) for x in v[-10:] if x is not None and np.isfinite(float(x)) and float(x) >= 0]
-        if recent_volumes:
-            # Match the universe liquidity gate: latest raw price x 10-day average volume.
-            avg_dollar_vol = display_price * float(np.mean(recent_volumes))
-    except (TypeError, ValueError):
-        avg_dollar_vol = None
+    if avg_vol_30d is not None:
+        avg_dollar_vol = display_price * avg_vol_30d
 
     avg_range_pct = None
     adr_samples = []
@@ -1243,6 +1240,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "w_pen_engulf": False, "w_pen_ema21": False, "w_pen_crash5": False,
                 # Internal baselines for intraday overlay (stripped before output)
                 "_atr": round(float(atr), 6) if atr else None,
+                "_avg_vol30": round(float(avg_vol_30d), 6) if avg_vol_30d is not None else None,
                 "_hi52": round(float(high_52w), 6) if high_52w else None,
                 "_pc": float(c[-2]) if n >= 2 else None,
                 "_5b": w_base,
@@ -1446,6 +1444,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "w_pen_mult": round(float(pen_multiplier), 4),
         # Internal baselines for intraday overlay (stripped before output)
         "_atr": round(float(atr), 6) if atr else None,
+        "_avg_vol30": round(float(avg_vol_30d), 6) if avg_vol_30d is not None else None,
         "_hi52": round(float(high_52w), 6) if high_52w else None,
         "_pc": float(c[-2]) if n >= 2 else None,
         "_5b": w_base,
@@ -2088,7 +2087,7 @@ def write_intraday_baselines(results):
     keep = {
         "p", "w_fr", "w_vs", "w_rs", "w_rk",
         "w_pen_engulf", "w_pen_crash5", "w_pen_mult",
-        "_pc", "_5b", "_20b", "_yb", "_atr", "_hi52",
+        "_pc", "_5b", "_20b", "_yb", "_atr", "_avg_vol30", "_hi52",
         "_sma10", "_sma20", "_sma50", "_sma200",
         "_setup_ema9", "_setup_ema21", "_setup_adr",
         "_w_deltas", "_w_week", "_w_date",
