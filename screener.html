@@ -1369,15 +1369,15 @@ function copyOvList(boxKey, btn){
   }
 }
 
-// Copy the top 500 tickers by weekly rank — same logic as the "Top 40 strongest"
-// box on the Overview tab, just with N=500 and a trailing comma in the output.
+// Copy the top 1000 tickers by weekly rank — same logic as the "Top 40 strongest"
+// box on the Overview tab, just with N=1000 and a trailing comma in the output.
 function copyTop600(btn){
   if(!DATA || !DATA.e){
     flashCopyBtn(btn,'No data');
     return;
   }
   const copyItems=getCurrentScreenerResults(true);
-  const top600=copyItems.filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,500);
+  const top600=copyItems.filter(e=>e.w_rk!=null).sort((a,b)=>a.w_rk-b.w_rk).slice(0,1000);
   const tickers=top600.map(e=>e.t);
   if(!tickers.length){
     flashCopyBtn(btn,'No tickers');

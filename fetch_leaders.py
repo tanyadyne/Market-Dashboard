@@ -65,6 +65,7 @@ CSV_EXTRAS = [
     "MBLY","HSAI","ROK","TKR","RBC","ABB","AEVA",
     "NTSK","SAIL","HIMS",
     "OKTA",
+    "PSNL", "LQDA", "WRBY", "ABCL", "PGEN", "BHVN",
 ]
 
 # MANUAL_INCLUDE — tickers that bypass all filtering (liquidity, market cap, pharma/biotech).
@@ -84,6 +85,8 @@ MANUAL_INCLUDE = {
     "NTSK", "SAIL", "HIMS",
     # Protected tracking name — keep the Cybersecurity profile in the universe.
     "OKTA",
+    # Force-tracked names — bypass liquidity / mcap gates so rank history builds.
+    "PSNL", "LQDA", "WRBY", "ABCL", "PGEN", "BHVN",
 }
 
 # MANUAL_EXCLUDE — tickers dropped from the universe before any filtering or data
