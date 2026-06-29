@@ -185,7 +185,13 @@ def fetch_quotes_yfinance_download(tickers):
                     closes = closes.dropna()
                     if len(closes) >= 1:
                         prev = float(closes.iloc[-2]) if len(closes) >= 2 else None
-                        out[batch[0]] = {"last": float(closes.iloc[-1]), "prev": prev, "source": "download"}
+                        volumes = sub.get("Volume")
+                        volume = None
+                        if volumes is not None:
+                            volumes = volumes.dropna()
+                            if len(volumes) >= 1:
+                                volume = float(volumes.iloc[-1])
+                        out[batch[0]] = {"last": float(closes.iloc[-1]), "prev": prev, "volume": volume, "source": "download"}
             else:
                 for tk in batch:
                     sub = extract_download_ticker(df, tk)
@@ -194,7 +200,12 @@ def fetch_quotes_yfinance_download(tickers):
                     closes = sub["Close"].dropna()
                     if len(closes) >= 1:
                         prev = float(closes.iloc[-2]) if len(closes) >= 2 else None
-                        out[tk] = {"last": float(closes.iloc[-1]), "prev": prev, "source": "download"}
+                        volume = None
+                        if "Volume" in sub:
+                            volumes = sub["Volume"].dropna()
+                            if len(volumes) >= 1:
+                                volume = float(volumes.iloc[-1])
+                        out[tk] = {"last": float(closes.iloc[-1]), "prev": prev, "volume": volume, "source": "download"}
         except Exception:
             pass
         time.sleep(0.4)
@@ -207,8 +218,9 @@ def fetch_fast_info_one(ticker):
         fi = ti.fast_info
         last = quote_get(fi, "lastPrice", "last_price")
         prev = quote_get(fi, "previousClose", "previous_close")
+        volume = quote_get(fi, "lastVolume", "last_volume", "regularMarketVolume", "regular_market_volume")
         if last is not None:
-            return ticker, {"last": last, "prev": prev, "source": "fast_info"}
+            return ticker, {"last": last, "prev": prev, "volume": volume, "source": "fast_info"}
     except Exception:
         pass
     return ticker, None
@@ -268,7 +280,8 @@ def valid_quote(ticker, quote, old_price):
         if ch > 90 or ch < -90:
             print(f"  [reject] {ticker}: 1D change {ch:.1f}% implausible")
             return None
-    return {"last": last, "prev": prev, "source": quote.get("source", "")}
+    volume = finite_num(quote.get("volume"))
+    return {"last": last, "prev": prev, "volume": volume, "source": quote.get("source", "")}
 
 
 WEEKLY_WEIGHTS = [0.12, 0.11, 0.10, 0.09, 0.08, 0.08, 0.08, 0.08, 0.07, 0.07, 0.06, 0.06]
@@ -363,10 +376,15 @@ def live_crash_penalty_multiplier(base, price):
 def update_change_fields(entry, base, quote):
     live = quote["last"]
     prev = quote.get("prev") or base.get("_pc") or entry.get("p")
+    prior_price = finite_num(entry.get("p")) or finite_num(base.get("p"))
     entry["p"] = round(live, 2)
     if prev:
         entry["ch"] = round((live / prev - 1) * 100, 2)
     avg_vol_30d = finite_num(base.get("_avg_vol30"))
+    if not avg_vol_30d:
+        prior_dollar_vol = finite_num(entry.get("dv"))
+        if prior_price and prior_dollar_vol:
+            avg_vol_30d = prior_dollar_vol / prior_price
     live_volume = finite_num(quote.get("volume"))
     if avg_vol_30d and avg_vol_30d > 0:
         entry["dv"] = round(live * avg_vol_30d)

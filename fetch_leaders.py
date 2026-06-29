@@ -1878,22 +1878,27 @@ def fetch_ticker_metadata(tk):
 
 def fetch_live_quote(ticker):
     """Fetch live (intraday) quote for a single ticker via fast_info.
-    Returns (last_price, prev_close) or (None, None) on failure.
+    Returns (last_price, prev_close, live_volume) or (None, None, None) on failure.
     """
     try:
         ti = yf.Ticker(ticker, session=_session)
         fi = ti.fast_info
         last = fi.get("lastPrice", fi.get("last_price"))
         prev = fi.get("previousClose", fi.get("previous_close"))
+        volume = fi.get(
+            "lastVolume",
+            fi.get("last_volume", fi.get("regularMarketVolume", fi.get("regular_market_volume"))),
+        )
         last = float(last) if last not in (None, 0) else None
         prev = float(prev) if prev not in (None, 0) else None
-        return last, prev
+        volume = float(volume) if volume not in (None, 0) else None
+        return last, prev, volume
     except Exception:
-        return None, None
+        return None, None, None
 
 
 def fetch_live_quotes_bulk(tickers, max_workers=20):
-    """Parallel-fetch live quotes for many tickers. Returns {ticker: (last, prev)}."""
+    """Parallel-fetch live quotes for many tickers. Returns {ticker: (last, prev, volume)}."""
     out = {}
     if not tickers:
         return out
@@ -1902,9 +1907,9 @@ def fetch_live_quotes_bulk(tickers, max_workers=20):
         for fut in as_completed(futs):
             tk = futs[fut]
             try:
-                last, prev = fut.result(timeout=15)
+                last, prev, volume = fut.result(timeout=15)
                 if last is not None and prev is not None:
-                    out[tk] = (last, prev)
+                    out[tk] = (last, prev, volume)
             except Exception:
                 pass
     return out
@@ -2036,7 +2041,7 @@ def apply_intraday_overlay(results):
         q = quotes.get(r["t"])
         if not q:
             continue
-        live, prev_close = q
+        live, prev_close, live_volume = q
         if not live or not prev_close or live <= 0 or prev_close <= 0:
             continue
         eod = r.get("p")
@@ -2051,6 +2056,16 @@ def apply_intraday_overlay(results):
         # Apply overlay
         r["p"] = round(live, 2)
         r["ch"] = round(candidate_ch, 2)
+        avg_vol_30d = r.get("_avg_vol30")
+        if not avg_vol_30d:
+            prior_price = eod or live
+            prior_dollar_vol = r.get("dv")
+            if prior_price and prior_dollar_vol:
+                avg_vol_30d = prior_dollar_vol / prior_price
+        if avg_vol_30d and avg_vol_30d > 0:
+            r["dv"] = round(live * avg_vol_30d)
+            if live_volume is not None and live_volume >= 0:
+                r["rv"] = round((live_volume / avg_vol_30d) * 100)
         atr = r.get("_atr")
         sma50 = r.get("_sma50")
         if atr and sma50 and atr > 0 and sma50 > 0:
