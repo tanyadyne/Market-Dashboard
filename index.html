@@ -104,7 +104,7 @@ button{font:inherit}
 .events-section + .events-section{border-top:1px solid var(--bdr2)}
 .events-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;color:var(--t3);margin-bottom:12px}
 .event-list{display:flex;flex-direction:column;gap:10px}
-.event-list.earnings-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:10px;align-items:start}
+.event-list.earnings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:18px;row-gap:10px;align-items:start}
 .earnings-column{display:flex;flex-direction:column;gap:10px;min-width:0}
 .event-item{display:flex;align-items:center;gap:9px;color:var(--t2);font-weight:700;line-height:1.25}
 .event-dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);flex:0 0 auto}
@@ -402,8 +402,8 @@ function eventTimingRank(item,marketRank=1){
   return marketRank;
 }
 function renderEarningsItems(items){
-  const midpoint=Math.ceil(items.length/2);
-  const columns=[items.slice(0,midpoint),items.slice(midpoint)];
+  const columns=[[],[],[]];
+  items.forEach((item,index)=>columns[index%3].push(item));
   return columns.map(column=>`<div class="earnings-column">${
     column.map(e=>`<a class="event-item earnings ${eventTimingClass(e)}" href="${profileUrl(e.ticker)}"><span class="event-dot"></span><span class="ticker">${esc(e.ticker)}</span></a>`).join('')
   }</div>`).join('');
