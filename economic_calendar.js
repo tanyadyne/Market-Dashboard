@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-06-29 00:10 UTC",
-  "generated_at_et": "28/06/2026, 20:10 EDT",
+  "generated_at_utc": "2026-06-30 00:05 UTC",
+  "generated_at_et": "29/06/2026, 20:05 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -274,14 +274,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-06-29",
           "day": "Monday, June 29, 2026",
-          "ticker": "AVAV",
-          "company": "AeroVironment, Inc.",
-          "group": "Aerospace & Defense",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-06-29",
-          "day": "Monday, June 29, 2026",
           "ticker": "CNXC",
           "company": "Concentrix Corporation",
           "group": "Information Technology Services",
@@ -538,14 +530,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     }
   ],
   "earnings_events": [
-    {
-      "date": "2026-06-29",
-      "day": "Monday, June 29, 2026",
-      "ticker": "AVAV",
-      "company": "AeroVironment, Inc.",
-      "group": "Aerospace & Defense",
-      "time": "AMC"
-    },
     {
       "date": "2026-06-29",
       "day": "Monday, June 29, 2026",
