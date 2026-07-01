@@ -1170,6 +1170,26 @@ function isInScreener(ticker){
   if(!SCREENER_TICKERS) return true;          // unknown → don't block
   return SCREENER_TICKERS.has(String(ticker||'').trim().toUpperCase());
 }
+
+function holdingSortValue(ticker){
+  const stock=STOCK_DATA.get(String(ticker||'').trim().toUpperCase());
+  const rank=stock&&stock.w_rk!=null?Number(stock.w_rk):Infinity;
+  const score=stock&&stock.w_rs!=null?Number(stock.w_rs):-Infinity;
+  return {rank:Number.isFinite(rank)?rank:Infinity,score:Number.isFinite(score)?score:-Infinity};
+}
+
+function sortHoldingsByTierAndRs(holdings,grades){
+  const gradeRank={g:0,s:1,b:2};
+  return holdings
+    .map((ticker,index)=>({ticker,index,grade:grades[ticker]||'b',...holdingSortValue(ticker)}))
+    .sort((a,b)=>
+      (gradeRank[a.grade]??2)-(gradeRank[b.grade]??2) ||
+      a.rank-b.rank ||
+      b.score-a.score ||
+      a.index-b.index
+    )
+    .map(item=>item.ticker);
+}
 async function loadData(){
   try{
     const [dataRes,namesRes,histRes,scrRes,leadersRes]=await Promise.all([
@@ -1651,12 +1671,14 @@ function renderProfile(){
   const chgTxt=etf.ch!=null?(etf.ch>=0?'+':'')+etf.ch.toFixed(2)+'%':'—';
   const priceTxt=etf.p!=null?'$'+etf.p.toFixed(2):'—';
 
-  // Holdings: split by tier and render pills in Gold → Silver → Bronze order.
+  // Holdings: split by tier and render pills in Gold → Silver → Bronze order,
+  // then by the holding's Stock Screener weekly RS rank/score inside each tier.
   const hl=etf.h?etf.h.split(',').map(s=>s.trim()).filter(Boolean):[];
   const hg=etf.hg||{};
-  const gs=hl.filter(h=>hg[h]==='g');
-  const ss=hl.filter(h=>hg[h]==='s');
-  const bs=hl.filter(h=>hg[h]==='b' || !hg[h]); // anything ungraded falls into bronze
+  const sortedHoldings=sortHoldingsByTierAndRs(hl,hg);
+  const gs=sortedHoldings.filter(h=>hg[h]==='g');
+  const ss=sortedHoldings.filter(h=>hg[h]==='s');
+  const bs=sortedHoldings.filter(h=>hg[h]==='b' || !hg[h]); // anything ungraded falls into bronze
   const orderedHoldings=[...gs,...ss,...bs];
   const pillFor=h=>{const g=hg[h];return g==='g'?'pill-g':g==='s'?'pill-s':'pill-b';};
   // A pill is only clickable if the ticker has a Stock Screener profile.

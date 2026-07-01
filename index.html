@@ -423,13 +423,33 @@ function renderEarningsItems(items){
     column.map(e=>`<a class="event-item earnings ${eventTimingClass(e)}" href="${profileUrl(e.ticker)}"><span class="event-dot"></span><span class="ticker">${esc(e.ticker)}</span></a>`).join('')
   }</div>`).join('');
 }
+function leaderSnapshotFor(ticker){
+  const tk=String(ticker||'').trim().toUpperCase();
+  return LEADER_DATA&&Array.isArray(LEADER_DATA.e)?LEADER_DATA.e.find(e=>e.t===tk):null;
+}
 function topHoldingsFor(theme){
   const holdings=String(theme.h||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
   const grades=theme.hg||{};
   const gradeRank={g:0,s:1,b:2};
   return holdings
-    .map((ticker,index)=>({ticker,index,grade:grades[ticker]||'b'}))
-    .sort((a,b)=>(gradeRank[a.grade]??2)-(gradeRank[b.grade]??2)||a.index-b.index)
+    .map((ticker,index)=>{
+      const stock=leaderSnapshotFor(ticker);
+      const rank=stock&&stock.w_rk!=null?Number(stock.w_rk):Infinity;
+      const score=stock&&stock.w_rs!=null?Number(stock.w_rs):-Infinity;
+      return {
+        ticker,
+        index,
+        grade:grades[ticker]||'b',
+        rank:Number.isFinite(rank)?rank:Infinity,
+        score:Number.isFinite(score)?score:-Infinity
+      };
+    })
+    .sort((a,b)=>
+      (gradeRank[a.grade]??2)-(gradeRank[b.grade]??2) ||
+      a.rank-b.rank ||
+      b.score-a.score ||
+      a.index-b.index
+    )
     .slice(0,3)
     .map(item=>item.ticker);
 }
