@@ -644,10 +644,7 @@ function switchTab(tab){
     overview.style.display='block';
     profile.style.display='none';
     if(status) status.style.display='none';
-    // Keep the SPY bar visible on Overview so the "Updated: …" timestamp shows
-    // in the same position as the RS Ranking / Profile tabs. The SPY price +
-    // the (desktop-empty) freq slot ride along harmlessly.
-    if(spy) spy.style.display='flex';
+    if(spy) spy.style.display='none';
     // Overview: hide everything except theme toggle (which has no "rs-only" class).
     document.querySelectorAll('.rs-only-tool, .rs-and-profile-tool').forEach(el=>el.style.display='none');
     // Hide the filter-search row — both Daily/Weekly and Search are irrelevant on Overview.
