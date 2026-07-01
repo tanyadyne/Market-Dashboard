@@ -1847,33 +1847,60 @@ def fetch_ticker_metadata(tk):
     desc = ""
     try:
         ticker_obj = yf.Ticker(tk, session=_session)
-        fi = ticker_obj.fast_info
         try:
-            mc = int(fi.get("marketCap", 0) or fi.get("market_cap", 0) or 0)
+            info = ticker_obj.info
+            industry = info.get("industry", "") or ""
+            name = info.get("shortName", "") or info.get("longName", "") or ""
+            desc = info.get("longBusinessSummary", "") or ""
+            info_mc = info.get("marketCap", 0) or 0
+            if info_mc:
+                mc = int(info_mc)
         except Exception:
-            mc = 0
+            pass
         if mc == 0:
             try:
+                fi = ticker_obj.fast_info
+                mc = int(fi.get("marketCap", 0) or fi.get("market_cap", 0) or 0)
+            except Exception:
+                mc = 0
+        if mc == 0:
+            try:
+                fi = ticker_obj.fast_info
                 shares = fi.get("shares", 0) or 0
                 last_price = fi.get("lastPrice", fi.get("last_price", 0)) or 0
                 if shares and last_price:
                     mc = int(shares * last_price)
             except Exception:
                 pass
+    except Exception:
+        pass
+    return mc, industry, name, desc
+
+
+def fetch_ticker_market_cap(tk):
+    try:
+        ticker_obj = yf.Ticker(tk, session=_session)
         try:
             info = ticker_obj.info
-            industry = info.get("industry", "") or ""
-            name = info.get("shortName", "") or info.get("longName", "") or ""
-            desc = info.get("longBusinessSummary", "") or ""
-            if mc == 0:
-                info_mc = info.get("marketCap", 0) or 0
-                if info_mc:
-                    mc = int(info_mc)
+            info_mc = info.get("marketCap", 0) or 0
+            if info_mc:
+                return int(info_mc)
+        except Exception:
+            pass
+        try:
+            fi = ticker_obj.fast_info
+            mc = int(fi.get("marketCap", 0) or fi.get("market_cap", 0) or 0)
+            if mc:
+                return mc
+            shares = fi.get("shares", 0) or 0
+            last_price = fi.get("lastPrice", fi.get("last_price", 0)) or 0
+            if shares and last_price:
+                return int(shares * last_price)
         except Exception:
             pass
     except Exception:
         pass
-    return mc, industry, name, desc
+    return 0
 
 
 def fetch_live_quote(ticker):
@@ -2704,25 +2731,30 @@ def main():
 
     # Load cached metadata before the liquidity gate. Some raw Yahoo industries have
     # a cap-only rule: no dollar-volume or ADR-collapse gate, just a lower mcap floor.
-    mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "names": {}, "descs": {}, "version": 0, "refresh_in_progress": False}
+    mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "names": {}, "descs": {}, "mcap_refreshed_at": {}, "version": 0, "refresh_in_progress": False}
     if os.path.exists("leaders_mcap.json"):
         try:
             with open("leaders_mcap.json") as f:
                 mcap_data = json.load(f)
+                if "caps" not in mcap_data:
+                    mcap_data["caps"] = {}
                 if "industries" not in mcap_data:
                     mcap_data["industries"] = {}
                 if "names" not in mcap_data:
                     mcap_data["names"] = {}
                 if "descs" not in mcap_data:
                     mcap_data["descs"] = {}
+                if "mcap_refreshed_at" not in mcap_data:
+                    mcap_data["mcap_refreshed_at"] = {}
                 if "version" not in mcap_data:
                     mcap_data["version"] = 0
                 if "refresh_in_progress" not in mcap_data:
                     mcap_data["refresh_in_progress"] = False
         except Exception:
-            mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "names": {}, "descs": {}, "version": 0, "refresh_in_progress": False}
+            mcap_data = {"refreshed": "", "caps": {}, "industries": {}, "names": {}, "descs": {}, "mcap_refreshed_at": {}, "version": 0, "refresh_in_progress": False}
 
     mcap_cache = mcap_data.get("caps", {})
+    mcap_refreshed_at = mcap_data.get("mcap_refreshed_at", {})
     industry_cache = mcap_data.get("industries", {})
     name_cache = mcap_data.get("names", {})
     desc_cache = mcap_data.get("descs", {})
@@ -2766,10 +2798,53 @@ def main():
     def metadata_desc(tk):
         return desc_cache.get(tk, "") or names_fallback.get(tk, {}).get("d", "")
 
+    def refresh_daily_market_caps(tickers):
+        due = [t for t in tickers if mcap_refreshed_at.get(t) != _et_today]
+        if not due:
+            return False
+        print(f"  Refreshing market caps for {len(due)} ticker(s) via yfinance...")
+        updated = 0
+        failed = 0
+        max_workers = min(16, max(1, len(due)))
+        with ThreadPoolExecutor(max_workers=max_workers) as ex:
+            futs = {ex.submit(fetch_ticker_market_cap, tk): tk for tk in due}
+            for fut in as_completed(futs):
+                tk = futs[fut]
+                try:
+                    mc = fut.result()
+                except Exception:
+                    mc = 0
+                if mc and mc > 0:
+                    mcap_cache[tk] = int(mc)
+                    mcap_refreshed_at[tk] = _et_today
+                    updated += 1
+                else:
+                    failed += 1
+        print(f"  Market cap refresh: {updated}/{len(due)} updated ({failed} failed; failed tickers retry next run)")
+        return updated > 0
+
+    def current_data_tickers(tickers):
+        current = []
+        for t in tickers:
+            df = get_df(t)
+            if df is None or len(df) < 10:
+                continue
+            try:
+                last_bar = df.index[-1]
+                last_date = last_bar.date() if hasattr(last_bar, "date") else date.fromisoformat(str(last_bar)[:10])
+                if (date.today() - last_date).days > 7:
+                    continue
+            except Exception:
+                pass
+            current.append(t)
+        return current
+
     last_refreshed = mcap_data.get("refreshed", "")
     cache_version = mcap_data.get("version", 0)
     refresh_in_progress = mcap_data.get("refresh_in_progress", False)
     refreshed_at_v = mcap_data.get("refreshed_at_v", {})
+
+    daily_mcap_updated = refresh_daily_market_caps(current_data_tickers(all_tickers))
 
     print(f"\nPre-filtering by liquidity (price × avg_vol_10d >= ${MIN_DOLLAR_VOL/1e6:.0f}M, or ${MIN_DOLLAR_VOL_SMALL_CAP/1e6:.0f}M for small caps < ${SMALL_CAP_THRESHOLD/1e9:.0f}B)...")
 
@@ -2830,6 +2905,7 @@ def main():
                 cap_only_metadata_updated = True
             if mc > 0:
                 refreshed_at_v[tk] = CACHE_VERSION
+                mcap_refreshed_at[tk] = _et_today
                 cached_mcap = mc
                 cap_only_policy = is_cap_only_industry(industry_cache.get(tk, ""))
         if cap_only_policy:
@@ -2995,6 +3071,7 @@ def main():
                     refreshed_at_v[tk] = CACHE_VERSION
             else:
                 refreshed_at_v[tk] = CACHE_VERSION
+                mcap_refreshed_at[tk] = _et_today
             time.sleep(0.2)
             if (i + 1) % 100 == 0:
                 print(f"    {i+1}/{total}  (failed so far: {failed})")
@@ -3007,11 +3084,12 @@ def main():
         # Determine if refresh is now complete
         still_needs_refresh = remaining_after_run > 0
         mcap_data = {
-            "refreshed": date.today().isoformat() if not still_needs_refresh else last_refreshed,
+            "refreshed": _et_today if not still_needs_refresh else last_refreshed,
             "caps": mcap_cache,
             "industries": industry_cache,
             "names": name_cache,
             "descs": desc_cache,
+            "mcap_refreshed_at": mcap_refreshed_at,
             "version": CACHE_VERSION if not still_needs_refresh else cache_version,
             "refresh_in_progress": still_needs_refresh,
             "refreshed_at_v": refreshed_at_v,
@@ -3022,20 +3100,24 @@ def main():
             print(f"  Cache partially updated ({len(mcap_cache)} entries, {remaining_after_run} more in next runs)")
         else:
             print(f"  Cache fully refreshed ({len(mcap_cache)} entries, version {CACHE_VERSION})")
-    elif cap_only_metadata_updated:
+    elif cap_only_metadata_updated or daily_mcap_updated:
         mcap_data = {
             "refreshed": last_refreshed,
             "caps": mcap_cache,
             "industries": industry_cache,
             "names": name_cache,
             "descs": desc_cache,
+            "mcap_refreshed_at": mcap_refreshed_at,
             "version": cache_version,
             "refresh_in_progress": refresh_in_progress,
             "refreshed_at_v": refreshed_at_v,
         }
         with open("leaders_mcap.json", "w") as f:
             json.dump(mcap_data, f, separators=(",", ":"))
-        print(f"  Cache updated with {cap_only_metadata_checked} pre-liquidity metadata lookup(s)")
+        if cap_only_metadata_updated:
+            print(f"  Cache updated with {cap_only_metadata_checked} pre-liquidity metadata lookup(s)")
+        if daily_mcap_updated:
+            print("  Cache updated with daily market cap refresh")
 
     # Final filter: standard names need >= $2B; cap-only industries need >= $1.2B.
     # Theme Tracker holdings that fail are retained as profile-only so ETF profile
