@@ -307,8 +307,14 @@ tr:hover{background:var(--bg3)}
 [data-theme="light"] .profile-box{box-shadow:0 1px 3px rgba(0,0,0,0.06)}
 .profile-chart{height:340px;min-height:340px}
 .profile-info{display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.profile-info-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.profile-title-block{min-width:0}
 .profile-tk{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;letter-spacing:.5px;line-height:1.1}
 .profile-name{font-size:14px;color:var(--t2);font-weight:500;line-height:1.2}
+.profile-metrics{flex:0 0 188px;border:1px solid var(--bdr2);border-radius:8px;background:var(--bg3);padding:10px 12px;display:grid;gap:8px}
+.profile-metric{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:11px;line-height:1.1}
+.profile-metric-label{color:var(--t3);font-weight:800;text-transform:uppercase;letter-spacing:.55px;white-space:nowrap}
+.profile-metric-value{font-family:'JetBrains Mono',monospace;color:var(--t1);font-weight:700;text-align:right;white-space:nowrap}
 .profile-price{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;margin-top:8px}
 .profile-price .chg{font-size:13px;margin-left:8px;font-weight:500}
 .profile-desc{font-size:12px;color:var(--t2);line-height:1.5;margin-top:8px;max-height:180px;overflow-y:auto;padding-right:6px}
@@ -345,7 +351,7 @@ tr:hover{background:var(--bg3)}
 .fund-tv-widget .tradingview-widget-container{height:100%;width:100%}
 .fund-tv-widget .tradingview-widget-container__widget{height:calc(100% - 32px);width:100%}
 .profile-section-empty{margin-top:16px;padding:34px 18px;border:1px dashed var(--bdr);border-radius:10px;text-align:center;color:var(--t3);font-size:12px;background:var(--bg2)}
-@media(max-width:768px){.profile-box{grid-template-columns:1fr}.profile-chart{height:240px;min-height:240px}.profile-tk{font-size:22px}.profile-price{font-size:16px}}
+@media(max-width:768px){.profile-box{grid-template-columns:1fr}.profile-chart{height:240px;min-height:240px}.profile-info-top{flex-direction:column;gap:10px}.profile-metrics{width:100%;box-sizing:border-box;flex-basis:auto}.profile-tk{font-size:22px}.profile-price{font-size:16px}}
 /* History delta arrow */
 .hist-delta{text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600}
 .hist-delta .up{color:var(--g)}
@@ -2105,6 +2111,17 @@ function profileSubtabsHtml(){
   </div>`;
 }
 
+function profileMetricsHtml(stock){
+  const rows=[
+    ['MCap:', moneyText(stock.mc)],
+    ['Avg$Vol:', moneyText(stock.dv)],
+    ['ADR:', adrText(stock.ad)]
+  ];
+  return `<div class="profile-metrics" aria-label="Stock characteristics">
+    ${rows.map(([label,value])=>`<div class="profile-metric"><span class="profile-metric-label">${label}</span><span class="profile-metric-value">${value}</span></div>`).join('')}
+  </div>`;
+}
+
 function formatFundValue(value,type){
   if(value==null)return'—';
   if(type==='eps')return `${value<0?'-':''}$${Math.abs(value).toFixed(2)}`;
@@ -2276,8 +2293,13 @@ function searchStock(){
   html+=`<div class="profile-box">
     <div class="profile-chart tv-chart" id="svc-profile-${stock.t}"></div>
     <div class="profile-info">
-      <div class="profile-tk">${esc(stock.t)}</div>
-      <div class="profile-name">${esc(stock.n||'')}</div>
+      <div class="profile-info-top">
+        <div class="profile-title-block">
+          <div class="profile-tk">${esc(stock.t)}</div>
+          <div class="profile-name">${esc(stock.n||'')}</div>
+        </div>
+        ${profileMetricsHtml(stock)}
+      </div>
       <div class="profile-price">$${stock.p!=null?stock.p.toFixed(2):'—'}<span class="chg ${chgCls}">${chgTxt}</span></div>
       <div class="profile-desc">${esc(stock.d||'No description available.')}</div>
     </div>
