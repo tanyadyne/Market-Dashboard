@@ -37,6 +37,7 @@ except ImportError:
 
 from fetch_data import percentrank_inc
 from fetch_leaders import (
+    HARD_EXCLUDE,
     INTRADAY_BASELINES_FILE,
     LOOKBACK_W,
     MA_LENGTH_W,
@@ -53,6 +54,16 @@ HISTORY_FILE = "leaders_score_history.json"
 MIN_QUOTE_COVERAGE = float(os.environ.get("MIN_QUOTE_COVERAGE", "0.97"))
 QUOTE_CHUNK = 120
 DOWNLOAD_CHUNK = 160
+
+
+def prune_hard_excluded(entries, baselines):
+    hard_exclude = {normalize_symbol(t) for t in HARD_EXCLUDE}
+    if not hard_exclude:
+        return entries, baselines, []
+    kept = [e for e in entries if normalize_symbol(e.get("t")) not in hard_exclude]
+    removed = sorted({normalize_symbol(e.get("t")) for e in entries if normalize_symbol(e.get("t")) in hard_exclude})
+    baselines = {tk: v for tk, v in baselines.items() if normalize_symbol(tk) not in hard_exclude}
+    return kept, baselines, removed
 
 
 def now_utc_str():
@@ -261,6 +272,45 @@ def fetch_quotes(tickers):
         print(f"  fast_info fallback: +{len(fi)} ({len(missing)} missing)")
 
     return quotes, missing
+
+
+def fallback_spy_quote(data):
+    meta = data.get("meta", {}) if isinstance(data, dict) else {}
+    last = finite_num(meta.get("spy_price"))
+    if not last:
+        return None
+    prev = None
+    change = meta.get("spy_change")
+    try:
+        ch = float(change)
+        if math.isfinite(ch) and ch > -99:
+            prev = last / (1 + ch / 100)
+    except Exception:
+        prev = None
+    return {"last": last, "prev": prev, "volume": None, "source": "prior_meta"}
+
+
+def get_spy_quote(quotes, data):
+    spy_quote = valid_quote("SPY", quotes.get("SPY"), None)
+    if spy_quote:
+        return spy_quote
+
+    print("  SPY missing from batch quotes; trying dedicated SPY refresh...")
+    for fetcher in (fetch_quotes_yahoo_endpoint, fetch_quotes_yfinance_download, fetch_quotes_fast_info):
+        try:
+            fresh = fetcher(["SPY"])
+            spy_quote = valid_quote("SPY", fresh.get("SPY"), None)
+            if spy_quote:
+                print(f"  SPY quote recovered via {spy_quote.get('source') or fetcher.__name__}")
+                return spy_quote
+        except Exception:
+            pass
+
+    fallback = fallback_spy_quote(data)
+    if fallback:
+        print("  WARNING: SPY live quote unavailable; using prior published SPY price")
+        return fallback
+    return None
 
 
 def valid_quote(ticker, quote, old_price):
@@ -582,13 +632,18 @@ def main():
 
     entries = data.get("e", [])
     baselines = baseline_payload.get("d", {})
+    entries, baselines, removed = prune_hard_excluded(entries, baselines)
+    data["e"] = entries
+    baseline_payload["d"] = baselines
+    if removed:
+        print(f"  HARD_EXCLUDE: dropped {len(removed)} ticker(s): {removed}")
     tickers = [e.get("t") for e in entries if e.get("t")]
     quote_tickers = tickers + ["SPY"]
 
     print(f"Fetching current quotes for {len(tickers)} stocks + SPY...")
     t0 = time.time()
     quotes, missing = fetch_quotes(quote_tickers)
-    spy_quote = valid_quote("SPY", quotes.get("SPY"), None)
+    spy_quote = get_spy_quote(quotes, data)
     if not spy_quote:
         print("ERROR: SPY quote unavailable; refusing to publish intraday ranks")
         sys.exit(1)

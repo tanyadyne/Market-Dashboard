@@ -292,6 +292,21 @@ button{font:inherit}
 <script src="economic_calendar.js"></script>
 <script>
 let THEME_DATA=null,LEADER_DATA=null,HISTORY=null;
+const HARD_EXCLUDED_TICKERS=new Set(['BAND','CWAN','TECH','AHR','LILA','LILAK']);
+
+function pruneExcludedLeaderData(){
+  if(LEADER_DATA&&Array.isArray(LEADER_DATA.e)){
+    const before=LEADER_DATA.e.length;
+    LEADER_DATA.e=LEADER_DATA.e.filter(e=>!HARD_EXCLUDED_TICKERS.has(String(e.t||'').toUpperCase()));
+    if(LEADER_DATA.meta&&before!==LEADER_DATA.e.length){
+      LEADER_DATA.meta.count=LEADER_DATA.e.length;
+      LEADER_DATA.meta.universe=LEADER_DATA.e.length;
+    }
+  }
+  if(HISTORY&&HISTORY.d){
+    for(const tk of HARD_EXCLUDED_TICKERS)delete HISTORY.d[tk];
+  }
+}
 
 function setTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
@@ -517,6 +532,7 @@ async function loadDashboard(){
     if(themeRes.ok)THEME_DATA=await themeRes.json();
     if(leadersRes.ok)LEADER_DATA=await leadersRes.json();
     if(histRes&&histRes.ok){try{HISTORY=await histRes.json();}catch(e){HISTORY=null;}}
+    pruneExcludedLeaderData();
     renderThemes();
     renderStocks();
     renderEvents();
