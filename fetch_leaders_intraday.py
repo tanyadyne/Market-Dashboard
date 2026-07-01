@@ -290,6 +290,35 @@ def fallback_spy_quote(data):
     return {"last": last, "prev": prev, "volume": None, "source": "prior_meta"}
 
 
+def prior_entry_quote(entry):
+    last = finite_num(entry.get("p"))
+    if not last:
+        return None
+    prev = None
+    try:
+        ch = float(entry.get("ch"))
+        if math.isfinite(ch) and ch > -99:
+            prev = last / (1 + ch / 100)
+    except Exception:
+        prev = None
+    return {"last": last, "prev": prev, "volume": None, "source": "prior_entry"}
+
+
+def carry_forward_missing_quotes(entries, quotes):
+    carried = []
+    for entry in entries:
+        tk = entry.get("t")
+        if not tk or tk in quotes:
+            continue
+        prior = prior_entry_quote(entry)
+        if prior:
+            quotes[tk] = prior
+            carried.append(tk)
+    if carried:
+        print(f"  Carry-forward fallback: +{len(carried)} stale ticker quote(s)")
+    return carried
+
+
 def get_spy_quote(quotes, data):
     spy_quote = valid_quote("SPY", quotes.get("SPY"), None)
     if spy_quote:
@@ -647,6 +676,7 @@ def main():
     if not spy_quote:
         print("ERROR: SPY quote unavailable; refusing to publish intraday ranks")
         sys.exit(1)
+    carried_forward = carry_forward_missing_quotes(entries, quotes)
 
     missing_stocks = [t for t in tickers if t not in quotes]
     coverage = (len(tickers) - len(missing_stocks)) / len(tickers) if tickers else 0
@@ -671,8 +701,8 @@ def main():
     meta["universe"] = len(entries)
     meta["rank_mode"] = "intraday"
     meta["quote_coverage"] = round(valid_coverage, 4)
-    meta["quotes_updated"] = updated
-    meta["quotes_stale"] = len(stale)
+    meta["quotes_updated"] = max(0, updated - len(carried_forward))
+    meta["quotes_stale"] = len(stale) + len(carried_forward)
     meta["spy_price"] = round(spy_quote["last"], 2)
     if spy_quote.get("prev"):
         meta["spy_change"] = round((spy_quote["last"] / spy_quote["prev"] - 1) * 100, 2)
