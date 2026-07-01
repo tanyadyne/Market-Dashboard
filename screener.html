@@ -1779,6 +1779,11 @@ function getCurrentScreenerResults(isW){
   return applyScreenerFilters(items,isW);
 }
 
+function rankedStockCount(){
+  if(!DATA||!Array.isArray(DATA.e))return 0;
+  return DATA.e.filter(e=>!e.po&&e.w_rk!=null).length;
+}
+
 function render(){
   if(!DATA)return;
   const isW=currentTab==='weekly';
@@ -2451,7 +2456,7 @@ async function loadData(){
     if(DATA.meta){
       document.getElementById('spyBar').style.display='flex';
       document.getElementById('ut').textContent=toSGT(DATA.meta.updated);
-      document.getElementById('stockCount').textContent=DATA.meta.count;
+      document.getElementById('stockCount').textContent=rankedStockCount();
     }
     buildHeader();
     if(currentTab==='overview')renderOverview();
