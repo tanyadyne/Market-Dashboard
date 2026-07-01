@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-06-30 00:05 UTC",
-  "generated_at_et": "29/06/2026, 20:05 EDT",
+  "generated_at_utc": "2026-07-01 00:06 UTC",
+  "generated_at_et": "30/06/2026, 20:05 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -221,7 +221,7 @@ window.ECONOMIC_CALENDAR_DATA = {
           "day": "Tuesday, June 30, 2026",
           "time": "09:45 AM",
           "period": "JUN",
-          "actual": "-",
+          "actual": "56.7",
           "consensus": "-",
           "previous": "62.7",
           "forecast": "-",
@@ -235,11 +235,11 @@ window.ECONOMIC_CALENDAR_DATA = {
           "day": "Tuesday, June 30, 2026",
           "time": "10:00 AM",
           "period": "JUN",
-          "actual": "-",
+          "actual": "91.2",
           "consensus": "-",
           "previous": "93.1",
           "forecast": "-",
-          "revised": "-"
+          "revised": "90.6"
         },
         {
           "key": "adp",
@@ -274,17 +274,17 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-06-29",
           "day": "Monday, June 29, 2026",
-          "ticker": "CNXC",
-          "company": "Concentrix Corporation",
-          "group": "Information Technology Services",
+          "ticker": "AVAV",
+          "company": "AeroVironment, Inc.",
+          "group": "Aerospace & Defense",
           "time": "AMC"
         },
         {
           "date": "2026-06-29",
           "day": "Monday, June 29, 2026",
-          "ticker": "RR",
-          "company": "Richtech Robotics Inc.",
-          "group": "Specialty Industrial Machinery",
+          "ticker": "CNXC",
+          "company": "Concentrix Corporation",
+          "group": "Information Technology Services",
           "time": "AMC"
         },
         {
@@ -301,6 +301,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "PRGS",
           "company": "Progress Software Corporation",
           "group": "Software - Infrastructure",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-06-30",
+          "day": "Tuesday, June 30, 2026",
+          "ticker": "RR",
+          "company": "Richtech Robotics Inc.",
+          "group": "Specialty Industrial Machinery",
           "time": "AMC"
         },
         {
@@ -480,7 +488,7 @@ window.ECONOMIC_CALENDAR_DATA = {
       "day": "Tuesday, June 30, 2026",
       "time": "09:45 AM",
       "period": "JUN",
-      "actual": "-",
+      "actual": "56.7",
       "consensus": "-",
       "previous": "62.7",
       "forecast": "-",
@@ -494,11 +502,11 @@ window.ECONOMIC_CALENDAR_DATA = {
       "day": "Tuesday, June 30, 2026",
       "time": "10:00 AM",
       "period": "JUN",
-      "actual": "-",
+      "actual": "91.2",
       "consensus": "-",
       "previous": "93.1",
       "forecast": "-",
-      "revised": "-"
+      "revised": "90.6"
     },
     {
       "key": "adp",
@@ -533,17 +541,17 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-06-29",
       "day": "Monday, June 29, 2026",
-      "ticker": "CNXC",
-      "company": "Concentrix Corporation",
-      "group": "Information Technology Services",
+      "ticker": "AVAV",
+      "company": "AeroVironment, Inc.",
+      "group": "Aerospace & Defense",
       "time": "AMC"
     },
     {
       "date": "2026-06-29",
       "day": "Monday, June 29, 2026",
-      "ticker": "RR",
-      "company": "Richtech Robotics Inc.",
-      "group": "Specialty Industrial Machinery",
+      "ticker": "CNXC",
+      "company": "Concentrix Corporation",
+      "group": "Information Technology Services",
       "time": "AMC"
     },
     {
@@ -560,6 +568,14 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "PRGS",
       "company": "Progress Software Corporation",
       "group": "Software - Infrastructure",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-06-30",
+      "day": "Tuesday, June 30, 2026",
+      "ticker": "RR",
+      "company": "Richtech Robotics Inc.",
+      "group": "Specialty Industrial Machinery",
       "time": "AMC"
     },
     {
