@@ -2319,6 +2319,7 @@ function searchStock(){
           <div class="profile-tk">${esc(stock.t)}</div>
           <div class="profile-name">${esc(stock.n||'')}</div>
         </div>
+        ${profileMetricsHtml(stock)}
       </div>
       <div class="profile-price">$${stock.p!=null?stock.p.toFixed(2):'—'}<span class="chg ${chgCls}">${chgTxt}</span></div>
       <div class="profile-desc">${esc(stock.d||'No description available.')}</div>
