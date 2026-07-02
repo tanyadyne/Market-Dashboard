@@ -77,7 +77,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 /* Info bar */
 .spy{padding:8px 20px;border-bottom:1px solid var(--bdr2);display:flex;justify-content:space-between;font-size:11px;color:var(--t3)}
 .m{font-family:'JetBrains Mono',monospace;font-size:11px}
-.fw-bold{font-weight:800!important}
+.metric-emphasis{font-weight:900!important;color:var(--t1)!important;text-shadow:0 0 0 currentColor}
 /* Filter dropdown */
 .filter-wrap{position:relative;display:inline-block}
 .filter-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
@@ -1843,17 +1843,17 @@ function render(){
     const rv=e[rvKey],rs=e[rsKey],vs=e[vsKey];
     const highDollarVol=e.dv!=null&&Number(e.dv)>1000000000;
     const activeRvol=rv!=null&&Number(rv)>=100;
-    const liquidityBold=highDollarVol?' fw-bold':'';
-    const rvolBold=activeRvol?' fw-bold':'';
+    const liquidityEmphasis=highDollarVol?' metric-emphasis':'';
+    const rvolEmphasis=activeRvol?' metric-emphasis':'';
     const cellMap={
       rk:`<td class="rk">${origRank}</td>`,
       rd:rankDelta(e.t),
       t:`<td class="tk tk-link" onclick="openProfile('${esc(e.t)}')" title="View ${esc(e.t)} profile">${esc(e.t)}</td>`,
       n:`<td class="sc2" title="${esc(e.n||'')}">${esc(e.n||'—')}</td>`,
       th:`<td class="sc2" title="${esc(e.th||'')}">${esc(e.th||'—')}</td>`,
-      rv:`<td class="c m${rvolBold}">${multText(rv)}</td>`,
-      mc:`<td class="c m${liquidityBold}">${moneyText(e.mc)}</td>`,
-      dv:`<td class="c m${liquidityBold}">${moneyText(e.dv)}</td>`,
+      rv:`<td class="c m${rvolEmphasis}">${multText(rv)}</td>`,
+      mc:`<td class="c m${liquidityEmphasis}">${moneyText(e.mc)}</td>`,
+      dv:`<td class="c m${liquidityEmphasis}">${moneyText(e.dv)}</td>`,
       ax:`<td class="c"><div class="bc" style="justify-content:center;gap:4px">${atrExtBars(e.ax)}<span class="bv">${multText(e.ax)}</span></div></td>`,
       ch:`<td class="c m ${chgClass(e.ch)}">${chgText(e.ch)}</td>`,
       c5:`<td class="c m ${chgClass(e.c5)}">${chgText(e.c5)}</td>`,
