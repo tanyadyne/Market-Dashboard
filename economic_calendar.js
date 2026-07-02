@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-07-01 00:06 UTC",
-  "generated_at_et": "30/06/2026, 20:05 EDT",
+  "generated_at_utc": "2026-07-02 00:08 UTC",
+  "generated_at_et": "01/07/2026, 20:08 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -249,7 +249,7 @@ window.ECONOMIC_CALENDAR_DATA = {
           "day": "Wednesday, July 1, 2026",
           "time": "08:15 AM",
           "period": "JUN",
-          "actual": "-",
+          "actual": "98",
           "consensus": "-",
           "previous": "122",
           "forecast": "-",
@@ -306,17 +306,17 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-06-30",
           "day": "Tuesday, June 30, 2026",
-          "ticker": "RR",
-          "company": "Richtech Robotics Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-06-30",
-          "day": "Tuesday, June 30, 2026",
           "ticker": "STZ",
           "company": "Constellation Brands, Inc.",
           "group": "Beverages - Brewers",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-01",
+          "day": "Wednesday, July 1, 2026",
+          "ticker": "RR",
+          "company": "Richtech Robotics Inc.",
+          "group": "Specialty Industrial Machinery",
           "time": "AMC"
         },
         {
@@ -516,7 +516,7 @@ window.ECONOMIC_CALENDAR_DATA = {
       "day": "Wednesday, July 1, 2026",
       "time": "08:15 AM",
       "period": "JUN",
-      "actual": "-",
+      "actual": "98",
       "consensus": "-",
       "previous": "122",
       "forecast": "-",
@@ -573,17 +573,17 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-06-30",
       "day": "Tuesday, June 30, 2026",
-      "ticker": "RR",
-      "company": "Richtech Robotics Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-06-30",
-      "day": "Tuesday, June 30, 2026",
       "ticker": "STZ",
       "company": "Constellation Brands, Inc.",
       "group": "Beverages - Brewers",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-01",
+      "day": "Wednesday, July 1, 2026",
+      "ticker": "RR",
+      "company": "Richtech Robotics Inc.",
+      "group": "Specialty Industrial Machinery",
       "time": "AMC"
     },
     {
