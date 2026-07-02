@@ -353,7 +353,7 @@ tr:hover{background:var(--bg3)}
 .fund-tv-widget .tradingview-widget-container{height:100%;width:100%}
 .fund-tv-widget .tradingview-widget-container__widget{height:calc(100% - 32px);width:100%}
 .profile-section-empty{margin-top:16px;padding:34px 18px;border:1px dashed var(--bdr);border-radius:10px;text-align:center;color:var(--t3);font-size:12px;background:var(--bg2)}
-@media(max-width:768px){.profile-box{grid-template-columns:1fr}.profile-chart{height:240px;min-height:240px}.profile-info-top{flex-direction:column;gap:10px}.profile-metrics{width:100%;box-sizing:border-box;flex-basis:auto}.profile-tk{font-size:22px}.profile-price{font-size:16px}}
+@media(max-width:768px){.profile-box{grid-template-columns:1fr}.profile-chart{height:240px;min-height:240px}.profile-info-top{flex-direction:row;gap:12px;align-items:flex-start}.profile-title-block{flex:1 1 auto}.profile-metrics{flex:0 0 45%;width:auto;box-sizing:border-box;padding:10px 12px;gap:7px}.profile-metric{gap:8px;font-size:10.5px}.profile-tk{font-size:22px}.profile-price{font-size:16px}}
 /* History delta arrow */
 .hist-delta{text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600}
 .hist-delta .up{color:var(--g)}
@@ -2318,10 +2318,10 @@ function searchStock(){
         <div class="profile-title-block">
           <div class="profile-tk">${esc(stock.t)}</div>
           <div class="profile-name">${esc(stock.n||'')}</div>
+          <div class="profile-price">$${stock.p!=null?stock.p.toFixed(2):'—'}<span class="chg ${chgCls}">${chgTxt}</span></div>
         </div>
         ${profileMetricsHtml(stock)}
       </div>
-      <div class="profile-price">$${stock.p!=null?stock.p.toFixed(2):'—'}<span class="chg ${chgCls}">${chgTxt}</span></div>
       <div class="profile-desc">${esc(stock.d||'No description available.')}</div>
     </div>
   </div>`;
