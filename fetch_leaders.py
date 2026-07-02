@@ -44,6 +44,7 @@ MIN_OUTPUT_RETENTION = 0.90
 TARGETED_REPAIR_COOLDOWN_SECONDS = int(os.environ.get("TARGETED_REPAIR_COOLDOWN_SECONDS", "60"))
 WEEKLY_RETRY_ATTEMPTS = 3
 STRICT_WEEKLY_RANK_RECOVERY = os.environ.get("STRICT_WEEKLY_RANK_RECOVERY", "1") != "0"
+MARKET_CAP_QUOTE_CHUNK = 120
 SPLIT_LIKE_RATIOS = (0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0)
 SPLIT_GAP_TOLERANCE = 0.08
 OFF_HIGH_MIN_MULTIPLIER = 0.70
@@ -1903,6 +1904,47 @@ def fetch_ticker_market_cap(tk):
     return 0
 
 
+def normalize_yahoo_symbol(sym):
+    return str(sym or "").strip().upper().replace(".", "-")
+
+
+def fetch_bulk_market_caps(tickers, chunk_size=MARKET_CAP_QUOTE_CHUNK):
+    """Fetch market caps from Yahoo's bulk quote endpoint.
+
+    This is far less rate-limit prone than thousands of per-ticker
+    yf.Ticker(...).info calls and should be the primary daily mcap path.
+    """
+    out = {}
+    ordered = sorted({normalize_yahoo_symbol(t) for t in tickers if t})
+    if not ordered:
+        return out
+    if _session is None and not HAS_REQUESTS:
+        return out
+
+    client = _session if _session is not None else requests
+    url = "https://query1.finance.yahoo.com/v7/finance/quote"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    for i in range(0, len(ordered), chunk_size):
+        batch = ordered[i:i + chunk_size]
+        try:
+            resp = client.get(url, params={"symbols": ",".join(batch)}, headers=headers, timeout=30)
+            if getattr(resp, "status_code", 0) != 200:
+                continue
+            payload = resp.json()
+            for q in payload.get("quoteResponse", {}).get("result", []):
+                tk = normalize_yahoo_symbol(q.get("symbol"))
+                try:
+                    mc = int(q.get("marketCap") or 0)
+                except Exception:
+                    mc = 0
+                if tk and mc > 0:
+                    out[tk] = mc
+        except Exception:
+            pass
+        time.sleep(0.15)
+    return out
+
+
 def fetch_live_quote(ticker):
     """Fetch live (intraday) quote for a single ticker via fast_info.
     Returns (last_price, prev_close, live_volume) or (None, None, None) on failure.
@@ -2798,30 +2840,52 @@ def main():
     def metadata_desc(tk):
         return desc_cache.get(tk, "") or names_fallback.get(tk, {}).get("d", "")
 
+    daily_mcap_updated_count = 0
+    daily_mcap_failed_tickers = []
+
     def refresh_daily_market_caps(tickers):
+        nonlocal daily_mcap_updated_count, daily_mcap_failed_tickers
         due = [t for t in tickers if mcap_refreshed_at.get(t) != _et_today]
+        daily_mcap_updated_count = 0
+        daily_mcap_failed_tickers = []
         if not due:
             return False
-        print(f"  Refreshing market caps for {len(due)} ticker(s) via yfinance...")
+        print(f"  Refreshing market caps for {len(due)} ticker(s) via Yahoo quote endpoint...")
         updated = 0
-        failed = 0
-        max_workers = min(16, max(1, len(due)))
-        with ThreadPoolExecutor(max_workers=max_workers) as ex:
-            futs = {ex.submit(fetch_ticker_market_cap, tk): tk for tk in due}
-            for fut in as_completed(futs):
-                tk = futs[fut]
-                try:
-                    mc = fut.result()
-                except Exception:
-                    mc = 0
-                if mc and mc > 0:
-                    mcap_cache[tk] = int(mc)
-                    mcap_refreshed_at[tk] = _et_today
-                    updated += 1
-                else:
-                    failed += 1
-        print(f"  Market cap refresh: {updated}/{len(due)} updated ({failed} failed; failed tickers retry next run)")
-        return updated > 0
+        bulk_caps = fetch_bulk_market_caps(due)
+        for tk in due:
+            mc = bulk_caps.get(normalize_yahoo_symbol(tk))
+            if mc and mc > 0:
+                mcap_cache[tk] = int(mc)
+                mcap_refreshed_at[tk] = _et_today
+                updated += 1
+
+        missing = [t for t in due if mcap_refreshed_at.get(t) != _et_today]
+        fallback_updated = 0
+        if missing:
+            print(f"  Market cap bulk refresh: {updated}/{len(due)} updated; retrying {len(missing)} via yfinance fallback...")
+            max_workers = min(4, max(1, len(missing)))
+            with ThreadPoolExecutor(max_workers=max_workers) as ex:
+                futs = {ex.submit(fetch_ticker_market_cap, tk): tk for tk in missing}
+                for fut in as_completed(futs):
+                    tk = futs[fut]
+                    try:
+                        mc = fut.result()
+                    except Exception:
+                        mc = 0
+                    if mc and mc > 0:
+                        mcap_cache[tk] = int(mc)
+                        mcap_refreshed_at[tk] = _et_today
+                        updated += 1
+                        fallback_updated += 1
+
+        daily_mcap_updated_count = updated
+        daily_mcap_failed_tickers = [t for t in due if mcap_refreshed_at.get(t) != _et_today]
+        print(
+            f"  Market cap refresh: {updated}/{len(due)} updated "
+            f"({len(bulk_caps)} bulk, {fallback_updated} fallback, {len(daily_mcap_failed_tickers)} stale; stale tickers retry next run)"
+        )
+        return bool(due)
 
     def current_data_tickers(tickers):
         current = []
@@ -3090,6 +3154,8 @@ def main():
             "names": name_cache,
             "descs": desc_cache,
             "mcap_refreshed_at": mcap_refreshed_at,
+            "mcap_refresh_updated": daily_mcap_updated_count,
+            "mcap_refresh_failed": daily_mcap_failed_tickers,
             "version": CACHE_VERSION if not still_needs_refresh else cache_version,
             "refresh_in_progress": still_needs_refresh,
             "refreshed_at_v": refreshed_at_v,
@@ -3099,7 +3165,7 @@ def main():
         if still_needs_refresh:
             print(f"  Cache partially updated ({len(mcap_cache)} entries, {remaining_after_run} more in next runs)")
         else:
-            print(f"  Cache fully refreshed ({len(mcap_cache)} entries, version {CACHE_VERSION})")
+            print(f"  Metadata cache fully refreshed ({len(mcap_cache)} entries, version {CACHE_VERSION})")
     elif cap_only_metadata_updated or daily_mcap_updated:
         mcap_data = {
             "refreshed": last_refreshed,
@@ -3108,6 +3174,8 @@ def main():
             "names": name_cache,
             "descs": desc_cache,
             "mcap_refreshed_at": mcap_refreshed_at,
+            "mcap_refresh_updated": daily_mcap_updated_count,
+            "mcap_refresh_failed": daily_mcap_failed_tickers,
             "version": cache_version,
             "refresh_in_progress": refresh_in_progress,
             "refreshed_at_v": refreshed_at_v,
