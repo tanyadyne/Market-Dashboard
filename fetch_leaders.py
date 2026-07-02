@@ -105,7 +105,7 @@ MANUAL_EXCLUDE = {
 
 # HARD_EXCLUDE — never allow these into the stock screener, even if they are
 # listed as Theme Tracker holdings. Use sparingly for explicit removals.
-HARD_EXCLUDE = {"CWAN", "TECH", "AHR", "LILA", "LILAK", "BAND"}
+HARD_EXCLUDE = {"CWAN", "TECH", "AHR", "LILA", "LILAK", "BAND", "JOYY"}
 
 # ─── ADR-collapse filter ───────────────────────────────────────────────────────
 # Drops stocks whose Average Daily Range has collapsed to a fraction of its OWN
