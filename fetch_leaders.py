@@ -5,7 +5,7 @@ Computes VARS (daily + weekly) for ~1100 individual stocks vs SPY.
 Outputs leaders.json (current snapshot) and leaders_history.json (rolling 30-day history).
 """
 
-import json, os, sys, time, io
+import json, os, sys, time, io, urllib.parse, urllib.request
 import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta, date, timezone
@@ -45,6 +45,9 @@ TARGETED_REPAIR_COOLDOWN_SECONDS = int(os.environ.get("TARGETED_REPAIR_COOLDOWN_
 WEEKLY_RETRY_ATTEMPTS = 3
 STRICT_WEEKLY_RANK_RECOVERY = os.environ.get("STRICT_WEEKLY_RANK_RECOVERY", "1") != "0"
 MARKET_CAP_QUOTE_CHUNK = 120
+NASDAQ_MCAP_FALLBACK_LIMIT = int(os.environ.get("NASDAQ_MCAP_FALLBACK_LIMIT", "500"))
+NASDAQ_MCAP_FALLBACK_WORKERS = int(os.environ.get("NASDAQ_MCAP_FALLBACK_WORKERS", "8"))
+NASDAQ_MCAP_PRIORITY_TICKERS = {"MXL"}
 SPLIT_LIKE_RATIOS = (0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0)
 SPLIT_GAP_TOLERANCE = 0.08
 OFF_HIGH_MIN_MULTIPLIER = 0.70
@@ -1919,6 +1922,80 @@ def normalize_yahoo_symbol(sym):
     return str(sym or "").strip().upper().replace(".", "-")
 
 
+def normalize_nasdaq_symbol(sym):
+    return str(sym or "").strip().upper().replace("-", ".")
+
+
+def parse_market_cap_value(value):
+    raw = str(value or "").strip()
+    if not raw or raw.upper() in {"N/A", "NA", "NONE", "--", "-"}:
+        return 0
+    s = raw.replace("$", "").replace(",", "").replace(" ", "").upper()
+    multiplier = 1
+    if s.endswith("T"):
+        multiplier = 1_000_000_000_000
+        s = s[:-1]
+    elif s.endswith("B"):
+        multiplier = 1_000_000_000
+        s = s[:-1]
+    elif s.endswith("M"):
+        multiplier = 1_000_000
+        s = s[:-1]
+    elif s.endswith("K"):
+        multiplier = 1_000
+        s = s[:-1]
+    try:
+        return int(float(s) * multiplier)
+    except Exception:
+        return 0
+
+
+def fetch_nasdaq_market_cap(tk):
+    """Fetch market cap from Nasdaq's public quote summary endpoint.
+
+    This is intentionally separate from Yahoo/yfinance so a Yahoo metadata
+    outage cannot leave stale caps frozen in leaders.json.
+    """
+    sym = normalize_nasdaq_symbol(tk)
+    if not sym:
+        return 0
+    url = f"https://api.nasdaq.com/api/quote/{urllib.parse.quote(sym)}/summary?assetclass=stocks"
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json,text/plain,*/*",
+        "Origin": "https://www.nasdaq.com",
+        "Referer": "https://www.nasdaq.com/",
+    }
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            payload = json.loads(resp.read().decode("utf-8", "replace"))
+        summary = (payload.get("data") or {}).get("summaryData") or {}
+        market_cap = summary.get("MarketCap") or {}
+        return parse_market_cap_value(market_cap.get("value"))
+    except Exception:
+        return 0
+
+
+def fetch_nasdaq_market_caps(tickers, max_workers=NASDAQ_MCAP_FALLBACK_WORKERS):
+    out = {}
+    ordered = list(dict.fromkeys(t for t in tickers if t))
+    if not ordered:
+        return out
+    workers = max(1, min(max_workers, len(ordered)))
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {ex.submit(fetch_nasdaq_market_cap, tk): tk for tk in ordered}
+        for fut in as_completed(futs):
+            tk = futs[fut]
+            try:
+                mc = fut.result()
+            except Exception:
+                mc = 0
+            if mc and mc > 0:
+                out[tk] = int(mc)
+    return out
+
+
 def fetch_bulk_market_caps(tickers, chunk_size=MARKET_CAP_QUOTE_CHUNK):
     """Fetch market caps and shares from Yahoo's bulk quote endpoint.
 
@@ -2865,6 +2942,32 @@ def main():
             return int(shares * float(price))
         return int(mcap_cache.get(tk, 0) or 0)
 
+    def latest_close_price(tk):
+        try:
+            df = get_df(tk)
+            if df is not None and len(df) > 0:
+                return float(df["Close"].values[-1])
+        except Exception:
+            pass
+        return None
+
+    def infer_shares_from_market_cap(tk, mc):
+        price = latest_close_price(tk)
+        if not (mc and price and price > 0):
+            return 0
+        try:
+            return int(round(float(mc) / float(price)))
+        except Exception:
+            return 0
+
+    def nasdaq_fallback_priority(t):
+        return (
+            0 if t in NASDAQ_MCAP_PRIORITY_TICKERS else 1,
+            0 if not shares_cache.get(t) else 1,
+            0 if not mcap_cache.get(t) else 1,
+            t,
+        )
+
     def metadata_name(tk):
         return name_cache.get(tk, "") or names_fallback.get(tk, {}).get("n", "")
 
@@ -2904,9 +3007,36 @@ def main():
             t for t in due
             if mcap_refreshed_at.get(t) != _et_today and shares_refreshed_at.get(t) != _et_today
         ]
+        nasdaq_updated = 0
+        if missing:
+            nasdaq_targets = sorted(missing, key=nasdaq_fallback_priority)
+            if NASDAQ_MCAP_FALLBACK_LIMIT <= 0:
+                nasdaq_targets = []
+            else:
+                nasdaq_targets = nasdaq_targets[:NASDAQ_MCAP_FALLBACK_LIMIT]
+            print(
+                f"  Market cap/share bulk refresh: {updated}/{len(due)} updated; "
+                f"retrying {len(nasdaq_targets)} priority ticker(s) via Nasdaq fallback..."
+            )
+            nasdaq_caps = fetch_nasdaq_market_caps(nasdaq_targets)
+            for tk, mc in nasdaq_caps.items():
+                if mc and mc > 0:
+                    mcap_cache[tk] = int(mc)
+                    mcap_refreshed_at[tk] = _et_today
+                    inferred_shares = infer_shares_from_market_cap(tk, mc)
+                    if inferred_shares > 0:
+                        shares_cache[tk] = int(inferred_shares)
+                        shares_refreshed_at[tk] = _et_today
+                    updated += 1
+                    nasdaq_updated += 1
+
+        missing = [
+            t for t in due
+            if mcap_refreshed_at.get(t) != _et_today and shares_refreshed_at.get(t) != _et_today
+        ]
         fallback_updated = 0
         if missing:
-            print(f"  Market cap/share bulk refresh: {updated}/{len(due)} updated; retrying {len(missing)} via yfinance fallback...")
+            print(f"  Market cap/share Nasdaq fallback: {nasdaq_updated} updated; retrying {len(missing)} via yfinance fallback...")
             max_workers = min(4, max(1, len(missing)))
             with ThreadPoolExecutor(max_workers=max_workers) as ex:
                 futs = {ex.submit(fetch_ticker_market_cap, tk): tk for tk in missing}
@@ -2933,7 +3063,8 @@ def main():
         ]
         print(
             f"  Market cap refresh: {updated}/{len(due)} updated "
-            f"({len(bulk_meta)} bulk, {fallback_updated} fallback, {len(daily_mcap_failed_tickers)} stale; stale tickers retry next run)"
+            f"({len(bulk_meta)} bulk, {fallback_updated} yfinance, {nasdaq_updated} nasdaq, "
+            f"{len(daily_mcap_failed_tickers)} stale; stale tickers retry next run)"
         )
         return bool(due)
 
