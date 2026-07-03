@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-07-02 00:08 UTC",
-  "generated_at_et": "01/07/2026, 20:08 EDT",
+  "generated_at_utc": "2026-07-03 00:06 UTC",
+  "generated_at_et": "02/07/2026, 20:06 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -263,7 +263,7 @@
           "day": "Thursday, July 2, 2026",
           "time": "08:30 AM",
           "period": "JUN",
-          "actual": "-",
+          "actual": "4.2",
           "consensus": "-",
           "previous": "4.3",
           "forecast": "-",
@@ -314,14 +314,6 @@
         {
           "date": "2026-07-01",
           "day": "Wednesday, July 1, 2026",
-          "ticker": "RR",
-          "company": "Richtech Robotics Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-01",
-          "day": "Wednesday, July 1, 2026",
           "ticker": "FDS",
           "company": "FactSet Research Systems Inc.",
           "group": "Financial Data & Stock Exchanges",
@@ -349,6 +341,14 @@
           "ticker": "BMNR",
           "company": "Bitmine Immersion Technologies, Inc.",
           "group": "Capital Markets",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-02",
+          "day": "Thursday, July 2, 2026",
+          "ticker": "RR",
+          "company": "Richtech Robotics Inc.",
+          "group": "Specialty Industrial Machinery",
           "time": "AMC"
         }
       ],
@@ -530,7 +530,7 @@
       "day": "Thursday, July 2, 2026",
       "time": "08:30 AM",
       "period": "JUN",
-      "actual": "-",
+      "actual": "4.2",
       "consensus": "-",
       "previous": "4.3",
       "forecast": "-",
@@ -581,14 +581,6 @@
     {
       "date": "2026-07-01",
       "day": "Wednesday, July 1, 2026",
-      "ticker": "RR",
-      "company": "Richtech Robotics Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-01",
-      "day": "Wednesday, July 1, 2026",
       "ticker": "FDS",
       "company": "FactSet Research Systems Inc.",
       "group": "Financial Data & Stock Exchanges",
@@ -616,6 +608,14 @@
       "ticker": "BMNR",
       "company": "Bitmine Immersion Technologies, Inc.",
       "group": "Capital Markets",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-02",
+      "day": "Thursday, July 2, 2026",
+      "ticker": "RR",
+      "company": "Richtech Robotics Inc.",
+      "group": "Specialty Industrial Machinery",
       "time": "AMC"
     }
   ],
