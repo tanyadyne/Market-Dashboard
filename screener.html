@@ -83,19 +83,32 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
   .seg-toggle button{padding:5px 8px;font-size:10px}
   .seg-toggle .lbl-text{display:none}
   .seg-toggle .lbl-icon{display:inline-block}
-  .tab-strip{order:1;padding:12px 18px 10px;gap:8px}
-  .tab-btn{flex:1 1 0;max-width:260px;padding:9px 10px;font-size:11px;letter-spacing:.45px}
+  .tab-strip{
+    order:1;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    padding:12px 11vw 10px;
+    gap:8px;
+  }
+  .tab-btn{width:100%;max-width:none;padding:9px 10px;font-size:11px;letter-spacing:.45px}
   .filter-search-row{
     order:2;
+    display:grid;
+    grid-template-columns:1fr 5fr;
+    align-items:center;
+    gap:8px;
     position:static;
     top:auto;
     right:auto;
-    width:100%;
+    width:64%;
+    margin:0 auto;
     padding:8px 18px 12px;
     border-bottom:1px solid var(--bdr2);
     background:var(--bg);
   }
-  .filter-search-row .srch{flex:1;width:auto;min-width:0}
+  .filter-search-row .filter-wrap{display:block;min-width:0}
+  .filter-search-row .filter-btn{width:100%}
+  .filter-search-row .srch{width:100%;min-width:0}
   .spy{order:3}
 }
 /* Info bar */
