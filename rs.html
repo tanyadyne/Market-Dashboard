@@ -1079,7 +1079,7 @@ function detectIsMobile(){
     const ua=navigator.userAgent||'';
     const phoneUA=/Mobi|Android.*Mobile|iPhone|iPod/i.test(ua);
     if(phoneUA)return true;
-    return window.innerWidth<=820;
+    return window.innerWidth<=760;
   }catch(e){return false;}
 }
 // Apply the detected layout synchronously BEFORE buildHeader()/loadData() run further down
