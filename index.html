@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-ticker-tape.js"></script>
 <script>
 (function(){try{const t=localStorage.getItem('dashboardTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
@@ -56,9 +57,9 @@ button{font:inherit}
 .nav-icon.calendar:before{content:"";position:absolute;left:4px;top:-3px;width:2px;height:5px;border-radius:2px;background:currentColor;box-shadow:6px 0 currentColor}
 .nav-icon.calendar:after{content:"";position:absolute;left:0;right:0;top:5px;border-top:1.6px solid currentColor}
 .main{min-width:0;display:flex;flex-direction:column}
-.topbar{height:53px;border-bottom:1px solid var(--bdr);background:var(--shell);display:flex;align-items:center;padding:0 32px;gap:24px}
+.topbar{height:48px;border-bottom:1px solid var(--bdr);background:var(--shell);display:flex;align-items:center;padding:0 32px;gap:24px}
 .ticker-tape-wrap{flex:1;min-width:0;height:100%;display:flex;align-items:center;overflow:hidden}
-.ticker-tape-wrap iframe{display:block;width:100%;max-width:100%}
+.ticker-tape-wrap tv-ticker-tape{display:block;width:100%;max-width:100%}
 .pill-toggle{position:relative;width:56px;height:28px;border-radius:999px;border:1px solid var(--bdr);cursor:pointer;background:#0f0f0f;transition:background .25s ease;flex-shrink:0}
 [data-theme="light"] .pill-toggle{background:#e0e0e0}
 .pill-toggle .knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left .25s ease;box-shadow:0 1px 4px rgba(0,0,0,.3);left:31px;color:#111}
@@ -143,7 +144,7 @@ button{font:inherit}
   .app{grid-template-columns:1fr}
   .sidebar{position:static;padding:18px 20px;gap:18px;border-right:0;border-bottom:1px solid var(--bdr)}
   .brand{padding:0}.nav{flex-direction:row;flex-wrap:wrap;gap:8px}.nav-link{height:34px}
-  .topbar{height:53px;padding:0 20px}
+  .topbar{height:36px;padding:0 20px}
   .dashboard-grid{grid-template-columns:1fr}
   .side-col{display:block}
 }
@@ -315,29 +316,16 @@ function toggleTheme(){
   const current=document.documentElement.getAttribute('data-theme')||'light';
   setTheme(current==='dark'?'light':'dark');
 }
-function renderTickerTape(){
+function renderTickerTape(theme){
   const wrap=document.getElementById('tickerTapeWrap');
   if(!wrap)return;
-  wrap.innerHTML=`<iframe style="border: none; width:100%; height: 53px;" data-widget-name="TickerTape" src="https://widget.darqube.com/ticker-tape?token=6a4878280cb50c290d188e42" id="TickerTape-f6msbru"></iframe>`;
+  const tape=document.createElement('tv-ticker-tape');
+  tape.setAttribute('symbols','BITSTAMP:BTCUSD,BITSTAMP:ETHUSD,AMEX:SPY,NASDAQ:QQQ,AMEX:DIA,AMEX:IWM,CAPITALCOM:DXY,CFI:WTI,CAPITALCOM:VIX');
+  tape.setAttribute('line-chart-type','Baseline');
+  tape.setAttribute('item-size','compact');
+  tape.setAttribute('theme',theme==='dark'?'dark':'light');
+  wrap.replaceChildren(tape);
 }
-window.top.addEventListener("message", function(msg) {
-  const widget = document.getElementById('TickerTape-f6msbru');
-
-  if (!widget) return;
-
-  const styles = msg.data?.styles;
-  const token = msg.data?.token;
-  const urlToken = new URL(widget.src)?.searchParams?.get?.('token');
-  if (styles && token === urlToken) {
-    Object.keys(styles).forEach(key => widget.style.setProperty(key, styles[key]))
-  }
-
-  const height = msg.data?.tickerTapeHeight;
-
-  if (height) {
-    widget.style.setProperty('height', height + 'px');
-  }
-});
 function renderNewsWidget(theme){
   const host=document.getElementById('newsWidget');
   if(!host)return;
