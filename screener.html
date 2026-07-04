@@ -18,31 +18,33 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .top-fixed{position:sticky;top:0;z-index:50;background:var(--bg);display:flex;flex-direction:column}
 .hdr{padding:12px 20px;border-bottom:1px solid var(--bdr2);display:flex;align-items:center;justify-content:space-between;gap:8px}
 .hdr-l{display:flex;align-items:center;gap:10px}
-/* .hdr-r holds the header-right toggle buttons (List/Charts, Desktop/Mobile, Theme).
-   The right padding reserves space for the absolutely-positioned .filter-search-row
-   that overlays the right edge of the header on desktop — keeps these buttons from
-   sitting under it.  Mobile resets this padding (see further down). */
-.hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-right:300px}
-/* Filter + search row.
-   This row sits between the header and the tab strip in the DOM.
-   - Desktop: absolutely positioned into the top-right of .top-fixed so it sits
-     inline with the header controls (matching the original visual layout).
-   - Mobile: switched back to normal flow as a full-width row, then re-ordered (via
-     CSS `order`) to appear BELOW the tab strip — see the mobile rules further down. */
-.filter-search-row{position:absolute;top:12px;right:20px;display:flex;align-items:center;gap:8px;z-index:6}
+.hdr-r{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;padding-right:0;flex-shrink:0}
+.filter-search-row{
+  order:2;
+  display:grid;
+  grid-template-columns:1fr 5fr;
+  align-items:center;
+  gap:8px;
+  position:static;
+  top:auto;
+  right:auto;
+  width:60%;
+  margin:0 auto;
+  padding:8px 18px 12px;
+  border-bottom:1px solid var(--bdr2);
+  background:var(--bg);
+  z-index:6;
+}
 .filter-search-row .srch{margin:0}
 .btn-sm{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
 .btn-sm:hover{background:var(--bg3);color:var(--t1)}
 /* Segmented toggles */
 .seg-toggle{display:inline-flex;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;background:var(--bg2)}
-.seg-toggle button{padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s;display:inline-flex;align-items:center;justify-content:center}
+.seg-toggle button{padding:5px 8px;font-size:10px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:.15s;display:inline-flex;align-items:center;justify-content:center}
 .seg-toggle button.on{background:var(--bg4);color:var(--t1)}
 .seg-toggle button:hover:not(.on){color:var(--t1)}
-/* Icon vs text inside segmented toggles.
-   Desktop shows the word; mobile (data-view="mobile") swaps to a compact icon so the
-   whole .hdr-r row can fit on one line next to the back button + title. */
-.seg-toggle .lbl-icon{width:14px;height:14px;display:none;color:currentColor}
-.seg-toggle .lbl-text{display:inline}
+.seg-toggle .lbl-icon{width:14px;height:14px;display:inline-block;color:currentColor}
+.seg-toggle .lbl-text{display:none}
 /* Single pill theme toggle (☀/🌙) */
 .pill-toggle{position:relative;width:56px;height:26px;border-radius:13px;border:1px solid var(--bdr);cursor:pointer;background:#e0e0e0;transition:background .25s ease;flex-shrink:0}
 [data-theme="dark"] .pill-toggle{background:#000}
@@ -68,9 +70,18 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 /* Mobile: hide entirely. Mobile has a constrained header that can't fit
    another input alongside the back arrow, title, and existing controls. */
 [data-view="mobile"] .ov-search-wrap{display:none!important}
-/* Centered tab strip */
-.tab-strip{display:flex;justify-content:center;gap:6px;padding:14px 20px 12px;border-bottom:1px solid var(--bdr2);background:var(--bg)}
-.tab-btn{padding:10px 32px;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.6px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:all .2s;font-family:inherit;text-transform:uppercase}
+.tab-strip{
+  order:1;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  width:44%;
+  margin:0 auto;
+  padding:12px 0 10px;
+  gap:8px;
+  border-bottom:1px solid var(--bdr2);
+  background:var(--bg);
+}
+.tab-btn{width:100%;max-width:none;padding:9px 10px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.45px;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:all .2s;font-family:inherit;text-transform:uppercase}
 .tab-btn:hover{background:var(--bg3);color:var(--t1);border-color:var(--t3)}
 .tab-btn.active{background:var(--bg4);color:var(--t1);border-color:var(--t3)}
 [data-theme="light"] .tab-btn.active{background:#e5e7eb;color:#111827;border-color:#9ca3af}
@@ -79,38 +90,10 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
   .hdr{order:0;padding:10px 18px;flex-wrap:nowrap;gap:8px}
   .hdr-l{min-width:0;flex:1 1 auto;overflow:hidden}
   .hdr-l > div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .hdr-r{gap:6px;flex-wrap:nowrap;padding-right:0;flex-shrink:0}
   .seg-toggle button{padding:5px 8px;font-size:10px}
   .seg-toggle .lbl-text{display:none}
   .seg-toggle .lbl-icon{display:inline-block}
-  .tab-strip{
-    order:1;
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    width:44%;
-    margin:0 auto;
-    padding:12px 0 10px;
-    gap:8px;
-  }
   .tab-btn{width:100%;max-width:none;padding:9px 10px;font-size:11px;letter-spacing:.45px}
-  .filter-search-row{
-    order:2;
-    display:grid;
-    grid-template-columns:1fr 5fr;
-    align-items:center;
-    gap:8px;
-    position:static;
-    top:auto;
-    right:auto;
-    width:60%;
-    margin:0 auto;
-    padding:8px 18px 12px;
-    border-bottom:1px solid var(--bdr2);
-    background:var(--bg);
-  }
-  .filter-search-row .filter-wrap{display:block;min-width:0}
-  .filter-search-row .filter-btn{width:100%}
-  .filter-search-row .srch{width:100%;min-width:0}
   .spy{order:3}
 }
 /* Info bar */
@@ -120,7 +103,10 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .metric-emphasis{font-weight:900!important;color:var(--t1)!important;text-shadow:0 0 0 currentColor}
 /* Filter dropdown */
 .filter-wrap{position:relative;display:inline-block}
+.filter-search-row .filter-wrap{display:block;min-width:0}
 .filter-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
+.filter-search-row .filter-btn{width:100%}
+.filter-search-row .srch{width:100%;min-width:0}
 .filter-btn:hover{background:var(--bg3);color:var(--t1)}
 .filter-btn.has-filter{border-color:#f59e0b;color:#fbbf24}
 .filter-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:8px 0;min-width:280px;max-height:calc(100vh - 80px);overflow-y:auto;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.4)}
@@ -478,6 +464,9 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
      .hdr (default order 0) → .tab-strip (order 1) → .filter-search-row (order 2) → .spy (order 3).
    - Style it as a full-width row with the search input expanding to fill space. */
 [data-view="mobile"] .filter-search-row{
+  display:flex;
+  width:auto;
+  margin:0;
   position:static;top:auto;right:auto;
   padding:8px 12px;gap:6px;
   border-bottom:1px solid var(--bdr2);
@@ -488,7 +477,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 [data-view="mobile"] .spy{order:3}
 [data-view="mobile"] .filter-search-row .srch{flex:1;width:auto;order:0}
 /* Constrain tab strip to viewport: shrink button padding + font + allow wrapping */
-[data-view="mobile"] .tab-strip{padding:10px 8px 8px;gap:4px;flex-wrap:wrap}
+[data-view="mobile"] .tab-strip{display:flex;width:auto;margin:0;padding:10px 8px 8px;gap:4px;flex-wrap:wrap}
 [data-view="mobile"] .tab-btn{padding:8px 12px;font-size:10px;letter-spacing:.3px}
 /* Shrink header toggle buttons on mobile + swap text labels for compact icons so all
    three controls (List/Charts, Desktop/Mobile, theme) fit on the same row as the
