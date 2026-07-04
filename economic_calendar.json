@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-07-03 00:06 UTC",
-  "generated_at_et": "02/07/2026, 20:06 EDT",
+  "generated_at_utc": "2026-07-04 00:04 UTC",
+  "generated_at_et": "03/07/2026, 20:04 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -334,22 +334,6 @@
           "company": "MSC Industrial Direct Co., Inc.",
           "group": "Industrial Distribution",
           "time": "BMO"
-        },
-        {
-          "date": "2026-07-02",
-          "day": "Thursday, July 2, 2026",
-          "ticker": "BMNR",
-          "company": "Bitmine Immersion Technologies, Inc.",
-          "group": "Capital Markets",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-02",
-          "day": "Thursday, July 2, 2026",
-          "ticker": "RR",
-          "company": "Richtech Robotics Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "AMC"
         }
       ],
       "event_keys": [
@@ -387,6 +371,22 @@
       ],
       "events": [],
       "earnings_events": [
+        {
+          "date": "2026-07-06",
+          "day": "Monday, July 6, 2026",
+          "ticker": "BMNR",
+          "company": "Bitmine Immersion Technologies, Inc.",
+          "group": "Capital Markets",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-06",
+          "day": "Monday, July 6, 2026",
+          "ticker": "RR",
+          "company": "Richtech Robotics Inc.",
+          "group": "Specialty Industrial Machinery",
+          "time": "AMC"
+        },
         {
           "date": "2026-07-06",
           "day": "Monday, July 6, 2026",
@@ -601,22 +601,6 @@
       "company": "MSC Industrial Direct Co., Inc.",
       "group": "Industrial Distribution",
       "time": "BMO"
-    },
-    {
-      "date": "2026-07-02",
-      "day": "Thursday, July 2, 2026",
-      "ticker": "BMNR",
-      "company": "Bitmine Immersion Technologies, Inc.",
-      "group": "Capital Markets",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-02",
-      "day": "Thursday, July 2, 2026",
-      "ticker": "RR",
-      "company": "Richtech Robotics Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "AMC"
     }
   ],
   "event_keys": [
