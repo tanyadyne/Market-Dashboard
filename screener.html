@@ -387,6 +387,17 @@ tr:hover{background:var(--bg3)}
 [data-theme="dark"] .fund-bar-neg-est{fill:#fda4af}
 .fund-label{fill:var(--t3);font-size:9px;font-family:'JetBrains Mono',monospace}
 .fund-value-label{fill:var(--t2);font-size:9px;font-family:'JetBrains Mono',monospace}
+.fund-tooltip{position:fixed;z-index:80;min-width:132px;padding:10px 12px;border:1px solid var(--bdr);border-radius:8px;background:rgba(17,24,39,.94);box-shadow:0 14px 34px rgba(0,0,0,.24);color:#f9fafb;pointer-events:none;opacity:0;transform:translate3d(-9999px,-9999px,0);transition:opacity .08s ease;font-size:11px;line-height:1.2;backdrop-filter:blur(10px)}
+.fund-tooltip.show{opacity:1}
+.fund-tooltip-period{font-weight:800;color:#fff;margin-bottom:8px;white-space:nowrap}
+.fund-tooltip-row{display:flex;align-items:baseline;justify-content:space-between;gap:18px;color:#d1d5db;white-space:nowrap}
+.fund-tooltip-label{color:#9ca3af}
+.fund-tooltip-value{font-family:'JetBrains Mono',monospace;font-weight:800;color:#fff}
+[data-theme="light"] .fund-tooltip{background:rgba(255,255,255,.96);border-color:#d1d5db;box-shadow:0 14px 34px rgba(15,23,42,.14);color:#111827}
+[data-theme="light"] .fund-tooltip-period,[data-theme="light"] .fund-tooltip-value{color:#111827}
+[data-theme="light"] .fund-tooltip-row{color:#374151}
+[data-theme="light"] .fund-tooltip-label{color:#6b7280}
+.fund-bar,.fund-bar-est,.fund-bar-neg,.fund-bar-neg-est{cursor:crosshair}
 .fund-tv-card{margin-top:12px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:0;min-height:1220px;overflow:hidden}
 [data-theme="light"] .fund-tv-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .fund-tv-widget{height:1220px;width:100%}
@@ -1082,6 +1093,44 @@ function toSGT(utcStr){
   return d.toLocaleString('en-SG',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' SGT';}catch(e){return utcStr;}
 }
 function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
+function escAttr(s){return esc(String(s??'')).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+let fundTooltipEl=null;
+function getFundTooltip(){
+  if(fundTooltipEl)return fundTooltipEl;
+  fundTooltipEl=document.createElement('div');
+  fundTooltipEl.className='fund-tooltip';
+  fundTooltipEl.setAttribute('role','tooltip');
+  document.body.appendChild(fundTooltipEl);
+  return fundTooltipEl;
+}
+function hideFundTooltip(){
+  if(!fundTooltipEl)return;
+  fundTooltipEl.classList.remove('show');
+  fundTooltipEl.style.transform='translate3d(-9999px,-9999px,0)';
+}
+function positionFundTooltip(e,tip){
+  const gap=16;
+  const margin=8;
+  const rect=tip.getBoundingClientRect();
+  let x=e.clientX+gap;
+  let y=e.clientY+gap;
+  if(x+rect.width+margin>window.innerWidth)x=e.clientX-rect.width-gap;
+  if(y+rect.height+margin>window.innerHeight)y=e.clientY-rect.height-gap;
+  x=Math.max(margin,Math.min(x,window.innerWidth-rect.width-margin));
+  y=Math.max(margin,Math.min(y,window.innerHeight-rect.height-margin));
+  tip.style.transform=`translate3d(${x}px,${y}px,0)`;
+}
+document.addEventListener('mousemove',e=>{
+  const target=e.target instanceof Element?e.target.closest('[data-fund-tooltip]'):null;
+  if(!target){hideFundTooltip();return;}
+  const tip=getFundTooltip();
+  tip.innerHTML=`<div class="fund-tooltip-period">${esc(target.dataset.fundPeriod||'')}</div>
+    <div class="fund-tooltip-row"><span class="fund-tooltip-label">${esc(target.dataset.fundLabel||'')}</span><span class="fund-tooltip-value">${esc(target.dataset.fundValue||'')}</span></div>`;
+  tip.classList.add('show');
+  positionFundTooltip(e,tip);
+});
+document.addEventListener('mouseleave',hideFundTooltip);
+window.addEventListener('scroll',hideFundTooltip,true);
 function chgClass(v){return v>0?'cp':v<0?'cn':'cz';}
 function chgText(v){return v!=null?(v>0?'+':'')+v.toFixed(2)+'%':'—';}
 function multText(v){return v!=null?(v/100).toFixed(2)+'x':'—';}
@@ -2244,6 +2293,17 @@ function shortFundPeriod(pointOrPeriod,annual,fiscalYearEndMonth=12){
   return `${String(fiscalYear).slice(2)}Q${quarter}`;
 }
 
+function fullFundPeriod(pointOrPeriod,annual,fiscalYearEndMonth=12){
+  const short=shortFundPeriod(pointOrPeriod,annual,fiscalYearEndMonth);
+  const estimate=String(short).includes('(E)')?' (E)':'';
+  const clean=String(short).replace(/\s*\(E\)/,'');
+  const q=clean.match(/^(\d{2})Q([1-4])$/);
+  if(q)return `Q${q[2]} 20${q[1]}${estimate}`;
+  const fy=clean.match(/^FY(\d{2})$/);
+  if(fy)return `FY 20${fy[1]}${estimate}`;
+  return `${clean}${estimate}`;
+}
+
 function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,options={}){
   const clean=(points||[]).filter(p=>p&&p.value!=null&&Number.isFinite(Number(p.value)));
   const head=`<div class="fund-card-head"><div class="fund-card-title">${esc(title)}</div>${options.toggleHtml||''}</div>`;
@@ -2269,7 +2329,10 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,op
     const cls=p.estimate
       ? (Number(p.value)<0?'fund-bar-neg-est':'fund-bar-est')
       : (Number(p.value)<0?'fund-bar-neg':'fund-bar');
-    return `<rect class="${cls}" x="${x.toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="2"><title>${shortFundPeriod(p,annual,fiscalYearEndMonth)}: ${formatFundValue(Number(p.value),type)}</title></rect>`;
+    const tooltipPeriod=fullFundPeriod(p,annual,fiscalYearEndMonth);
+    const tooltipLabel=type==='eps'?'EPS:':'Revenue:';
+    const tooltipValue=formatFundValue(Number(p.value),type);
+    return `<rect class="${cls}" data-fund-tooltip="1" data-fund-period="${escAttr(tooltipPeriod)}" data-fund-label="${escAttr(tooltipLabel)}" data-fund-value="${escAttr(tooltipValue)}" aria-label="${escAttr(`${tooltipPeriod}, ${tooltipLabel} ${tooltipValue}`)}" x="${x.toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="2"></rect>`;
   }).join('');
   const labelEvery=clean.length>10?Math.ceil(clean.length/6):1;
   const labels=clean.map((p,i)=>{
