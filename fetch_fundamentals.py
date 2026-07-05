@@ -34,6 +34,10 @@ OUT_JSON = ROOT / "fundamentals.json"
 OUT_JS = ROOT / "fundamentals.js"
 MAX_QUARTERS = 16
 MAX_YEARS = 10
+PROFILE_QUARTERLY_EPS_ACTUALS = 5
+PROFILE_QUARTERLY_EPS_ESTIMATES = 2
+PROFILE_ANNUAL_EPS_ACTUALS = 4
+PROFILE_ANNUAL_EPS_ESTIMATES = 1
 FX_RATE_CACHE: dict[tuple[str, str], float | None] = {}
 
 
@@ -274,7 +278,7 @@ def _quarterly_estimates(
     actual_points: list[dict],
     *,
     fiscal_year_end_month: int,
-    limit: int = 2,
+    limit: int = PROFILE_QUARTERLY_EPS_ESTIMATES,
 ) -> list[dict]:
     if frame is None or getattr(frame, "empty", True) or not actual_points:
         return []
@@ -299,6 +303,44 @@ def _quarterly_estimates(
         estimates.append({
             "period": period,
             "label": f"{_fiscal_label(period, False, fiscal_year_end_month)} (E)",
+            "value": round(num, 4),
+            "estimate": True,
+        })
+        if len(estimates) >= limit:
+            break
+    return estimates
+
+
+def _annual_estimates(
+    frame,
+    actual_points: list[dict],
+    *,
+    fiscal_year_end_month: int,
+    limit: int = PROFILE_ANNUAL_EPS_ESTIMATES,
+) -> list[dict]:
+    if frame is None or getattr(frame, "empty", True) or not actual_points:
+        return []
+    avg_col = _estimate_avg_column(frame)
+    if avg_col is None:
+        return []
+
+    latest_period = actual_points[-1]["period"]
+    estimates = []
+    for row_key, row in frame.iterrows():
+        key = str(row_key).strip().lower()
+        is_quarter = "q" in key or "quarter" in key
+        is_year = "y" in key or "year" in key
+        if not is_year or is_quarter:
+            continue
+        num = _safe_number(row.get(avg_col))
+        if num is None:
+            continue
+        period = _add_months(latest_period, 12 * (len(estimates) + 1))
+        if period is None:
+            continue
+        estimates.append({
+            "period": period,
+            "label": f"{_fiscal_label(period, True, fiscal_year_end_month)} (E)",
             "value": round(num, 4),
             "estimate": True,
         })
@@ -380,6 +422,30 @@ def _annual_eps_from_quarters(points: list[dict], *, fiscal_year_end_month: int,
     ]
     annual.sort(key=lambda item: item["period"])
     return annual[-limit:]
+
+
+def _merge_missing_periods(primary: list[dict], fallback: list[dict], limit: int) -> list[dict]:
+    merged = {point.get("period"): dict(point) for point in primary if point.get("period")}
+    for point in fallback:
+        period = point.get("period")
+        if period and period not in merged:
+            merged[period] = dict(point)
+    points = sorted(merged.values(), key=lambda item: item["period"])
+    return points[-limit:]
+
+
+def _profile_eps_series(
+    actual_points: list[dict],
+    estimate_points: list[dict],
+    *,
+    actual_limit: int,
+    estimate_limit: int,
+) -> list[dict]:
+    actual = [dict(point) for point in actual_points if not point.get("estimate")]
+    estimates = [dict(point) for point in estimate_points if point.get("estimate")]
+    actual.sort(key=lambda item: item.get("period", ""))
+    estimates.sort(key=lambda item: item.get("period", ""))
+    return actual[-actual_limit:] + estimates[:estimate_limit]
 
 
 def _get_ticker_currencies(ticker_obj) -> tuple[str | None, str | None]:
@@ -524,16 +590,19 @@ def _fetch_one(ticker: str, session) -> dict:
         annual=False,
         fiscal_year_end_month=fiscal_year_end_month,
     )
-    quarterly_eps_non_gaap = _series_from_earnings_history(
+    reported_eps = _series_from_earnings_history(
         earnings_dates,
         MAX_QUARTERS,
         fiscal_year_end_month=fiscal_year_end_month,
         reported_dates=True,
-    ) or _series_from_earnings_history(
+    )
+    history_eps = _series_from_earnings_history(
         earnings_history,
         MAX_QUARTERS,
         fiscal_year_end_month=fiscal_year_end_month,
-    ) or quarterly_eps_gaap
+    )
+    non_gaap_uses_gaap_fallback = not reported_eps and not history_eps
+    quarterly_eps_non_gaap = reported_eps or history_eps or quarterly_eps_gaap
     quarterly_eps_estimates = _quarterly_estimates(
         earnings_estimate,
         quarterly_eps_non_gaap,
@@ -551,6 +620,11 @@ def _fetch_one(ticker: str, session) -> dict:
         fiscal_year_end_month=fiscal_year_end_month,
         limit=MAX_YEARS,
     ) or annual_eps_gaap
+    annual_eps_estimates = _annual_estimates(
+        earnings_estimate,
+        annual_eps_non_gaap or annual_eps_gaap,
+        fiscal_year_end_month=fiscal_year_end_month,
+    )
 
     if _looks_like_eps_currency_mismatch(quarterly_eps_gaap, quarterly_eps_estimates):
         financial_currency, quote_currency = _get_ticker_currencies(ticker_obj)
@@ -558,8 +632,37 @@ def _fetch_one(ticker: str, session) -> dict:
         if rate and rate > 0:
             quarterly_eps_gaap = _convert_eps_points(quarterly_eps_gaap, rate, financial_currency or "", quote_currency or "")
             annual_eps_gaap = _convert_eps_points(annual_eps_gaap, rate, financial_currency or "", quote_currency or "")
-            quarterly_eps_non_gaap = _convert_eps_points(quarterly_eps_non_gaap, rate, financial_currency or "", quote_currency or "")
-            annual_eps_non_gaap = _convert_eps_points(annual_eps_non_gaap, rate, financial_currency or "", quote_currency or "")
+            if non_gaap_uses_gaap_fallback:
+                quarterly_eps_non_gaap = quarterly_eps_gaap
+                annual_eps_non_gaap = annual_eps_gaap
+
+    if reported_eps:
+        quarterly_eps_gaap = _merge_missing_periods(quarterly_eps_gaap, reported_eps, MAX_QUARTERS)
+
+    quarterly_eps_gaap_profile = _profile_eps_series(
+        quarterly_eps_gaap,
+        quarterly_eps_estimates,
+        actual_limit=PROFILE_QUARTERLY_EPS_ACTUALS,
+        estimate_limit=PROFILE_QUARTERLY_EPS_ESTIMATES,
+    )
+    quarterly_eps_non_gaap_profile = _profile_eps_series(
+        quarterly_eps_non_gaap,
+        quarterly_eps_estimates,
+        actual_limit=PROFILE_QUARTERLY_EPS_ACTUALS,
+        estimate_limit=PROFILE_QUARTERLY_EPS_ESTIMATES,
+    )
+    annual_eps_gaap_profile = _profile_eps_series(
+        annual_eps_gaap,
+        annual_eps_estimates,
+        actual_limit=PROFILE_ANNUAL_EPS_ACTUALS,
+        estimate_limit=PROFILE_ANNUAL_EPS_ESTIMATES,
+    )
+    annual_eps_non_gaap_profile = _profile_eps_series(
+        annual_eps_non_gaap,
+        annual_eps_estimates,
+        actual_limit=PROFILE_ANNUAL_EPS_ACTUALS,
+        estimate_limit=PROFILE_ANNUAL_EPS_ESTIMATES,
+    )
 
     return {
         "quarterly_revenue": quarterly_revenue + _quarterly_estimates(
@@ -574,12 +677,12 @@ def _fetch_one(ticker: str, session) -> dict:
             annual=True,
             fiscal_year_end_month=fiscal_year_end_month,
         ),
-        "quarterly_eps": quarterly_eps_non_gaap + quarterly_eps_estimates,
-        "annual_eps": annual_eps_non_gaap,
-        "quarterly_eps_gaap": quarterly_eps_gaap + quarterly_eps_estimates,
-        "annual_eps_gaap": annual_eps_gaap,
-        "quarterly_eps_non_gaap": quarterly_eps_non_gaap + quarterly_eps_estimates,
-        "annual_eps_non_gaap": annual_eps_non_gaap,
+        "quarterly_eps": quarterly_eps_non_gaap_profile,
+        "annual_eps": annual_eps_non_gaap_profile,
+        "quarterly_eps_gaap": quarterly_eps_gaap_profile,
+        "annual_eps_gaap": annual_eps_gaap_profile,
+        "quarterly_eps_non_gaap": quarterly_eps_non_gaap_profile,
+        "annual_eps_non_gaap": annual_eps_non_gaap_profile,
     }
 
 

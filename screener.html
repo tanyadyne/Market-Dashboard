@@ -2296,10 +2296,21 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,op
 function selectedEpsSeries(rec,annual=false){
   if(!rec)return[];
   const suffix=annual?'annual':'quarterly';
+  const maxActual=annual?4:5;
+  const maxEstimates=annual?1:2;
+  const trimSeries=(points=[])=>{
+    const clean=(points||[]).filter(p=>p&&p.value!=null&&Number.isFinite(Number(p.value)));
+    const actual=clean.filter(p=>!p.estimate).sort((a,b)=>String(a.period||'').localeCompare(String(b.period||'')));
+    const estimates=clean.filter(p=>p.estimate).sort((a,b)=>String(a.period||'').localeCompare(String(b.period||'')));
+    return [...actual.slice(-maxActual),...estimates.slice(0,maxEstimates)];
+  };
+  let points;
   if(profileEpsBasis==='gaap'){
-    return rec[`${suffix}_eps_gaap`]||rec[`${suffix}_eps`]||[];
+    points=rec[`${suffix}_eps_gaap`]||rec[`${suffix}_eps`]||[];
+    return trimSeries(points);
   }
-  return rec[`${suffix}_eps_non_gaap`]||rec[`${suffix}_eps`]||rec[`${suffix}_eps_gaap`]||[];
+  points=rec[`${suffix}_eps_non_gaap`]||rec[`${suffix}_eps`]||rec[`${suffix}_eps_gaap`]||[];
+  return trimSeries(points);
 }
 
 function renderFundamentalsPanel(ticker){
