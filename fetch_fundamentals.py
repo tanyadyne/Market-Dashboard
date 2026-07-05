@@ -142,6 +142,26 @@ def _add_months(period: str, months: int) -> str | None:
     return f"{new_year:04d}-{new_month:02d}-{new_day:02d}"
 
 
+def _reported_period_from_earnings_date(period: str, fiscal_year_end_month: int) -> str:
+    parsed = _period_year_month(period)
+    if parsed is None:
+        return period
+    year, month = parsed
+    quarter_end_months = sorted(((fiscal_year_end_month - 9 - 1) % 12 + 1,
+                                 (fiscal_year_end_month - 6 - 1) % 12 + 1,
+                                 (fiscal_year_end_month - 3 - 1) % 12 + 1,
+                                 fiscal_year_end_month))
+    prev_month = None
+    for q_month in quarter_end_months:
+        if q_month < month:
+            prev_month = q_month
+    if prev_month is None:
+        prev_month = quarter_end_months[-1]
+        year -= 1
+    day = monthrange(year, prev_month)[1]
+    return f"{year:04d}-{prev_month:02d}-{day:02d}"
+
+
 def _infer_fiscal_year_end_month(annual_frame) -> int:
     if annual_frame is None or getattr(annual_frame, "empty", True):
         return 12
@@ -226,6 +246,16 @@ def _get_estimate_frame(ticker_obj, attr: str):
     return None
 
 
+def _get_earnings_dates(ticker_obj, limit: int = 24):
+    try:
+        frame = ticker_obj.get_earnings_dates(limit=limit)
+        if frame is not None and not frame.empty:
+            return frame
+    except Exception:
+        pass
+    return None
+
+
 def _estimate_avg_column(frame):
     if frame is None or getattr(frame, "empty", True):
         return None
@@ -282,6 +312,7 @@ def _series_from_earnings_history(
     limit: int,
     *,
     fiscal_year_end_month: int,
+    reported_dates: bool = False,
 ) -> list[dict]:
     if frame is None or getattr(frame, "empty", True):
         return []
@@ -312,6 +343,8 @@ def _series_from_earnings_history(
             continue
         period_value = row.get(period_col) if period_col is not None else row_key
         period_label = _period_label(period_value)
+        if reported_dates:
+            period_label = _reported_period_from_earnings_date(period_label, fiscal_year_end_month)
         if not period_label or len(period_label) < 7:
             continue
         points.append({
@@ -474,6 +507,7 @@ def _fetch_one(ticker: str, session) -> dict:
     fiscal_year_end_month = _infer_fiscal_year_end_month(annual)
     revenue_estimate = _get_estimate_frame(ticker_obj, "revenue_estimate")
     earnings_estimate = _get_estimate_frame(ticker_obj, "earnings_estimate")
+    earnings_dates = _get_earnings_dates(ticker_obj, max(MAX_QUARTERS + 4, 24))
     earnings_history = _get_estimate_frame(ticker_obj, "earnings_history")
 
     quarterly_revenue = _series_from_income_statement(
@@ -491,6 +525,11 @@ def _fetch_one(ticker: str, session) -> dict:
         fiscal_year_end_month=fiscal_year_end_month,
     )
     quarterly_eps_non_gaap = _series_from_earnings_history(
+        earnings_dates,
+        MAX_QUARTERS,
+        fiscal_year_end_month=fiscal_year_end_month,
+        reported_dates=True,
+    ) or _series_from_earnings_history(
         earnings_history,
         MAX_QUARTERS,
         fiscal_year_end_month=fiscal_year_end_month,
