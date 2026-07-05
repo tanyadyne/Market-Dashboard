@@ -476,9 +476,11 @@ def update_change_fields(entry, base, quote):
 
     atr = finite_num(base.get("_atr"))
     sma50 = finite_num(base.get("_sma50"))
+    atr_pct = (atr / live * 100) if atr and live > 0 else None
+    if atr_pct and atr_pct > 0:
+        entry["atr"] = round(atr_pct, 2)
     if atr and sma50:
         gain_pct = (live - sma50) / sma50 * 100
-        atr_pct = atr / live * 100
         if atr_pct > 0:
             entry["ax"] = round((gain_pct / atr_pct) * 100)
 

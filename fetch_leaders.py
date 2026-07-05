@@ -1147,9 +1147,9 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         except (TypeError, ValueError):
             continue
     sma50 = np.mean(valid_c[-50:]) if len(valid_c) >= 50 else np.mean(valid_c)
-    if atr > 0 and sma50 > 0:
+    atr_pct = (atr / display_price * 100) if atr > 0 and display_price > 0 else None
+    if atr > 0 and sma50 > 0 and atr_pct and atr_pct > 0:
         gain_pct = (c[-1] - sma50) / sma50 * 100
-        atr_pct  = atr / c[-1] * 100
         atr_ext  = gain_pct / atr_pct  # can be negative (below SMA)
     else:
         atr_ext = 0
@@ -1234,6 +1234,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "ax": round(atr_ext * 100), "ch": round(change, 2),
                 "dv": round(avg_dollar_vol) if avg_dollar_vol is not None else None,
                 "ad": round(avg_range_pct, 2) if avg_range_pct is not None else None,
+                "atr": round(atr_pct, 2) if atr_pct is not None else None,
                 "ma": ma_flags,
                 "md": ma_distances,
                 "c5": round(c5, 2) if c5 is not None else None,
@@ -1432,6 +1433,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "ch": round(change, 2),
         "dv": round(avg_dollar_vol) if avg_dollar_vol is not None else None,
         "ad": round(avg_range_pct, 2) if avg_range_pct is not None else None,
+        "atr": round(atr_pct, 2) if atr_pct is not None else None,
         "ma": ma_flags,
         "md": ma_distances,
         "c5": round(c5, 2) if c5 is not None else None,

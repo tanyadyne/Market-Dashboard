@@ -1084,7 +1084,7 @@ function moneyText(v){
   if(a>=1e3)return'$'+(n/1e3).toFixed(0)+'K';
   return'$'+n.toFixed(0);
 }
-function adrText(v){return v!=null?Number(v).toFixed(2)+'%':'—';}
+function rangePctText(v){return v!=null?Number(v).toFixed(2)+'%':'—';}
 function getRSBg(rs){if(rs==null)return'var(--bg4)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--gbg)';if(rs>=80)return d?'#1a3a2a':'#dcfce7';if(rs>=60)return'var(--bg4)';if(rs>=40)return d?'#292524':'#fef3c7';if(rs>=20)return d?'#2c1810':'#ffedd5';return'var(--rbg)';}
 function getRSCol(rs){if(rs==null)return'var(--t3)';const d=document.documentElement.getAttribute('data-theme')==='dark';if(rs>=96)return'var(--g)';if(rs>=80)return'var(--g2)';if(rs>=60)return'var(--t2)';if(rs>=40)return d?'#d4a373':'#92400e';if(rs>=20)return d?'#fb923c':'#c2410c';return'var(--r)';}
 function atrExtBars(val){
@@ -2171,7 +2171,7 @@ function profileMetricsHtml(stock){
   const rows=[
     ['MCap:', moneyText(stock.mc)],
     ['Avg$Vol:', moneyText(stock.dv)],
-    ['ADR:', adrText(stock.ad)]
+    ['ATR:', rangePctText(stock.atr)]
   ];
   return `<div class="profile-metrics" aria-label="Stock characteristics">
     ${rows.map(([label,value])=>`<div class="profile-metric"><span class="profile-metric-label">${label}</span><span class="profile-metric-value">${value}</span></div>`).join('')}
