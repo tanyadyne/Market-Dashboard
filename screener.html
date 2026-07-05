@@ -363,7 +363,16 @@ tr:hover{background:var(--bg3)}
 .fund-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
 .fund-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;min-height:260px}
 [data-theme="light"] .fund-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-.fund-card-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--t2);margin-bottom:8px}
+.fund-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.fund-card-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--t2)}
+.eps-basis-toggle{display:inline-flex;align-items:center;overflow:hidden;border:1px solid var(--bdr);border-radius:999px;background:var(--bg2);flex:0 0 auto}
+.eps-basis-toggle button{min-width:54px;padding:4px 10px;border:0;background:transparent;color:var(--t3);font-family:inherit;font-size:10px;font-weight:800;letter-spacing:.3px;cursor:pointer;transition:background .15s,color .15s}
+.eps-basis-toggle button.on{background:var(--bg4);color:var(--t1)}
+.eps-basis-toggle button:hover:not(.on){color:var(--t1)}
+[data-theme="light"] .eps-basis-toggle{background:#fff;border-color:#d1d5db}
+[data-theme="light"] .eps-basis-toggle button.on{background:#dbeafe;color:#1e3a8a}
+[data-theme="dark"] .eps-basis-toggle{background:#111827;border-color:#4b5563}
+[data-theme="dark"] .eps-basis-toggle button.on{background:#1e3a5f;color:#bfdbfe}
 .fund-chart{width:100%;height:210px;display:block}
 .fund-axis{stroke:var(--bdr);stroke-width:1}
 .fund-gridline{stroke:var(--bdr2);stroke-width:1}
@@ -748,6 +757,7 @@ let chartPage=1;
 let profileHistoryPage=1;
 let profileHistoryTicker='';
 let profileSectionTab='history';
+let profileEpsBasis='non_gaap';
 let isMobile=false; // Mobile column layout toggle
 
 // ─── Theme (persisted across pages via localStorage) ──────────
@@ -2155,6 +2165,18 @@ function setProfileSectionTab(tab){
   searchStock();
 }
 
+function setProfileEpsBasis(basis){
+  profileEpsBasis=basis==='gaap'?'gaap':'non_gaap';
+  searchStock();
+}
+
+function profileEpsBasisToggleHtml(){
+  return `<div class="eps-basis-toggle" role="group" aria-label="EPS basis">
+    <button type="button" class="${profileEpsBasis==='gaap'?'on':''}" aria-pressed="${profileEpsBasis==='gaap'?'true':'false'}" onclick="setProfileEpsBasis('gaap')">GAAP</button>
+    <button type="button" class="${profileEpsBasis==='non_gaap'?'on':''}" aria-pressed="${profileEpsBasis==='non_gaap'?'true':'false'}" onclick="setProfileEpsBasis('non_gaap')">Non-GAAP</button>
+  </div>`;
+}
+
 function profileSubtabsHtml(){
   const tabs=[
     ['history','Rank History'],
@@ -2222,10 +2244,11 @@ function shortFundPeriod(pointOrPeriod,annual,fiscalYearEndMonth=12){
   return `${String(fiscalYear).slice(2)}Q${quarter}`;
 }
 
-function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12){
+function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,options={}){
   const clean=(points||[]).filter(p=>p&&p.value!=null&&Number.isFinite(Number(p.value)));
+  const head=`<div class="fund-card-head"><div class="fund-card-title">${esc(title)}</div>${options.toggleHtml||''}</div>`;
   if(!clean.length){
-    return `<div class="fund-card"><div class="fund-card-title">${esc(title)}</div><div class="profile-section-empty">No data available</div></div>`;
+    return `<div class="fund-card">${head}<div class="profile-section-empty">No data available</div></div>`;
   }
   const w=520,h=210,left=42,right=20,top=16,bottom=32;
   const plotW=w-left-right,plotH=h-top-bottom;
@@ -2255,7 +2278,7 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12){
     return `<text class="fund-label" x="${x.toFixed(1)}" y="${h-10}" text-anchor="middle">${esc(shortFundPeriod(p,annual,fiscalYearEndMonth))}</text>`;
   }).join('');
   return `<div class="fund-card">
-    <div class="fund-card-title">${esc(title)}</div>
+    ${head}
     <svg class="fund-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(title)}">
       <line class="fund-gridline" x1="${left}" y1="${top}" x2="${w-right}" y2="${top}"></line>
       <line class="fund-gridline" x1="${left}" y1="${top+plotH/2}" x2="${w-right}" y2="${top+plotH/2}"></line>
@@ -2268,6 +2291,15 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12){
       ${labels}
     </svg>
   </div>`;
+}
+
+function selectedEpsSeries(rec,annual=false){
+  if(!rec)return[];
+  const suffix=annual?'annual':'quarterly';
+  if(profileEpsBasis==='gaap'){
+    return rec[`${suffix}_eps_gaap`]||rec[`${suffix}_eps`]||[];
+  }
+  return rec[`${suffix}_eps_non_gaap`]||rec[`${suffix}_eps`]||rec[`${suffix}_eps_gaap`]||[];
 }
 
 function renderFundamentalsPanel(ticker){
@@ -2284,11 +2316,12 @@ function renderFundamentalsPanel(ticker){
     </div>${tvWidget}`;
   }
   const fiscalYearEndMonth=inferFiscalYearEndMonth(rec);
+  const epsToggle=profileEpsBasisToggleHtml();
   return `<div class="fund-grid">
     ${renderFundChart('Quarterly Revenue',rec.quarterly_revenue,'revenue',false,fiscalYearEndMonth)}
     ${renderFundChart('Annual Revenue',rec.annual_revenue,'revenue',true,fiscalYearEndMonth)}
-    ${renderFundChart('Quarterly EPS',rec.quarterly_eps,'eps',false,fiscalYearEndMonth)}
-    ${renderFundChart('Annual EPS',rec.annual_eps,'eps',true,fiscalYearEndMonth)}
+    ${renderFundChart('Quarterly EPS',selectedEpsSeries(rec,false),'eps',false,fiscalYearEndMonth,{toggleHtml:epsToggle})}
+    ${renderFundChart('Annual EPS',selectedEpsSeries(rec,true),'eps',true,fiscalYearEndMonth,{toggleHtml:epsToggle})}
   </div>${tvWidget}`;
 }
 

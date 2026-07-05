@@ -277,6 +277,78 @@ def _quarterly_estimates(
     return estimates
 
 
+def _series_from_earnings_history(
+    frame,
+    limit: int,
+    *,
+    fiscal_year_end_month: int,
+) -> list[dict]:
+    if frame is None or getattr(frame, "empty", True):
+        return []
+    normalized = {str(col).strip().lower(): col for col in frame.columns}
+    actual_col = None
+    for key in ("epsactual", "eps actual", "reported eps", "actual"):
+        if key in normalized:
+            actual_col = normalized[key]
+            break
+    if actual_col is None:
+        for key, col in normalized.items():
+            if "eps" in key and "actual" in key:
+                actual_col = col
+                break
+    if actual_col is None:
+        return []
+
+    period_col = None
+    for key in ("period", "quarter", "date"):
+        if key in normalized:
+            period_col = normalized[key]
+            break
+
+    points = []
+    for row_key, row in frame.iterrows():
+        num = _safe_number(row.get(actual_col))
+        if num is None:
+            continue
+        period_value = row.get(period_col) if period_col is not None else row_key
+        period_label = _period_label(period_value)
+        if not period_label or len(period_label) < 7:
+            continue
+        points.append({
+            "period": period_label,
+            "label": _fiscal_label(period_label, False, fiscal_year_end_month),
+            "value": round(num, 4),
+        })
+
+    points.sort(key=lambda item: item["period"])
+    return points[-limit:]
+
+
+def _annual_eps_from_quarters(points: list[dict], *, fiscal_year_end_month: int, limit: int) -> list[dict]:
+    grouped: dict[str, dict] = {}
+    for point in points:
+        if point.get("estimate"):
+            continue
+        period = point.get("period")
+        value = _safe_number(point.get("value"))
+        if not period or value is None:
+            continue
+        label = _fiscal_label(period, True, fiscal_year_end_month)
+        bucket = grouped.setdefault(label, {"period": period, "label": label, "value": 0.0, "count": 0})
+        bucket["value"] += value
+        bucket["count"] += 1
+        if period > bucket["period"]:
+            bucket["period"] = period
+
+    annual = [
+        {"period": item["period"], "label": item["label"], "value": round(item["value"], 4)}
+        for item in grouped.values()
+        if item["count"] >= 4
+    ]
+    annual.sort(key=lambda item: item["period"])
+    return annual[-limit:]
+
+
 def _get_ticker_currencies(ticker_obj) -> tuple[str | None, str | None]:
     quote_currency = None
     financial_currency = None
@@ -402,6 +474,7 @@ def _fetch_one(ticker: str, session) -> dict:
     fiscal_year_end_month = _infer_fiscal_year_end_month(annual)
     revenue_estimate = _get_estimate_frame(ticker_obj, "revenue_estimate")
     earnings_estimate = _get_estimate_frame(ticker_obj, "earnings_estimate")
+    earnings_history = _get_estimate_frame(ticker_obj, "earnings_history")
 
     quarterly_revenue = _series_from_income_statement(
         quarterly,
@@ -410,32 +483,44 @@ def _fetch_one(ticker: str, session) -> dict:
         annual=False,
         fiscal_year_end_month=fiscal_year_end_month,
     )
-    quarterly_eps = _series_from_income_statement(
+    quarterly_eps_gaap = _series_from_income_statement(
         quarterly,
         ("Diluted EPS", "Basic EPS", "Diluted EPS Other Gains Losses"),
         MAX_QUARTERS,
         annual=False,
         fiscal_year_end_month=fiscal_year_end_month,
     )
+    quarterly_eps_non_gaap = _series_from_earnings_history(
+        earnings_history,
+        MAX_QUARTERS,
+        fiscal_year_end_month=fiscal_year_end_month,
+    ) or quarterly_eps_gaap
     quarterly_eps_estimates = _quarterly_estimates(
         earnings_estimate,
-        quarterly_eps,
+        quarterly_eps_non_gaap,
         fiscal_year_end_month=fiscal_year_end_month,
     )
-    annual_eps = _series_from_income_statement(
+    annual_eps_gaap = _series_from_income_statement(
         annual,
         ("Diluted EPS", "Basic EPS", "Diluted EPS Other Gains Losses"),
         MAX_YEARS,
         annual=True,
         fiscal_year_end_month=fiscal_year_end_month,
     )
+    annual_eps_non_gaap = _annual_eps_from_quarters(
+        quarterly_eps_non_gaap,
+        fiscal_year_end_month=fiscal_year_end_month,
+        limit=MAX_YEARS,
+    ) or annual_eps_gaap
 
-    if _looks_like_eps_currency_mismatch(quarterly_eps, quarterly_eps_estimates):
+    if _looks_like_eps_currency_mismatch(quarterly_eps_gaap, quarterly_eps_estimates):
         financial_currency, quote_currency = _get_ticker_currencies(ticker_obj)
         rate = _fx_rate(financial_currency, quote_currency, session)
         if rate and rate > 0:
-            quarterly_eps = _convert_eps_points(quarterly_eps, rate, financial_currency or "", quote_currency or "")
-            annual_eps = _convert_eps_points(annual_eps, rate, financial_currency or "", quote_currency or "")
+            quarterly_eps_gaap = _convert_eps_points(quarterly_eps_gaap, rate, financial_currency or "", quote_currency or "")
+            annual_eps_gaap = _convert_eps_points(annual_eps_gaap, rate, financial_currency or "", quote_currency or "")
+            quarterly_eps_non_gaap = _convert_eps_points(quarterly_eps_non_gaap, rate, financial_currency or "", quote_currency or "")
+            annual_eps_non_gaap = _convert_eps_points(annual_eps_non_gaap, rate, financial_currency or "", quote_currency or "")
 
     return {
         "quarterly_revenue": quarterly_revenue + _quarterly_estimates(
@@ -450,8 +535,12 @@ def _fetch_one(ticker: str, session) -> dict:
             annual=True,
             fiscal_year_end_month=fiscal_year_end_month,
         ),
-        "quarterly_eps": quarterly_eps + quarterly_eps_estimates,
-        "annual_eps": annual_eps,
+        "quarterly_eps": quarterly_eps_non_gaap + quarterly_eps_estimates,
+        "annual_eps": annual_eps_non_gaap,
+        "quarterly_eps_gaap": quarterly_eps_gaap + quarterly_eps_estimates,
+        "annual_eps_gaap": annual_eps_gaap,
+        "quarterly_eps_non_gaap": quarterly_eps_non_gaap + quarterly_eps_estimates,
+        "annual_eps_non_gaap": annual_eps_non_gaap,
     }
 
 
