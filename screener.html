@@ -373,7 +373,7 @@ tr:hover{background:var(--bg3)}
 [data-theme="light"] .eps-basis-toggle button.on{background:#dbeafe;color:#1e3a8a}
 [data-theme="dark"] .eps-basis-toggle{background:#111827;border-color:#4b5563}
 [data-theme="dark"] .eps-basis-toggle button.on{background:#1e3a5f;color:#bfdbfe}
-.fund-chart{width:100%;height:210px;display:block}
+.fund-chart{width:100%;height:210px;display:block;overflow:visible}
 .fund-axis{stroke:var(--bdr);stroke-width:1}
 .fund-gridline{stroke:var(--bdr2);stroke-width:1}
 .fund-zero{stroke:var(--t4);stroke-width:1;stroke-dasharray:4 4;opacity:.65}
@@ -387,17 +387,18 @@ tr:hover{background:var(--bg3)}
 [data-theme="dark"] .fund-bar-neg-est{fill:#fda4af}
 .fund-label{fill:var(--t3);font-size:9px;font-family:'JetBrains Mono',monospace}
 .fund-value-label{fill:var(--t2);font-size:9px;font-family:'JetBrains Mono',monospace}
-.fund-tooltip{position:fixed;z-index:80;min-width:132px;padding:10px 12px;border:1px solid var(--bdr);border-radius:8px;background:rgba(17,24,39,.94);box-shadow:0 14px 34px rgba(0,0,0,.24);color:#f9fafb;pointer-events:none;opacity:0;transform:translate3d(-9999px,-9999px,0);transition:opacity .08s ease;font-size:11px;line-height:1.2;backdrop-filter:blur(10px)}
-.fund-tooltip.show{opacity:1}
-.fund-tooltip-period{font-weight:800;color:#fff;margin-bottom:8px;white-space:nowrap}
-.fund-tooltip-row{display:flex;align-items:baseline;justify-content:space-between;gap:18px;color:#d1d5db;white-space:nowrap}
-.fund-tooltip-label{color:#9ca3af}
-.fund-tooltip-value{font-family:'JetBrains Mono',monospace;font-weight:800;color:#fff}
-[data-theme="light"] .fund-tooltip{background:rgba(255,255,255,.96);border-color:#d1d5db;box-shadow:0 14px 34px rgba(15,23,42,.14);color:#111827}
-[data-theme="light"] .fund-tooltip-period,[data-theme="light"] .fund-tooltip-value{color:#111827}
-[data-theme="light"] .fund-tooltip-row{color:#374151}
-[data-theme="light"] .fund-tooltip-label{color:#6b7280}
-.fund-bar,.fund-bar-est,.fund-bar-neg,.fund-bar-neg-est{cursor:crosshair}
+.fund-bar-point{cursor:default;outline:none}
+.fund-hover-dot{fill:#020617;stroke:#fff;stroke-width:1.4;opacity:0;transition:opacity .12s}
+.fund-svg-tooltip{opacity:0;pointer-events:none;transition:opacity .12s}
+.fund-tooltip-box{fill:rgba(17,24,39,.96);stroke:var(--bdr);stroke-width:1;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22))}
+.fund-tooltip-period{fill:#f9fafb;font-size:10px;font-weight:800}
+.fund-tooltip-label{fill:#9ca3af;font-size:9px}
+.fund-tooltip-value{fill:#f9fafb;font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:800}
+[data-theme="light"] .fund-hover-dot{fill:#111827;stroke:#fff}
+[data-theme="light"] .fund-tooltip-box{fill:rgba(255,255,255,.98);stroke:#d1d5db;filter:drop-shadow(0 8px 14px rgba(15,23,42,.14))}
+[data-theme="light"] .fund-tooltip-period,[data-theme="light"] .fund-tooltip-value{fill:#111827}
+[data-theme="light"] .fund-tooltip-label{fill:#6b7280}
+.fund-bar-point:hover .fund-hover-dot,.fund-bar-point:focus-visible .fund-hover-dot,.fund-bar-point:hover .fund-svg-tooltip,.fund-bar-point:focus-visible .fund-svg-tooltip{opacity:1}
 .fund-tv-card{margin-top:12px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:0;min-height:1220px;overflow:hidden}
 [data-theme="light"] .fund-tv-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .fund-tv-widget{height:1220px;width:100%}
@@ -1093,44 +1094,6 @@ function toSGT(utcStr){
   return d.toLocaleString('en-SG',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' SGT';}catch(e){return utcStr;}
 }
 function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
-function escAttr(s){return esc(String(s??'')).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-let fundTooltipEl=null;
-function getFundTooltip(){
-  if(fundTooltipEl)return fundTooltipEl;
-  fundTooltipEl=document.createElement('div');
-  fundTooltipEl.className='fund-tooltip';
-  fundTooltipEl.setAttribute('role','tooltip');
-  document.body.appendChild(fundTooltipEl);
-  return fundTooltipEl;
-}
-function hideFundTooltip(){
-  if(!fundTooltipEl)return;
-  fundTooltipEl.classList.remove('show');
-  fundTooltipEl.style.transform='translate3d(-9999px,-9999px,0)';
-}
-function positionFundTooltip(e,tip){
-  const gap=16;
-  const margin=8;
-  const rect=tip.getBoundingClientRect();
-  let x=e.clientX+gap;
-  let y=e.clientY+gap;
-  if(x+rect.width+margin>window.innerWidth)x=e.clientX-rect.width-gap;
-  if(y+rect.height+margin>window.innerHeight)y=e.clientY-rect.height-gap;
-  x=Math.max(margin,Math.min(x,window.innerWidth-rect.width-margin));
-  y=Math.max(margin,Math.min(y,window.innerHeight-rect.height-margin));
-  tip.style.transform=`translate3d(${x}px,${y}px,0)`;
-}
-document.addEventListener('mousemove',e=>{
-  const target=e.target instanceof Element?e.target.closest('[data-fund-tooltip]'):null;
-  if(!target){hideFundTooltip();return;}
-  const tip=getFundTooltip();
-  tip.innerHTML=`<div class="fund-tooltip-period">${esc(target.dataset.fundPeriod||'')}</div>
-    <div class="fund-tooltip-row"><span class="fund-tooltip-label">${esc(target.dataset.fundLabel||'')}</span><span class="fund-tooltip-value">${esc(target.dataset.fundValue||'')}</span></div>`;
-  tip.classList.add('show');
-  positionFundTooltip(e,tip);
-});
-document.addEventListener('mouseleave',hideFundTooltip);
-window.addEventListener('scroll',hideFundTooltip,true);
 function chgClass(v){return v>0?'cp':v<0?'cn':'cz';}
 function chgText(v){return v!=null?(v>0?'+':'')+v.toFixed(2)+'%':'—';}
 function multText(v){return v!=null?(v/100).toFixed(2)+'x':'—';}
@@ -2332,7 +2295,21 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,op
     const tooltipPeriod=fullFundPeriod(p,annual,fiscalYearEndMonth);
     const tooltipLabel=type==='eps'?'EPS:':'Revenue:';
     const tooltipValue=formatFundValue(Number(p.value),type);
-    return `<rect class="${cls}" data-fund-tooltip="1" data-fund-period="${escAttr(tooltipPeriod)}" data-fund-label="${escAttr(tooltipLabel)}" data-fund-value="${escAttr(tooltipValue)}" aria-label="${escAttr(`${tooltipPeriod}, ${tooltipLabel} ${tooltipValue}`)}" x="${x.toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="2"></rect>`;
+    const tipW=118,tipH=46;
+    const midX=x+barW/2;
+    const tipX=Math.max(2,Math.min(midX-tipW/2,w-tipW-2));
+    const tipY=rectY>top+tipH+10?rectY-tipH-9:Math.min(rectY+rectH+9,h-tipH-3);
+    const dotY=Number(p.value)<0?Math.min(rectY+rectH+5,h-bottom-4):Math.max(rectY-5,top+5);
+    return `<g class="fund-bar-point" tabindex="0" role="graphics-symbol" aria-label="${esc(`${tooltipPeriod}, ${tooltipLabel} ${tooltipValue}`)}">
+      <rect class="${cls}" x="${x.toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="2"></rect>
+      <circle class="fund-hover-dot" cx="${midX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="3"></circle>
+      <g class="fund-svg-tooltip" transform="translate(${tipX.toFixed(1)} ${tipY.toFixed(1)})">
+        <rect class="fund-tooltip-box" x="0" y="0" width="${tipW}" height="${tipH}" rx="7"></rect>
+        <text class="fund-tooltip-period" x="10" y="17">${esc(tooltipPeriod)}</text>
+        <text class="fund-tooltip-label" x="10" y="33">${esc(tooltipLabel)}</text>
+        <text class="fund-tooltip-value" x="${tipW-10}" y="33" text-anchor="end">${esc(tooltipValue)}</text>
+      </g>
+    </g>`;
   }).join('');
   const labelEvery=clean.length>10?Math.ceil(clean.length/6):1;
   const labels=clean.map((p,i)=>{
