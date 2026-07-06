@@ -373,7 +373,7 @@ tr:hover{background:var(--bg3)}
 [data-theme="light"] .eps-basis-toggle button.on{background:#dbeafe;color:#1e3a8a}
 [data-theme="dark"] .eps-basis-toggle{background:#111827;border-color:#4b5563}
 [data-theme="dark"] .eps-basis-toggle button.on{background:#1e3a5f;color:#bfdbfe}
-.fund-chart{width:100%;height:230px;display:block;overflow:visible}
+.fund-chart{width:100%;height:210px;display:block;overflow:visible}
 .fund-axis{stroke:var(--bdr);stroke-width:1}
 .fund-gridline{stroke:var(--bdr2);stroke-width:1}
 .fund-zero{stroke:var(--t4);stroke-width:1;stroke-dasharray:4 4;opacity:.65}
@@ -2271,7 +2271,7 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,op
   if(!clean.length){
     return `<div class="fund-card">${head}<div class="profile-section-empty">No data available</div></div>`;
   }
-  const w=520,h=230,left=42,right=20,top=58,bottom=32;
+  const w=520,h=210,left=42,right=20,top=38,bottom=32;
   const plotW=w-left-right,plotH=h-top-bottom;
   const values=clean.map(p=>Number(p.value));
   let minVal=Math.min(0,...values);
