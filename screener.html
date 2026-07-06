@@ -390,9 +390,9 @@ tr:hover{background:var(--bg3)}
 .fund-bar-point{cursor:default;outline:none}
 .fund-svg-tooltip{opacity:0;pointer-events:none;transition:opacity .12s}
 .fund-tooltip-box{fill:rgba(17,24,39,.96);stroke:var(--bdr);stroke-width:1;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22))}
-.fund-tooltip-period{fill:#f9fafb;font-size:11px;font-weight:800}
-.fund-tooltip-label{fill:#9ca3af;font-size:10px}
-.fund-tooltip-value{fill:#f9fafb;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:800}
+.fund-tooltip-period{fill:#f9fafb;font-size:14px;font-weight:800}
+.fund-tooltip-label{fill:#9ca3af;font-size:13px}
+.fund-tooltip-value{fill:#f9fafb;font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:800}
 [data-theme="light"] .fund-tooltip-box{fill:rgba(255,255,255,.98);stroke:#d1d5db;filter:drop-shadow(0 8px 14px rgba(15,23,42,.14))}
 [data-theme="light"] .fund-tooltip-period,[data-theme="light"] .fund-tooltip-value{fill:#111827}
 [data-theme="light"] .fund-tooltip-label{fill:#6b7280}
@@ -2293,12 +2293,12 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,op
     const tooltipPeriod=fullFundPeriod(p,annual,fiscalYearEndMonth);
     const tooltipLabel=type==='eps'?'EPS:':'Revenue:';
     const tooltipValue=formatFundValue(Number(p.value),type);
-    const labelW=tooltipLabel.length*5.7;
-    const valueW=tooltipValue.length*6.2;
-    const tipGap=8;
-    const tipPad=9;
+    const labelW=tooltipLabel.length*7.4;
+    const valueW=tooltipValue.length*8.1;
+    const tipGap=10;
+    const tipPad=10;
     const tipW=Math.ceil(Math.max(72,tipPad*2+labelW+tipGap+valueW));
-    const tipH=42;
+    const tipH=52;
     const midX=x+barW/2;
     const tipX=Math.max(2,Math.min(midX-tipW/2,w-tipW-2));
     const tipY=Math.max(4,rectY-tipH-8);
@@ -2306,9 +2306,9 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,op
       <rect class="${cls}" x="${x.toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="2"></rect>
       <g class="fund-svg-tooltip" transform="translate(${tipX.toFixed(1)} ${tipY.toFixed(1)})">
         <rect class="fund-tooltip-box" x="0" y="0" width="${tipW}" height="${tipH}" rx="7"></rect>
-        <text class="fund-tooltip-period" x="9" y="16">${esc(tooltipPeriod)}</text>
-        <text class="fund-tooltip-label" x="9" y="31">${esc(tooltipLabel)}</text>
-        <text class="fund-tooltip-value" x="${tipW-9}" y="31" text-anchor="end">${esc(tooltipValue)}</text>
+        <text class="fund-tooltip-period" x="${tipPad}" y="20">${esc(tooltipPeriod)}</text>
+        <text class="fund-tooltip-label" x="${tipPad}" y="39">${esc(tooltipLabel)}</text>
+        <text class="fund-tooltip-value" x="${tipW-tipPad}" y="39" text-anchor="end">${esc(tooltipValue)}</text>
       </g>
     </g>`;
   }).join('');
