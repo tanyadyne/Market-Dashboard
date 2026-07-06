@@ -388,6 +388,7 @@ tr:hover{background:var(--bg3)}
 .fund-label{fill:var(--t3);font-size:9px;font-family:'JetBrains Mono',monospace}
 .fund-value-label{fill:var(--t2);font-size:9px;font-family:'JetBrains Mono',monospace}
 .fund-bar-point{cursor:default;outline:none}
+.fund-bar-hit{fill:transparent;pointer-events:all}
 .fund-svg-tooltip{opacity:0;pointer-events:none;transition:opacity .12s}
 .fund-tooltip-box{fill:rgba(17,24,39,.96);stroke:var(--bdr);stroke-width:1;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22))}
 .fund-tooltip-period{fill:#f9fafb;font-size:14px;font-weight:800}
@@ -2281,7 +2282,7 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,op
   const zeroY=yFor(0);
   const slotW=plotW/clean.length;
   const barW=Math.max(7,Math.min(36,slotW*.46));
-  const bars=clean.map((p,i)=>{
+  const chartItems=clean.map((p,i)=>{
     const x=left+i*slotW+(slotW-barW)/2;
     const y=yFor(Math.max(0,Number(p.value)));
     const y0=yFor(Math.min(0,Number(p.value)));
@@ -2302,8 +2303,9 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,op
     const midX=x+barW/2;
     const tipX=Math.max(2,Math.min(midX-tipW/2,w-tipW-2));
     const tipY=Math.max(4,rectY-tipH-8);
-    return `<g class="fund-bar-point" tabindex="0" role="graphics-symbol" aria-label="${esc(`${tooltipPeriod}, ${tooltipLabel} ${tooltipValue}`)}">
-      <rect class="${cls}" x="${x.toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="2"></rect>
+    const bar=`<rect class="${cls}" x="${x.toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="2"></rect>`;
+    const tooltip=`<g class="fund-bar-point" tabindex="0" role="graphics-symbol" aria-label="${esc(`${tooltipPeriod}, ${tooltipLabel} ${tooltipValue}`)}">
+      <rect class="fund-bar-hit" x="${x.toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="2"></rect>
       <g class="fund-svg-tooltip" transform="translate(${tipX.toFixed(1)} ${tipY.toFixed(1)})">
         <rect class="fund-tooltip-box" x="0" y="0" width="${tipW}" height="${tipH}" rx="7"></rect>
         <text class="fund-tooltip-period" x="${tipPad}" y="20">${esc(tooltipPeriod)}</text>
@@ -2311,7 +2313,10 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,op
         <text class="fund-tooltip-value" x="${tipW-tipPad}" y="39" text-anchor="end">${esc(tooltipValue)}</text>
       </g>
     </g>`;
-  }).join('');
+    return {bar,tooltip};
+  });
+  const bars=chartItems.map(item=>item.bar).join('');
+  const tooltips=chartItems.map(item=>item.tooltip).join('');
   const labelEvery=clean.length>10?Math.ceil(clean.length/6):1;
   const labels=clean.map((p,i)=>{
     if(!p.estimate&&i%labelEvery!==0&&i!==clean.length-1)return'';
@@ -2330,6 +2335,7 @@ function renderFundChart(title,points,type,annual=false,fiscalYearEndMonth=12,op
       <text class="fund-value-label" x="${left-6}" y="${top+plotH}" text-anchor="end">${esc(formatFundValue(minVal,type))}</text>
       ${bars}
       ${labels}
+      ${tooltips}
     </svg>
   </div>`;
 }
