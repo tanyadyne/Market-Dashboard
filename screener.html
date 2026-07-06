@@ -2193,7 +2193,7 @@ function profileSubtabsHtml(){
     ['history','Rank History'],
     ['fundamentals','Fundamentals'],
     ['earnings','Earnings'],
-    ['news','News']
+    ['news','Ownership']
   ];
   return `<div class="profile-subtabs" role="tablist" aria-label="Profile sections">
     ${tabs.map(([key,label])=>`<button class="profile-subtab ${profileSectionTab===key?'active':''}" role="tab" aria-selected="${profileSectionTab===key?'true':'false'}" onclick="setProfileSectionTab('${key}')">${label}</button>`).join('')}
@@ -2459,7 +2459,7 @@ function searchStock(){
   }else if(profileSectionTab==='earnings'){
     html+=`<div class="profile-section-empty">Earnings tab coming soon.</div>`;
   }else if(profileSectionTab==='news'){
-    html+=`<div class="profile-section-empty">News tab coming soon.</div>`;
+    html+=`<div class="profile-section-empty">Ownership tab coming soon.</div>`;
   }else if(stock.po){
     html+=`<div style="text-align:center;color:var(--t3);padding:20px;font-size:12px">No history data available.</div>`;
   }else{
