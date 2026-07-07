@@ -371,7 +371,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--universe", type=Path, default=DEFAULT_UNIVERSE, help="Ticker universe JSON.")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="Output JSON for ownership top holders.")
     parser.add_argument("--report-period", default="latest", help="13F report period to use, or latest/auto.")
-    parser.add_argument("--top-n", type=int, default=5, help="Number of holders per ticker.")
+    parser.add_argument("--top-n", type=int, default=10, help="Number of holders per ticker.")
     parser.add_argument("--rank-by", choices=("shares", "value"), default="shares", help="Ranking metric.")
     return parser.parse_args()
 
