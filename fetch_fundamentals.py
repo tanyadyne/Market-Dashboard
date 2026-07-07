@@ -15,6 +15,8 @@ from __future__ import annotations
 import json
 import math
 import time
+import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from calendar import monthrange
 from pathlib import Path
@@ -39,6 +41,49 @@ PROFILE_QUARTERLY_EPS_ESTIMATES = 2
 PROFILE_ANNUAL_EPS_ACTUALS = 4
 PROFILE_ANNUAL_EPS_ESTIMATES = 1
 FX_RATE_CACHE: dict[tuple[str, str], float | None] = {}
+OWNERSHIP_HOLDER_EXCLUDE_TERMS = (
+    "blackrock",
+    "vanguard",
+    "state street",
+    "ssga",
+    "jpmorgan",
+    "jp morgan",
+    "morgan stanley",
+    "ubs",
+    "bank of america",
+    "bofa",
+    "bnp paribas",
+    "t. rowe",
+    "t.rowe",
+    "t rowe",
+    "price (t.rowe",
+    "invesco",
+    "fmr",
+    "jane street",
+    "first trust",
+    "ishares",
+    "spdr",
+    "qqq",
+    "index",
+    "etf",
+    "fidelity",
+    "charles schwab",
+    "schwab",
+    "northern trust",
+    "geode",
+    "bny",
+    "mellon",
+    "deutsche bank",
+    "goldman sachs",
+    "citigroup",
+    "wells fargo",
+    "barclays",
+    "hsbc",
+    "credit suisse",
+    "nomura",
+    "mizuho",
+    "societe generale",
+)
 
 
 def _build_session():
@@ -78,6 +123,65 @@ def _load_universe() -> list[str]:
             print(f"Warning: failed to read {SCREENER_TICKERS.name}: {exc}")
 
     return sorted(tickers)
+
+
+def _parse_ticker_filter(value: str | None) -> set[str] | None:
+    if not value:
+        return None
+    tickers = {item.strip().upper() for item in value.split(",") if item.strip()}
+    return tickers or None
+
+
+def _filter_tickers(tickers: list[str], ticker_filter: set[str] | None) -> list[str]:
+    if not ticker_filter:
+        return tickers
+    return [ticker for ticker in tickers if ticker in ticker_filter]
+
+
+def _empty_payload(ticker_count: int) -> dict:
+    return {
+        "meta": {
+            "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "count": 0,
+            "universe": ticker_count,
+            "max_quarters": MAX_QUARTERS,
+            "max_years": MAX_YEARS,
+        },
+        "tickers": {},
+    }
+
+
+def _load_existing_payload(ticker_count: int) -> dict:
+    if OUT_JSON.exists():
+        try:
+            with OUT_JSON.open() as f:
+                payload = json.load(f)
+            if isinstance(payload, dict) and isinstance(payload.get("tickers"), dict):
+                payload.setdefault("meta", {})
+                payload["meta"]["universe"] = ticker_count
+                payload["meta"].setdefault("max_quarters", MAX_QUARTERS)
+                payload["meta"].setdefault("max_years", MAX_YEARS)
+                return payload
+        except Exception as exc:
+            print(f"Warning: failed to read existing {OUT_JSON.name}: {exc}")
+    return _empty_payload(ticker_count)
+
+
+def _write_payload(payload: dict, ticker_count: int) -> None:
+    payload.setdefault("meta", {})
+    payload.setdefault("tickers", {})
+    payload["meta"]["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    payload["meta"]["count"] = len(payload["tickers"])
+    payload["meta"]["universe"] = ticker_count
+    payload["meta"]["max_quarters"] = MAX_QUARTERS
+    payload["meta"]["max_years"] = MAX_YEARS
+
+    with OUT_JSON.open("w") as f:
+        json.dump(payload, f, separators=(",", ":"))
+    with OUT_JS.open("w") as f:
+        f.write("window.FUNDAMENTALS_DATA = ")
+        json.dump(payload, f, separators=(",", ":"))
+        f.write(";\n")
 
 
 def _safe_number(value):
@@ -543,6 +647,164 @@ def _convert_eps_points(points: list[dict], rate: float, from_currency: str, to_
     return converted
 
 
+def _safe_percent(value):
+    num = _safe_number(value)
+    if num is None:
+        return None
+    pct = num * 100 if abs(num) <= 1 else num
+    if not math.isfinite(pct) or pct < 0:
+        return None
+    return round(pct, 4)
+
+
+def _series_value(row, names: tuple[str, ...]):
+    if row is None:
+        return None
+    normalized = {str(key).strip().lower(): key for key in getattr(row, "index", [])}
+    for name in names:
+        key = normalized.get(name.lower())
+        if key is not None:
+            try:
+                return row.get(key)
+            except Exception:
+                return row[key]
+    return None
+
+
+def _major_holder_value(frame, key: str):
+    if frame is None or getattr(frame, "empty", True):
+        return None
+    try:
+        if key in frame.index:
+            row = frame.loc[key]
+            if hasattr(row, "iloc"):
+                return row.iloc[0]
+            return row
+    except Exception:
+        pass
+    return None
+
+
+def _is_filtered_institutional_holder(name: str) -> bool:
+    clean = " ".join(str(name or "").lower().replace("&", " and ").split())
+    if not clean:
+        return True
+    return any(term in clean for term in OWNERSHIP_HOLDER_EXCLUDE_TERMS)
+
+
+def _get_major_holders(ticker_obj):
+    try:
+        frame = ticker_obj.get_major_holders()
+        if frame is not None and not frame.empty:
+            return frame
+    except Exception:
+        pass
+    try:
+        frame = ticker_obj.major_holders
+        if frame is not None and not frame.empty:
+            return frame
+    except Exception:
+        pass
+    return None
+
+
+def _get_institutional_holders(ticker_obj):
+    try:
+        frame = ticker_obj.get_institutional_holders()
+        if frame is not None and not frame.empty:
+            return frame
+    except Exception:
+        pass
+    try:
+        frame = ticker_obj.institutional_holders
+        if frame is not None and not frame.empty:
+            return frame
+    except Exception:
+        pass
+    return None
+
+
+def _shares_outstanding_history(ticker_obj) -> list[dict]:
+    try:
+        shares = ticker_obj.get_shares_full(start=None, end=None)
+    except Exception:
+        return []
+    if shares is None or getattr(shares, "empty", True):
+        return []
+
+    by_date: dict[str, int] = {}
+    try:
+        iterator = shares.dropna().items()
+    except Exception:
+        iterator = []
+    for period, value in iterator:
+        num = _safe_number(value)
+        if num is None or num <= 0:
+            continue
+        date = _period_label(period)
+        if not date or len(date) < 7:
+            continue
+        by_date[date[:10]] = int(round(num))
+
+    return [{"date": date, "value": value} for date, value in sorted(by_date.items())]
+
+
+def _institutional_holder_rows(frame) -> list[dict]:
+    if frame is None or getattr(frame, "empty", True):
+        return []
+    rows = []
+    for _, row in frame.iterrows():
+        holder = _series_value(row, ("Holder", "holder"))
+        holder = str(holder or "").strip()
+        if _is_filtered_institutional_holder(holder):
+            continue
+        shares = _safe_number(_series_value(row, ("Shares", "shares")))
+        pct_out = _safe_percent(_series_value(row, ("pctHeld", "pct held", "% Out", "% out")))
+        value = _safe_number(_series_value(row, ("Value", "value")))
+        date_reported = _series_value(row, ("Date Reported", "date reported", "Date", "date"))
+        item = {"holder": holder}
+        if shares is not None:
+            item["shares"] = int(round(shares))
+        if pct_out is not None:
+            item["pct_out"] = pct_out
+        if value is not None:
+            item["value"] = int(round(value))
+        if date_reported is not None:
+            item["date_reported"] = _period_label(date_reported)
+        rows.append(item)
+    rows.sort(key=lambda item: item.get("shares", 0), reverse=True)
+    return rows[:12]
+
+
+def _fetch_ownership(ticker_obj) -> dict:
+    ownership: dict = {}
+
+    major = _get_major_holders(ticker_obj)
+    institutional_pct = _safe_percent(_major_holder_value(major, "institutionsPercentHeld"))
+    insider_pct = _safe_percent(_major_holder_value(major, "insidersPercentHeld"))
+    institutions_count = _safe_number(_major_holder_value(major, "institutionsCount"))
+    if institutional_pct is not None or insider_pct is not None:
+        inst = institutional_pct or 0
+        insider = insider_pct or 0
+        ownership["breakdown"] = {
+            "institutional": institutional_pct,
+            "insider": insider_pct,
+            "other": round(max(0, 100 - inst - insider), 4),
+        }
+        if institutions_count is not None:
+            ownership["breakdown"]["institutions_count"] = int(round(institutions_count))
+
+    shares_history = _shares_outstanding_history(ticker_obj)
+    if shares_history:
+        ownership["shares_outstanding"] = shares_history
+
+    holder_rows = _institutional_holder_rows(_get_institutional_holders(ticker_obj))
+    if holder_rows:
+        ownership["institutional_holders"] = holder_rows
+
+    return ownership
+
+
 def _get_income_statement(ticker_obj, frequency: str):
     accessors = (
         "quarterly_income_stmt" if frequency == "quarterly" else "income_stmt",
@@ -565,7 +827,7 @@ def _get_income_statement(ticker_obj, frequency: str):
     return None
 
 
-def _fetch_one(ticker: str, session) -> dict:
+def _fetch_one(ticker: str, session, include_ownership: bool = True) -> dict:
     kwargs = {"session": session} if session is not None else {}
     ticker_obj = yf.Ticker(ticker, **kwargs)
     quarterly = _get_income_statement(ticker_obj, "quarterly")
@@ -575,6 +837,7 @@ def _fetch_one(ticker: str, session) -> dict:
     earnings_estimate = _get_estimate_frame(ticker_obj, "earnings_estimate")
     earnings_dates = _get_earnings_dates(ticker_obj, max(MAX_QUARTERS + 4, 24))
     earnings_history = _get_estimate_frame(ticker_obj, "earnings_history")
+    ownership = _fetch_ownership(ticker_obj) if include_ownership else {}
 
     quarterly_revenue = _series_from_income_statement(
         quarterly,
@@ -664,7 +927,7 @@ def _fetch_one(ticker: str, session) -> dict:
         estimate_limit=PROFILE_ANNUAL_EPS_ESTIMATES,
     )
 
-    return {
+    result = {
         "quarterly_revenue": quarterly_revenue + _quarterly_estimates(
             revenue_estimate,
             quarterly_revenue,
@@ -684,42 +947,127 @@ def _fetch_one(ticker: str, session) -> dict:
         "quarterly_eps_non_gaap": quarterly_eps_non_gaap_profile,
         "annual_eps_non_gaap": annual_eps_non_gaap_profile,
     }
+    if ownership:
+        result["ownership"] = ownership
+    return result
+
+
+def _record_has_data(data: dict) -> bool:
+    return any(
+        (isinstance(value, list) and value)
+        or (isinstance(value, dict) and value)
+        for value in data.values()
+    )
+
+
+def _fetch_ownership_for_ticker(ticker: str, session=None) -> tuple[str, dict, Exception | None]:
+    try:
+        kwargs = {"session": session} if session is not None else {}
+        return ticker, _fetch_ownership(yf.Ticker(ticker, **kwargs)), None
+    except Exception as exc:
+        return ticker, {}, exc
+
+
+def _refresh_ownership_only(tickers: list[str], session, universe_count: int, workers: int) -> int:
+    payload = _load_existing_payload(universe_count)
+    updated = 0
+    skipped = 0
+
+    print(f"Refreshing ownership for {len(tickers)} stock(s)...")
+    workers = max(1, int(workers or 1))
+
+    def store(ticker: str, ownership: dict, exc: Exception | None) -> None:
+        nonlocal updated, skipped
+        if exc is not None:
+            skipped += 1
+            print(f"  {ticker}: ownership failed ({exc})")
+            return
+        if ownership:
+            rec = payload["tickers"].setdefault(ticker, {})
+            rec["ownership"] = ownership
+            updated += 1
+        else:
+            skipped += 1
+
+    if workers == 1:
+        for i, ticker in enumerate(tickers, start=1):
+            if i % 50 == 0:
+                print(f"  {i}/{len(tickers)}...")
+            ticker, ownership, exc = _fetch_ownership_for_ticker(ticker, session)
+            store(ticker, ownership, exc)
+            time.sleep(0.05)
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = {pool.submit(_fetch_ownership_for_ticker, ticker, None): ticker for ticker in tickers}
+            for i, future in enumerate(as_completed(futures), start=1):
+                if i % 50 == 0:
+                    print(f"  {i}/{len(tickers)}...")
+                ticker, ownership, exc = future.result()
+                store(ticker, ownership, exc)
+
+    payload.setdefault("meta", {})
+    payload["meta"]["ownership_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    payload["meta"]["ownership_count"] = sum(
+        1 for rec in payload.get("tickers", {}).values()
+        if isinstance(rec, dict) and isinstance(rec.get("ownership"), dict) and rec["ownership"]
+    )
+    _write_payload(payload, universe_count)
+    print(
+        f"Wrote {OUT_JSON.name}: ownership updated for {updated}/{len(tickers)} stock(s); "
+        f"skipped {skipped}; total ownership records {payload['meta']['ownership_count']}"
+    )
+    return 0
+
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Fetch static stock fundamentals from Yahoo Finance.")
+    parser.add_argument(
+        "--ownership-only",
+        action="store_true",
+        help="Refresh ownership fields only and preserve existing fundamentals data.",
+    )
+    parser.add_argument(
+        "--skip-ownership",
+        action="store_true",
+        help="Skip ownership fetching during the full fundamentals refresh.",
+    )
+    parser.add_argument(
+        "--tickers",
+        help="Optional comma-separated ticker filter, useful for targeted refreshes like BE,AMD.",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=8,
+        help="Parallel workers for --ownership-only. Use 1 for sequential fetching.",
+    )
+    return parser.parse_args()
 
 
 def main() -> int:
-    tickers = _load_universe()
+    args = _parse_args()
+    all_tickers = _load_universe()
+    tickers = _filter_tickers(all_tickers, _parse_ticker_filter(args.tickers))
     session = _build_session()
-    payload = {
-        "meta": {
-            "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
-            "count": 0,
-            "universe": len(tickers),
-            "max_quarters": MAX_QUARTERS,
-            "max_years": MAX_YEARS,
-        },
-        "tickers": {},
-    }
+
+    if args.ownership_only:
+        return _refresh_ownership_only(tickers, session, len(all_tickers), args.workers)
+
+    payload = _empty_payload(len(all_tickers))
 
     print(f"Fetching fundamentals for {len(tickers)} stock(s)...")
     for i, ticker in enumerate(tickers, start=1):
         if i % 50 == 0:
             print(f"  {i}/{len(tickers)}...")
         try:
-            data = _fetch_one(ticker, session)
-            if any(isinstance(value, list) and value for value in data.values()):
+            data = _fetch_one(ticker, session, include_ownership=not args.skip_ownership)
+            if _record_has_data(data):
                 payload["tickers"][ticker] = data
         except Exception as exc:
             print(f"  {ticker}: failed ({exc})")
         time.sleep(0.05)
 
-    payload["meta"]["count"] = len(payload["tickers"])
-    with OUT_JSON.open("w") as f:
-        json.dump(payload, f, separators=(",", ":"))
-    with OUT_JS.open("w") as f:
-        f.write("window.FUNDAMENTALS_DATA = ")
-        json.dump(payload, f, separators=(",", ":"))
-        f.write(";\n")
-
+    _write_payload(payload, len(all_tickers))
     print(f"Wrote {OUT_JSON.name}: {payload['meta']['count']}/{len(tickers)} stock(s)")
     return 0
 

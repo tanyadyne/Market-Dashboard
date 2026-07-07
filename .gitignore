@@ -1,0 +1,15 @@
+.env.local
+__pycache__/
+*.pyc
+.cusip_cache/
+.sec_13f_cache/
+13f_holdings_*_raw.ndjson
+13f_holdings_*_raw.progress.json
+13f_holdings_*_raw.summary.json
+13f_holdings_*_aggregated.ndjson
+13f_holdings_*_aggregated.summary.json
+13f_holdings_*_classified.ndjson
+13f_holdings_*_classified.summary.json
+13f_holdings_*_included.ndjson
+13f_holder_manager_classifications.json
+ownership_top_holders_13f.summary.json

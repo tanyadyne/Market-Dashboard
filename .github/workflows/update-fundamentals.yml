@@ -25,7 +25,10 @@ jobs:
         run: pip install --retries 5 --timeout 60 yfinance pandas curl_cffi
 
       - name: Fetch fundamentals
-        run: python fetch_fundamentals.py
+        run: python fetch_fundamentals.py --skip-ownership
+
+      - name: Refresh ownership
+        run: python fetch_fundamentals.py --ownership-only --workers 8
 
       - name: Commit and push fundamentals data
         run: |
