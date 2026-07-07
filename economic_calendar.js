@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-07-07 00:09 UTC",
-  "generated_at_et": "06/07/2026, 20:09 EDT",
+  "generated_at_utc": "2026-07-07 23:58 UTC",
+  "generated_at_et": "07/07/2026, 19:57 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -44,20 +44,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "previous": "62.7",
           "forecast": "-",
           "revised": "-"
-        },
-        {
-          "key": "consumer_confidence",
-          "event": "Consumer confidence",
-          "source_event": "Consumer Confidence",
-          "date": "2026-06-30",
-          "day": "Tuesday, June 30, 2026",
-          "time": "10:00 AM",
-          "period": "JUN",
-          "actual": "91.2",
-          "consensus": "-",
-          "previous": "93.1",
-          "forecast": "-",
-          "revised": "90.6"
         },
         {
           "key": "adp",
@@ -156,7 +142,6 @@ window.ECONOMIC_CALENDAR_DATA = {
       ],
       "event_keys": [
         "chicago_pmi",
-        "consumer_confidence",
         "adp",
         "unemployment"
       ]
@@ -190,27 +175,11 @@ window.ECONOMIC_CALENDAR_DATA = {
       "events": [],
       "earnings_events": [
         {
-          "date": "2026-07-06",
-          "day": "Monday, July 6, 2026",
+          "date": "2026-07-07",
+          "day": "Tuesday, July 7, 2026",
           "ticker": "BMNR",
           "company": "Bitmine Immersion Technologies, Inc.",
           "group": "Capital Markets",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-06",
-          "day": "Monday, July 6, 2026",
-          "ticker": "RR",
-          "company": "Richtech Robotics Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-06",
-          "day": "Monday, July 6, 2026",
-          "ticker": "USAU",
-          "company": "U.S. Gold Corp.",
-          "group": "Gold",
           "time": "AMC"
         },
         {
@@ -227,6 +196,22 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "PENG",
           "company": "Penguin Solutions, Inc.",
           "group": "Information Technology Services",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-07",
+          "day": "Tuesday, July 7, 2026",
+          "ticker": "RR",
+          "company": "Richtech Robotics Inc.",
+          "group": "Specialty Industrial Machinery",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-07",
+          "day": "Tuesday, July 7, 2026",
+          "ticker": "USAU",
+          "company": "U.S. Gold Corp.",
+          "group": "Gold",
           "time": "AMC"
         },
         {
@@ -376,14 +361,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-14",
           "day": "Tuesday, July 14, 2026",
-          "ticker": "NIC",
-          "company": "Nicolet Bankshares, Inc.",
-          "group": "Banks - Regional",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-14",
-          "day": "Tuesday, July 14, 2026",
           "ticker": "BAC",
           "company": "Bank of America Corporation",
           "group": "Banks - Diversified",
@@ -512,6 +489,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-15",
           "day": "Wednesday, July 15, 2026",
+          "ticker": "ELV",
+          "company": "Elevance Health, Inc.",
+          "group": "Healthcare Plans",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-15",
+          "day": "Wednesday, July 15, 2026",
           "ticker": "FHN",
           "company": "First Horizon Corporation",
           "group": "Banks - Regional",
@@ -576,6 +561,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-16",
           "day": "Thursday, July 16, 2026",
+          "ticker": "INDB",
+          "company": "Independent Bank Corp.",
+          "group": "Banks - Regional",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-16",
+          "day": "Thursday, July 16, 2026",
           "ticker": "ISRG",
           "company": "Intuitive Surgical, Inc.",
           "group": "Medical Instruments & Supplies",
@@ -587,14 +580,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "NFLX",
           "company": "Netflix, Inc.",
           "group": "Entertainment",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
-          "ticker": "WAL",
-          "company": "Western Alliance Bancorporation",
-          "group": "Banks - Regional",
           "time": "AMC"
         },
         {
@@ -619,14 +604,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "CFG",
           "company": "Citizens Financial Group, Inc.",
           "group": "Banks - Regional",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
-          "ticker": "ELV",
-          "company": "Elevance Health, Inc.",
-          "group": "Healthcare Plans",
           "time": "BMO"
         },
         {
@@ -769,27 +746,11 @@ window.ECONOMIC_CALENDAR_DATA = {
   "events": [],
   "earnings_events": [
     {
-      "date": "2026-07-06",
-      "day": "Monday, July 6, 2026",
+      "date": "2026-07-07",
+      "day": "Tuesday, July 7, 2026",
       "ticker": "BMNR",
       "company": "Bitmine Immersion Technologies, Inc.",
       "group": "Capital Markets",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-06",
-      "day": "Monday, July 6, 2026",
-      "ticker": "RR",
-      "company": "Richtech Robotics Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-06",
-      "day": "Monday, July 6, 2026",
-      "ticker": "USAU",
-      "company": "U.S. Gold Corp.",
-      "group": "Gold",
       "time": "AMC"
     },
     {
@@ -806,6 +767,22 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "PENG",
       "company": "Penguin Solutions, Inc.",
       "group": "Information Technology Services",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-07",
+      "day": "Tuesday, July 7, 2026",
+      "ticker": "RR",
+      "company": "Richtech Robotics Inc.",
+      "group": "Specialty Industrial Machinery",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-07",
+      "day": "Tuesday, July 7, 2026",
+      "ticker": "USAU",
+      "company": "U.S. Gold Corp.",
+      "group": "Gold",
       "time": "AMC"
     },
     {
