@@ -404,10 +404,10 @@ tr:hover{background:var(--bg3)}
 .ownership-card-wide{grid-column:1/-1;min-height:0}
 .ownership-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 .ownership-card-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--t2)}
-.ownership-breakdown-body{display:grid;grid-template-columns:minmax(0,1fr) 210px;align-items:center;gap:16px}
+.ownership-breakdown-body{display:grid;grid-template-columns:minmax(240px,320px) minmax(0,1fr);align-items:center;gap:28px;min-height:330px;padding:8px 8px 4px}
 .ownership-breakdown-body.no-metrics{display:block}
-.ownership-pie-wrap{min-width:0}
-.ownership-chart{width:100%;height:230px;display:block;overflow:visible}
+.ownership-pie-wrap{min-width:0;justify-self:stretch}
+.ownership-chart{width:100%;height:320px;display:block;overflow:visible}
 .own-axis{stroke:var(--bdr);stroke-width:1}
 .own-gridline{stroke:var(--bdr2);stroke-width:1;stroke-dasharray:4 5}
 .own-svg-tooltip{opacity:0;pointer-events:none;transition:opacity .12s}
@@ -421,17 +421,24 @@ tr:hover{background:var(--bg3)}
 [data-theme="light"] .own-tooltip-label{fill:#6b7280}
 .own-axis-label{fill:var(--t3);font-size:9px;font-family:'JetBrains Mono',monospace}
 .own-pie-segment{cursor:default;outline:none}
+.own-pie-slice{transition:transform .16s ease,filter .16s ease;transform-box:view-box;transform-origin:center}
+.own-pie-segment:hover .own-pie-slice,.own-pie-segment:focus-visible .own-pie-slice{transform:translate(var(--pop-x,0),var(--pop-y,0));filter:drop-shadow(0 10px 14px rgba(15,23,42,.18))}
 .own-pie-inst{fill:#2563eb}
 .own-pie-insider{fill:#22c5c7}
 .own-pie-other{fill:#fbbf24}
 [data-theme="dark"] .own-pie-inst{fill:#3b82f6}
 [data-theme="dark"] .own-pie-insider{fill:#4dd2d2}
 [data-theme="dark"] .own-pie-other{fill:#fcd34d}
+.own-pie-outline{fill:none;stroke:rgba(15,23,42,.22);stroke-width:1.2}
+[data-theme="dark"] .own-pie-outline{stroke:rgba(249,250,251,.18)}
+.own-spider-line{fill:none;stroke:var(--t4);stroke-width:1.1}
+.own-spider-label{fill:var(--t2);font-size:13px;font-weight:800}
+.own-spider-value{fill:var(--t1);font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:800}
 .own-pie-legend{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:2px;color:var(--t2);font-size:11px;font-weight:700}
 .own-pie-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .own-pie-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
-.ownership-float-metrics{border:1px solid var(--bdr2);border-radius:8px;background:var(--bg3);padding:12px 14px;display:grid;gap:10px;align-self:center}
-.ownership-float-metric{display:flex;align-items:baseline;justify-content:space-between;gap:16px;font-size:11px;line-height:1.1}
+.ownership-float-metrics{border:1px solid var(--bdr2);border-radius:8px;background:var(--bg3);padding:18px 20px;display:grid;gap:14px;align-self:center;justify-self:center;width:min(100%,300px);box-sizing:border-box}
+.ownership-float-metric{display:flex;align-items:baseline;justify-content:space-between;gap:18px;font-size:12px;line-height:1.1}
 .ownership-float-label{color:var(--t3);font-weight:800;text-transform:uppercase;letter-spacing:.55px;white-space:nowrap}
 .ownership-float-value{font-family:'JetBrains Mono',monospace;color:var(--t1);font-weight:700;text-align:right;white-space:nowrap}
 .ownership-empty{height:210px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--t3);font-size:12px;border:1px dashed var(--bdr);border-radius:8px;background:var(--bg)}
@@ -485,10 +492,11 @@ tr:hover{background:var(--bg3)}
 [data-view="mobile"] .fund-chart{height:205px}
 [data-view="mobile"] .ownership-grid{grid-template-columns:1fr;gap:10px;margin-top:12px}
 [data-view="mobile"] .ownership-card{padding:10px;min-height:248px}
-[data-view="mobile"] .ownership-breakdown-body{grid-template-columns:1fr;gap:10px}
-[data-view="mobile"] .ownership-chart{height:208px}
+[data-view="mobile"] .ownership-breakdown-body{grid-template-columns:1fr;gap:12px;min-height:0;padding:0}
+[data-view="mobile"] .ownership-chart{height:250px}
 [data-view="mobile"] .own-pie-legend{gap:10px;font-size:10px}
-[data-view="mobile"] .ownership-float-metrics{width:min(100%,260px);justify-self:center;box-sizing:border-box}
+[data-view="mobile"] .ownership-float-metrics{width:min(100%,280px);justify-self:center;box-sizing:border-box;padding:12px 14px;gap:9px}
+[data-view="mobile"] .ownership-float-metric{font-size:10.5px;gap:10px}
 
 /* ─── MOBILE LAYOUT ─── */
 /* Master constraint: every direct child of body is clamped to viewport width.
@@ -2326,6 +2334,41 @@ function renderOwnershipFloatMetrics(b){
   </div>`;
 }
 
+function ownershipSpiderLabels(sliceData,cx,cy,r,w,h){
+  const rows=sliceData.map(item=>{
+    const rad=(item.mid-90)*Math.PI/180;
+    const right=Math.cos(rad)>=0;
+    const edge=ownershipPolar(cx,cy,r+4,item.mid);
+    const elbow=ownershipPolar(cx,cy,r+30,item.mid);
+    const textX=right?w-76:76;
+    const lineX=right?textX-12:textX+12;
+    const rawY=Math.max(38,Math.min(h-38,elbow.y));
+    return {...item,right,edge,elbow,textX,lineX,y:rawY,anchor:right?'start':'end'};
+  });
+  ['left','right'].forEach(side=>{
+    const sideRows=rows.filter(row=>row.right===(side==='right')).sort((a,b)=>a.y-b.y);
+    const gap=34,minY=42,maxY=h-42;
+    let nextY=minY;
+    sideRows.forEach(row=>{
+      row.y=Math.max(row.y,nextY);
+      nextY=row.y+gap;
+    });
+    if(sideRows.length&&sideRows[sideRows.length-1].y>maxY){
+      const shift=sideRows[sideRows.length-1].y-maxY;
+      sideRows.forEach(row=>{row.y-=shift;});
+      for(let i=sideRows.length-2;i>=0;i--){
+        sideRows[i].y=Math.min(sideRows[i].y,sideRows[i+1].y-gap);
+      }
+      sideRows.forEach(row=>{row.y=Math.max(minY,row.y);});
+    }
+  });
+  return rows.map(row=>`<g class="own-spider-label-group">
+    <path class="own-spider-line" d="M ${row.edge.x.toFixed(1)} ${row.edge.y.toFixed(1)} L ${row.elbow.x.toFixed(1)} ${row.elbow.y.toFixed(1)} L ${row.elbow.x.toFixed(1)} ${row.y.toFixed(1)} L ${row.lineX.toFixed(1)} ${row.y.toFixed(1)}"></path>
+    <text class="own-spider-label" x="${row.textX}" y="${(row.y-3).toFixed(1)}" text-anchor="${row.anchor}">${esc(row.seg.legend)}</text>
+    <text class="own-spider-value" x="${row.textX}" y="${(row.y+14).toFixed(1)}" text-anchor="${row.anchor}">${esc(formatOwnershipPct(row.seg.value))}</text>
+  </g>`).join('');
+}
+
 function renderOwnershipPie(ownership){
   const b=ownership?.breakdown||{};
   const rawSegments=[
@@ -2339,20 +2382,27 @@ function renderOwnershipPie(ownership){
     return `<div class="ownership-card ownership-card-wide"><div class="ownership-card-head"><div class="ownership-card-title">Ownership Breakdown</div></div><div class="ownership-empty">No ownership breakdown available.</div></div>`;
   }
   const total=visibleSegments.reduce((sum,seg)=>sum+seg.value,0)||100;
-  const w=metrics?360:520,h=214,cx=metrics?180:260,cy=92,r=78;
+  const w=500,h=320,cx=252,cy=158,r=114;
   let angle=0;
-  const segments=visibleSegments.map(seg=>{
+  const sliceData=visibleSegments.map(seg=>{
     const span=seg.value/total*360;
     const start=angle;
     const end=angle+span;
     angle=end;
     const mid=start+span/2;
+    const rad=(mid-90)*Math.PI/180;
+    const dx=Math.cos(rad)*9;
+    const dy=Math.sin(rad)*9;
+    return {seg,start,end,mid,dx,dy};
+  });
+  const segments=sliceData.map(item=>{
+    const {seg,start,end,mid,dx,dy}=item;
     const tip=ownershipPolar(cx,cy,r*.58,mid);
     const tipW=176,tipH=48;
     const tipX=Math.max(4,Math.min(tip.x+12,w-tipW-4));
     const tipY=Math.max(4,Math.min(tip.y-24,h-tipH-4));
-    return `<g class="own-pie-segment" tabindex="0" role="graphics-symbol" aria-label="${esc(`${seg.label}: ${formatOwnershipPct(seg.value)}`)}">
-      <path class="${seg.cls}" d="${ownershipPiePath(cx,cy,r,start,end)}"></path>
+    return `<g class="own-pie-segment" tabindex="0" role="graphics-symbol" style="--pop-x:${dx.toFixed(1)}px;--pop-y:${dy.toFixed(1)}px" aria-label="${esc(`${seg.label}: ${formatOwnershipPct(seg.value)}`)}">
+      <path class="own-pie-slice ${seg.cls}" d="${ownershipPiePath(cx,cy,r,start,end)}"></path>
       <g class="own-svg-tooltip" transform="translate(${tipX.toFixed(1)} ${tipY.toFixed(1)})">
         <rect class="own-tooltip-box" x="0" y="0" width="${tipW}" height="${tipH}" rx="7"></rect>
         <text class="own-tooltip-title" x="10" y="19">${esc(seg.legend)}</text>
@@ -2360,18 +2410,19 @@ function renderOwnershipPie(ownership){
       </g>
     </g>`;
   }).join('');
-  const legend=rawSegments.map(seg=>`<span><i class="${seg.cls}"></i>${esc(seg.legend)} <strong>${esc(formatOwnershipPct(seg.value))}</strong></span>`).join('');
+  const labels=ownershipSpiderLabels(sliceData,cx,cy,r,w,h);
   const chart=visibleSegments.length?`<div class="ownership-pie-wrap">
     <svg class="ownership-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Ownership breakdown">
+      <circle class="own-pie-outline" cx="${cx}" cy="${cy}" r="${r}"></circle>
       ${segments}
+      ${labels}
     </svg>
-    <div class="own-pie-legend">${legend}</div>
   </div>`:`<div class="ownership-pie-wrap"><div class="ownership-empty">No ownership breakdown available.</div></div>`;
   return `<div class="ownership-card ownership-card-wide">
     <div class="ownership-card-head"><div class="ownership-card-title">Ownership Breakdown</div></div>
     <div class="ownership-breakdown-body${metrics?'':' no-metrics'}">
-      ${chart}
       ${metrics}
+      ${chart}
     </div>
   </div>`;
 }
