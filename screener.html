@@ -407,15 +407,15 @@ tr:hover{background:var(--bg3)}
 .ownership-chart{width:100%;height:230px;display:block;overflow:visible}
 .own-axis{stroke:var(--bdr);stroke-width:1}
 .own-gridline{stroke:var(--bdr2);stroke-width:1;stroke-dasharray:4 5}
-.own-area{fill:#3b82f6;opacity:.20}
-.own-line{fill:none;stroke:#2563eb;stroke-width:2}
-[data-theme="dark"] .own-area{fill:#60a5fa;opacity:.22}
-[data-theme="dark"] .own-line{stroke:#3b82f6}
+.own-bar{fill:#5b9bd5}
+[data-theme="dark"] .own-bar{fill:#60a5fa}
+.own-bar-point{cursor:default;outline:none}
+.own-bar-hit{fill:transparent;pointer-events:all}
 .own-point-hit{fill:transparent;pointer-events:all;cursor:default}
 .own-point-dot{fill:#2563eb;stroke:var(--bg2);stroke-width:1;opacity:0}
 .own-point:hover .own-point-dot,.own-point:focus-visible .own-point-dot{opacity:1}
 .own-svg-tooltip{opacity:0;pointer-events:none;transition:opacity .12s}
-.own-point:hover .own-svg-tooltip,.own-point:focus-visible .own-svg-tooltip,.own-pie-segment:hover .own-svg-tooltip,.own-pie-segment:focus-visible .own-svg-tooltip{opacity:1}
+.own-point:hover .own-svg-tooltip,.own-point:focus-visible .own-svg-tooltip,.own-bar-point:hover .own-svg-tooltip,.own-bar-point:focus-visible .own-svg-tooltip,.own-pie-segment:hover .own-svg-tooltip,.own-pie-segment:focus-visible .own-svg-tooltip{opacity:1}
 .own-tooltip-box{fill:rgba(17,24,39,.96);stroke:var(--bdr);stroke-width:1;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22))}
 .own-tooltip-label{fill:#9ca3af;font-size:12px;font-weight:700}
 .own-tooltip-value{fill:#f9fafb;font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:800}
@@ -781,7 +781,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
   <div id="searchResults"></div>
 </div>
 <script>
-let DATA=null,HISTORY=null,ETF_DATA=null,FUNDAMENTALS=null,OWNERSHIP_13F=null,sortKey='rk',sortDir=1,currentTab='weekly',currentPage=1;
+let DATA=null,HISTORY=null,ETF_DATA=null,FUNDAMENTALS=null,OWNERSHIP_13F=null,OWNERSHIP_SHARES=null,sortKey='rk',sortDir=1,currentTab='weekly',currentPage=1;
 const HARD_EXCLUDED_TICKERS=new Set(['BAND','CWAN','TECH','AHR','LILA','LILAK']);
 
 function pruneExcludedScreenerData(){
@@ -2294,6 +2294,11 @@ function formatOwnershipDate(value){
   return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
 }
 
+function formatOwnershipPeriod(point){
+  if(point&&point.period)return String(point.period);
+  return formatOwnershipDate(point?.date);
+}
+
 function ownershipPolar(cx,cy,r,angle){
   const rad=(angle-90)*Math.PI/180;
   return {x:cx+r*Math.cos(rad),y:cy+r*Math.sin(rad)};
@@ -2363,24 +2368,29 @@ function renderOwnershipAreaChart(points){
   const pad=(maxVal-minVal)*.08;
   minVal=Math.max(0,minVal-pad);
   maxVal=maxVal+pad;
-  const xFor=i=>left+(clean.length===1?plotW/2:(i/(clean.length-1))*plotW);
+  const xStep=plotW/Math.max(clean.length,1);
+  const barW=Math.max(3,Math.min(16,xStep*.72));
+  const xFor=i=>left+xStep*i+xStep/2;
   const yFor=v=>top+((maxVal-v)/(maxVal-minVal))*plotH;
-  const lineD=clean.map((p,i)=>`${i?'L':'M'} ${xFor(i).toFixed(1)} ${yFor(Number(p.value)).toFixed(1)}`).join(' ');
-  const areaD=`${lineD} L ${xFor(clean.length-1).toFixed(1)} ${top+plotH} L ${xFor(0).toFixed(1)} ${top+plotH} Z`;
+  const baseY=yFor(minVal);
   const tickIndexes=[0,Math.floor((clean.length-1)/2),clean.length-1].filter((idx,pos,arr)=>idx>=0&&arr.indexOf(idx)===pos);
-  const xLabels=tickIndexes.map(idx=>`<text class="own-axis-label" x="${xFor(idx).toFixed(1)}" y="${h-10}" text-anchor="middle">${esc(formatOwnershipDate(clean[idx].date))}</text>`).join('');
+  const xLabels=tickIndexes.map(idx=>`<text class="own-axis-label" x="${xFor(idx).toFixed(1)}" y="${h-10}" text-anchor="middle">${esc(formatOwnershipPeriod(clean[idx]))}</text>`).join('');
+  const bars=clean.map((p,i)=>{
+    const x=xFor(i),y=yFor(Number(p.value));
+    const barH=Math.max(1,baseY-y);
+    return `<rect class="own-bar" x="${(x-barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="1.4"></rect>`;
+  }).join('');
   const tooltips=clean.map((p,i)=>{
     const x=xFor(i),y=yFor(Number(p.value));
     const tipW=170,tipH=52;
-    const tipX=Math.max(4,Math.min(x+10,w-tipW-4));
-    const tipY=Math.max(4,Math.min(y-60,h-tipH-4));
-    const hitW=Math.max(8,Math.min(22,plotW/Math.max(clean.length,1)));
-    return `<g class="own-point" tabindex="0" role="graphics-symbol" aria-label="${esc(`${formatOwnershipDate(p.date)}, ${formatShareCount(p.value)} shares`)}">
-      <rect class="own-point-hit" x="${(x-hitW/2).toFixed(1)}" y="${top}" width="${hitW.toFixed(1)}" height="${plotH}"></rect>
-      <circle class="own-point-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3"></circle>
+    const tipX=Math.max(4,Math.min(x-tipW/2,w-tipW-4));
+    const tipY=Math.max(4,y-tipH-8);
+    const hitW=Math.max(7,xStep);
+    return `<g class="own-bar-point" tabindex="0" role="graphics-symbol" aria-label="${esc(`${formatOwnershipPeriod(p)}, ${formatShareCount(p.value)} shares`)}">
+      <rect class="own-bar-hit" x="${(x-hitW/2).toFixed(1)}" y="${top}" width="${hitW.toFixed(1)}" height="${plotH}"></rect>
       <g class="own-svg-tooltip" transform="translate(${tipX.toFixed(1)} ${tipY.toFixed(1)})">
         <rect class="own-tooltip-box" x="0" y="0" width="${tipW}" height="${tipH}" rx="7"></rect>
-        <text class="own-tooltip-title" x="10" y="20">${esc(formatOwnershipDate(p.date))}</text>
+        <text class="own-tooltip-title" x="10" y="20">${esc(formatOwnershipPeriod(p))}</text>
         <text class="own-tooltip-label" x="10" y="39">Shares:</text>
         <text class="own-tooltip-value" x="${tipW-10}" y="39" text-anchor="end">${esc(formatShareCount(p.value))}</text>
       </g>
@@ -2395,8 +2405,7 @@ function renderOwnershipAreaChart(points){
       <line class="own-axis" x1="${left}" y1="${top+plotH}" x2="${w-right}" y2="${top+plotH}"></line>
       <text class="own-axis-label" x="${left-7}" y="${top+4}" text-anchor="end">${esc(formatShareCount(maxVal))}</text>
       <text class="own-axis-label" x="${left-7}" y="${top+plotH}" text-anchor="end">${esc(formatShareCount(minVal))}</text>
-      <path class="own-area" d="${areaD}"></path>
-      <path class="own-line" d="${lineD}"></path>
+      ${bars}
       ${xLabels}
       ${tooltips}
     </svg>
@@ -2426,22 +2435,31 @@ function ownership13FRecord(ticker){
   return OWNERSHIP_13F.tickers[String(ticker||'').toUpperCase()]||null;
 }
 
+function ownershipSharesRecord(ticker){
+  if(!OWNERSHIP_SHARES||!OWNERSHIP_SHARES.tickers)return null;
+  return OWNERSHIP_SHARES.tickers[String(ticker||'').toUpperCase()]||null;
+}
+
 function renderOwnershipPanel(ticker){
   const rec=FUNDAMENTALS&&FUNDAMENTALS.tickers?FUNDAMENTALS.tickers[ticker]:null;
   const ownership=rec?.ownership||{};
   const holderRecord=ownership13FRecord(ticker);
+  const sharesRecord=ownershipSharesRecord(ticker);
+  const sharesPoints=(sharesRecord&&Array.isArray(sharesRecord.points)&&sharesRecord.points.length)
+    ?sharesRecord.points
+    :ownership.shares_outstanding;
   const holderRows=(holderRecord&&Array.isArray(holderRecord.holders)&&holderRecord.holders.length)
     ?holderRecord.holders
     :ownership.institutional_holders;
   const holderNote=holderRecord&&Array.isArray(holderRecord.holders)&&holderRecord.holders.length
     ?`${OWNERSHIP_13F?.meta?.report_period_label||'Latest 13F filings'} - excludes index funds, mutual funds, ETFs, banks, and custodians.`
     :null;
-  if(!ownership.breakdown&&!ownership.shares_outstanding&&!(holderRows&&holderRows.length)){
+  if(!ownership.breakdown&&!(sharesPoints&&sharesPoints.length)&&!(holderRows&&holderRows.length)){
     return `<div class="profile-section-empty">Ownership data is not available yet. Run the fundamentals refresh to populate this tab.</div>`;
   }
   return `<div class="ownership-grid">
     ${renderOwnershipPie(ownership)}
-    ${renderOwnershipAreaChart(ownership.shares_outstanding)}
+    ${renderOwnershipAreaChart(sharesPoints)}
     ${renderOwnershipHoldersTable(holderRows,holderNote)}
   </div>`;
 }
@@ -2823,12 +2841,13 @@ function setProfileHistoryPage(page){
 
 async function loadData(){
   try{
-    const [dataRes,histRes,etfRes,fundRes,ownershipRes]=await Promise.all([
+    const [dataRes,histRes,etfRes,fundRes,ownershipRes,ownershipSharesRes]=await Promise.all([
       fetch('leaders.json?_='+Date.now()),
       fetch('leaders_score_history.json?_='+Date.now()).catch(()=>null),
       fetch('data.json?_='+Date.now()).catch(()=>null),
       fetch('fundamentals.json?_='+Date.now()).catch(()=>null),
-      fetch('ownership_top_holders_13f.json?_='+Date.now()).catch(()=>null)
+      fetch('ownership_top_holders_13f.json?_='+Date.now()).catch(()=>null),
+      fetch('ownership_shares_outstanding_sec.json?_='+Date.now()).catch(()=>null)
     ]);
     if(!dataRes.ok)throw new Error('leaders.json not found');
     DATA=await dataRes.json();
@@ -2836,6 +2855,7 @@ async function loadData(){
     if(etfRes&&etfRes.ok){try{ETF_DATA=await etfRes.json();}catch(e){}}
     if(fundRes&&fundRes.ok){try{FUNDAMENTALS=await fundRes.json();}catch(e){}}
     if(ownershipRes&&ownershipRes.ok){try{OWNERSHIP_13F=await ownershipRes.json();}catch(e){}}
+    if(ownershipSharesRes&&ownershipSharesRes.ok){try{OWNERSHIP_SHARES=await ownershipSharesRes.json();}catch(e){}}
     pruneExcludedScreenerData();
     document.getElementById('statusBar').style.display='none';
     if(currentTab==='overview'){
