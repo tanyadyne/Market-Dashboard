@@ -552,6 +552,17 @@ def _profile_eps_series(
     return actual[-actual_limit:] + estimates[:estimate_limit]
 
 
+def _get_ticker_info(ticker_obj) -> dict:
+    try:
+        info = ticker_obj.get_info()
+    except Exception:
+        try:
+            info = ticker_obj.info
+        except Exception:
+            info = {}
+    return info if isinstance(info, dict) else {}
+
+
 def _get_ticker_currencies(ticker_obj) -> tuple[str | None, str | None]:
     quote_currency = None
     financial_currency = None
@@ -563,17 +574,9 @@ def _get_ticker_currencies(ticker_obj) -> tuple[str | None, str | None]:
     except Exception:
         pass
 
-    try:
-        info = ticker_obj.get_info()
-    except Exception:
-        try:
-            info = ticker_obj.info
-        except Exception:
-            info = {}
-
-    if isinstance(info, dict):
-        quote_currency = str(info.get("currency") or quote_currency or "").upper() or None
-        financial_currency = str(info.get("financialCurrency") or "").upper() or None
+    info = _get_ticker_info(ticker_obj)
+    quote_currency = str(info.get("currency") or quote_currency or "").upper() or None
+    financial_currency = str(info.get("financialCurrency") or "").upper() or None
 
     return financial_currency, quote_currency
 
@@ -751,6 +754,47 @@ def _institutional_holder_rows(frame) -> list[dict]:
     return rows[:12]
 
 
+def _ownership_float_metrics(info: dict) -> dict:
+    reported_shares_outstanding = _safe_number(info.get("sharesOutstanding"))
+    implied_shares_outstanding = _safe_number(info.get("impliedSharesOutstanding"))
+    public_float = _safe_number(info.get("floatShares"))
+    shares_outstanding = reported_shares_outstanding
+    if implied_shares_outstanding is not None and (
+        shares_outstanding is None
+        or (
+            public_float is not None
+            and shares_outstanding < public_float
+            and implied_shares_outstanding >= public_float
+        )
+    ):
+        shares_outstanding = implied_shares_outstanding
+    if (
+        shares_outstanding is not None
+        and public_float is not None
+        and shares_outstanding > 0
+        and public_float > shares_outstanding
+    ):
+        if public_float <= shares_outstanding * 1.05:
+            public_float = shares_outstanding
+        else:
+            public_float = None
+    short_pct_float = _safe_percent(info.get("shortPercentOfFloat"))
+    shares_short = _safe_number(info.get("sharesShort"))
+    if short_pct_float is None and public_float and public_float > 0 and shares_short is not None:
+        short_pct_float = round(max(0, shares_short) / public_float * 100, 4)
+
+    metrics: dict = {}
+    if shares_outstanding is not None:
+        metrics["shares_outstanding"] = int(round(shares_outstanding))
+    if public_float is not None:
+        metrics["public_float"] = int(round(public_float))
+    if shares_outstanding and shares_outstanding > 0 and public_float is not None:
+        metrics["float_pct_of_tso"] = round(max(0, public_float) / shares_outstanding * 100, 4)
+    if short_pct_float is not None:
+        metrics["short_pct_float"] = short_pct_float
+    return metrics
+
+
 def _fetch_ownership(ticker_obj) -> dict:
     ownership: dict = {}
 
@@ -758,7 +802,8 @@ def _fetch_ownership(ticker_obj) -> dict:
     institutional_pct = _safe_percent(_major_holder_value(major, "institutionsPercentHeld"))
     insider_pct = _safe_percent(_major_holder_value(major, "insidersPercentHeld"))
     institutions_count = _safe_number(_major_holder_value(major, "institutionsCount"))
-    if institutional_pct is not None or insider_pct is not None:
+    float_metrics = _ownership_float_metrics(_get_ticker_info(ticker_obj))
+    if institutional_pct is not None or insider_pct is not None or float_metrics:
         inst = institutional_pct or 0
         insider = insider_pct or 0
         ownership["breakdown"] = {
@@ -768,6 +813,7 @@ def _fetch_ownership(ticker_obj) -> dict:
         }
         if institutions_count is not None:
             ownership["breakdown"]["institutions_count"] = int(round(institutions_count))
+        ownership["breakdown"].update(float_metrics)
 
     holder_rows = _institutional_holder_rows(_get_institutional_holders(ticker_obj))
     if holder_rows:
@@ -939,6 +985,80 @@ def _fetch_ownership_for_ticker(ticker: str, session=None) -> tuple[str, dict, E
         return ticker, {}, exc
 
 
+def _fetch_ownership_metrics_for_ticker(ticker: str, session=None) -> tuple[str, dict, Exception | None]:
+    try:
+        kwargs = {"session": session} if session is not None else {}
+        info = _get_ticker_info(yf.Ticker(ticker, **kwargs))
+        return ticker, _ownership_float_metrics(info), None
+    except Exception as exc:
+        return ticker, {}, exc
+
+
+def _refresh_ownership_metrics_only(tickers: list[str], session, universe_count: int, workers: int) -> int:
+    payload = _load_existing_payload(universe_count)
+    updated = 0
+    skipped = 0
+
+    print(f"Refreshing ownership float metrics for {len(tickers)} stock(s)...")
+    workers = max(1, int(workers or 1))
+
+    def store(ticker: str, metrics: dict, exc: Exception | None) -> None:
+        nonlocal updated, skipped
+        if exc is not None:
+            skipped += 1
+            print(f"  {ticker}: ownership metrics failed ({exc})")
+            return
+        if not metrics:
+            skipped += 1
+            return
+        rec = payload["tickers"].setdefault(ticker, {})
+        ownership = rec.setdefault("ownership", {})
+        breakdown = ownership.setdefault("breakdown", {})
+        for key in ("shares_outstanding", "public_float", "float_pct_of_tso", "short_pct_float"):
+            breakdown.pop(key, None)
+        breakdown.update(metrics)
+        updated += 1
+
+    if workers == 1:
+        for i, ticker in enumerate(tickers, start=1):
+            if i % 50 == 0:
+                print(f"  {i}/{len(tickers)}...")
+            ticker, metrics, exc = _fetch_ownership_metrics_for_ticker(ticker, session)
+            store(ticker, metrics, exc)
+            time.sleep(0.05)
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = {pool.submit(_fetch_ownership_metrics_for_ticker, ticker, None): ticker for ticker in tickers}
+            for i, future in enumerate(as_completed(futures), start=1):
+                if i % 50 == 0:
+                    print(f"  {i}/{len(tickers)}...")
+                ticker, metrics, exc = future.result()
+                store(ticker, metrics, exc)
+
+    payload.setdefault("meta", {})
+    payload["meta"]["ownership_metrics_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    payload["meta"]["ownership_count"] = sum(
+        1 for rec in payload.get("tickers", {}).values()
+        if isinstance(rec, dict) and isinstance(rec.get("ownership"), dict) and rec["ownership"]
+    )
+    payload["meta"]["ownership_metrics_count"] = sum(
+        1 for rec in payload.get("tickers", {}).values()
+        if isinstance(rec, dict)
+        and isinstance(rec.get("ownership"), dict)
+        and isinstance(rec["ownership"].get("breakdown"), dict)
+        and any(
+            key in rec["ownership"]["breakdown"]
+            for key in ("shares_outstanding", "public_float", "float_pct_of_tso", "short_pct_float")
+        )
+    )
+    _write_payload(payload, universe_count)
+    print(
+        f"Wrote {OUT_JSON.name}: ownership metrics updated for {updated}/{len(tickers)} stock(s); "
+        f"skipped {skipped}; total metric records {payload['meta']['ownership_metrics_count']}"
+    )
+    return 0
+
+
 def _refresh_ownership_only(tickers: list[str], session, universe_count: int, workers: int) -> int:
     payload = _load_existing_payload(universe_count)
     updated = 0
@@ -998,6 +1118,11 @@ def _parse_args() -> argparse.Namespace:
         help="Refresh ownership fields only and preserve existing fundamentals data.",
     )
     parser.add_argument(
+        "--ownership-metrics-only",
+        action="store_true",
+        help="Refresh shares outstanding, public float, and short-float metrics only.",
+    )
+    parser.add_argument(
         "--skip-ownership",
         action="store_true",
         help="Skip ownership fetching during the full fundamentals refresh.",
@@ -1020,6 +1145,9 @@ def main() -> int:
     all_tickers = _load_universe()
     tickers = _filter_tickers(all_tickers, _parse_ticker_filter(args.tickers))
     session = _build_session()
+
+    if args.ownership_metrics_only:
+        return _refresh_ownership_metrics_only(tickers, session, len(all_tickers), args.workers)
 
     if args.ownership_only:
         return _refresh_ownership_only(tickers, session, len(all_tickers), args.workers)

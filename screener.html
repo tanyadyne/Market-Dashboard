@@ -404,6 +404,9 @@ tr:hover{background:var(--bg3)}
 .ownership-card-wide{grid-column:1/-1;min-height:0}
 .ownership-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 .ownership-card-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--t2)}
+.ownership-breakdown-body{display:grid;grid-template-columns:minmax(0,1fr) 210px;align-items:center;gap:16px}
+.ownership-breakdown-body.no-metrics{display:block}
+.ownership-pie-wrap{min-width:0}
 .ownership-chart{width:100%;height:230px;display:block;overflow:visible}
 .own-axis{stroke:var(--bdr);stroke-width:1}
 .own-gridline{stroke:var(--bdr2);stroke-width:1;stroke-dasharray:4 5}
@@ -427,6 +430,10 @@ tr:hover{background:var(--bg3)}
 .own-pie-legend{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:2px;color:var(--t2);font-size:11px;font-weight:700}
 .own-pie-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .own-pie-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.ownership-float-metrics{border:1px solid var(--bdr2);border-radius:8px;background:var(--bg3);padding:12px 14px;display:grid;gap:10px;align-self:center}
+.ownership-float-metric{display:flex;align-items:baseline;justify-content:space-between;gap:16px;font-size:11px;line-height:1.1}
+.ownership-float-label{color:var(--t3);font-weight:800;text-transform:uppercase;letter-spacing:.55px;white-space:nowrap}
+.ownership-float-value{font-family:'JetBrains Mono',monospace;color:var(--t1);font-weight:700;text-align:right;white-space:nowrap}
 .ownership-empty{height:210px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--t3);font-size:12px;border:1px dashed var(--bdr);border-radius:8px;background:var(--bg)}
 .ownership-table-wrap{overflow-x:auto;border:1px solid var(--bdr);border-radius:9px;background:var(--bg)}
 .ownership-table{min-width:760px}
@@ -478,8 +485,10 @@ tr:hover{background:var(--bg3)}
 [data-view="mobile"] .fund-chart{height:205px}
 [data-view="mobile"] .ownership-grid{grid-template-columns:1fr;gap:10px;margin-top:12px}
 [data-view="mobile"] .ownership-card{padding:10px;min-height:248px}
+[data-view="mobile"] .ownership-breakdown-body{grid-template-columns:1fr;gap:10px}
 [data-view="mobile"] .ownership-chart{height:208px}
 [data-view="mobile"] .own-pie-legend{gap:10px;font-size:10px}
+[data-view="mobile"] .ownership-float-metrics{width:min(100%,260px);justify-self:center;box-sizing:border-box}
 
 /* ─── MOBILE LAYOUT ─── */
 /* Master constraint: every direct child of body is clamped to viewport width.
@@ -2300,6 +2309,23 @@ function ownershipPiePath(cx,cy,r,startAngle,endAngle){
   return `M ${cx} ${cy} L ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} 0 ${finish.x.toFixed(2)} ${finish.y.toFixed(2)} Z`;
 }
 
+function renderOwnershipFloatMetrics(b){
+  const rows=[
+    {label:'Shares Outstanding',value:b.shares_outstanding,format:formatShareCount},
+    {label:'Public Float',value:b.public_float,format:formatShareCount},
+    {label:'Float % of TSO',value:b.float_pct_of_tso,format:formatOwnershipPct},
+    {label:'Short % of Float',value:b.short_pct_float,format:formatOwnershipPct}
+  ].map(row=>{
+    const n=Number(row.value);
+    if(!Number.isFinite(n))return null;
+    return {...row,display:row.format(n)};
+  }).filter(Boolean);
+  if(!rows.length)return'';
+  return `<div class="ownership-float-metrics" aria-label="Ownership float metrics">
+    ${rows.map(row=>`<div class="ownership-float-metric"><span class="ownership-float-label">${esc(row.label)}:</span><span class="ownership-float-value">${esc(row.display)}</span></div>`).join('')}
+  </div>`;
+}
+
 function renderOwnershipPie(ownership){
   const b=ownership?.breakdown||{};
   const rawSegments=[
@@ -2308,11 +2334,12 @@ function renderOwnershipPie(ownership){
     {label:'Other ownership',legend:'Other',value:Number(b.other||0),cls:'own-pie-other'}
   ].filter(seg=>Number.isFinite(seg.value));
   const visibleSegments=rawSegments.filter(seg=>seg.value>0);
-  if(!visibleSegments.length){
+  const metrics=renderOwnershipFloatMetrics(b);
+  if(!visibleSegments.length&&!metrics){
     return `<div class="ownership-card ownership-card-wide"><div class="ownership-card-head"><div class="ownership-card-title">Ownership Breakdown</div></div><div class="ownership-empty">No ownership breakdown available.</div></div>`;
   }
   const total=visibleSegments.reduce((sum,seg)=>sum+seg.value,0)||100;
-  const w=520,h=214,cx=260,cy=92,r=78;
+  const w=metrics?360:520,h=214,cx=metrics?180:260,cy=92,r=78;
   let angle=0;
   const segments=visibleSegments.map(seg=>{
     const span=seg.value/total*360;
@@ -2334,12 +2361,18 @@ function renderOwnershipPie(ownership){
     </g>`;
   }).join('');
   const legend=rawSegments.map(seg=>`<span><i class="${seg.cls}"></i>${esc(seg.legend)} <strong>${esc(formatOwnershipPct(seg.value))}</strong></span>`).join('');
-  return `<div class="ownership-card ownership-card-wide">
-    <div class="ownership-card-head"><div class="ownership-card-title">Ownership Breakdown</div></div>
+  const chart=visibleSegments.length?`<div class="ownership-pie-wrap">
     <svg class="ownership-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Ownership breakdown">
       ${segments}
     </svg>
     <div class="own-pie-legend">${legend}</div>
+  </div>`:`<div class="ownership-pie-wrap"><div class="ownership-empty">No ownership breakdown available.</div></div>`;
+  return `<div class="ownership-card ownership-card-wide">
+    <div class="ownership-card-head"><div class="ownership-card-title">Ownership Breakdown</div></div>
+    <div class="ownership-breakdown-body${metrics?'':' no-metrics'}">
+      ${chart}
+      ${metrics}
+    </div>
   </div>`;
 }
 
