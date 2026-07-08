@@ -3,7 +3,6 @@ __pycache__/
 *.pyc
 .cusip_cache/
 .sec_13f_cache/
-.sec_companyfacts_cache/
 13f_holdings_*_raw.ndjson
 13f_holdings_*_raw.progress.json
 13f_holdings_*_raw.summary.json

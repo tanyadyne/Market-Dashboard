@@ -724,31 +724,6 @@ def _get_institutional_holders(ticker_obj):
     return None
 
 
-def _shares_outstanding_history(ticker_obj) -> list[dict]:
-    try:
-        shares = ticker_obj.get_shares_full(start=None, end=None)
-    except Exception:
-        return []
-    if shares is None or getattr(shares, "empty", True):
-        return []
-
-    by_date: dict[str, int] = {}
-    try:
-        iterator = shares.dropna().items()
-    except Exception:
-        iterator = []
-    for period, value in iterator:
-        num = _safe_number(value)
-        if num is None or num <= 0:
-            continue
-        date = _period_label(period)
-        if not date or len(date) < 7:
-            continue
-        by_date[date[:10]] = int(round(num))
-
-    return [{"date": date, "value": value} for date, value in sorted(by_date.items())]
-
-
 def _institutional_holder_rows(frame) -> list[dict]:
     if frame is None or getattr(frame, "empty", True):
         return []
@@ -793,10 +768,6 @@ def _fetch_ownership(ticker_obj) -> dict:
         }
         if institutions_count is not None:
             ownership["breakdown"]["institutions_count"] = int(round(institutions_count))
-
-    shares_history = _shares_outstanding_history(ticker_obj)
-    if shares_history:
-        ownership["shares_outstanding"] = shares_history
 
     holder_rows = _institutional_holder_rows(_get_institutional_holders(ticker_obj))
     if holder_rows:
