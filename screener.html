@@ -491,12 +491,30 @@ tr:hover{background:var(--bg3)}
 [data-view="mobile"] .fund-card{padding:10px;min-height:230px}
 [data-view="mobile"] .fund-chart{height:205px}
 [data-view="mobile"] .ownership-grid{grid-template-columns:1fr;gap:10px;margin-top:12px}
-[data-view="mobile"] .ownership-card{padding:10px;min-height:248px}
+[data-view="mobile"] .ownership-grid,
+[data-view="mobile"] .ownership-card,
+[data-view="mobile"] .ownership-card-wide{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+[data-view="mobile"] .ownership-card{padding:10px;min-height:248px;overflow:hidden}
 [data-view="mobile"] .ownership-breakdown-body{grid-template-columns:1fr;gap:12px;min-height:0;padding:0}
+[data-view="mobile"] .ownership-pie-wrap{width:100%;max-width:100%;min-width:0;overflow:hidden}
 [data-view="mobile"] .ownership-chart{height:250px}
 [data-view="mobile"] .own-pie-legend{gap:10px;font-size:10px}
 [data-view="mobile"] .ownership-float-metrics{width:min(100%,280px);justify-self:center;box-sizing:border-box;padding:12px 14px;gap:9px}
 [data-view="mobile"] .ownership-float-metric{font-size:10.5px;gap:10px}
+[data-view="mobile"] .ownership-table-wrap{width:100%;max-width:100%;min-width:0;overflow:hidden}
+[data-view="mobile"] .ownership-table{width:100%;min-width:0;table-layout:fixed}
+[data-view="mobile"] .ownership-table th,
+[data-view="mobile"] .ownership-table td{padding:8px 4px;font-size:8px}
+[data-view="mobile"] .ownership-table th:first-child,
+[data-view="mobile"] .ownership-table td:first-child{width:52%;padding-left:7px}
+[data-view="mobile"] .ownership-table th:nth-child(2),
+[data-view="mobile"] .ownership-table td:nth-child(2){width:16%}
+[data-view="mobile"] .ownership-table th:nth-child(3),
+[data-view="mobile"] .ownership-table td:nth-child(3){width:13%}
+[data-view="mobile"] .ownership-table th:nth-child(4),
+[data-view="mobile"] .ownership-table td:nth-child(4){width:19%;padding-right:7px}
+[data-view="mobile"] .ownership-table .holder{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+[data-view="mobile"] .ownership-table-note{overflow-wrap:anywhere}
 
 /* ─── MOBILE LAYOUT ─── */
 /* Master constraint: every direct child of body is clamped to viewport width.
