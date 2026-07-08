@@ -2434,7 +2434,7 @@ function renderOwnershipPanel(ticker){
     ?holderRecord.holders
     :ownership.institutional_holders;
   const holderNote=holderRecord&&Array.isArray(holderRecord.holders)&&holderRecord.holders.length
-    ?`${OWNERSHIP_13F?.meta?.report_period_label||'Latest 13F filings'} - Index-like, ETF, mutual-fund, bank, and custodian holders are filtered out using the project holder rules.`
+    ?`${OWNERSHIP_13F?.meta?.report_period_label||'Latest 13F filings'} - excludes index funds, mutual funds, ETFs, banks, and custodians.`
     :null;
   if(!ownership.breakdown&&!ownership.shares_outstanding&&!(holderRows&&holderRows.length)){
     return `<div class="profile-section-empty">Ownership data is not available yet. Run the fundamentals refresh to populate this tab.</div>`;
