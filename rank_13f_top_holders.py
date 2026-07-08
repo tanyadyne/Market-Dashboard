@@ -105,6 +105,18 @@ def parse_int(value: Any) -> int | None:
         return None
 
 
+def parse_float(value: Any) -> float | None:
+    try:
+        if value in ("", None):
+            return None
+        parsed = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if parsed <= 0:
+        return None
+    return parsed
+
+
 def parse_period(value: Any) -> tuple[int, int, int]:
     text = str(value or "")
     try:
@@ -185,6 +197,32 @@ def load_shares_outstanding(path: Path) -> dict[str, int]:
     return shares
 
 
+def load_current_prices(path: Path) -> dict[str, float]:
+    data = read_json(path)
+    if not isinstance(data, dict):
+        raise ValueError(f"Unsupported price source file shape: {path}")
+
+    prices: dict[str, float] = {}
+    raw_prices = data.get("prices")
+    if isinstance(raw_prices, dict):
+        for ticker, value in raw_prices.items():
+            parsed = parse_float(value)
+            if parsed:
+                prices[str(ticker).upper()] = parsed
+
+    caps = data.get("caps")
+    shares = data.get("shares")
+    if isinstance(caps, dict) and isinstance(shares, dict):
+        for ticker, cap_value in caps.items():
+            shares_value = shares.get(ticker)
+            cap = parse_float(cap_value)
+            shares_out = parse_float(shares_value)
+            if cap and shares_out:
+                prices[str(ticker).upper()] = cap / shares_out
+
+    return prices
+
+
 def select_report_period(rows: list[dict[str, Any]], requested: str) -> str:
     periods = sorted({str(row.get("report_period") or "") for row in rows if row.get("report_period")}, key=parse_period)
     if not periods:
@@ -212,6 +250,7 @@ def rank_positions(
     *,
     report_period: str,
     shares_outstanding: dict[str, int],
+    current_prices: dict[str, float],
     top_n: int,
     rank_by: str,
 ) -> tuple[dict[str, list[dict[str, Any]]], Counter[str], list[dict[str, Any]]]:
@@ -252,7 +291,13 @@ def rank_positions(
     for row in latest_by_position.values():
         ticker = row["ticker"]
         shares = int(row["shares"])
-        value_usd = int(row["value_usd"])
+        reported_value_usd = int(row["value_usd"])
+        current_price = current_prices.get(ticker)
+        if current_price:
+            value_usd = int(round(shares * current_price))
+        else:
+            value_usd = reported_value_usd
+            counters["missing_current_price"] += 1
         shares_out = shares_outstanding.get(ticker)
         pct_out = (shares / shares_out * 100) if shares_out else None
 
@@ -312,6 +357,7 @@ def build_output(
     rows: list[dict[str, Any]],
     universe: list[str],
     shares_outstanding: dict[str, int],
+    current_prices: dict[str, float],
     report_period: str,
     top_n: int,
     rank_by: str,
@@ -323,6 +369,7 @@ def build_output(
         rows,
         report_period=report_period,
         shares_outstanding=shares_outstanding,
+        current_prices=current_prices,
         top_n=top_n,
         rank_by=rank_by,
     )
@@ -345,8 +392,11 @@ def build_output(
     meta = {
         "updated": now_iso(),
         "source": "SEC 13F-HR filings filtered by holder classification rules",
+        "value_source": "shares_x_current_price when a local current price is available; reported_13f_value fallback otherwise",
         "input": str(input_path),
         "shares_outstanding_file": str(shares_path),
+        "current_price_file": str(shares_path),
+        "current_price_count": len(current_prices),
         "universe_file": str(universe_path),
         "report_period": report_period,
         "report_period_label": f"Latest 13F filings, quarter ended {pretty_period(report_period)}",
@@ -382,11 +432,13 @@ def main() -> None:
     report_period = select_report_period(rows, args.report_period)
     universe = load_universe(args.universe)
     shares_outstanding = load_shares_outstanding(args.shares)
+    current_prices = load_current_prices(args.shares)
 
     payload = build_output(
         rows=rows,
         universe=universe,
         shares_outstanding=shares_outstanding,
+        current_prices=current_prices,
         report_period=report_period,
         top_n=args.top_n,
         rank_by=args.rank_by,
