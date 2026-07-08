@@ -2459,7 +2459,7 @@ function renderOwnershipHoldersTable(rows,note){
       <thead><tr><th class="l">Holder</th><th class="num">Shares</th><th class="num">% out</th><th class="num">Value ($)</th></tr></thead>
       <tbody>${tableBody}</tbody>
     </table></div>
-    <div class="ownership-table-note">${esc(note||'Index-like, ETF, mutual-fund, bank, and custodian holders are filtered out where identifiable from the holder name.')}</div>`:`<div class="ownership-empty">No discretionary institutional holders available after filtering.</div>`}
+    <div class="ownership-table-note">${esc(note||'Excluding index funds, mutual funds, banks, and custodians')}</div>`:`<div class="ownership-empty">No discretionary institutional holders available after filtering.</div>`}
   </div>`;
 }
 
