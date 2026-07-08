@@ -1,13 +1,13 @@
 {
   "bulk_stats": {
-    "matched_from_bulk": 1583,
+    "matched_from_bulk": 1589,
     "pages_read": 110,
     "records_seen": 109230,
     "reported_total": 109230
   },
   "direct_symbol_calls": 0,
-  "duplicate_cusip_tickers_count": 431,
-  "mapped_count": 1578,
+  "duplicate_cusip_tickers_count": 59,
+  "mapped_count": 1584,
   "source": "EODHD ID Mapping API",
   "tickers": {
     "A": {
@@ -272,12 +272,13 @@
     },
     "ADEA": {
       "cik": "0001803696",
-      "cusip": "00676P107",
-      "cusip_source": "eodhd",
+      "cusip": "98390M103",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "ADEA.US",
       "figi": "BBG00RBFBL50",
       "isin": "US98390M1036",
       "lei": "12QXQCZOIJ35VTGVAL38",
+      "raw_cusip": "00676P107",
       "source": "EODHD ID Mapping API"
     },
     "ADI": {
@@ -332,12 +333,13 @@
     },
     "ADTN": {
       "cik": "0000926282",
-      "cusip": "00738A106",
-      "cusip_source": "eodhd",
+      "cusip": "00486H105",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "ADTN.US",
       "figi": "BBG0169CH7X9",
       "isin": "US00486H1059",
       "lei": null,
+      "raw_cusip": "00738A106",
       "source": "EODHD ID Mapping API"
     },
     "AEE": {
@@ -752,12 +754,13 @@
     },
     "ALNT": {
       "cik": "0000046129",
-      "cusip": "534780101",
-      "cusip_source": "eodhd",
+      "cusip": "019330109",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "ALNT.US",
       "figi": "BBG000BKVYJ3",
       "isin": "US0193301092",
       "lei": "549300I2LHAWYGNBPM97",
+      "raw_cusip": "534780101",
       "source": "EODHD ID Mapping API"
     },
     "ALNY": {
@@ -910,6 +913,16 @@
       "lei": "6ZLKQF7QB6JAEKQS5388",
       "source": "EODHD ID Mapping API"
     },
+    "AMPL": {
+      "cik": "0001866692",
+      "cusip": "03213A104",
+      "cusip_source": "eodhd",
+      "eodhd_symbol": "AMPL.US",
+      "figi": "BBG012CDTZY6",
+      "isin": "US03213A1043",
+      "lei": null,
+      "source": "EODHD ID Mapping API"
+    },
     "AMPX": {
       "cik": "0001899287",
       "cusip": "03214Q108",
@@ -922,12 +935,13 @@
     },
     "AMR": {
       "cik": "0001704715",
-      "cusip": "001765106",
-      "cusip_source": "eodhd",
+      "cusip": "020764106",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "AMR.US",
       "figi": "BBG00DGWV035",
       "isin": "US0207641061",
       "lei": "549300C9E158C3V6PT51",
+      "raw_cusip": "001765106",
       "source": "EODHD ID Mapping API"
     },
     "AMRC": {
@@ -982,12 +996,13 @@
     },
     "ANET": {
       "cik": "0001596532",
-      "cusip": "040413106",
-      "cusip_source": "eodhd",
+      "cusip": "040413205",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "ANET.US",
       "figi": "BBG000N2HDY5",
       "isin": "US0404132054",
       "lei": null,
+      "raw_cusip": "040413106",
       "source": "EODHD ID Mapping API"
     },
     "ANF": {
@@ -1032,12 +1047,13 @@
     },
     "APA": {
       "cik": "0000006769",
-      "cusip": "037411105",
-      "cusip_source": "eodhd",
+      "cusip": "03743Q108",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "APA.US",
       "figi": "BBG00YTS96G2",
       "isin": "US03743Q1085",
       "lei": null,
+      "raw_cusip": "037411105",
       "source": "EODHD ID Mapping API"
     },
     "APD": {
@@ -1092,12 +1108,13 @@
     },
     "APO": {
       "cik": "0001411494",
-      "cusip": "037612306",
-      "cusip_source": "eodhd",
+      "cusip": "03769M106",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "APO.US",
       "figi": "BBG00ZNLTFK3",
       "isin": "US03769M1062",
       "lei": null,
+      "raw_cusip": "037612306",
       "source": "EODHD ID Mapping API"
     },
     "APP": {
@@ -1118,6 +1135,16 @@
       "figi": "BBG008GC8CP6",
       "isin": "US03783C1009",
       "lei": "529900OOUUGT6JFC0S15",
+      "source": "EODHD ID Mapping API"
+    },
+    "APPN": {
+      "cik": "0001441683",
+      "cusip": "03782L101",
+      "cusip_source": "eodhd",
+      "eodhd_symbol": "APPN.US",
+      "figi": "BBG001C7PMJ2",
+      "isin": "US03782L1017",
+      "lei": "529900NIARIFW7HGU386",
       "source": "EODHD ID Mapping API"
     },
     "APPS": {
@@ -2052,12 +2079,13 @@
     },
     "BLK": {
       "cik": "0001364742",
-      "cusip": "09247X101",
-      "cusip_source": "eodhd",
+      "cusip": "09290D101",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "BLK.US",
       "figi": "BBG01PSW2WN4",
       "isin": "US09290D1019",
       "lei": null,
+      "raw_cusip": "09247X101",
       "source": "EODHD ID Mapping API"
     },
     "BLKB": {
@@ -2912,12 +2940,13 @@
     },
     "CHRD": {
       "cik": "0001042134",
-      "cusip": "170404107",
-      "cusip_source": "eodhd",
+      "cusip": "674215207",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "CHRD.US",
       "figi": "BBG00Y7BLHL9",
       "isin": "US6742152076",
       "lei": "529900FA4V2YNIKZ0M71",
+      "raw_cusip": "170404107",
       "source": "EODHD ID Mapping API"
     },
     "CHRW": {
@@ -3232,12 +3261,13 @@
     },
     "CNR": {
       "cik": "0000883902",
-      "cusip": "21925D109",
-      "cusip_source": "eodhd",
+      "cusip": "218937100",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "CNR.US",
       "figi": "BBG00HC114X0",
       "isin": "US2189371006",
       "lei": null,
+      "raw_cusip": "21925D109",
       "source": "EODHD ID Mapping API"
     },
     "CNX": {
@@ -3292,12 +3322,13 @@
     },
     "COHR": {
       "cik": "0000021510",
-      "cusip": "192479103",
-      "cusip_source": "eodhd",
+      "cusip": "19247G107",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "COHR.US",
       "figi": "BBG000BLW102",
       "isin": "US19247G1076",
       "lei": "549300O5C25A0MMHHU33",
+      "raw_cusip": "192479103",
       "source": "EODHD ID Mapping API"
     },
     "COHU": {
@@ -3362,12 +3393,13 @@
     },
     "COO": {
       "cik": "0000711404",
-      "cusip": "216640102",
-      "cusip_source": "eodhd",
+      "cusip": "216648501",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "COO.US",
       "figi": "BBG000BG3445",
       "isin": "US2166485019",
       "lei": null,
+      "raw_cusip": "216640102",
       "source": "EODHD ID Mapping API"
     },
     "COP": {
@@ -3382,12 +3414,13 @@
     },
     "COR": {
       "cik": "0001140859",
-      "cusip": "03071P102",
-      "cusip_source": "eodhd",
+      "cusip": "03073E105",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "COR.US",
       "figi": "BBG000MDCQC2",
       "isin": "US03073E1055",
       "lei": "AI8GXW8LG5WK7E9UD086",
+      "raw_cusip": "03071P102",
       "source": "EODHD ID Mapping API"
     },
     "CORT": {
@@ -3872,12 +3905,13 @@
     },
     "CZR": {
       "cik": "0000858339",
-      "cusip": "127686103",
-      "cusip_source": "eodhd",
+      "cusip": "12769G100",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "CZR.US",
       "figi": "BBG0074Q3NK6",
       "isin": "US12769G1004",
       "lei": "549300FA4CTCW903Y781",
+      "raw_cusip": "127686103",
       "source": "EODHD ID Mapping API"
     },
     "D": {
@@ -4112,12 +4146,13 @@
     },
     "DINO": {
       "cik": "0000048039",
-      "cusip": "436106108",
-      "cusip_source": "eodhd",
+      "cusip": "403949100",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "DINO.US",
       "figi": "BBG0135B2214",
       "isin": "US4039491000",
       "lei": null,
+      "raw_cusip": "436106108",
       "source": "EODHD ID Mapping API"
     },
     "DIOD": {
@@ -4142,12 +4177,13 @@
     },
     "DJT": {
       "cik": "0001849635",
-      "cusip": "287711816",
-      "cusip_source": "eodhd",
+      "cusip": "25400Q105",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "DJT.US",
       "figi": "BBG011744HH0",
       "isin": "US25400Q1058",
       "lei": null,
+      "raw_cusip": "287711816",
       "source": "EODHD ID Mapping API"
     },
     "DK": {
@@ -4172,12 +4208,13 @@
     },
     "DKNG": {
       "cik": "0001772757",
-      "cusip": "25258L109",
-      "cusip_source": "eodhd",
+      "cusip": "26142V105",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "DKNG.US",
       "figi": "BBG0134WCM78",
       "isin": "US26142V1052",
       "lei": "5493008P45UYYL683Z97",
+      "raw_cusip": "25258L109",
       "source": "EODHD ID Mapping API"
     },
     "DKS": {
@@ -5272,22 +5309,24 @@
     },
     "FCEL": {
       "cik": "0000886128",
-      "cusip": "29271E100",
-      "cusip_source": "eodhd",
+      "cusip": "35952H700",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "FCEL.US",
       "figi": "BBG000HQ1LB3",
       "isin": "US35952H7008",
       "lei": null,
+      "raw_cusip": "29271E100",
       "source": "EODHD ID Mapping API"
     },
     "FCFS": {
       "cik": "0000840489",
-      "cusip": "31942D107",
-      "cusip_source": "eodhd",
+      "cusip": "33768G107",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "FCFS.US",
       "figi": "BBG0145KL747",
       "isin": "US33768G1076",
       "lei": null,
+      "raw_cusip": "31942D107",
       "source": "EODHD ID Mapping API"
     },
     "FCN": {
@@ -5682,12 +5721,13 @@
     },
     "FOUR": {
       "cik": "0000058592",
-      "cusip": "037531100",
-      "cusip_source": "eodhd",
+      "cusip": "82452J109",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "FOUR.US",
       "figi": "BBG00TX393L4",
       "isin": "US82452J1097",
       "lei": null,
+      "raw_cusip": "037531100",
       "source": "EODHD ID Mapping API"
     },
     "FOX": {
@@ -5762,12 +5802,13 @@
     },
     "FRT": {
       "cik": "0000034903",
-      "cusip": "313747206",
-      "cusip_source": "eodhd",
+      "cusip": "313745101",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "FRT.US",
       "figi": "BBG000BJVN28",
       "isin": "US3137451015",
       "lei": null,
+      "raw_cusip": "313747206",
       "source": "EODHD ID Mapping API"
     },
     "FSLR": {
@@ -5882,12 +5923,13 @@
     },
     "FWONK": {
       "cik": "0001560385",
-      "cusip": "531229854",
-      "cusip_source": "eodhd",
+      "cusip": "531229755",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "FWONK.US",
       "figi": "BBG01HLMBCG3",
       "isin": "US5312297550",
       "lei": null,
+      "raw_cusip": "531229854",
       "source": "EODHD ID Mapping API"
     },
     "G": {
@@ -5942,12 +5984,13 @@
     },
     "GE": {
       "cik": "0000040545",
-      "cusip": "369604103",
-      "cusip_source": "eodhd",
+      "cusip": "369604301",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "GE.US",
       "figi": "BBG000BK6MB5",
       "isin": "US3696043013",
       "lei": "3C7474T6CDKPR9K6YT90",
+      "raw_cusip": "369604103",
       "source": "EODHD ID Mapping API"
     },
     "GEHC": {
@@ -6312,12 +6355,13 @@
     },
     "GRPN": {
       "cik": "0001490281",
-      "cusip": "399473107",
-      "cusip_source": "eodhd",
+      "cusip": "399473206",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "GRPN.US",
       "figi": "BBG000QRKJ70",
       "isin": "US3994732069",
       "lei": "5299005W5W1R5POQJL03",
+      "raw_cusip": "399473107",
       "source": "EODHD ID Mapping API"
     },
     "GS": {
@@ -6332,12 +6376,23 @@
     },
     "GSAT": {
       "cik": "0001366868",
-      "cusip": "378973408",
-      "cusip_source": "eodhd",
+      "cusip": "378973507",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "GSAT.US",
       "figi": "BBG000K008L5",
       "isin": "US3789735079",
       "lei": null,
+      "raw_cusip": "378973408",
+      "source": "EODHD ID Mapping API"
+    },
+    "GT": {
+      "cik": "0000042582",
+      "cusip": "382550101",
+      "cusip_source": "eodhd",
+      "eodhd_symbol": "GT.US",
+      "figi": "BBG000BKNX95",
+      "isin": "US3825501014",
+      "lei": "5493002BI0S2ZQUY3437",
       "source": "EODHD ID Mapping API"
     },
     "GTBIF": {
@@ -6762,12 +6817,13 @@
     },
     "HR": {
       "cik": "0000899749",
-      "cusip": "421946104",
-      "cusip_source": "eodhd",
+      "cusip": "42226K105",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "HR.US",
       "figi": "BBG000PRJCX9",
       "isin": "US42226K1051",
       "lei": null,
+      "raw_cusip": "421946104",
       "source": "EODHD ID Mapping API"
     },
     "HRB": {
@@ -6932,12 +6988,13 @@
     },
     "IAC": {
       "cik": "0001800227",
-      "cusip": "40429R109",
-      "cusip_source": "eodhd",
+      "cusip": "44891N208",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "IAC.US",
       "figi": null,
       "isin": "US44891N2080",
       "lei": "549300TO56L57RP6P031",
+      "raw_cusip": "40429R109",
       "source": "EODHD ID Mapping API"
     },
     "IAG": {
@@ -7942,12 +7999,13 @@
     },
     "KNTK": {
       "cik": "0001692787",
-      "cusip": "02215L100",
-      "cusip_source": "eodhd",
+      "cusip": "02215L209",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "KNTK.US",
       "figi": "BBG00GCLZ7B8",
       "isin": "US02215L2097",
       "lei": null,
+      "raw_cusip": "02215L100",
       "source": "EODHD ID Mapping API"
     },
     "KNX": {
@@ -8152,12 +8210,13 @@
     },
     "LAZ": {
       "cik": "0001311370",
-      "cusip": "G54050102",
-      "cusip_source": "eodhd",
+      "cusip": "52110M109",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "LAZ.US",
       "figi": "BBG000BT4C39",
       "isin": "US52110M1099",
       "lei": null,
+      "raw_cusip": "G54050102",
       "source": "EODHD ID Mapping API"
     },
     "LBRDK": {
@@ -8202,12 +8261,23 @@
     },
     "LCID": {
       "cik": "0001811210",
-      "cusip": "549498103",
-      "cusip_source": "eodhd",
+      "cusip": "549498202",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "LCID.US",
       "figi": "BBG00W7F99V5",
       "isin": "US5494982029",
       "lei": null,
+      "raw_cusip": "549498103",
+      "source": "EODHD ID Mapping API"
+    },
+    "LCII": {
+      "cik": "0000763744",
+      "cusip": "50189K103",
+      "cusip_source": "eodhd",
+      "eodhd_symbol": "LCII.US",
+      "figi": "BBG000DNLMB0",
+      "isin": "US50189K1034",
+      "lei": "549300E1B98YNJ1WIQ04",
       "source": "EODHD ID Mapping API"
     },
     "LDOS": {
@@ -8312,12 +8382,13 @@
     },
     "LH": {
       "cik": "0000920148",
-      "cusip": "50540R102",
-      "cusip_source": "eodhd",
+      "cusip": "504922105",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "LH.US",
       "figi": "BBG000D9DMK0",
       "isin": "US5049221055",
       "lei": null,
+      "raw_cusip": "50540R102",
       "source": "EODHD ID Mapping API"
     },
     "LHX": {
@@ -8532,22 +8603,24 @@
     },
     "LRCX": {
       "cik": "0000707549",
-      "cusip": "512807108",
-      "cusip_source": "eodhd",
+      "cusip": "512807306",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "LRCX.US",
       "figi": "BBG000BNFLM9",
       "isin": "US5128073062",
       "lei": null,
+      "raw_cusip": "512807108",
       "source": "EODHD ID Mapping API"
     },
     "LRN": {
       "cik": "0001157408",
-      "cusip": "48273U102",
-      "cusip_source": "eodhd",
+      "cusip": "86333M108",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "LRN.US",
       "figi": "BBG000QSXPZ9",
       "isin": "US86333M1080",
       "lei": "254900BRWS3AFONWU277",
+      "raw_cusip": "48273U102",
       "source": "EODHD ID Mapping API"
     },
     "LSCC": {
@@ -8602,12 +8675,13 @@
     },
     "LUMN": {
       "cik": "0000018926",
-      "cusip": "156700106",
-      "cusip_source": "eodhd",
+      "cusip": "550241103",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "LUMN.US",
       "figi": "BBG000BGLRN3",
       "isin": "US5502411037",
       "lei": "8M3THTGWLTYZVE6BBY25",
+      "raw_cusip": "156700106",
       "source": "EODHD ID Mapping API"
     },
     "LUNR": {
@@ -8772,12 +8846,13 @@
     },
     "MARA": {
       "cik": "0001507605",
-      "cusip": "030101109",
-      "cusip_source": "eodhd",
+      "cusip": "565788106",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "MARA.US",
       "figi": "BBG001K7WBT8",
       "isin": "US5657881067",
       "lei": "549300M8ISKPTX2W7F94",
+      "raw_cusip": "030101109",
       "source": "EODHD ID Mapping API"
     },
     "MAS": {
@@ -9170,14 +9245,25 @@
       "lei": "Z35SZFYJR8GZZRSIUU09",
       "source": "EODHD ID Mapping API"
     },
+    "MOH": {
+      "cik": "0001179929",
+      "cusip": "60855R100",
+      "cusip_source": "eodhd",
+      "eodhd_symbol": "MOH.US",
+      "figi": "BBG000MBHNC8",
+      "isin": "US60855R1005",
+      "lei": "549300NQQCEQ46YHZ591",
+      "source": "EODHD ID Mapping API"
+    },
     "MOMO": {
       "cik": "0001610601",
-      "cusip": "60879B107",
-      "cusip_source": "eodhd",
+      "cusip": "423403104",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "MOMO.US",
       "figi": "BBG007HTCQT0",
       "isin": "US4234031049",
       "lei": "549300YMGLID32W48529",
+      "raw_cusip": "60879B107",
       "source": "EODHD ID Mapping API"
     },
     "MORN": {
@@ -9302,12 +9388,13 @@
     },
     "MRVL": {
       "cik": "0001058057",
-      "cusip": "G5876H105",
-      "cusip_source": "eodhd",
+      "cusip": "573874104",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "MRVL.US",
       "figi": "BBG00ZXBJ153",
       "isin": "US5738741041",
       "lei": null,
+      "raw_cusip": "G5876H105",
       "source": "EODHD ID Mapping API"
     },
     "MS": {
@@ -9402,12 +9489,13 @@
     },
     "MTCH": {
       "cik": "0000891103",
-      "cusip": "57665R106",
-      "cusip_source": "eodhd",
+      "cusip": "57667L107",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "MTCH.US",
       "figi": "BBG00VT0KNC3",
       "isin": "US57667L1070",
       "lei": "549300BIJKT86CPCKK96",
+      "raw_cusip": "57665R106",
       "source": "EODHD ID Mapping API"
     },
     "MTD": {
@@ -9522,12 +9610,13 @@
     },
     "MUX": {
       "cik": "0000314203",
-      "cusip": "58039P107",
-      "cusip_source": "eodhd",
+      "cusip": "58039P305",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "MUX.US",
       "figi": "BBG000BW6CN8",
       "isin": "US58039P3055",
       "lei": null,
+      "raw_cusip": "58039P107",
       "source": "EODHD ID Mapping API"
     },
     "MVST": {
@@ -9782,12 +9871,13 @@
     },
     "NLY": {
       "cik": "0001043219",
-      "cusip": "035710409",
-      "cusip_source": "eodhd",
+      "cusip": "035710839",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "NLY.US",
       "figi": "BBG000BJFJ98",
       "isin": "US0357108390",
       "lei": null,
+      "raw_cusip": "035710409",
       "source": "EODHD ID Mapping API"
     },
     "NN": {
@@ -9842,12 +9932,13 @@
     },
     "NOV": {
       "cik": "0001021860",
-      "cusip": "637071101",
-      "cusip_source": "eodhd",
+      "cusip": "62955J103",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "NOV.US",
       "figi": "BBG000BJX8C8",
       "isin": "US62955J1034",
       "lei": "549300EHF3IW1AR6U008",
+      "raw_cusip": "637071101",
       "source": "EODHD ID Mapping API"
     },
     "NOVT": {
@@ -10012,12 +10103,13 @@
     },
     "NTST": {
       "cik": "0001011028",
-      "cusip": "64114W108",
-      "cusip_source": "eodhd",
+      "cusip": "64119V303",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "NTST.US",
       "figi": "BBG00W5FQPV2",
       "isin": "US64119V3033",
       "lei": null,
+      "raw_cusip": "64114W108",
       "source": "EODHD ID Mapping API"
     },
     "NU": {
@@ -10542,12 +10634,13 @@
     },
     "OUT": {
       "cik": "0001579877",
-      "cusip": "14987J106",
-      "cusip_source": "eodhd",
+      "cusip": "69007J304",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "OUT.US",
       "figi": "BBG004S69ZX4",
       "isin": "US69007J3041",
       "lei": null,
+      "raw_cusip": "14987J106",
       "source": "EODHD ID Mapping API"
     },
     "OVV": {
@@ -11242,12 +11335,13 @@
     },
     "PRAX": {
       "cik": "0001689548",
-      "cusip": "74006W108",
-      "cusip_source": "eodhd",
+      "cusip": "74006W207",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "PRAX.US",
       "figi": "BBG00W9LF2G5",
       "isin": "US74006W2070",
       "lei": null,
+      "raw_cusip": "74006W108",
       "source": "EODHD ID Mapping API"
     },
     "PRCT": {
@@ -11882,22 +11976,24 @@
     },
     "RKLB": {
       "cik": "0001819994",
-      "cusip": "773122106",
-      "cusip_source": "eodhd",
+      "cusip": "773121108",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "RKLB.US",
       "figi": "BBG00Y61SZL5",
       "isin": "US7731211089",
       "lei": null,
+      "raw_cusip": "773122106",
       "source": "EODHD ID Mapping API"
     },
     "RKT": {
       "cik": "0001805284",
-      "cusip": "772739207",
-      "cusip_source": "eodhd",
+      "cusip": "77311W101",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "RKT.US",
       "figi": "BBG00VY1MYW7",
       "isin": "US77311W1018",
       "lei": null,
+      "raw_cusip": "772739207",
       "source": "EODHD ID Mapping API"
     },
     "RL": {
@@ -12582,12 +12678,13 @@
     },
     "SHEL": {
       "cik": "0001306965",
-      "cusip": "780257705",
-      "cusip_source": "eodhd",
+      "cusip": "780259305",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "SHEL.US",
       "figi": "BBG0147BN6G2",
       "isin": "US7802593050",
       "lei": null,
+      "raw_cusip": "780257705",
       "source": "EODHD ID Mapping API"
     },
     "SHLS": {
@@ -12652,12 +12749,13 @@
     },
     "SIRI": {
       "cik": "0000908937",
-      "cusip": "125127100",
-      "cusip_source": "eodhd",
+      "cusip": "829933100",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "SIRI.US",
       "figi": "BBG000BT0093",
       "isin": "US8299331004",
       "lei": null,
+      "raw_cusip": "125127100",
       "source": "EODHD ID Mapping API"
     },
     "SITE": {
@@ -12692,12 +12790,13 @@
     },
     "SKM": {
       "cik": "0001015650",
-      "cusip": "78440P108",
-      "cusip_source": "eodhd",
+      "cusip": "78440P306",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "SKM.US",
       "figi": "BBG000BLN497",
       "isin": "US78440P3064",
       "lei": null,
+      "raw_cusip": "78440P108",
       "source": "EODHD ID Mapping API"
     },
     "SKWD": {
@@ -12812,12 +12911,13 @@
     },
     "SMCI": {
       "cik": "0001375365",
-      "cusip": "86800U104",
-      "cusip_source": "eodhd",
+      "cusip": "86800U302",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "SMCI.US",
       "figi": "BBG000MYZDJ3",
       "isin": "US86800U3023",
       "lei": null,
+      "raw_cusip": "86800U104",
       "source": "EODHD ID Mapping API"
     },
     "SMG": {
@@ -12912,12 +13012,13 @@
     },
     "SNOW": {
       "cik": "0001587755",
-      "cusip": "46090K109",
-      "cusip_source": "eodhd",
+      "cusip": "833445109",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "SNOW.US",
       "figi": "BBG007DHGNJ4",
       "isin": "US8334451098",
       "lei": "254900CJNSY1K7T53Z16",
+      "raw_cusip": "46090K109",
       "source": "EODHD ID Mapping API"
     },
     "SNPS": {
@@ -13052,12 +13153,13 @@
     },
     "SPIR": {
       "cik": "0001816017",
-      "cusip": "848560108",
-      "cusip_source": "eodhd",
+      "cusip": "848560306",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "SPIR.US",
       "figi": "BBG00WCNHBW7",
       "isin": "US8485603067",
       "lei": null,
+      "raw_cusip": "848560108",
       "source": "EODHD ID Mapping API"
     },
     "SPOT": {
@@ -13092,12 +13194,13 @@
     },
     "SPXC": {
       "cik": "0000088205",
-      "cusip": "784635104",
-      "cusip_source": "eodhd",
+      "cusip": "78473E103",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "SPXC.US",
       "figi": "BBG000BTGCV5",
       "isin": "US78473E1038",
       "lei": null,
+      "raw_cusip": "784635104",
       "source": "EODHD ID Mapping API"
     },
     "SQM": {
@@ -13152,12 +13255,13 @@
     },
     "SSB": {
       "cik": "0000764038",
-      "cusip": "32023E105",
-      "cusip_source": "eodhd",
+      "cusip": "84472E102",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "SSB.US",
       "figi": "BBG000BNPYN9",
       "isin": "US84472E1029",
       "lei": null,
+      "raw_cusip": "32023E105",
       "source": "EODHD ID Mapping API"
     },
     "SSD": {
@@ -13602,12 +13706,13 @@
     },
     "TEAM": {
       "cik": "0001650372",
-      "cusip": "G06242104",
-      "cusip_source": "eodhd",
+      "cusip": "049468101",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "TEAM.US",
       "figi": "BBG01BGWHFR5",
       "isin": "US0494681010",
       "lei": "549300AGBII4MWBVJY22",
+      "raw_cusip": "G06242104",
       "source": "EODHD ID Mapping API"
     },
     "TECK": {
@@ -13772,12 +13877,13 @@
     },
     "TLRY": {
       "cik": "0001731348",
-      "cusip": "88688T100",
-      "cusip_source": "eodhd",
+      "cusip": "88688T209",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "TLRY.US",
       "figi": "BBG00L7XTP60",
       "isin": "US88688T2096",
       "lei": null,
+      "raw_cusip": "88688T100",
       "source": "EODHD ID Mapping API"
     },
     "TLS": {
@@ -13912,12 +14018,13 @@
     },
     "TPL": {
       "cik": "0000097517",
-      "cusip": "882610108",
-      "cusip_source": "eodhd",
+      "cusip": "88262P102",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "TPL.US",
       "figi": "BBG00YRJXKB1",
       "isin": "US88262P1021",
       "lei": "529900WTH0D1S7BB4S10",
+      "raw_cusip": "882610108",
       "source": "EODHD ID Mapping API"
     },
     "TPR": {
@@ -14302,12 +14409,13 @@
     },
     "UAN": {
       "cik": "0001425292",
-      "cusip": "126633106",
-      "cusip_source": "eodhd",
+      "cusip": "126633205",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "UAN.US",
       "figi": "BBG001CBC4Y0",
       "isin": "US1266332055",
       "lei": null,
+      "raw_cusip": "126633106",
       "source": "EODHD ID Mapping API"
     },
     "UBER": {
@@ -14532,12 +14640,13 @@
     },
     "URNM": {
       "cik": null,
-      "cusip": "301505715",
-      "cusip_source": "eodhd",
+      "cusip": "85208P303",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "URNM.US",
       "figi": "BBG016ZGFKV6",
       "isin": "US85208P3038",
       "lei": null,
+      "raw_cusip": "301505715",
       "source": "EODHD ID Mapping API"
     },
     "UROY": {
@@ -14852,12 +14961,13 @@
     },
     "VNOM": {
       "cik": "0001602065",
-      "cusip": "92763M105",
-      "cusip_source": "eodhd",
+      "cusip": "927959106",
+      "cusip_source": "isin_override_us_mismatch",
       "eodhd_symbol": "VNOM.US",
       "figi": "BBG006G57XG0",
       "isin": "US9279591062",
       "lei": null,
+      "raw_cusip": "92763M105",
       "source": "EODHD ID Mapping API"
     },
     "VNT": {
@@ -15570,6 +15680,16 @@
       "lei": null,
       "source": "EODHD ID Mapping API"
     },
+    "XMTR": {
+      "cik": "0001657573",
+      "cusip": "98423F109",
+      "cusip_source": "eodhd",
+      "eodhd_symbol": "XMTR.US",
+      "figi": "BBG00BDCCV93",
+      "isin": "US98423F1093",
+      "lei": "5493006JFRGU7YRRXE44",
+      "source": "EODHD ID Mapping API"
+    },
     "XOM": {
       "cik": "0000034088",
       "cusip": "30231G102",
@@ -15791,8 +15911,8 @@
       "source": "EODHD ID Mapping API"
     }
   },
-  "universe_count": 1583,
+  "universe_count": 1589,
   "universe_file": "screener_tickers.json",
   "unmapped_count": 5,
-  "updated": "2026-07-07T01:46:33Z"
+  "updated": "2026-07-08T02:29:14Z"
 }

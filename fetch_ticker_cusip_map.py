@@ -115,11 +115,30 @@ def isin_identifier(row: dict[str, Any]) -> str | None:
     return None
 
 
+def isin_country(row: dict[str, Any]) -> str:
+    return str(row.get("isin") or "").upper()[:2]
+
+
 def effective_cusip(row: dict[str, Any]) -> str | None:
     cusip = str(row.get("cusip") or "").strip().upper()
+    isin_cusip = isin_identifier(row)
+    if isin_country(row) == "US" and cusip and isin_cusip and cusip != isin_cusip:
+        return isin_cusip
     if cusip:
         return cusip
-    return isin_identifier(row)
+    return isin_cusip
+
+
+def effective_cusip_source(row: dict[str, Any]) -> str | None:
+    cusip = str(row.get("cusip") or "").strip().upper()
+    isin_cusip = isin_identifier(row)
+    if isin_country(row) == "US" and cusip and isin_cusip and cusip != isin_cusip:
+        return "isin_override_us_mismatch"
+    if cusip:
+        return "eodhd"
+    if isin_cusip:
+        return "isin_derived"
+    return None
 
 
 def cusip_matches_isin(row: dict[str, Any]) -> bool:
@@ -145,15 +164,17 @@ def choose_best_row(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
 
 def compact_row(row: dict[str, Any]) -> dict[str, Any]:
     raw_cusip = str(row.get("cusip") or "").strip().upper()
-    cusip = raw_cusip or effective_cusip(row)
+    cusip = effective_cusip(row)
+    cusip_source = effective_cusip_source(row)
     return {
         "cusip": cusip,
-        "cusip_source": "eodhd" if raw_cusip else "isin_derived",
+        "cusip_source": cusip_source,
         "isin": row.get("isin"),
         "figi": row.get("figi"),
         "lei": row.get("lei"),
         "cik": row.get("cik"),
         "eodhd_symbol": row.get("symbol"),
+        **({"raw_cusip": raw_cusip} if raw_cusip and raw_cusip != cusip else {}),
         "source": "EODHD ID Mapping API",
     }
 
