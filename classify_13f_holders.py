@@ -85,9 +85,9 @@ def classify_manager(manager_name: str, rules: dict[str, Any]) -> dict[str, Any]
     normalized = normalize_name(manager_name)
 
     checks = (
-        ("exclude", "explicit_exclude", "explicit_exclude_contains"),
         ("include", "allowed_sovereign", "allowed_sovereign_contains"),
         ("include", "explicit_include", "explicit_include_contains"),
+        ("exclude", "explicit_exclude", "explicit_exclude_contains"),
         ("exclude", "market_maker", "market_maker_contains"),
         ("exclude", "structural_exclude", "structural_exclude_contains"),
         ("include", "structural_include", "structural_include_contains"),
