@@ -2412,7 +2412,7 @@ function renderOwnershipHoldersTable(rows,note){
     <td class="num">${esc(row.value_display||moneyText(row.value_usd??row.value))}</td>
   </tr>`).join('');
   return `<div class="ownership-card ownership-card-wide">
-    <div class="ownership-card-head"><div class="ownership-card-title">Top Institutional Holders</div></div>
+    <div class="ownership-card-head"><div class="ownership-card-title">Top 10 Institutional Holders</div></div>
     ${clean.length?`<div class="ownership-table-wrap"><table class="ownership-table">
       <thead><tr><th class="l">Holder</th><th class="num">Shares</th><th class="num">% out</th><th class="num">Value ($)</th></tr></thead>
       <tbody>${tableBody}</tbody>
