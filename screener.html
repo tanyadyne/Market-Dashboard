@@ -2397,7 +2397,7 @@ function renderOwnershipPie(ownership){
   const visibleSegments=rawSegments.filter(seg=>seg.value>0);
   const metrics=renderOwnershipFloatMetrics(b);
   if(!visibleSegments.length&&!metrics){
-    return `<div class="ownership-card ownership-card-wide"><div class="ownership-card-head"><div class="ownership-card-title">Ownership Breakdown</div></div><div class="ownership-empty">No ownership breakdown available.</div></div>`;
+    return `<div class="ownership-card ownership-card-wide"><div class="ownership-card-head"><div class="ownership-card-title" aria-hidden="true">&nbsp;</div></div><div class="ownership-empty">No ownership breakdown available.</div></div>`;
   }
   const total=visibleSegments.reduce((sum,seg)=>sum+seg.value,0)||100;
   const w=500,h=320,cx=252,cy=158,r=114;
@@ -2437,7 +2437,7 @@ function renderOwnershipPie(ownership){
     </svg>
   </div>`:`<div class="ownership-pie-wrap"><div class="ownership-empty">No ownership breakdown available.</div></div>`;
   return `<div class="ownership-card ownership-card-wide">
-    <div class="ownership-card-head"><div class="ownership-card-title">Ownership Breakdown</div></div>
+    <div class="ownership-card-head"><div class="ownership-card-title" aria-hidden="true">&nbsp;</div></div>
     <div class="ownership-breakdown-body${metrics?'':' no-metrics'}">
       ${metrics}
       ${chart}
