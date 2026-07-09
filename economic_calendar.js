@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-07-07 23:58 UTC",
-  "generated_at_et": "07/07/2026, 19:57 EDT",
+  "generated_at_utc": "2026-07-09 00:11 UTC",
+  "generated_at_et": "08/07/2026, 20:11 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -177,14 +177,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-07",
           "day": "Tuesday, July 7, 2026",
-          "ticker": "BMNR",
-          "company": "Bitmine Immersion Technologies, Inc.",
-          "group": "Capital Markets",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-07",
-          "day": "Tuesday, July 7, 2026",
           "ticker": "EPAC",
           "company": "Enerpac Tool Group Corp.",
           "group": "Specialty Industrial Machinery",
@@ -199,27 +191,19 @@ window.ECONOMIC_CALENDAR_DATA = {
           "time": "AMC"
         },
         {
-          "date": "2026-07-07",
-          "day": "Tuesday, July 7, 2026",
-          "ticker": "RR",
-          "company": "Richtech Robotics Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-07",
-          "day": "Tuesday, July 7, 2026",
-          "ticker": "USAU",
-          "company": "U.S. Gold Corp.",
-          "group": "Gold",
-          "time": "AMC"
-        },
-        {
           "date": "2026-07-08",
           "day": "Wednesday, July 8, 2026",
           "ticker": "PSMT",
           "company": "PriceSmart, Inc.",
           "group": "Discount Stores",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-08",
+          "day": "Wednesday, July 8, 2026",
+          "ticker": "RR",
+          "company": "Richtech Robotics Inc.",
+          "group": "Specialty Industrial Machinery",
           "time": "AMC"
         },
         {
@@ -245,6 +229,22 @@ window.ECONOMIC_CALENDAR_DATA = {
           "company": "PepsiCo, Inc.",
           "group": "Beverages - Non-Alcoholic",
           "time": "BMO"
+        },
+        {
+          "date": "2026-07-10",
+          "day": "Friday, July 10, 2026",
+          "ticker": "BMNR",
+          "company": "Bitmine Immersion Technologies, Inc.",
+          "group": "Capital Markets",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-10",
+          "day": "Friday, July 10, 2026",
+          "ticker": "USAU",
+          "company": "U.S. Gold Corp.",
+          "group": "Gold",
+          "time": "AMC"
         },
         {
           "date": "2026-07-10",
@@ -748,14 +748,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-07-07",
       "day": "Tuesday, July 7, 2026",
-      "ticker": "BMNR",
-      "company": "Bitmine Immersion Technologies, Inc.",
-      "group": "Capital Markets",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-07",
-      "day": "Tuesday, July 7, 2026",
       "ticker": "EPAC",
       "company": "Enerpac Tool Group Corp.",
       "group": "Specialty Industrial Machinery",
@@ -770,27 +762,19 @@ window.ECONOMIC_CALENDAR_DATA = {
       "time": "AMC"
     },
     {
-      "date": "2026-07-07",
-      "day": "Tuesday, July 7, 2026",
-      "ticker": "RR",
-      "company": "Richtech Robotics Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-07",
-      "day": "Tuesday, July 7, 2026",
-      "ticker": "USAU",
-      "company": "U.S. Gold Corp.",
-      "group": "Gold",
-      "time": "AMC"
-    },
-    {
       "date": "2026-07-08",
       "day": "Wednesday, July 8, 2026",
       "ticker": "PSMT",
       "company": "PriceSmart, Inc.",
       "group": "Discount Stores",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-08",
+      "day": "Wednesday, July 8, 2026",
+      "ticker": "RR",
+      "company": "Richtech Robotics Inc.",
+      "group": "Specialty Industrial Machinery",
       "time": "AMC"
     },
     {
@@ -816,6 +800,22 @@ window.ECONOMIC_CALENDAR_DATA = {
       "company": "PepsiCo, Inc.",
       "group": "Beverages - Non-Alcoholic",
       "time": "BMO"
+    },
+    {
+      "date": "2026-07-10",
+      "day": "Friday, July 10, 2026",
+      "ticker": "BMNR",
+      "company": "Bitmine Immersion Technologies, Inc.",
+      "group": "Capital Markets",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-10",
+      "day": "Friday, July 10, 2026",
+      "ticker": "USAU",
+      "company": "U.S. Gold Corp.",
+      "group": "Gold",
+      "time": "AMC"
     },
     {
       "date": "2026-07-10",
