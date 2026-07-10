@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-07-10 00:05 UTC",
-  "generated_at_et": "09/07/2026, 20:05 EDT",
+  "generated_at_utc": "2026-07-10 23:58 UTC",
+  "generated_at_et": "10/07/2026, 19:58 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -31,20 +31,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         }
       ],
       "events": [
-        {
-          "key": "chicago_pmi",
-          "event": "Chicago PMI",
-          "source_event": "Chicago PMI",
-          "date": "2026-06-30",
-          "day": "Tuesday, June 30, 2026",
-          "time": "09:45 AM",
-          "period": "JUN",
-          "actual": "56.7",
-          "consensus": "-",
-          "previous": "62.7",
-          "forecast": "-",
-          "revised": "-"
-        },
         {
           "key": "adp",
           "event": "ADP employment",
@@ -141,7 +127,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         }
       ],
       "event_keys": [
-        "chicago_pmi",
         "adp",
         "unemployment"
       ]
@@ -201,9 +186,9 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-09",
           "day": "Thursday, July 9, 2026",
-          "ticker": "RR",
-          "company": "Richtech Robotics Inc.",
-          "group": "Specialty Industrial Machinery",
+          "ticker": "NRIX",
+          "company": "Nurix Therapeutics, Inc.",
+          "group": "Biotechnology",
           "time": "AMC"
         },
         {
@@ -335,6 +320,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "time": "AMC"
         },
         {
+          "date": "2026-07-13",
+          "day": "Monday, July 13, 2026",
+          "ticker": "RR",
+          "company": "Richtech Robotics Inc.",
+          "group": "Specialty Industrial Machinery",
+          "time": "AMC"
+        },
+        {
           "date": "2026-07-14",
           "day": "Tuesday, July 14, 2026",
           "ticker": "AEHR",
@@ -444,14 +437,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "ASML",
           "company": "ASML Holding N.V.",
           "group": "Semiconductor Equipment & Materials",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-15",
-          "day": "Wednesday, July 15, 2026",
-          "ticker": "BK",
-          "company": "Bank of New York Mellon Corp",
-          "group": "Banks - Diversified",
           "time": "BMO"
         },
         {
@@ -748,9 +733,9 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-07-09",
       "day": "Thursday, July 9, 2026",
-      "ticker": "RR",
-      "company": "Richtech Robotics Inc.",
-      "group": "Specialty Industrial Machinery",
+      "ticker": "NRIX",
+      "company": "Nurix Therapeutics, Inc.",
+      "group": "Biotechnology",
       "time": "AMC"
     },
     {
