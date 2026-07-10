@@ -410,15 +410,6 @@ tr:hover{background:var(--bg3)}
 .ownership-chart{width:100%;height:320px;display:block;overflow:visible}
 .own-axis{stroke:var(--bdr);stroke-width:1}
 .own-gridline{stroke:var(--bdr2);stroke-width:1;stroke-dasharray:4 5}
-.own-svg-tooltip{opacity:0;pointer-events:none;transition:opacity .12s}
-.own-pie-segment:hover .own-svg-tooltip,.own-pie-segment:focus-visible .own-svg-tooltip{opacity:1}
-.own-tooltip-box{fill:rgba(17,24,39,.96);stroke:var(--bdr);stroke-width:1;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22))}
-.own-tooltip-label{fill:#9ca3af;font-size:12px;font-weight:700}
-.own-tooltip-value{fill:#f9fafb;font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:800}
-.own-tooltip-title{fill:#f9fafb;font-size:13px;font-weight:800}
-[data-theme="light"] .own-tooltip-box{fill:rgba(255,255,255,.98);stroke:#d1d5db;filter:drop-shadow(0 8px 14px rgba(15,23,42,.14))}
-[data-theme="light"] .own-tooltip-title,[data-theme="light"] .own-tooltip-value{fill:#111827}
-[data-theme="light"] .own-tooltip-label{fill:#6b7280}
 .own-axis-label{fill:var(--t3);font-size:9px;font-family:'JetBrains Mono',monospace}
 .own-pie-segment{cursor:default;outline:none}
 .own-pie-slice{transition:transform .16s ease,filter .16s ease;transform-box:view-box;transform-origin:center}
@@ -432,8 +423,14 @@ tr:hover{background:var(--bg3)}
 .own-pie-outline{fill:none;stroke:rgba(15,23,42,.22);stroke-width:1.2}
 [data-theme="dark"] .own-pie-outline{stroke:rgba(249,250,251,.18)}
 .own-spider-line{fill:none;stroke:var(--t4);stroke-width:1.1}
-.own-spider-label{fill:var(--t2);font-size:13px;font-weight:800}
-.own-spider-value{fill:var(--t1);font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:800}
+.own-spider-label{fill:var(--t2);font-size:13px;font-weight:700;transition:fill .16s ease,font-weight .16s ease}
+.own-spider-value{fill:var(--t1);font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:700;transition:font-weight .16s ease}
+.ownership-chart:has(.own-pie-inst-segment:is(:hover,:focus-visible)) .own-pie-inst-label :is(.own-spider-label,.own-spider-value),
+.ownership-chart:has(.own-pie-insider-segment:is(:hover,:focus-visible)) .own-pie-insider-label :is(.own-spider-label,.own-spider-value),
+.ownership-chart:has(.own-pie-other-segment:is(:hover,:focus-visible)) .own-pie-other-label :is(.own-spider-label,.own-spider-value){font-weight:900}
+.ownership-chart:has(.own-pie-inst-segment:is(:hover,:focus-visible)) .own-pie-inst-label .own-spider-label,
+.ownership-chart:has(.own-pie-insider-segment:is(:hover,:focus-visible)) .own-pie-insider-label .own-spider-label,
+.ownership-chart:has(.own-pie-other-segment:is(:hover,:focus-visible)) .own-pie-other-label .own-spider-label{fill:var(--t1)}
 .own-pie-legend{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:2px;color:var(--t2);font-size:11px;font-weight:700}
 .own-pie-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .own-pie-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
@@ -2355,17 +2352,31 @@ function renderOwnershipFloatMetrics(b){
 function ownershipSpiderLabels(sliceData,cx,cy,r,w,h){
   const rows=sliceData.map(item=>{
     const rad=(item.mid-90)*Math.PI/180;
-    const right=Math.cos(rad)>=0;
+    const preferredRight=Math.cos(rad)>=0;
+    const ambiguous=Math.abs(Math.cos(rad))<.32;
     const edge=ownershipPolar(cx,cy,r+4,item.mid);
-    const elbow=ownershipPolar(cx,cy,r+30,item.mid);
-    const textX=right?w-76:76;
-    const lineX=right?textX-12:textX+12;
-    const rawY=Math.max(38,Math.min(h-38,elbow.y));
-    return {...item,right,edge,elbow,textX,lineX,y:rawY,anchor:right?'start':'end'};
+    const outer=ownershipPolar(cx,cy,r+28,item.mid);
+    return {...item,preferredRight,ambiguous,edge,outer};
+  });
+  let leftCount=rows.filter(row=>!row.ambiguous&&!row.preferredRight).length;
+  let rightCount=rows.filter(row=>!row.ambiguous&&row.preferredRight).length;
+  rows.filter(row=>row.ambiguous).sort((a,b)=>a.edge.y-b.edge.y).forEach(row=>{
+    const normalized=((row.mid%360)+360)%360;
+    const nearTop=normalized<=35||normalized>=325;
+    row.right=leftCount<rightCount?false:rightCount<leftCount?true:(nearTop||row.preferredRight);
+    if(row.right)rightCount++;else leftCount++;
+  });
+  rows.filter(row=>!row.ambiguous).forEach(row=>{row.right=row.preferredRight;});
+  rows.forEach(row=>{
+    row.textX=row.right?w-76:76;
+    row.lineX=row.right?row.textX-12:row.textX+12;
+    row.bendX=row.right?Math.max(row.outer.x,cx+14):Math.min(row.outer.x,cx-14);
+    row.y=Math.max(38,Math.min(h-38,row.outer.y));
+    row.anchor=row.right?'start':'end';
   });
   ['left','right'].forEach(side=>{
     const sideRows=rows.filter(row=>row.right===(side==='right')).sort((a,b)=>a.y-b.y);
-    const gap=34,minY=42,maxY=h-42;
+    const gap=38,minY=42,maxY=h-42;
     let nextY=minY;
     sideRows.forEach(row=>{
       row.y=Math.max(row.y,nextY);
@@ -2380,8 +2391,8 @@ function ownershipSpiderLabels(sliceData,cx,cy,r,w,h){
       sideRows.forEach(row=>{row.y=Math.max(minY,row.y);});
     }
   });
-  return rows.map(row=>`<g class="own-spider-label-group">
-    <path class="own-spider-line" d="M ${row.edge.x.toFixed(1)} ${row.edge.y.toFixed(1)} L ${row.elbow.x.toFixed(1)} ${row.elbow.y.toFixed(1)} L ${row.elbow.x.toFixed(1)} ${row.y.toFixed(1)} L ${row.lineX.toFixed(1)} ${row.y.toFixed(1)}"></path>
+  return rows.map(row=>`<g class="own-spider-label-group ${row.seg.cls}-label">
+    <path class="own-spider-line" d="M ${row.edge.x.toFixed(1)} ${row.edge.y.toFixed(1)} L ${row.bendX.toFixed(1)} ${row.y.toFixed(1)} L ${row.lineX.toFixed(1)} ${row.y.toFixed(1)}"></path>
     <text class="own-spider-label" x="${row.textX}" y="${(row.y-3).toFixed(1)}" text-anchor="${row.anchor}">${esc(row.seg.legend)}</text>
     <text class="own-spider-value" x="${row.textX}" y="${(row.y+14).toFixed(1)}" text-anchor="${row.anchor}">${esc(formatOwnershipPct(row.seg.value))}</text>
   </g>`).join('');
@@ -2401,9 +2412,11 @@ function renderOwnershipPie(ownership){
   }
   const total=visibleSegments.reduce((sum,seg)=>sum+seg.value,0)||100;
   const w=500,h=320,cx=252,cy=158,r=114;
+  const minSliceAngle=10;
+  const proportionalAngle=Math.max(0,360-minSliceAngle*visibleSegments.length);
   let angle=0;
   const sliceData=visibleSegments.map(seg=>{
-    const span=seg.value/total*360;
+    const span=minSliceAngle+(seg.value/total)*proportionalAngle;
     const start=angle;
     const end=angle+span;
     angle=end;
@@ -2415,25 +2428,16 @@ function renderOwnershipPie(ownership){
   });
   const segments=sliceData.map(item=>{
     const {seg,start,end,mid,dx,dy}=item;
-    const tip=ownershipPolar(cx,cy,r*.58,mid);
-    const tipW=176,tipH=48;
-    const tipX=Math.max(4,Math.min(tip.x+12,w-tipW-4));
-    const tipY=Math.max(4,Math.min(tip.y-24,h-tipH-4));
-    return `<g class="own-pie-segment" tabindex="0" role="graphics-symbol" style="--pop-x:${dx.toFixed(1)}px;--pop-y:${dy.toFixed(1)}px" aria-label="${esc(`${seg.label}: ${formatOwnershipPct(seg.value)}`)}">
+    return `<g class="own-pie-segment ${seg.cls}-segment" tabindex="0" role="graphics-symbol" style="--pop-x:${dx.toFixed(1)}px;--pop-y:${dy.toFixed(1)}px" aria-label="${esc(`${seg.label}: ${formatOwnershipPct(seg.value)}`)}">
       <path class="own-pie-slice ${seg.cls}" d="${ownershipPiePath(cx,cy,r,start,end)}"></path>
-      <g class="own-svg-tooltip" transform="translate(${tipX.toFixed(1)} ${tipY.toFixed(1)})">
-        <rect class="own-tooltip-box" x="0" y="0" width="${tipW}" height="${tipH}" rx="7"></rect>
-        <text class="own-tooltip-title" x="10" y="19">${esc(seg.legend)}</text>
-        <text class="own-tooltip-value" x="${tipW-10}" y="32" text-anchor="end">${esc(formatOwnershipPct(seg.value))}</text>
-      </g>
     </g>`;
   }).join('');
   const labels=ownershipSpiderLabels(sliceData,cx,cy,r,w,h);
   const chart=visibleSegments.length?`<div class="ownership-pie-wrap">
     <svg class="ownership-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Ownership breakdown">
       <circle class="own-pie-outline" cx="${cx}" cy="${cy}" r="${r}"></circle>
-      ${segments}
       ${labels}
+      ${segments}
     </svg>
   </div>`:`<div class="ownership-pie-wrap"><div class="ownership-empty">No ownership breakdown available.</div></div>`;
   return `<div class="ownership-card ownership-card-wide">
