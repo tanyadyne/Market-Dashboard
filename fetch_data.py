@@ -77,7 +77,6 @@ ETF_INFO = [
     {"t":"MOO","n":"Agribusiness","fn":"VanEck:Agribusiness","h":"DE,ZTS,CTVA,ADM,TSN,CF,BG,ELAN,MOS,CNH,DAR,TTC,AGCO,CAT"},
     {"t":"XME","n":"Metals & Mining","fn":"SS SPDR S&P Metals&Mng","h":"HL,AA,HCC,STLD,NEM,LEU,CDE,NUE,CLF,CMC,RGLD,BTU,CNR,RS,FCX,UEC,MP,AMR,MTRN,CENX,IE,KALU,USAR,WS,MUX"},
     {"t":"ARKF","n":"Fintech Innovation","fn":"ARK BC & Fintech Innov","h":"SHOP,COIN,HOOD,PLTR,TOST,SOFI,XYZ,RBLX,ROKU,CRCL,MELI,AMD,DKNG,META,AMZN,BMNR,PINS,NU,KLAR,SE,BLSH,FUTU,Z"},
-    {"t":"EWZ","n":"Brazil","fn":"iShares:MSCI Brazil","h":"NU,MELI,DLO"},
     {"t":"XBI","n":"Biotechnology","fn":"SS SPDR S&P Biotech","h":"ABBV,APGE,AMGN,VRTX,MRNA,RVMD,NTRA,ARGX,AXSM,BBIO,IQV,ARWR,MDGL,BIIB,ROIV,PTCT,INCY,TWST,CYTK,PRAX,NBIX,SYRE,QURE,TNGX,TGTX,KYMR,KRYS,IONS,EXEL,ALKS,ORKA,MIRM,TVTX,ELVN,DNTH,HALO,RYTM,TXG,COGT,ELAN,BMRN,NTLA,PCVX,PTGX,SRRK,IBRX,VKTX,RARE,CGON,ABSI,ERAS,VCYT,CRSP,BEAM,RLAY,ADPT"},
     {"t":"XSD","n":"Semiconductors","fn":"SPDR:S&P Semiconductor ETF","h":"MU,INTC,RGTI,AMD,MRVL,MTSI,FSLR,RMBS,SITM,SMTC,MPWR,ADI,QCOM,CRUS,ON,AVGO,CRDO,LSCC,NVDA,QRVO,SLAB,TXN,NXPI,SWKS,OLED,TSEM,TSM,AMAT,ASML,LRCX,KLAC,CDNS,SNPS,TER,MCHP,STM"},
     {"t":"ARKG","n":"Genomics","fn":"ARK Genomic Revolution","h":"ABSI,ADPT,ARWR,ATAI,AZN,BEAM,BFLY,BLLN,BMRN,BMY,BNTX,BRKR,CAI,CRSP,DHR,GH,GILD,ILMN,IONS,LEGN,LLY,MRNA,NRIX,NTLA,NTRA,PRAX,PSNL,QGEN,QURE,RARE,RXRX,SRPT,TEM,TWST,TXG,VCYT,VRTX,WGS"},
@@ -241,9 +240,6 @@ CUSTOM_ETF_DESCRIPTIONS = {'MAGS': 'This theme tracks the dominant U.S. mega-cap
  'ARKF': 'This theme tracks digital payments, crypto platforms, online brokerage, financial software, e-commerce '
          'finance, and technology-led financial services companies. It is designed to represent the modernization of '
          'banking, payments, investing, lending, and consumer finance through software and platforms.',
- 'EWZ': 'This theme tracks Brazilian and Brazil-linked companies exposed to Latin American consumer growth, digital '
-        'finance, e-commerce, and regional market cycles. It is designed to represent Brazil-specific equity exposure, '
-        'with sensitivity to commodities, currencies, rates, domestic demand, and political risk.',
  'XBI': 'This theme tracks biotechnology companies developing therapies, genetic medicines, diagnostics, and drug '
         'platforms. It is designed to represent innovation in oncology, rare disease, immunology, precision medicine, '
         'and clinical-stage drug development.',
