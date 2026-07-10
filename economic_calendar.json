@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-07-09 00:11 UTC",
-  "generated_at_et": "08/07/2026, 20:11 EDT",
+  "generated_at_utc": "2026-07-10 00:05 UTC",
+  "generated_at_et": "09/07/2026, 20:05 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -199,28 +199,12 @@
           "time": "AMC"
         },
         {
-          "date": "2026-07-08",
-          "day": "Wednesday, July 8, 2026",
+          "date": "2026-07-09",
+          "day": "Thursday, July 9, 2026",
           "ticker": "RR",
           "company": "Richtech Robotics Inc.",
           "group": "Specialty Industrial Machinery",
           "time": "AMC"
-        },
-        {
-          "date": "2026-07-09",
-          "day": "Thursday, July 9, 2026",
-          "ticker": "FEIM",
-          "company": "Frequency Electronics, Inc.",
-          "group": "Communication Equipment",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-09",
-          "day": "Thursday, July 9, 2026",
-          "ticker": "NRIX",
-          "company": "Nurix Therapeutics, Inc.",
-          "group": "Biotechnology",
-          "time": "BMO"
         },
         {
           "date": "2026-07-09",
@@ -413,6 +397,14 @@
           "company": "Wells Fargo & Company",
           "group": "Banks - Diversified",
           "time": "BMO"
+        },
+        {
+          "date": "2026-07-15",
+          "day": "Wednesday, July 15, 2026",
+          "ticker": "FEIM",
+          "company": "Frequency Electronics, Inc.",
+          "group": "Communication Equipment",
+          "time": "AMC"
         },
         {
           "date": "2026-07-15",
@@ -625,25 +617,9 @@
         {
           "date": "2026-07-16",
           "day": "Thursday, July 16, 2026",
-          "ticker": "SNA",
-          "company": "Snap-on Incorporated",
-          "group": "Tools & Accessories",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
           "ticker": "STT",
           "company": "State Street Corporation",
           "group": "Asset Management",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
-          "ticker": "TCBI",
-          "company": "Texas Capital Bancshares, Inc.",
-          "group": "Banks - Regional",
           "time": "BMO"
         },
         {
@@ -770,28 +746,12 @@
       "time": "AMC"
     },
     {
-      "date": "2026-07-08",
-      "day": "Wednesday, July 8, 2026",
+      "date": "2026-07-09",
+      "day": "Thursday, July 9, 2026",
       "ticker": "RR",
       "company": "Richtech Robotics Inc.",
       "group": "Specialty Industrial Machinery",
       "time": "AMC"
-    },
-    {
-      "date": "2026-07-09",
-      "day": "Thursday, July 9, 2026",
-      "ticker": "FEIM",
-      "company": "Frequency Electronics, Inc.",
-      "group": "Communication Equipment",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-09",
-      "day": "Thursday, July 9, 2026",
-      "ticker": "NRIX",
-      "company": "Nurix Therapeutics, Inc.",
-      "group": "Biotechnology",
-      "time": "BMO"
     },
     {
       "date": "2026-07-09",
