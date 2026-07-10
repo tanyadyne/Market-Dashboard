@@ -423,12 +423,12 @@ tr:hover{background:var(--bg3)}
 .own-pie-outline{fill:none;stroke:rgba(15,23,42,.22);stroke-width:1.2}
 [data-theme="dark"] .own-pie-outline{stroke:rgba(249,250,251,.18)}
 .own-spider-line{fill:none;stroke:var(--t4);stroke-width:1;transition:stroke .16s ease,stroke-width .16s ease}
-.own-spider-label,.own-spider-value{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:fill .16s ease,font-weight .16s ease}
+.own-spider-label,.own-spider-value{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:fill .16s ease,font-size .16s ease,font-weight .16s ease}
 .own-spider-label{fill:var(--t2)}
 .own-spider-value{fill:var(--t1)}
 .ownership-chart:has(.own-pie-inst-segment:is(:hover,:focus-visible)) .own-pie-inst-label :is(.own-spider-label,.own-spider-value),
 .ownership-chart:has(.own-pie-insider-segment:is(:hover,:focus-visible)) .own-pie-insider-label :is(.own-spider-label,.own-spider-value),
-.ownership-chart:has(.own-pie-other-segment:is(:hover,:focus-visible)) .own-pie-other-label :is(.own-spider-label,.own-spider-value){fill:var(--t1);font-family:'JetBrains Mono',monospace;font-weight:800}
+.ownership-chart:has(.own-pie-other-segment:is(:hover,:focus-visible)) .own-pie-other-label :is(.own-spider-label,.own-spider-value){fill:var(--t1);font-size:14.5px;font-weight:800}
 .ownership-chart:has(.own-pie-inst-segment:is(:hover,:focus-visible)) .own-pie-inst-label .own-spider-line,
 .ownership-chart:has(.own-pie-insider-segment:is(:hover,:focus-visible)) .own-pie-insider-label .own-spider-line,
 .ownership-chart:has(.own-pie-other-segment:is(:hover,:focus-visible)) .own-pie-other-label .own-spider-line{stroke:var(--t2);stroke-width:2.2}
@@ -2355,7 +2355,7 @@ function ownershipSpiderLabels(sliceData,cx,cy,r,w,h){
     const rad=(item.mid-90)*Math.PI/180;
     const preferredRight=Math.cos(rad)>=0;
     const ambiguous=Math.abs(Math.cos(rad))<.32;
-    const edge=ownershipPolar(cx,cy,r+4,item.mid);
+    const edge=ownershipPolar(cx,cy,r-1,item.mid);
     const outer=ownershipPolar(cx,cy,r+28,item.mid);
     return {...item,preferredRight,ambiguous,edge,outer};
   });
@@ -2413,7 +2413,7 @@ function renderOwnershipPie(ownership){
   }
   const total=visibleSegments.reduce((sum,seg)=>sum+seg.value,0)||100;
   const w=500,h=320,cx=252,cy=158,r=114;
-  const minSliceAngle=10;
+  const minSliceAngle=6;
   const proportionalAngle=Math.max(0,360-minSliceAngle*visibleSegments.length);
   let angle=0;
   const sliceData=visibleSegments.map(seg=>{
