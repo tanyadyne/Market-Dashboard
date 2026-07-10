@@ -8,7 +8,7 @@
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-ticker-tape.js"></script>
 <script>
 (function(){try{const t=localStorage.getItem('dashboardTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
@@ -68,37 +68,45 @@ button{font:inherit}
 .content{padding:28px 28px 38px;max-width:1440px;width:100%;margin:0 auto}
 .dashboard-grid{display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:28px;align-items:stretch}
 .main-col,.side-col{display:flex;flex-direction:column;gap:26px;min-width:0}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;height:100%}
+.summary-grid{height:100%}
 .card{background:var(--card);border:1px solid var(--bdr);border-radius:10px;box-shadow:0 8px 24px var(--shadow);min-width:0}
 .card-pad{padding:22px 22px 18px}
 .card-title{font-size:16px;font-weight:800;letter-spacing:-.1px;color:var(--t1)}
 .card-subtitle{font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:4px}
-.theme-card{height:100%;overflow:hidden;display:flex;flex-direction:column}
-.theme-list{margin:12px -22px -18px;display:flex;flex:1;flex-direction:column}
-.theme-row{display:flex;flex:1;align-items:center;padding:8px 22px;border-top:1px solid var(--bdr2)}
+.dashboard-section-title{font-family:'Barlow Condensed','DM Sans',sans-serif;font-size:25px;font-weight:700;line-height:1;text-transform:uppercase;letter-spacing:1.1px;color:var(--t1)}
+.themes-card{height:100%;padding:20px;overflow:hidden}
+.theme-period-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.theme-period{min-width:0;border:1px solid var(--bdr);border-radius:6px;background:var(--card2);overflow:hidden}
+.theme-period-title{position:relative;padding:13px 14px 12px;color:var(--t2);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--bdr2)}
+.theme-period-title::after{content:"";position:absolute;left:14px;bottom:-1px;width:42px;height:2px;background:var(--accent2)}
+.theme-list{display:flex;flex-direction:column}
+.theme-row{display:grid;grid-template-columns:22px minmax(0,1fr);align-items:center;min-height:53px;padding:7px 13px;border-top:1px solid var(--bdr2)}
+.theme-row:first-child{border-top:0}
 .theme-row:hover{background:var(--card-hover)}
+.theme-rank{align-self:start;padding-top:1px;color:var(--t4);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600}
 .theme-name{display:block;font-size:13px;font-weight:800;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .theme-name:hover{color:var(--accent2)}
 .theme-holdings{font-size:11px;font-weight:800;color:var(--orange);letter-spacing:.3px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .theme-holding:hover{color:var(--t1)}
 .positive{color:var(--green2)}.negative{color:var(--red)}.neutral{color:var(--t3)}
 .table-card{overflow:hidden}
-.table-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 22px 12px}
+.table-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px 22px 15px;border-bottom:1px solid var(--bdr2)}
 .stocks-shell{max-height:505px;overflow:auto}
 .stocks-table{width:100%;border-collapse:collapse;table-layout:fixed}
-.stocks-table th{position:sticky;top:0;background:var(--card);z-index:2;color:var(--t3);font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;text-align:left;font-weight:800;padding:9px 14px;border-bottom:1px solid var(--bdr2)}
-.stocks-table td{padding:9px 14px;border-bottom:1px solid var(--bdr2);font-size:11px;color:var(--t2);vertical-align:middle}
+.stocks-table th{position:sticky;top:0;background:#161616;z-index:2;color:var(--t3);font-size:9px;text-transform:uppercase;letter-spacing:.75px;text-align:left;font-weight:800;padding:9px 10px;border-bottom:1px solid var(--bdr)}
+[data-theme="light"] .stocks-table th{background:#f3f4f6}
+.stocks-table td{height:37px;padding:7px 10px;border-bottom:1px solid var(--bdr2);font-size:10.5px;color:var(--t2);vertical-align:middle}
 .stocks-table tr:hover td{background:var(--card-hover)}
-.rank{font-family:'JetBrains Mono',monospace;color:var(--t3);font-weight:700}
+.rank{font-family:'JetBrains Mono',monospace;color:var(--t4);font-weight:500}
 .ticker{font-family:'JetBrains Mono',monospace;color:var(--t1);font-weight:800;letter-spacing:.5px}
 .ticker:hover{color:var(--accent2)}
-.theme-cell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.company-cell,.theme-cell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mono{font-family:'JetBrains Mono',monospace;font-weight:700}
-.rs-pill{display:inline-flex;align-items:center;justify-content:center;min-width:34px;border-radius:6px;padding:4px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:800;background:var(--bdr2);color:var(--t2)}
+.rs-pill{display:inline-flex;align-items:center;justify-content:center;min-width:32px;border-radius:6px;padding:3px 7px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;background:var(--bdr2);color:var(--t2)}
 .rs-strong{background:rgba(34,197,94,.16);color:var(--green2)}
 .rs-mid{background:rgba(148,163,184,.16);color:var(--t2)}
 .rs-weak{background:rgba(255,90,102,.14);color:var(--red)}
-.events-card{min-height:278px;display:flex;flex-direction:column}
+.events-card{height:100%;min-height:278px;display:flex;flex-direction:column}
 .events-section{padding:18px 20px;min-height:132px}
 .events-section + .events-section{border-top:1px solid var(--bdr2)}
 .events-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;color:var(--t3);margin-bottom:12px}
@@ -193,13 +201,22 @@ button{font:inherit}
       <div class="dashboard-grid">
         <div class="main-col">
           <section class="summary-grid" aria-label="Leading themes">
-            <article class="card card-pad theme-card">
-              <div class="card-title">Strongest themes (past week)</div>
-              <div class="theme-list" id="weeklyThemes"><div class="loading">Loading themes...</div></div>
-            </article>
-            <article class="card card-pad theme-card">
-              <div class="card-title">Strongest themes (past 3 months)</div>
-              <div class="theme-list" id="yearThemes"><div class="loading">Loading themes...</div></div>
+            <article class="card themes-card">
+              <h2 class="dashboard-section-title">Leading Themes</h2>
+              <div class="theme-period-grid">
+                <section class="theme-period" aria-labelledby="pastWeekTitle">
+                  <h3 class="theme-period-title" id="pastWeekTitle">Past Week</h3>
+                  <div class="theme-list" id="weeklyThemes"><div class="loading">Loading themes...</div></div>
+                </section>
+                <section class="theme-period" aria-labelledby="pastQuarterTitle">
+                  <h3 class="theme-period-title" id="pastQuarterTitle">Past Quarter</h3>
+                  <div class="theme-list" id="quarterThemes"><div class="loading">Loading themes...</div></div>
+                </section>
+                <section class="theme-period" aria-labelledby="pastYearTitle">
+                  <h3 class="theme-period-title" id="pastYearTitle">Past Year</h3>
+                  <div class="theme-list" id="yearThemes"><div class="loading">Loading themes...</div></div>
+                </section>
+              </div>
             </article>
           </section>
         </div>
@@ -224,18 +241,15 @@ button{font:inherit}
 
         <section class="card table-card">
           <div class="table-head">
-            <div>
-              <div class="card-title">Leading stocks</div>
-              <div class="card-subtitle">Top 40 strongest stocks</div>
-            </div>
+            <h2 class="dashboard-section-title">Leading Stocks</h2>
           </div>
           <div class="stocks-shell">
             <table class="stocks-table">
               <colgroup>
-                <col style="width:54px"><col style="width:92px"><col><col style="width:78px"><col style="width:78px"><col style="width:78px"><col style="width:86px"><col style="width:62px">
+                <col style="width:42px"><col style="width:70px"><col style="width:180px"><col><col style="width:68px"><col style="width:68px"><col style="width:66px"><col style="width:76px"><col style="width:52px">
               </colgroup>
-              <thead><tr><th>#</th><th>Ticker</th><th>Theme</th><th>1D</th><th>1W</th><th>Streak</th><th>% Since</th><th>RS</th></tr></thead>
-              <tbody id="leadingStocks"><tr><td colspan="8" class="loading">Loading stocks...</td></tr></tbody>
+              <thead><tr><th>#</th><th>Ticker</th><th>Company Name</th><th>Theme</th><th>1D</th><th>1W</th><th>Streak</th><th>% Since</th><th>RS</th></tr></thead>
+              <tbody id="leadingStocks"><tr><td colspan="9" class="loading">Loading stocks...</td></tr></tbody>
             </table>
           </div>
         </section>
@@ -469,12 +483,13 @@ function renderThemeList(targetId,items){
     target.innerHTML='<div class="loading">No theme data</div>';
     return;
   }
-  target.innerHTML=items.map(theme=>{
+  target.innerHTML=items.map((theme,index)=>{
     const holdings=topHoldingsFor(theme);
     const holdingsHtml=holdings.length
       ? holdings.map(ticker=>`<a class="theme-holding" href="${profileUrl(ticker)}">${esc(ticker)}</a>`).join(' · ')
       : '-';
     return `<div class="theme-row">
+      <div class="theme-rank">${index+1}</div>
       <div>
         <a class="theme-name" href="${themeUrl(theme.t)}" title="${esc(theme.n||theme.t)}">${esc(theme.n||theme.t)}</a>
         <div class="theme-holdings">${holdingsHtml}</div>
@@ -484,10 +499,13 @@ function renderThemeList(targetId,items){
 }
 function renderThemes(){
   const items=(THEME_DATA&&Array.isArray(THEME_DATA.e))?THEME_DATA.e:[];
-  const daily=[...items].filter(e=>isNum(e.rk)).sort((a,b)=>Number(a.rk)-Number(b.rk)).slice(0,5);
-  const weekly=[...items].filter(e=>isNum(e.w_rk)).sort((a,b)=>Number(a.w_rk)-Number(b.w_rk)).slice(0,5);
-  renderThemeList('weeklyThemes',daily);
-  renderThemeList('yearThemes',weekly);
+  const pastWeek=[...items].filter(e=>isNum(e.rk)).sort((a,b)=>Number(a.rk)-Number(b.rk)).slice(0,5);
+  const pastQuarter=[...items].filter(e=>isNum(e.w_rk)).sort((a,b)=>Number(a.w_rk)-Number(b.w_rk)).slice(0,5);
+  const rankedYear=[...items].filter(e=>isNum(e.y_rk)).sort((a,b)=>Number(a.y_rk)-Number(b.y_rk));
+  const pastYear=(rankedYear.length?rankedYear:[...items].filter(e=>isNum(e.ytd)).sort((a,b)=>Number(b.ytd)-Number(a.ytd))).slice(0,5);
+  renderThemeList('weeklyThemes',pastWeek);
+  renderThemeList('quarterThemes',pastQuarter);
+  renderThemeList('yearThemes',pastYear);
 }
 function getTop40Stats(tk,currentPrice){
   if(!HISTORY||!HISTORY.d||!HISTORY.d[tk])return {streak:null,pctSince:null};
@@ -518,14 +536,15 @@ function renderStocks(){
     .sort((a,b)=>Number(a.w_rk)-Number(b.w_rk))
     .slice(0,40);
   if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="8" class="loading">No stock data</td></tr>';
+    tbody.innerHTML='<tr><td colspan="9" class="loading">No stock data</td></tr>';
     return;
   }
   tbody.innerHTML=rows.map(stock=>{
     const stats=getTop40Stats(stock.t,stock.p);
     return `<tr>
-      <td class="rank">#${esc(stock.w_rk)}</td>
+      <td class="rank">${esc(stock.w_rk)}</td>
       <td><a class="ticker" href="${profileUrl(stock.t)}">${esc(stock.t)}</a></td>
+      <td class="company-cell" title="${esc(stock.n||'-')}">${esc(stock.n||'-')}</td>
       <td class="theme-cell" title="${esc(stock.th||'-')}">${esc(stock.th||'-')}</td>
       <td class="mono ${pctClass(stock.ch)}">${pctText(stock.ch,2)}</td>
       <td class="mono ${pctClass(stock.c5)}">${pctText(stock.c5,2)}</td>
@@ -567,7 +586,9 @@ async function loadDashboard(){
     renderEvents();
   }catch(err){
     document.getElementById('weeklyThemes').innerHTML='<div class="loading">Unable to load dashboard data</div>';
-    document.getElementById('leadingStocks').innerHTML='<tr><td colspan="8" class="loading">Unable to load stock data</td></tr>';
+    document.getElementById('quarterThemes').innerHTML='<div class="loading">Unable to load dashboard data</div>';
+    document.getElementById('yearThemes').innerHTML='<div class="loading">Unable to load dashboard data</div>';
+    document.getElementById('leadingStocks').innerHTML='<tr><td colspan="9" class="loading">Unable to load stock data</td></tr>';
     renderEvents();
   }
 }

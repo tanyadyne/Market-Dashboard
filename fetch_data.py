@@ -1075,7 +1075,8 @@ def main():
         sys.exit(1)
 
     # Also download weekly data for weekly VARS
-    w_start = end - timedelta(days=365)
+    # Keep enough weekly history for a true trailing-12-month theme return.
+    w_start = end - timedelta(days=400)
     raw_w = yf.download(
         all_download,
         start=w_start.strftime("%Y-%m-%d"),
@@ -1327,13 +1328,26 @@ def main():
     def process_ticker_weekly(ticker, df_w):
         """Process weekly data for a ticker — same VARS logic but on weekly bars."""
         if df_w is None or len(df_w) < 5:
-            return {"w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None}
+            return {"w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None, "y1": None}
 
         c = df_w["Close"].values
         h = df_w["High"].values
         l = df_w["Low"].values
         v = df_w["Volume"].values
         length = len(c)
+
+        # Rolling 12-month return, using the last weekly close at or before
+        # the date one year ago as the baseline.
+        year_change = None
+        target_date = df_w.index[-1] - timedelta(days=365)
+        year_base = None
+        for idx, ts in enumerate(df_w.index):
+            if ts <= target_date:
+                year_base = c[idx]
+            else:
+                break
+        if year_base is not None and np.isfinite(year_base) and year_base > 0 and np.isfinite(c[-1]):
+            year_change = (c[-1] / year_base - 1) * 100
 
         # Weekly ATR mult: this week's change / weekly ATR%
         atr = compute_atr(h, l, c, ATR_PERIOD)
@@ -1358,7 +1372,8 @@ def main():
 
         if len(common) < LOOKBACK_W:
             return {"w_rv": round(rvol * 100) if rvol else None, "w_am": round(atr_mult * 100),
-                    "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None}
+                    "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None, "w_fr": None,
+                    "y1": round(year_change, 2) if year_change is not None else None}
 
         etf_atr_series = compute_atr_series(h, l, c, ATR_PERIOD)
         extended = common[-(LOOKBACK_W + 1):]
@@ -1403,6 +1418,7 @@ def main():
             "w_ra": adv_streak,
             "w_vs": vs_series,
             "w_fr": round(final_rs, 4),
+            "y1": round(year_change, 2) if year_change is not None else None,
         }
 
     # ─── Process regular ETFs ──────────────────────────────
@@ -1441,7 +1457,7 @@ def main():
                             "c20": None, "ytd": None, "rs": None, "rf": 0, "ra": 0, "p": None,
                             "fr": None, "vs": None, "sf": 0, "tz": "neutral",
                             "w_rv": None, "w_am": None, "w_rs": None, "w_rf": 0, "w_ra": 0, "w_vs": None,
-                            "w_fr": None})
+                            "w_fr": None, "y1": None})
             continue
 
         # Average daily VARS series (equal-weighted)
@@ -1625,6 +1641,7 @@ def main():
             "w_ra": w_adv_streak,
             "w_vs": w_avg_vs,
             "w_fr": round(w_final_rs, 4) if w_rs_series else None,
+            "y1": avg_w_metric("y1"),
             # Synthetic basket close series + matching ISO dates, captured above.
             # Frontend uses these to draw a custom price chart for baskets (since
             # baskets have no listed ticker for TradingView). Both fields are None
@@ -1666,6 +1683,17 @@ def main():
         w_rank_map[r["t"]] = i + 1
     for r in results:
         r["w_rk"] = w_rank_map.get(r["t"], len(results))
+
+    # Trailing-year ranks use the equal-weighted 12-month return for custom
+    # baskets and the listed ETF's own 12-month return for regular themes.
+    y_sorted = sorted(
+        [r for r in results if r.get("y1") is not None],
+        key=lambda x: x["y1"],
+        reverse=True,
+    )
+    y_rank_map = {r["t"]: i + 1 for i, r in enumerate(y_sorted)}
+    for r in results:
+        r["y_rk"] = y_rank_map.get(r["t"])
 
     # ─── Daily rank history (data_score_history.json) ────────────
     # Stores per-trading-day snapshots of daily and weekly ranks for each ETF, in the
