@@ -422,15 +422,16 @@ tr:hover{background:var(--bg3)}
 [data-theme="dark"] .own-pie-other{fill:#fcd34d}
 .own-pie-outline{fill:none;stroke:rgba(15,23,42,.22);stroke-width:1.2}
 [data-theme="dark"] .own-pie-outline{stroke:rgba(249,250,251,.18)}
-.own-spider-line{fill:none;stroke:var(--t4);stroke-width:1.1}
-.own-spider-label{fill:var(--t2);font-size:13px;font-weight:700;transition:fill .16s ease,font-weight .16s ease}
-.own-spider-value{fill:var(--t1);font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:700;transition:font-weight .16s ease}
+.own-spider-line{fill:none;stroke:var(--t4);stroke-width:1;transition:stroke .16s ease,stroke-width .16s ease}
+.own-spider-label,.own-spider-value{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:fill .16s ease,font-weight .16s ease}
+.own-spider-label{fill:var(--t2)}
+.own-spider-value{fill:var(--t1)}
 .ownership-chart:has(.own-pie-inst-segment:is(:hover,:focus-visible)) .own-pie-inst-label :is(.own-spider-label,.own-spider-value),
 .ownership-chart:has(.own-pie-insider-segment:is(:hover,:focus-visible)) .own-pie-insider-label :is(.own-spider-label,.own-spider-value),
-.ownership-chart:has(.own-pie-other-segment:is(:hover,:focus-visible)) .own-pie-other-label :is(.own-spider-label,.own-spider-value){font-weight:900}
-.ownership-chart:has(.own-pie-inst-segment:is(:hover,:focus-visible)) .own-pie-inst-label .own-spider-label,
-.ownership-chart:has(.own-pie-insider-segment:is(:hover,:focus-visible)) .own-pie-insider-label .own-spider-label,
-.ownership-chart:has(.own-pie-other-segment:is(:hover,:focus-visible)) .own-pie-other-label .own-spider-label{fill:var(--t1)}
+.ownership-chart:has(.own-pie-other-segment:is(:hover,:focus-visible)) .own-pie-other-label :is(.own-spider-label,.own-spider-value){fill:var(--t1);font-family:'JetBrains Mono',monospace;font-weight:800}
+.ownership-chart:has(.own-pie-inst-segment:is(:hover,:focus-visible)) .own-pie-inst-label .own-spider-line,
+.ownership-chart:has(.own-pie-insider-segment:is(:hover,:focus-visible)) .own-pie-insider-label .own-spider-line,
+.ownership-chart:has(.own-pie-other-segment:is(:hover,:focus-visible)) .own-pie-other-label .own-spider-line{stroke:var(--t2);stroke-width:2.2}
 .own-pie-legend{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:2px;color:var(--t2);font-size:11px;font-weight:700}
 .own-pie-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .own-pie-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
@@ -2370,13 +2371,13 @@ function ownershipSpiderLabels(sliceData,cx,cy,r,w,h){
   rows.forEach(row=>{
     row.textX=row.right?w-76:76;
     row.lineX=row.right?row.textX-12:row.textX+12;
-    row.bendX=row.right?Math.max(row.outer.x,cx+14):Math.min(row.outer.x,cx-14);
-    row.y=Math.max(38,Math.min(h-38,row.outer.y));
+    row.bendX=row.outer.x;
+    row.y=Math.max(18,Math.min(h-18,row.outer.y));
     row.anchor=row.right?'start':'end';
   });
   ['left','right'].forEach(side=>{
     const sideRows=rows.filter(row=>row.right===(side==='right')).sort((a,b)=>a.y-b.y);
-    const gap=38,minY=42,maxY=h-42;
+    const gap=38,minY=18,maxY=h-18;
     let nextY=minY;
     sideRows.forEach(row=>{
       row.y=Math.max(row.y,nextY);
