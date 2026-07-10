@@ -142,11 +142,18 @@ button{font:inherit}
 .mobile-footer{margin-top:auto;padding:24px;text-align:center;font-size:10px;color:var(--mobile-t4);letter-spacing:.5px}
 @media(max-width:1100px){
   .app{grid-template-columns:1fr}
-  .sidebar{position:static;padding:16px 18px;border-right:0;border-bottom:1px solid var(--bdr)}
+  .sidebar{position:static;padding:0 18px;border-right:0;border-bottom:1px solid var(--bdr)}
   .brand{display:none}
-  .nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;width:100%}
-  .nav-link{height:38px;justify-content:center;padding:0 8px}
+  .nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;width:100%}
+  .nav-link{height:46px;justify-content:center;gap:0;padding:0 8px;border-radius:0;background:transparent;color:#17375e;font-size:12.5px;font-weight:500}
+  .nav-link:hover{background:transparent;color:#0b4f8a}
+  .nav-link.active{background:transparent;color:#12345b;font-weight:700}
+  .nav-link.active::after{content:"";position:absolute;left:50%;bottom:0;width:calc(100% - 28px);max-width:112px;height:3px;border-radius:2px 2px 0 0;background:#36a9f4;transform:translateX(-50%)}
+  .nav-icon{display:none}
   .nav-link .sidebar-label{max-width:none;white-space:nowrap}
+  [data-theme="dark"] .nav-link{background:transparent;color:#aebfd2}
+  [data-theme="dark"] .nav-link:hover{background:transparent;color:#e5f1ff}
+  [data-theme="dark"] .nav-link.active{background:transparent;color:#e5f1ff}
   .topbar{height:48px;padding:0 20px}
   .dashboard-grid{grid-template-columns:1fr}
   .side-col{display:block}
@@ -157,7 +164,7 @@ button{font:inherit}
   .mobile-landing{display:flex;min-height:100vh;flex-direction:column;align-items:center;background:var(--mobile-bg)}
 }
 </style>
-<link rel="stylesheet" href="sidebar.css?v=20260704-mode2nav">
+<link rel="stylesheet" href="sidebar.css?v=20260710-mode2tabs">
 <script src="sidebar.js"></script>
 </head>
 <body>

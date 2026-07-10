@@ -139,7 +139,7 @@ body[data-theme="dark"] .global-nav-link.active{background:#2b00f5;color:#fff}
     inset:auto;
     width:100%;
     height:auto;
-    padding:16px 18px;
+    padding:0 18px;
     border-right:0;
     border-bottom:1px solid #d8d8d8;
   }
@@ -147,13 +147,23 @@ body[data-theme="dark"] .global-nav-link.active{background:#2b00f5;color:#fff}
   .global-nav{
     display:grid;
     grid-template-columns:repeat(5,minmax(0,1fr));
-    gap:8px;
+    gap:0;
     width:100%;
   }
-  .global-nav-link{height:38px;justify-content:center;padding:0 8px}
+  .global-nav-link{height:46px;justify-content:center;gap:0;padding:0 8px;border-radius:0;background:transparent;color:#17375e;font-size:12.5px;font-weight:500}
+  .global-nav-link:hover{background:transparent;color:#0b4f8a}
+  .global-nav-link.active{background:transparent;color:#12345b;font-weight:700}
+  .global-nav-link.active::after{content:"";position:absolute;left:50%;bottom:0;width:calc(100% - 28px);max-width:112px;height:3px;border-radius:2px 2px 0 0;background:#36a9f4;transform:translateX(-50%)}
+  .global-nav-icon{display:none}
   .global-nav-link .sidebar-label{max-width:none;white-space:nowrap}
   html[data-theme="dark"] .global-sidebar,
   body[data-theme="dark"] .global-sidebar{border-bottom-color:#333}
+  html[data-theme="dark"] .global-nav-link,
+  body[data-theme="dark"] .global-nav-link{background:transparent;color:#aebfd2}
+  html[data-theme="dark"] .global-nav-link:hover,
+  body[data-theme="dark"] .global-nav-link:hover{background:transparent;color:#e5f1ff}
+  html[data-theme="dark"] .global-nav-link.active,
+  body[data-theme="dark"] .global-nav-link.active{background:transparent;color:#e5f1ff}
   body.global-shell{padding-left:0}
 }
 .mode-back{
@@ -172,9 +182,7 @@ body[data-theme="dark"] .global-nav-link.active{background:#2b00f5;color:#fff}
   text-decoration:none;
 }
 @media(max-width:1100px) and (min-width:761px){
-  .mode-back{display:inline-flex}
-  html[data-theme="dark"] .mode-back,
-  body[data-theme="dark"] .mode-back{background:#111;border-color:#333;color:#8a8a8a}
+  .mode-back{display:none}
 }
 @media(max-width:760px){
   .global-sidebar{display:none}
