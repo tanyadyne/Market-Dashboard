@@ -2361,7 +2361,29 @@ function ownershipSpiderLabels(sliceData,cx,cy,r,w,h){
   });
   let leftCount=rows.filter(row=>!row.ambiguous&&!row.preferredRight).length;
   let rightCount=rows.filter(row=>!row.ambiguous&&row.preferredRight).length;
-  rows.filter(row=>row.ambiguous).sort((a,b)=>a.edge.y-b.edge.y).forEach(row=>{
+  const ambiguousRows=rows.filter(row=>row.ambiguous).sort((a,b)=>a.edge.y-b.edge.y);
+  for(let i=0;i<ambiguousRows.length;){
+    let end=i+1;
+    while(end<ambiguousRows.length&&ambiguousRows[end].edge.y-ambiguousRows[i].edge.y<=30)end++;
+    const cluster=ambiguousRows.slice(i,end);
+    if(cluster.length>=2){
+      const horizontal=[...cluster].sort((a,b)=>a.edge.x-b.edge.x);
+      const leftRow=horizontal.shift();
+      const rightRow=horizontal.pop();
+      leftRow.right=false;
+      rightRow.right=true;
+      leftRow.sideAssigned=rightRow.sideAssigned=true;
+      leftCount++;
+      rightCount++;
+      horizontal.forEach(row=>{
+        row.right=rightCount<leftCount;
+        row.sideAssigned=true;
+        if(row.right)rightCount++;else leftCount++;
+      });
+    }
+    i=end;
+  }
+  ambiguousRows.filter(row=>!row.sideAssigned).forEach(row=>{
     const normalized=((row.mid%360)+360)%360;
     const nearTop=normalized<=35||normalized>=325;
     row.right=leftCount<rightCount?false:rightCount<leftCount?true:(nearTop||row.preferredRight);
