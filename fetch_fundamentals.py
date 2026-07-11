@@ -16,12 +16,17 @@ import json
 import math
 import time
 import argparse
+import copy
+import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from calendar import monthrange
 from pathlib import Path
 
-import yfinance as yf
+try:
+    import yfinance as yf
+except ImportError:  # Recovery mode only needs local JSON files.
+    yf = None
 
 try:
     from curl_cffi import requests as cffi_requests
@@ -167,6 +172,32 @@ def _load_existing_payload(ticker_count: int) -> dict:
     return _empty_payload(ticker_count)
 
 
+def _ownership_record_count(payload: dict) -> int:
+    return sum(
+        1
+        for record in payload.get("tickers", {}).values()
+        if isinstance(record, dict)
+        and isinstance(record.get("ownership"), dict)
+        and bool(record["ownership"])
+    )
+
+
+def _merge_cached_ownership(fresh: dict, cached: dict | None) -> dict:
+    """Merge fresh fields over cached ownership without losing missing subfields."""
+    if not isinstance(cached, dict) or not cached:
+        return fresh
+    merged = copy.deepcopy(cached)
+    current = fresh.get("ownership")
+    if isinstance(current, dict):
+        for key, value in current.items():
+            if isinstance(value, dict) and isinstance(merged.get(key), dict):
+                merged[key].update({k: v for k, v in value.items() if v is not None})
+            elif value is not None:
+                merged[key] = value
+    fresh["ownership"] = merged
+    return fresh
+
+
 def _write_payload(payload: dict, ticker_count: int) -> None:
     payload.setdefault("meta", {})
     payload.setdefault("tickers", {})
@@ -176,12 +207,58 @@ def _write_payload(payload: dict, ticker_count: int) -> None:
     payload["meta"]["max_quarters"] = MAX_QUARTERS
     payload["meta"]["max_years"] = MAX_YEARS
 
-    with OUT_JSON.open("w") as f:
+    json_tmp = OUT_JSON.with_name(f"{OUT_JSON.name}.tmp")
+    js_tmp = OUT_JS.with_name(f"{OUT_JS.name}.tmp")
+    with json_tmp.open("w") as f:
         json.dump(payload, f, separators=(",", ":"))
-    with OUT_JS.open("w") as f:
+    with js_tmp.open("w") as f:
         f.write("window.FUNDAMENTALS_DATA = ")
         json.dump(payload, f, separators=(",", ":"))
         f.write(";\n")
+    os.replace(json_tmp, OUT_JSON)
+    os.replace(js_tmp, OUT_JS)
+
+
+def _restore_ownership_from_snapshot(snapshot_path: Path, ticker_count: int) -> int:
+    payload = _load_existing_payload(ticker_count)
+    try:
+        with snapshot_path.open(encoding="utf-8-sig") as f:
+            snapshot = json.load(f)
+    except Exception as exc:
+        print(f"ERROR: unable to read ownership snapshot {snapshot_path}: {exc}")
+        return 1
+
+    snapshot_tickers = snapshot.get("tickers", {}) if isinstance(snapshot, dict) else {}
+    restored = 0
+    retained = 0
+    unavailable = 0
+    for ticker, record in payload.get("tickers", {}).items():
+        current = record.get("ownership") if isinstance(record, dict) else None
+        if isinstance(current, dict) and current:
+            retained += 1
+            continue
+        cached_record = snapshot_tickers.get(ticker, {})
+        cached = cached_record.get("ownership") if isinstance(cached_record, dict) else None
+        if isinstance(cached, dict) and cached:
+            record["ownership"] = copy.deepcopy(cached)
+            restored += 1
+        else:
+            unavailable += 1
+
+    total = _ownership_record_count(payload)
+    payload.setdefault("meta", {})
+    payload["meta"].update({
+        "ownership_recovered": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+        "ownership_recovery_source": snapshot_path.name,
+        "ownership_recovery_restored": restored,
+        "ownership_count": total,
+    })
+    _write_payload(payload, ticker_count)
+    print(
+        f"Recovered ownership for {restored} stock(s); retained {retained}; "
+        f"unavailable {unavailable}; total ownership records {total}"
+    )
+    return 0
 
 
 def _safe_number(value):
@@ -804,22 +881,34 @@ def _fetch_ownership(ticker_obj) -> dict:
     institutions_count = _safe_number(_major_holder_value(major, "institutionsCount"))
     float_metrics = _ownership_float_metrics(_get_ticker_info(ticker_obj))
     if institutional_pct is not None or insider_pct is not None or float_metrics:
-        inst = institutional_pct or 0
-        insider = insider_pct or 0
-        ownership["breakdown"] = {
-            "institutional": institutional_pct,
-            "insider": insider_pct,
-            "other": round(max(0, 100 - inst - insider), 4),
-        }
+        breakdown: dict = {}
+        if institutional_pct is not None:
+            breakdown["institutional"] = institutional_pct
+        if insider_pct is not None:
+            breakdown["insider"] = insider_pct
+        if institutional_pct is not None or insider_pct is not None:
+            breakdown["other"] = round(
+                max(0, 100 - (institutional_pct or 0) - (insider_pct or 0)),
+                4,
+            )
         if institutions_count is not None:
-            ownership["breakdown"]["institutions_count"] = int(round(institutions_count))
-        ownership["breakdown"].update(float_metrics)
+            breakdown["institutions_count"] = int(round(institutions_count))
+        breakdown.update(float_metrics)
+        ownership["breakdown"] = breakdown
 
     holder_rows = _institutional_holder_rows(_get_institutional_holders(ticker_obj))
     if holder_rows:
         ownership["institutional_holders"] = holder_rows
 
     return ownership
+
+
+def _ownership_has_breakdown(ownership: dict) -> bool:
+    breakdown = ownership.get("breakdown") if isinstance(ownership, dict) else None
+    return isinstance(breakdown, dict) and (
+        breakdown.get("institutional") is not None
+        or breakdown.get("insider") is not None
+    )
 
 
 def _get_income_statement(ticker_obj, frequency: str):
@@ -977,12 +1066,26 @@ def _record_has_data(data: dict) -> bool:
     )
 
 
-def _fetch_ownership_for_ticker(ticker: str, session=None) -> tuple[str, dict, Exception | None]:
-    try:
-        kwargs = {"session": session} if session is not None else {}
-        return ticker, _fetch_ownership(yf.Ticker(ticker, **kwargs)), None
-    except Exception as exc:
-        return ticker, {}, exc
+def _fetch_ownership_for_ticker(
+    ticker: str,
+    session=None,
+    attempts: int = 1,
+    retry_delay: float = 1.0,
+) -> tuple[str, dict, Exception | None]:
+    last_error: Exception | None = None
+    for attempt in range(max(1, attempts)):
+        try:
+            active_session = session if attempt == 0 else _build_session()
+            kwargs = {"session": active_session} if active_session is not None else {}
+            ownership = _fetch_ownership(yf.Ticker(ticker, **kwargs))
+            if _ownership_has_breakdown(ownership):
+                return ticker, ownership, None
+            last_error = RuntimeError("Yahoo returned no ownership breakdown")
+        except Exception as exc:
+            last_error = exc
+        if attempt + 1 < max(1, attempts):
+            time.sleep(max(0.0, retry_delay) * (2 ** attempt))
+    return ticker, {}, last_error
 
 
 def _fetch_ownership_metrics_for_ticker(ticker: str, session=None) -> tuple[str, dict, Exception | None]:
@@ -1014,8 +1117,6 @@ def _refresh_ownership_metrics_only(tickers: list[str], session, universe_count:
         rec = payload["tickers"].setdefault(ticker, {})
         ownership = rec.setdefault("ownership", {})
         breakdown = ownership.setdefault("breakdown", {})
-        for key in ("shares_outstanding", "public_float", "float_pct_of_tso", "short_pct_float"):
-            breakdown.pop(key, None)
         breakdown.update(metrics)
         updated += 1
 
@@ -1059,8 +1160,18 @@ def _refresh_ownership_metrics_only(tickers: list[str], session, universe_count:
     return 0
 
 
-def _refresh_ownership_only(tickers: list[str], session, universe_count: int, workers: int) -> int:
+def _refresh_ownership_only(
+    tickers: list[str],
+    session,
+    universe_count: int,
+    workers: int,
+    retries: int,
+    retry_delay: float,
+    request_delay: float,
+    min_success_ratio: float,
+) -> int:
     payload = _load_existing_payload(universe_count)
+    previous_count = _ownership_record_count(payload)
     updated = 0
     skipped = 0
 
@@ -1075,7 +1186,10 @@ def _refresh_ownership_only(tickers: list[str], session, universe_count: int, wo
             return
         if ownership:
             rec = payload["tickers"].setdefault(ticker, {})
-            rec["ownership"] = ownership
+            rec["ownership"] = _merge_cached_ownership(
+                {"ownership": ownership},
+                rec.get("ownership"),
+            )["ownership"]
             updated += 1
         else:
             skipped += 1
@@ -1084,24 +1198,48 @@ def _refresh_ownership_only(tickers: list[str], session, universe_count: int, wo
         for i, ticker in enumerate(tickers, start=1):
             if i % 50 == 0:
                 print(f"  {i}/{len(tickers)}...")
-            ticker, ownership, exc = _fetch_ownership_for_ticker(ticker, session)
+            ticker, ownership, exc = _fetch_ownership_for_ticker(
+                ticker,
+                session,
+                attempts=retries,
+                retry_delay=retry_delay,
+            )
             store(ticker, ownership, exc)
-            time.sleep(0.05)
+            if i < len(tickers):
+                time.sleep(max(0.0, request_delay))
     else:
         with ThreadPoolExecutor(max_workers=workers) as pool:
-            futures = {pool.submit(_fetch_ownership_for_ticker, ticker, None): ticker for ticker in tickers}
+            futures = {
+                pool.submit(
+                    _fetch_ownership_for_ticker,
+                    ticker,
+                    None,
+                    retries,
+                    retry_delay,
+                ): ticker
+                for ticker in tickers
+            }
             for i, future in enumerate(as_completed(futures), start=1):
                 if i % 50 == 0:
                     print(f"  {i}/{len(tickers)}...")
                 ticker, ownership, exc = future.result()
                 store(ticker, ownership, exc)
 
+    success_ratio = updated / len(tickers) if tickers else 1.0
+    if success_ratio < min_success_ratio:
+        print(
+            f"ERROR: ownership refresh succeeded for only {updated}/{len(tickers)} stock(s) "
+            f"({success_ratio:.1%}); required {min_success_ratio:.1%}. "
+            f"Existing {previous_count} ownership records were left untouched."
+        )
+        return 1
+
     payload.setdefault("meta", {})
     payload["meta"]["ownership_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-    payload["meta"]["ownership_count"] = sum(
-        1 for rec in payload.get("tickers", {}).values()
-        if isinstance(rec, dict) and isinstance(rec.get("ownership"), dict) and rec["ownership"]
-    )
+    payload["meta"]["ownership_count"] = _ownership_record_count(payload)
+    payload["meta"]["ownership_refresh_succeeded"] = updated
+    payload["meta"]["ownership_refresh_failed"] = skipped
+    payload["meta"]["ownership_refresh_success_ratio"] = round(success_ratio, 4)
     _write_payload(payload, universe_count)
     print(
         f"Wrote {OUT_JSON.name}: ownership updated for {updated}/{len(tickers)} stock(s); "
@@ -1134,8 +1272,37 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--workers",
         type=int,
-        default=8,
+        default=1,
         help="Parallel workers for --ownership-only. Use 1 for sequential fetching.",
+    )
+    parser.add_argument(
+        "--ownership-retries",
+        type=int,
+        default=3,
+        help="Attempts per ticker during --ownership-only.",
+    )
+    parser.add_argument(
+        "--ownership-retry-delay",
+        type=float,
+        default=1.0,
+        help="Initial exponential-backoff delay in seconds for ownership retries.",
+    )
+    parser.add_argument(
+        "--ownership-delay",
+        type=float,
+        default=0.25,
+        help="Delay between sequential ownership requests.",
+    )
+    parser.add_argument(
+        "--min-ownership-success-ratio",
+        type=float,
+        default=0.9,
+        help="Abort without writing when ownership refresh success falls below this ratio.",
+    )
+    parser.add_argument(
+        "--restore-ownership-from",
+        type=Path,
+        help="Restore only missing ownership records from a known-good fundamentals JSON snapshot.",
     )
     return parser.parse_args()
 
@@ -1146,13 +1313,37 @@ def main() -> int:
     tickers = _filter_tickers(all_tickers, _parse_ticker_filter(args.tickers))
     session = _build_session()
 
+    if args.restore_ownership_from:
+        return _restore_ownership_from_snapshot(args.restore_ownership_from, len(all_tickers))
+
+    if yf is None:
+        print("ERROR: yfinance is required for network refresh modes")
+        return 1
+
     if args.ownership_metrics_only:
         return _refresh_ownership_metrics_only(tickers, session, len(all_tickers), args.workers)
 
     if args.ownership_only:
-        return _refresh_ownership_only(tickers, session, len(all_tickers), args.workers)
+        return _refresh_ownership_only(
+            tickers,
+            session,
+            len(all_tickers),
+            args.workers,
+            max(1, args.ownership_retries),
+            max(0.0, args.ownership_retry_delay),
+            max(0.0, args.ownership_delay),
+            min(1.0, max(0.0, args.min_ownership_success_ratio)),
+        )
 
+    existing = _load_existing_payload(len(all_tickers))
+    active_tickers = set(all_tickers)
     payload = _empty_payload(len(all_tickers))
+    payload["meta"].update(copy.deepcopy(existing.get("meta", {})))
+    payload["tickers"] = {
+        ticker: copy.deepcopy(record)
+        for ticker, record in existing.get("tickers", {}).items()
+        if ticker in active_tickers and isinstance(record, dict)
+    }
 
     print(f"Fetching fundamentals for {len(tickers)} stock(s)...")
     for i, ticker in enumerate(tickers, start=1):
@@ -1161,6 +1352,8 @@ def main() -> int:
         try:
             data = _fetch_one(ticker, session, include_ownership=not args.skip_ownership)
             if _record_has_data(data):
+                cached = payload["tickers"].get(ticker, {}).get("ownership")
+                data = _merge_cached_ownership(data, cached)
                 payload["tickers"][ticker] = data
         except Exception as exc:
             print(f"  {ticker}: failed ({exc})")

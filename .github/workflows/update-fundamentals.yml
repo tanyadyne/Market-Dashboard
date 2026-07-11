@@ -8,6 +8,7 @@ on:
 jobs:
   update-fundamentals:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
 
     permissions:
       contents: write
@@ -28,7 +29,14 @@ jobs:
         run: python fetch_fundamentals.py --skip-ownership
 
       - name: Refresh ownership
-        run: python fetch_fundamentals.py --ownership-only --workers 8
+        run: >-
+          python fetch_fundamentals.py
+          --ownership-only
+          --workers 1
+          --ownership-retries 3
+          --ownership-retry-delay 1.0
+          --ownership-delay 0.25
+          --min-ownership-success-ratio 0.90
 
       - name: Commit and push fundamentals data
         run: |
