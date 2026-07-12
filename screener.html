@@ -808,7 +808,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 </div>
 <script>
 let DATA=null,HISTORY=null,ETF_DATA=null,FUNDAMENTALS=null,OWNERSHIP_13F=null,sortKey='rk',sortDir=1,currentTab='weekly',currentPage=1;
-const HARD_EXCLUDED_TICKERS=new Set(['BAND','CWAN','TECH','AHR','LILA','LILAK']);
+const HARD_EXCLUDED_TICKERS=new Set(['BAND','CWAN','TECH','AHR','LILA','LILAK','GOOG','MRX','OZK','SVC','UPBD','XMTR']);
 
 function pruneExcludedScreenerData(){
   if(DATA&&Array.isArray(DATA.e)){

@@ -56,7 +56,7 @@ OFF_HIGH_RECOVERY_STEP = 0.05
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
     "ACN","ADEA","AEHR","ALAB","APO","ARES","ARM","AXTI","BIRD","BP","BRK-B","CAR",
-    "ENS","GOOG","LAC","LNG","NOK","NVO","OWL","RDDT","RIG","SMCI","SNAP","SNDK","STX","WDC",
+    "ENS","LAC","LNG","NOK","NVO","OWL","RDDT","RIG","SMCI","SNAP","SNDK","STX","WDC",
     "WOLF", "BB", "CRML", "OUST", "RCAT", "PENG", "SKM", "UMC",
     "NVEC", "CAMT", "NLST", "SKYT", "POWI", "LWLG",
     "INFQ", "RR", "MRAM", "AOSL", "AMBA", "SPIR", "BYDDY", "SERV", "ARBE", "VPG", "INDI", "ALNT",
@@ -105,7 +105,10 @@ MANUAL_EXCLUDE = {
 
 # HARD_EXCLUDE — never allow these into the stock screener, even if they are
 # listed as Theme Tracker holdings. Use sparingly for explicit removals.
-HARD_EXCLUDE = {"CWAN", "TECH", "AHR", "LILA", "LILAK", "BAND", "JOYY"}
+HARD_EXCLUDE = {
+    "CWAN", "TECH", "AHR", "LILA", "LILAK", "BAND", "JOYY",
+    "GOOG", "MRX", "OZK", "SVC", "UPBD", "XMTR",
+}
 
 # ─── ADR-collapse filter ───────────────────────────────────────────────────────
 # Drops stocks whose Average Daily Range has collapsed to a fraction of its OWN
