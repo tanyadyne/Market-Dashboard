@@ -390,10 +390,25 @@ function pctClass(v){return Number(v)>0?'positive':Number(v)<0?'negative':'neutr
 function rsClass(rs){return rs>=90?'rs-strong':rs>=60?'rs-mid':'rs-weak';}
 function profileUrl(ticker){return 'screener.html?profile='+encodeURIComponent(String(ticker||'').toUpperCase());}
 function themeUrl(ticker){return 'rs.html?tab=profile&tk='+encodeURIComponent(String(ticker||'').toUpperCase());}
-function todayEtIso(){
-  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+const EVENTS_TIME_ZONE='Asia/Singapore';
+const EVENTS_ROLLOVER_HOUR_SGT=7;
+const SGT_UTC_OFFSET_HOURS=8;
+function eventsDateIso(now=new Date()){
+  const shifted=new Date(now.getTime()-EVENTS_ROLLOVER_HOUR_SGT*60*60*1000);
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:EVENTS_TIME_ZONE,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(shifted);
   const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));
   return `${values.year}-${values.month}-${values.day}`;
+}
+function millisecondsUntilEventsRollover(now=new Date()){
+  const sgtNow=new Date(now.getTime()+SGT_UTC_OFFSET_HOURS*60*60*1000);
+  let next=Date.UTC(
+    sgtNow.getUTCFullYear(),
+    sgtNow.getUTCMonth(),
+    sgtNow.getUTCDate(),
+    EVENTS_ROLLOVER_HOUR_SGT
+  )-SGT_UTC_OFFSET_HOURS*60*60*1000;
+  if(next<=now.getTime())next+=24*60*60*1000;
+  return next-now.getTime()+100;
 }
 function compactDate(dateText){
   const dt=new Date(`${dateText}T00:00:00`);
@@ -557,7 +572,7 @@ function renderStocks(){
   }).join('');
 }
 function renderEvents(){
-  const today=todayEtIso();
+  const today=eventsDateIso();
   document.getElementById('todayLabel').textContent=compactDate(today)+' ET';
   const econ=calendarItemsForDate('events',today)
     .sort((a,b)=>eventTimingRank(a)-eventTimingRank(b)||String(a.time||'').localeCompare(String(b.time||''))||String(a.event||'').localeCompare(String(b.event||'')));
@@ -571,6 +586,14 @@ function renderEvents(){
   earningsTarget.innerHTML=earn.length
     ? renderEarningsItems(earn)
     : '<div class="empty-state">No earnings scheduled</div>';
+}
+let eventsRolloverTimer=null;
+function scheduleEventsRollover(){
+  clearTimeout(eventsRolloverTimer);
+  eventsRolloverTimer=setTimeout(()=>{
+    renderEvents();
+    scheduleEventsRollover();
+  },millisecondsUntilEventsRollover());
 }
 async function loadDashboard(){
   try{
@@ -613,6 +636,7 @@ function syncResponsiveDashboard(){
 if(mobileLandingQuery.addEventListener)mobileLandingQuery.addEventListener('change',syncResponsiveDashboard);
 else mobileLandingQuery.addListener(syncResponsiveDashboard);
 syncResponsiveDashboard();
+scheduleEventsRollover();
 </script>
 </body>
 </html>
