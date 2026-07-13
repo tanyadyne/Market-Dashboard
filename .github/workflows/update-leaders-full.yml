@@ -34,6 +34,17 @@ jobs:
       - name: Fetch full Liquid Leaders data
         run: python fetch_leaders.py
 
+      - name: Refresh press releases
+        continue-on-error: true
+        run: >-
+          python fetch_press_releases.py
+          --count 30
+          --workers 1
+          --retries 3
+          --retry-delay 2.0
+          --request-delay 0.25
+          --min-success-ratio 0.50
+
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
@@ -41,6 +52,7 @@ jobs:
           for f in leaders.json leaders_score_history.json leaders_mcap.json leaders_index_universe.json leaders_intraday_baselines.json leaders_universe_grace.json leaders_missing_tickers.json screener_tickers.json; do
             [ -f "$f" ] && git add "$f"
           done
+          [ -d press_releases ] && git add press_releases
           git diff --staged --quiet || git commit -m "Update leaders.json"
           git pull --rebase
           git push

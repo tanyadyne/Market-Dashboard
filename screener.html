@@ -448,6 +448,20 @@ tr:hover{background:var(--bg3)}
 .ownership-table .holder{font-weight:650;color:var(--t1)}
 .ownership-table .num{text-align:right;font-family:'JetBrains Mono',monospace;font-weight:650;white-space:nowrap}
 .ownership-table-note{margin-top:8px;color:var(--t4);font-size:10px;line-height:1.4}
+.press-release-panel{margin-top:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden}
+[data-theme="light"] .press-release-panel{box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.press-release-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 16px;border-bottom:1px solid var(--bdr)}
+.press-release-heading{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--t2)}
+.press-release-source{font-size:10px;color:var(--t4);white-space:nowrap}
+.press-release-list{display:grid}
+.press-release-item{display:block;padding:15px 16px;border-bottom:1px solid var(--bdr2);color:inherit;text-decoration:none;transition:background .15s}
+.press-release-item:last-child{border-bottom:0}
+a.press-release-item:hover,a.press-release-item:focus-visible{background:var(--bg3);outline:none}
+.press-release-title{color:var(--t1);font-size:14px;font-weight:750;line-height:1.35}
+.press-release-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px;color:var(--t3);font-size:10px;font-weight:650}
+.press-release-meta span+span::before{content:"/";margin-right:8px;color:var(--t4)}
+.press-release-summary{margin-top:7px;color:var(--t2);font-size:11px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.press-release-empty{margin:16px;padding:48px 18px;border:1px dashed var(--bdr);border-radius:8px;background:var(--bg);color:var(--t3);font-size:12px;text-align:center}
 .fund-tv-card{margin-top:12px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:0;min-height:1220px;overflow:hidden}
 [data-theme="light"] .fund-tv-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .fund-tv-widget{height:1220px;width:100%}
@@ -513,6 +527,12 @@ tr:hover{background:var(--bg3)}
 [data-view="mobile"] .ownership-table td:nth-child(4){width:19%;padding-right:7px}
 [data-view="mobile"] .ownership-table .holder{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 [data-view="mobile"] .ownership-table-note{overflow-wrap:anywhere}
+[data-view="mobile"] .press-release-panel{margin-top:12px}
+[data-view="mobile"] .press-release-head{padding:11px 12px}
+[data-view="mobile"] .press-release-item{padding:13px 12px}
+[data-view="mobile"] .press-release-title{font-size:12px}
+[data-view="mobile"] .press-release-summary{font-size:10.5px;-webkit-line-clamp:3}
+[data-view="mobile"] .press-release-empty{margin:12px;padding:36px 12px}
 
 /* ─── MOBILE LAYOUT ─── */
 /* Master constraint: every direct child of body is clamped to viewport width.
@@ -808,6 +828,9 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 </div>
 <script>
 let DATA=null,HISTORY=null,ETF_DATA=null,FUNDAMENTALS=null,OWNERSHIP_13F=null,sortKey='rk',sortDir=1,currentTab='weekly',currentPage=1;
+const PRESS_RELEASE_SHARDS=new Map();
+const PRESS_RELEASE_REQUESTS=new Map();
+const PRESS_RELEASE_ERRORS=new Map();
 const HARD_EXCLUDED_TICKERS=new Set(['BAND','CWAN','TECH','AHR','LILA','LILAK','GOOG','MRX','OZK','SVC','UPBD','XMTR']);
 
 function pruneExcludedScreenerData(){
@@ -2267,8 +2290,8 @@ function profileSubtabsHtml(){
   const tabs=[
     ['history','Rank History'],
     ['fundamentals','Fundamentals'],
-    ['earnings','Earnings'],
-    ['ownership','Ownership']
+    ['ownership','Ownership'],
+    ['news','News']
   ];
   return `<div class="profile-subtabs" role="tablist" aria-label="Profile sections">
     ${tabs.map(([key,label])=>`<button class="profile-subtab ${profileSectionTab===key?'active':''}" role="tab" aria-selected="${profileSectionTab===key?'true':'false'}" onclick="setProfileSectionTab('${key}')">${label}</button>`).join('')}
@@ -2514,6 +2537,81 @@ function renderOwnershipPanel(ticker){
   </div>`;
 }
 
+function pressReleaseShardKey(ticker){
+  const first=String(ticker||'_').trim().toUpperCase().charAt(0);
+  return /^[A-Z0-9]$/.test(first)?first:'_';
+}
+
+function pressReleaseRecord(ticker){
+  const key=pressReleaseShardKey(ticker);
+  const payload=PRESS_RELEASE_SHARDS.get(key);
+  if(!payload)return null;
+  return payload.tickers?.[String(ticker||'').toUpperCase()]||{items:[]};
+}
+
+function refreshPressReleasePanel(ticker){
+  const input=document.getElementById('searchInput')?.value.trim().toUpperCase();
+  if(profileSectionTab==='news'&&input===ticker)searchStock();
+}
+
+function requestPressReleaseShard(ticker){
+  const normalized=String(ticker||'').toUpperCase();
+  const key=pressReleaseShardKey(normalized);
+  if(PRESS_RELEASE_SHARDS.has(key)||PRESS_RELEASE_REQUESTS.has(key)||PRESS_RELEASE_ERRORS.has(key))return;
+  const request=fetch(`press_releases/${encodeURIComponent(key)}.json?_=${Date.now()}`)
+    .then(response=>{
+      if(!response.ok)throw new Error(`Press release data returned ${response.status}`);
+      return response.json();
+    })
+    .then(payload=>{
+      if(!payload||typeof payload.tickers!=='object')throw new Error('Invalid press release data');
+      PRESS_RELEASE_SHARDS.set(key,payload);
+      refreshPressReleasePanel(normalized);
+    })
+    .catch(error=>{
+      PRESS_RELEASE_ERRORS.set(key,error);
+      refreshPressReleasePanel(normalized);
+    })
+    .finally(()=>PRESS_RELEASE_REQUESTS.delete(key));
+  PRESS_RELEASE_REQUESTS.set(key,request);
+}
+
+function formatPressReleaseDate(value){
+  const dt=new Date(value);
+  if(Number.isNaN(dt.getTime()))return'';
+  return dt.toLocaleDateString('en-US',{timeZone:'Asia/Singapore',day:'numeric',month:'short',year:'numeric'});
+}
+
+function renderPressReleasesPanel(ticker){
+  const normalized=String(ticker||'').toUpperCase();
+  const key=pressReleaseShardKey(normalized);
+  if(!PRESS_RELEASE_SHARDS.has(key)&&!PRESS_RELEASE_ERRORS.has(key)){
+    requestPressReleaseShard(normalized);
+    return `<div class="press-release-panel"><div class="press-release-empty">Loading press releases...</div></div>`;
+  }
+  if(PRESS_RELEASE_ERRORS.has(key)){
+    return `<div class="press-release-panel"><div class="press-release-empty">Press releases are temporarily unavailable.</div></div>`;
+  }
+  const items=(pressReleaseRecord(normalized)?.items||[]).slice(0,30);
+  if(!items.length){
+    return `<div class="press-release-panel"><div class="press-release-head"><div class="press-release-heading">Press Releases</div><div class="press-release-source">Yahoo Finance</div></div><div class="press-release-empty">No press releases available.</div></div>`;
+  }
+  const rows=items.map(item=>{
+    const meta=[formatPressReleaseDate(item.published_at),item.provider].filter(Boolean);
+    const tag=item.url?'a':'article';
+    const attrs=item.url?` href="${esc(item.url)}" target="_blank" rel="noopener noreferrer"`:'';
+    return `<${tag} class="press-release-item"${attrs}>
+      <div class="press-release-title">${esc(item.title||'Untitled press release')}</div>
+      ${meta.length?`<div class="press-release-meta">${meta.map(value=>`<span>${esc(value)}</span>`).join('')}</div>`:''}
+      ${item.summary?`<div class="press-release-summary">${esc(item.summary)}</div>`:''}
+    </${tag}>`;
+  }).join('');
+  return `<div class="press-release-panel">
+    <div class="press-release-head"><div class="press-release-heading">Press Releases</div><div class="press-release-source">Yahoo Finance</div></div>
+    <div class="press-release-list">${rows}</div>
+  </div>`;
+}
+
 function parseFundDate(period){
   if(!period)return null;
   const parts=String(period).split('-').map(x=>parseInt(x,10));
@@ -2748,10 +2846,10 @@ function searchStock(){
 
   if(profileSectionTab==='fundamentals'){
     html+=renderFundamentalsPanel(input);
-  }else if(profileSectionTab==='earnings'){
-    html+=`<div class="profile-section-empty">Earnings tab coming soon.</div>`;
   }else if(profileSectionTab==='ownership'){
     html+=renderOwnershipPanel(input);
+  }else if(profileSectionTab==='news'){
+    html+=renderPressReleasesPanel(input);
   }else if(stock.po){
     html+=`<div style="text-align:center;color:var(--t3);padding:20px;font-size:12px">No history data available.</div>`;
   }else{
