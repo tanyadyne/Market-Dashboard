@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-07-13 09:45 UTC",
-  "generated_at_et": "13/07/2026, 05:45 EDT",
+  "generated_at_utc": "2026-07-13 23:55 UTC",
+  "generated_at_et": "13/07/2026, 19:55 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -168,14 +168,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         }
       ],
       "earnings_events": [
-        {
-          "date": "2026-07-13",
-          "day": "Monday, July 13, 2026",
-          "ticker": "FBK",
-          "company": "FB Financial Corporation",
-          "group": "Banks - Regional",
-          "time": "AMC"
-        },
         {
           "date": "2026-07-14",
           "day": "Tuesday, July 14, 2026",
@@ -567,14 +559,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-20",
           "day": "Monday, July 20, 2026",
-          "ticker": "AGYS",
-          "company": "Agilysys, Inc.",
-          "group": "Software - Application",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-20",
-          "day": "Monday, July 20, 2026",
           "ticker": "BOKF",
           "company": "BOK Financial Corporation",
           "group": "Banks - Regional",
@@ -594,14 +578,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "CCK",
           "company": "Crown Holdings, Inc.",
           "group": "Packaging & Containers",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-20",
-          "day": "Monday, July 20, 2026",
-          "ticker": "ELS",
-          "company": "Equity LifeStyle Properties, Inc.",
-          "group": "REIT - Residential",
           "time": "AMC"
         },
         {
@@ -983,6 +959,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-22",
           "day": "Wednesday, July 22, 2026",
+          "ticker": "ELS",
+          "company": "Equity LifeStyle Properties, Inc.",
+          "group": "REIT - Residential",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-22",
+          "day": "Wednesday, July 22, 2026",
           "ticker": "EPRT",
           "company": "Essential Properties Realty Trust, Inc.",
           "group": "REIT - Retail",
@@ -1207,14 +1191,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-22",
           "day": "Wednesday, July 22, 2026",
-          "ticker": "SIGI",
-          "company": "Selective Insurance Group, Inc.",
-          "group": "Insurance - Property & Casualty",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-22",
-          "day": "Wednesday, July 22, 2026",
           "ticker": "SON",
           "company": "Sonoco Products Company",
           "group": "Packaging & Containers",
@@ -1330,14 +1306,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "NTRS",
           "company": "Northern Trust Corporation",
           "group": "Asset Management",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-22",
-          "day": "Wednesday, July 22, 2026",
-          "ticker": "NVR",
-          "company": "NVR, Inc.",
-          "group": "Residential Construction",
           "time": "BMO"
         },
         {
@@ -1607,9 +1575,9 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-23",
           "day": "Thursday, July 23, 2026",
-          "ticker": "SEI",
-          "company": "Solaris Energy Infrastructure, Inc.",
-          "group": "Oil & Gas Equipment & Services",
+          "ticker": "SIGI",
+          "company": "Selective Insurance Group, Inc.",
+          "group": "Insurance - Property & Casualty",
           "time": "AMC"
         },
         {
@@ -1858,6 +1826,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "NSC",
           "company": "Norfolk Southern Corporation",
           "group": "Railroads",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
+          "ticker": "NVR",
+          "company": "NVR, Inc.",
+          "group": "Residential Construction",
           "time": "BMO"
         },
         {
@@ -2203,14 +2179,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     }
   ],
   "earnings_events": [
-    {
-      "date": "2026-07-13",
-      "day": "Monday, July 13, 2026",
-      "ticker": "FBK",
-      "company": "FB Financial Corporation",
-      "group": "Banks - Regional",
-      "time": "AMC"
-    },
     {
       "date": "2026-07-14",
       "day": "Tuesday, July 14, 2026",
