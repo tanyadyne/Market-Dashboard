@@ -42,6 +42,8 @@ jobs:
           --workers 1
           --retries 3
           --retry-delay 2.0
+          --empty-retries 1
+          --empty-retry-delay 3.0
           --request-delay 0.25
           --min-success-ratio 0.50
 

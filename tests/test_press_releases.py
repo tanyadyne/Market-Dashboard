@@ -5,6 +5,29 @@ import fetch_press_releases as press_releases
 
 
 class PressReleaseTests(unittest.TestCase):
+    @patch("fetch_press_releases.time.sleep")
+    @patch("fetch_press_releases.yf.Ticker")
+    def test_retries_empty_response_before_accepting_it(self, ticker_factory, sleep):
+        ticker_factory.return_value.get_news.side_effect = [
+            [],
+            [{"id": "release", "title": "Recovered release"}],
+        ]
+
+        ticker, items, error = press_releases.fetch_ticker(
+            "TLN",
+            30,
+            2,
+            1,
+            empty_retries=1,
+            empty_retry_delay=3,
+        )
+
+        self.assertEqual(ticker_factory.return_value.get_news.call_count, 2)
+        sleep.assert_called_once_with(3)
+        self.assertEqual(ticker, "TLN")
+        self.assertEqual([item["title"] for item in items], ["Recovered release"])
+        self.assertIsNone(error)
+
     @patch("fetch_press_releases.yf.Ticker")
     def test_fetches_only_thirty_press_releases(self, ticker_factory):
         ticker_factory.return_value.get_news.return_value = [

@@ -139,17 +139,36 @@ def normalize_releases(items: object, count: int = DEFAULT_COUNT) -> list[dict]:
     return releases[:count]
 
 
-def fetch_ticker(ticker: str, count: int, retries: int, retry_delay: float) -> tuple[str, list[dict] | None, str | None]:
+def fetch_ticker(
+    ticker: str,
+    count: int,
+    retries: int,
+    retry_delay: float,
+    empty_retries: int = 1,
+    empty_retry_delay: float = 3.0,
+) -> tuple[str, list[dict] | None, str | None]:
     last_error = "Unknown Yahoo Finance error"
-    for attempt in range(retries):
+    error_attempts = 0
+    empty_confirmations = 0
+    while True:
         try:
             raw = yf.Ticker(ticker).get_news(count=count, tab=PRESS_RELEASE_TAB)
-            return ticker, normalize_releases(raw, count), None
+            items = normalize_releases(raw, count)
         except Exception as exc:  # Yahoo errors vary by transport and response type.
             last_error = str(exc)
-            if attempt + 1 < retries:
-                time.sleep(retry_delay * (2**attempt))
-    return ticker, None, last_error
+            error_attempts += 1
+            if error_attempts >= retries:
+                return ticker, None, last_error
+            time.sleep(retry_delay * (2 ** (error_attempts - 1)))
+            continue
+
+        if items:
+            return ticker, items, None
+
+        empty_confirmations += 1
+        if empty_confirmations > empty_retries:
+            return ticker, [], None
+        time.sleep(empty_retry_delay * (2 ** (empty_confirmations - 1)))
 
 
 def load_existing() -> dict[str, dict]:
@@ -200,6 +219,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--retries", type=int, default=3)
     parser.add_argument("--retry-delay", type=float, default=1.0)
+    parser.add_argument("--empty-retries", type=int, default=1)
+    parser.add_argument("--empty-retry-delay", type=float, default=3.0)
+    parser.add_argument(
+        "--empty-cache-only",
+        action="store_true",
+        help="Refresh only active tickers whose cached release list is empty or missing.",
+    )
     parser.add_argument("--request-delay", type=float, default=0.05)
     parser.add_argument("--min-success-ratio", type=float, default=0.5)
     return parser.parse_args()
@@ -213,16 +239,29 @@ def main() -> int:
     tickers = [ticker for ticker in all_tickers if not ticker_filter or ticker in ticker_filter]
     active = set(all_tickers)
     records = {ticker: record for ticker, record in load_existing().items() if ticker in active}
+    if args.empty_cache_only:
+        tickers = [ticker for ticker in tickers if not records.get(ticker, {}).get("items")]
     succeeded = 0
     failed: list[str] = []
     preserved = 0
     changed = 0
+    confirmed_empty = 0
 
     print(f"Fetching up to {count} press releases for {len(tickers)} stock(s)...")
     with ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
         futures = {}
         for ticker in tickers:
-            futures[pool.submit(fetch_ticker, ticker, count, max(1, args.retries), max(0.0, args.retry_delay))] = ticker
+            futures[
+                pool.submit(
+                    fetch_ticker,
+                    ticker,
+                    count,
+                    max(1, args.retries),
+                    max(0.0, args.retry_delay),
+                    max(0, args.empty_retries),
+                    max(0.0, args.empty_retry_delay),
+                )
+            ] = ticker
             if args.request_delay > 0:
                 time.sleep(args.request_delay)
         for index, future in enumerate(as_completed(futures), start=1):
@@ -234,6 +273,8 @@ def main() -> int:
                 print(f"  {ticker}: failed ({error})")
             else:
                 succeeded += 1
+                if not items:
+                    confirmed_empty += 1
                 old_items = records.get(ticker, {}).get("items", [])
                 # Empty Yahoo responses can be transient; never erase a populated cache.
                 if items or not old_items:
@@ -249,6 +290,7 @@ def main() -> int:
         return 1
 
     success_ratio = succeeded / len(tickers) if tickers else 1.0
+    records_with_releases = sum(bool(record.get("items")) for record in records.values())
     meta = {
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
         "source": "yfinance.Ticker.get_news",
@@ -256,9 +298,13 @@ def main() -> int:
         "requested_per_ticker": count,
         "universe": len(all_tickers),
         "records": len(records),
+        "records_with_releases": records_with_releases,
+        "records_empty": len(records) - records_with_releases,
         "attempted": len(tickers),
         "succeeded": succeeded,
         "failed": len(failed),
+        "confirmed_empty": confirmed_empty,
+        "empty_retries": max(0, args.empty_retries),
         "preserved_on_failure": preserved,
         "changed": changed,
         "success_ratio": round(success_ratio, 4),
