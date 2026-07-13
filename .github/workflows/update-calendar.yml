@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: pip install --retries 5 --timeout 60 yfinance curl_cffi pandas
 
+      - name: Test earnings reliability guard
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
       - name: Fetch economic and earnings events
         run: python fetch_economic_calendar.py
 
@@ -31,7 +34,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add economic_calendar.json economic_calendar.js
+          git add economic_calendar.json economic_calendar.js earnings_calendar_state.json
           git diff --staged --quiet || git commit -m "Update calendar files"
           git pull --rebase
           git push

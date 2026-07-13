@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-07-12 23:55 UTC",
-  "generated_at_et": "12/07/2026, 19:55 EDT",
+  "generated_at_utc": "2026-07-13 09:45 UTC",
+  "generated_at_et": "13/07/2026, 05:45 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -171,33 +171,9 @@
         {
           "date": "2026-07-13",
           "day": "Monday, July 13, 2026",
-          "ticker": "BMNR",
-          "company": "Bitmine Immersion Technologies, Inc.",
-          "group": "Capital Markets",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-13",
-          "day": "Monday, July 13, 2026",
           "ticker": "FBK",
           "company": "FB Financial Corporation",
           "group": "Banks - Regional",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-13",
-          "day": "Monday, July 13, 2026",
-          "ticker": "RR",
-          "company": "Richtech Robotics Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-13",
-          "day": "Monday, July 13, 2026",
-          "ticker": "USAU",
-          "company": "U.S. Gold Corp.",
-          "group": "Gold",
           "time": "AMC"
         },
         {
@@ -2230,33 +2206,9 @@
     {
       "date": "2026-07-13",
       "day": "Monday, July 13, 2026",
-      "ticker": "BMNR",
-      "company": "Bitmine Immersion Technologies, Inc.",
-      "group": "Capital Markets",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-13",
-      "day": "Monday, July 13, 2026",
       "ticker": "FBK",
       "company": "FB Financial Corporation",
       "group": "Banks - Regional",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-13",
-      "day": "Monday, July 13, 2026",
-      "ticker": "RR",
-      "company": "Richtech Robotics Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-13",
-      "day": "Monday, July 13, 2026",
-      "ticker": "USAU",
-      "company": "U.S. Gold Corp.",
-      "group": "Gold",
       "time": "AMC"
     },
     {
@@ -2609,5 +2561,25 @@
     "ppi",
     "retail_sales",
     "uom_sentiment"
-  ]
+  ],
+  "earnings_guard": {
+    "suppressed_count": 3,
+    "suppressed": [
+      {
+        "ticker": "BMNR",
+        "date": "2026-07-13",
+        "reason": "rolling_unreported_date"
+      },
+      {
+        "ticker": "RR",
+        "date": "2026-07-13",
+        "reason": "rolling_unreported_date"
+      },
+      {
+        "ticker": "USAU",
+        "date": "2026-07-13",
+        "reason": "rolling_unreported_date"
+      }
+    ]
+  }
 }

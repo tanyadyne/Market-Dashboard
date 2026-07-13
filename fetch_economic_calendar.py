@@ -16,7 +16,7 @@ import json
 import math
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -33,7 +33,14 @@ OUT_JSON = ROOT / "economic_calendar.json"
 OUT_JS = ROOT / "economic_calendar.js"
 SCREENER_TICKERS = ROOT / "screener_tickers.json"
 LEADERS_JSON = ROOT / "leaders.json"
+EARNINGS_STATE = ROOT / "earnings_calendar_state.json"
 TZ_ET = ZoneInfo("America/New_York")
+
+EARNINGS_STATE_VERSION = 1
+ROLL_FORWARD_MAX_DAYS = 14
+RECOVERY_STABLE_DAYS = 7
+RECOVERY_MIN_LEAD_DAYS = 3
+STATE_RETENTION_DAYS = 180
 
 
 @dataclass(frozen=True)
@@ -345,6 +352,182 @@ def _as_datetime(value) -> datetime | None:
     return parsed.astimezone(TZ_ET)
 
 
+def _as_date(value) -> date | None:
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    try:
+        return date.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _empty_earnings_state() -> dict:
+    return {"version": EARNINGS_STATE_VERSION, "updated": None, "tickers": {}}
+
+
+def _load_earnings_state(observed_on: date) -> dict:
+    if EARNINGS_STATE.exists():
+        try:
+            with EARNINGS_STATE.open(encoding="utf-8") as handle:
+                state = json.load(handle)
+            if isinstance(state.get("tickers"), dict):
+                state["version"] = EARNINGS_STATE_VERSION
+                return state
+        except (OSError, ValueError, TypeError):
+            pass
+
+    state = _empty_earnings_state()
+    if not OUT_JSON.exists():
+        return state
+
+    try:
+        with OUT_JSON.open(encoding="utf-8") as handle:
+            previous_payload = json.load(handle)
+    except (OSError, ValueError, TypeError):
+        return state
+
+    for week in previous_payload.get("weeks", []):
+        for event in week.get("earnings_events", []):
+            ticker = str(event.get("ticker", "")).upper()
+            event_date = _as_date(event.get("date"))
+            if not ticker or event_date is None:
+                continue
+            state["tickers"][ticker] = {
+                "last_date": event_date.isoformat(),
+                "stable_since": observed_on.isoformat(),
+                "last_seen": observed_on.isoformat(),
+                "roll_count": 0,
+                "quarantined": False,
+            }
+    return state
+
+
+def _save_earnings_state(state: dict, observed_on: date) -> None:
+    state["version"] = EARNINGS_STATE_VERSION
+    state["updated"] = observed_on.isoformat()
+    EARNINGS_STATE.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+
+
+def _public_earnings_event(event: dict) -> dict:
+    return {key: value for key, value in event.items() if not key.startswith("_")}
+
+
+def _candidate_is_reported(event: dict) -> bool:
+    return bool(event.get("_reported"))
+
+
+def _apply_earnings_reliability_guard(
+    earnings: list[dict], state: dict, observed_on: date
+) -> tuple[list[dict], list[dict]]:
+    """Suppress Yahoo dates that roll forward without an earnings report."""
+    ticker_state = state.setdefault("tickers", {})
+    allowed: list[dict] = []
+    suppressed: list[dict] = []
+    pending: dict[str, dict] = {}
+
+    for event in earnings:
+        ticker = event["ticker"]
+        if _candidate_is_reported(event):
+            allowed.append(_public_earnings_event(event))
+            record = ticker_state.setdefault(ticker, {})
+            record.update({
+                "last_reported_date": event["date"],
+                "last_seen": observed_on.isoformat(),
+                "quarantined": False,
+            })
+            record.pop("reason", None)
+            record.pop("quarantined_at", None)
+            continue
+
+        current = pending.get(ticker)
+        if current is None or event["date"] < current["date"]:
+            pending[ticker] = event
+
+    for ticker, event in sorted(pending.items()):
+        event_date = _as_date(event["date"])
+        if event_date is None:
+            continue
+
+        record = ticker_state.setdefault(ticker, {})
+        previous_date = _as_date(record.get("last_date"))
+        stable_since = _as_date(record.get("stable_since"))
+        confirmed_date = _as_date(record.get("confirmed_date"))
+        date_changed = previous_date is not None and event_date != previous_date
+
+        if confirmed_date == event_date:
+            record.update({
+                "last_date": event["date"],
+                "stable_since": record.get("stable_since") or observed_on.isoformat(),
+                "last_seen": observed_on.isoformat(),
+                "quarantined": False,
+            })
+            record.pop("reason", None)
+            record.pop("quarantined_at", None)
+            allowed.append(_public_earnings_event(event))
+            continue
+
+        is_roll_forward = (
+            date_changed
+            and event_date > previous_date
+            and previous_date <= observed_on
+            and (event_date - previous_date).days <= ROLL_FORWARD_MAX_DAYS
+        )
+
+        if date_changed:
+            record["stable_since"] = observed_on.isoformat()
+            stable_since = observed_on
+        elif stable_since is None:
+            record["stable_since"] = observed_on.isoformat()
+            stable_since = observed_on
+
+        if is_roll_forward:
+            record["quarantined"] = True
+            record["reason"] = "rolling_unreported_date"
+            record["quarantined_at"] = record.get("quarantined_at") or observed_on.isoformat()
+            record["roll_count"] = int(record.get("roll_count", 0)) + 1
+
+        record["last_date"] = event["date"]
+        record["last_seen"] = observed_on.isoformat()
+        record.setdefault("roll_count", 0)
+
+        stable_days = (observed_on - stable_since).days
+        lead_days = (event_date - observed_on).days
+        can_recover = (
+            record.get("quarantined")
+            and stable_days >= RECOVERY_STABLE_DAYS
+            and lead_days >= RECOVERY_MIN_LEAD_DAYS
+        )
+        if can_recover:
+            record["quarantined"] = False
+            record["recovered_at"] = observed_on.isoformat()
+            record.pop("reason", None)
+            record.pop("quarantined_at", None)
+
+        if record.get("quarantined"):
+            suppressed.append({
+                "ticker": ticker,
+                "date": event["date"],
+                "reason": record.get("reason", "unconfirmed_date"),
+            })
+        else:
+            allowed.append(_public_earnings_event(event))
+
+    retention_cutoff = observed_on - timedelta(days=STATE_RETENTION_DAYS)
+    for ticker in list(ticker_state):
+        last_seen = _as_date(ticker_state[ticker].get("last_seen"))
+        if (
+            last_seen is not None
+            and last_seen < retention_cutoff
+            and not ticker_state[ticker].get("quarantined")
+        ):
+            del ticker_state[ticker]
+
+    allowed.sort(key=lambda item: (item["date"], item["time"], item["ticker"]))
+    return allowed, suppressed
+
+
 def _earnings_time(row, event_time: datetime) -> str:
     raw = _row_value(row, "Timing", "Earnings Call Time", "Call Time", "Time")
     text = str(raw or "").strip().upper()
@@ -409,6 +592,7 @@ def _select_universe_earnings(rows, universe: set[str], metadata: dict[str, dict
             "company": str(company),
             "group": str(profile.get("group") or "-"),
             "time": _earnings_time(row, event_time),
+            "_reported": _row_value(row, "Reported EPS", "EPS Actual") is not None,
         }
     return sorted(selected.values(), key=lambda item: (item["date"], item["time"], item["ticker"]))
 
@@ -429,7 +613,7 @@ def _week_payload(key: str, label: str, start_et: datetime, events: list[dict], 
     }
 
 
-def build_payload(now_et: datetime | None = None) -> dict:
+def build_payload(now_et: datetime | None = None) -> tuple[dict, dict]:
     now_et = now_et or datetime.now(TZ_ET)
     previous_start, _ = _week_bounds(now_et, -1)
     current_start, _ = _week_bounds(now_et, 0)
@@ -440,6 +624,10 @@ def build_payload(now_et: datetime | None = None) -> dict:
     universe, metadata = _load_stock_metadata()
     earnings_rows = _fetch_earnings_rows(previous_start, next_end)
     earnings = _select_universe_earnings(earnings_rows, universe, metadata)
+    earnings_state = _load_earnings_state(now_et.date())
+    earnings, suppressed = _apply_earnings_reliability_guard(
+        earnings, earnings_state, now_et.date()
+    )
 
     weeks = [
         _week_payload("previous", "Last week", previous_start, events, earnings),
@@ -461,8 +649,12 @@ def build_payload(now_et: datetime | None = None) -> dict:
         "events": current_week["events"],
         "earnings_events": current_week["earnings_events"],
         "event_keys": current_week["event_keys"],
+        "earnings_guard": {
+            "suppressed_count": len(suppressed),
+            "suppressed": suppressed,
+        },
     }
-    return payload
+    return payload, earnings_state
 
 
 def write_outputs(payload: dict) -> None:
@@ -472,14 +664,21 @@ def write_outputs(payload: dict) -> None:
 
 
 def main() -> None:
-    payload = build_payload()
+    now_et = datetime.now(TZ_ET)
+    payload, earnings_state = build_payload(now_et)
     write_outputs(payload)
+    _save_earnings_state(earnings_state, now_et.date())
     total_economic = sum(len(week["events"]) for week in payload["weeks"])
     total_earnings = sum(len(week["earnings_events"]) for week in payload["weeks"])
     print(
         f"Wrote {OUT_JSON.name} and {OUT_JS.name} with "
         f"{total_economic} economic event(s) and {total_earnings} earnings event(s)"
     )
+    suppressed = payload["earnings_guard"]["suppressed"]
+    if suppressed:
+        print("Suppressed unreliable Yahoo earnings dates:")
+        for event in suppressed:
+            print(f"  - {event['ticker']} on {event['date']} ({event['reason']})")
     missing = [matcher.label for matcher in MAJOR_EVENTS if matcher.key not in payload["event_keys"]]
     if missing:
         print("Missing this week:")
