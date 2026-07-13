@@ -2594,7 +2594,7 @@ function renderPressReleasesPanel(ticker){
   }
   const items=(pressReleaseRecord(normalized)?.items||[]).slice(0,30);
   if(!items.length){
-    return `<div class="press-release-panel"><div class="press-release-head"><div class="press-release-heading">Press Releases</div><div class="press-release-source">Yahoo Finance</div></div><div class="press-release-empty">No press releases available.</div></div>`;
+    return `<div class="press-release-panel"><div class="press-release-head"><div class="press-release-heading" aria-hidden="true">&nbsp;</div><div class="press-release-source">Yahoo Finance</div></div><div class="press-release-empty">No press releases available.</div></div>`;
   }
   const rows=items.map(item=>{
     const meta=[formatPressReleaseDate(item.published_at),item.provider].filter(Boolean);
@@ -2607,7 +2607,7 @@ function renderPressReleasesPanel(ticker){
     </${tag}>`;
   }).join('');
   return `<div class="press-release-panel">
-    <div class="press-release-head"><div class="press-release-heading">Press Releases</div><div class="press-release-source">Yahoo Finance</div></div>
+    <div class="press-release-head"><div class="press-release-heading" aria-hidden="true">&nbsp;</div><div class="press-release-source">Yahoo Finance</div></div>
     <div class="press-release-list">${rows}</div>
   </div>`;
 }
