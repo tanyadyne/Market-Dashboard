@@ -253,6 +253,7 @@ tr:hover{background:var(--bg3)}
 [data-theme="light"] .info-box{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .info-box .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:4px}
 .info-box .val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.info-box .val.val-status{font-family:'DM Sans',sans-serif;font-size:16px;letter-spacing:0}
 .info-box .sub{font-size:10px;color:var(--t3);margin-top:2px}
 /* .info-pair: wraps the three info-boxes so we can visually merge them on mobile.
    On desktop, it's transparent (display:contents) — the boxes flow as separate
@@ -488,6 +489,7 @@ a.press-release-item:hover,a.press-release-item:focus-visible{background:var(--b
 [data-view="mobile"] .info-box{min-width:0;padding:10px 8px}
 [data-view="mobile"] .info-box .lbl{font-size:8px;letter-spacing:.6px}
 [data-view="mobile"] .info-box .val{font-size:18px}
+[data-view="mobile"] .info-box .val.val-status{font-size:11px;line-height:1.2}
 [data-view="mobile"] .info-box .sub{font-size:9px}
 /* Theme value needs to wrap and shrink further on mobile since it can be long. */
 [data-view="mobile"] .info-box-theme .val{font-size:11px !important;line-height:1.2;word-break:break-word;white-space:normal}
@@ -2804,7 +2806,11 @@ function searchStock(){
   // Theme info (mapped sector with rank among ETFs)
   const mappedSector=stock.thm||stock.th||'';
   const themeRankInfo=getThemeRankInfo(mappedSector);
-  const rankSubline=stock.w_rk!=null?`of ${DATA.e.filter(e=>e.w_rk!=null).length}`:'Unranked';
+  const hasRsData=stock.w_rs!=null&&stock.w_rk!=null;
+  const rsScoreValue=hasRsData?stock.w_rs:'No RS Score';
+  const rsScoreSubline=hasRsData?`<span class="${posClass(rsLabel)}">${rsLabel}</span>`:'';
+  const rsRankValue=hasRsData?`#${stock.w_rk}`:'Not Ranked';
+  const rankSubline=hasRsData?`of ${DATA.e.filter(e=>e.w_rk!=null).length}`:'';
   let themeSubline;
   if(themeRankInfo){
     themeSubline=`<span class="${themeTag(themeRankInfo.status)}">${themeRankInfo.status}: #${themeRankInfo.avg} of ${themeRankInfo.total}</span>`;
@@ -2818,8 +2824,8 @@ function searchStock(){
   // on desktop (display:contents) and becomes a single bordered container on mobile.
   let html=`<div class="info-boxes">
     <div class="info-pair">
-      <div class="info-box info-box-pair"><div class="lbl">RS Score</div><div class="val" style="color:${getRSCol(stock.w_rs)}">${stock.w_rs!=null?stock.w_rs:'—'}</div><div class="sub"><span class="${posClass(rsLabel)}">${rsLabel}</span></div></div>
-      <div class="info-box info-box-pair"><div class="lbl">RS Rank</div><div class="val">#${stock.w_rk||'—'}</div><div class="sub">${rankSubline}</div></div>
+      <div class="info-box info-box-pair"><div class="lbl">RS Score</div><div class="val${hasRsData?'':' val-status'}" style="color:${hasRsData?getRSCol(stock.w_rs):'var(--t2)'}">${rsScoreValue}</div><div class="sub">${rsScoreSubline}</div></div>
+      <div class="info-box info-box-pair"><div class="lbl">RS Rank</div><div class="val${hasRsData?'':' val-status'}">${rsRankValue}</div><div class="sub">${rankSubline}</div></div>
       <div class="info-box info-box-pair info-box-theme"><div class="lbl">Theme</div><div class="val">${esc(mappedSector||'—')}</div><div class="sub">${themeSubline}</div></div>
     </div>
   </div>`;
