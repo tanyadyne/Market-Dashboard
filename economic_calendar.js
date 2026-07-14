@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-07-13 23:55 UTC",
-  "generated_at_et": "13/07/2026, 19:55 EDT",
+  "generated_at_utc": "2026-07-14 23:54 UTC",
+  "generated_at_et": "14/07/2026, 19:53 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -118,7 +118,7 @@ window.ECONOMIC_CALENDAR_DATA = {
           "day": "Tuesday, July 14, 2026",
           "time": "08:30 AM",
           "period": "JUN",
-          "actual": "-",
+          "actual": "333.95",
           "consensus": "-",
           "previous": "335.12",
           "forecast": "-",
@@ -169,28 +169,12 @@ window.ECONOMIC_CALENDAR_DATA = {
       ],
       "earnings_events": [
         {
-          "date": "2026-07-14",
-          "day": "Tuesday, July 14, 2026",
-          "ticker": "AEHR",
-          "company": "Aehr Test Systems, Inc.",
-          "group": "Semiconductor Equipment & Materials",
+          "date": "2026-07-13",
+          "day": "Monday, July 13, 2026",
+          "ticker": "FBK",
+          "company": "FB Financial Corporation",
+          "group": "Banks - Regional",
           "time": "AMC"
-        },
-        {
-          "date": "2026-07-14",
-          "day": "Tuesday, July 14, 2026",
-          "ticker": "BAC",
-          "company": "Bank of America Corporation",
-          "group": "Banks - Diversified",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-14",
-          "day": "Tuesday, July 14, 2026",
-          "ticker": "C",
-          "company": "Citigroup Inc.",
-          "group": "Banks - Diversified",
-          "time": "BMO"
         },
         {
           "date": "2026-07-14",
@@ -198,38 +182,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "ERIC",
           "company": "Telefonaktiebolaget LM Ericsson (publ)",
           "group": "Communication Equipment",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-14",
-          "day": "Tuesday, July 14, 2026",
-          "ticker": "FAST",
-          "company": "Fastenal Company",
-          "group": "Industrial Distribution",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-14",
-          "day": "Tuesday, July 14, 2026",
-          "ticker": "GS",
-          "company": "The Goldman Sachs Group, Inc.",
-          "group": "Capital Markets",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-14",
-          "day": "Tuesday, July 14, 2026",
-          "ticker": "JPM",
-          "company": "JPMorgan Chase & Co.",
-          "group": "Banks - Diversified",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-14",
-          "day": "Tuesday, July 14, 2026",
-          "ticker": "WFC",
-          "company": "Wells Fargo & Company",
-          "group": "Banks - Diversified",
           "time": "BMO"
         },
         {
@@ -706,14 +658,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "PEGA",
           "company": "Pegasystems Inc.",
           "group": "Software - Application",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-21",
-          "day": "Tuesday, July 21, 2026",
-          "ticker": "PFSI",
-          "company": "PennyMac Financial Services, Inc.",
-          "group": "Mortgage Finance",
           "time": "AMC"
         },
         {
@@ -1271,14 +1215,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-22",
           "day": "Wednesday, July 22, 2026",
-          "ticker": "FISV",
-          "company": "Fiserv, Inc.",
-          "group": "General",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-22",
-          "day": "Wednesday, July 22, 2026",
           "ticker": "GEV",
           "company": "GE Vernova Inc.",
           "group": "Specialty Industrial Machinery",
@@ -1695,14 +1631,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-23",
           "day": "Thursday, July 23, 2026",
-          "ticker": "CTS",
-          "company": "CTS Corporation",
-          "group": "Electronic Components",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-23",
-          "day": "Thursday, July 23, 2026",
           "ticker": "DGX",
           "company": "Quest Diagnostics Incorporated",
           "group": "Diagnostics & Research",
@@ -1746,14 +1674,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "FCX",
           "company": "Freeport-McMoRan Inc.",
           "group": "Copper",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-23",
-          "day": "Thursday, July 23, 2026",
-          "ticker": "GTX",
-          "company": "Garrett Motion Inc.",
-          "group": "Auto Parts",
           "time": "BMO"
         },
         {
@@ -2129,7 +2049,7 @@ window.ECONOMIC_CALENDAR_DATA = {
       "day": "Tuesday, July 14, 2026",
       "time": "08:30 AM",
       "period": "JUN",
-      "actual": "-",
+      "actual": "333.95",
       "consensus": "-",
       "previous": "335.12",
       "forecast": "-",
@@ -2180,28 +2100,12 @@ window.ECONOMIC_CALENDAR_DATA = {
   ],
   "earnings_events": [
     {
-      "date": "2026-07-14",
-      "day": "Tuesday, July 14, 2026",
-      "ticker": "AEHR",
-      "company": "Aehr Test Systems, Inc.",
-      "group": "Semiconductor Equipment & Materials",
+      "date": "2026-07-13",
+      "day": "Monday, July 13, 2026",
+      "ticker": "FBK",
+      "company": "FB Financial Corporation",
+      "group": "Banks - Regional",
       "time": "AMC"
-    },
-    {
-      "date": "2026-07-14",
-      "day": "Tuesday, July 14, 2026",
-      "ticker": "BAC",
-      "company": "Bank of America Corporation",
-      "group": "Banks - Diversified",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-14",
-      "day": "Tuesday, July 14, 2026",
-      "ticker": "C",
-      "company": "Citigroup Inc.",
-      "group": "Banks - Diversified",
-      "time": "BMO"
     },
     {
       "date": "2026-07-14",
@@ -2209,38 +2113,6 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "ERIC",
       "company": "Telefonaktiebolaget LM Ericsson (publ)",
       "group": "Communication Equipment",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-14",
-      "day": "Tuesday, July 14, 2026",
-      "ticker": "FAST",
-      "company": "Fastenal Company",
-      "group": "Industrial Distribution",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-14",
-      "day": "Tuesday, July 14, 2026",
-      "ticker": "GS",
-      "company": "The Goldman Sachs Group, Inc.",
-      "group": "Capital Markets",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-14",
-      "day": "Tuesday, July 14, 2026",
-      "ticker": "JPM",
-      "company": "JPMorgan Chase & Co.",
-      "group": "Banks - Diversified",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-14",
-      "day": "Tuesday, July 14, 2026",
-      "ticker": "WFC",
-      "company": "Wells Fargo & Company",
-      "group": "Banks - Diversified",
       "time": "BMO"
     },
     {
@@ -2535,17 +2407,17 @@ window.ECONOMIC_CALENDAR_DATA = {
     "suppressed": [
       {
         "ticker": "BMNR",
-        "date": "2026-07-13",
+        "date": "2026-07-15",
         "reason": "rolling_unreported_date"
       },
       {
         "ticker": "RR",
-        "date": "2026-07-13",
+        "date": "2026-07-14",
         "reason": "rolling_unreported_date"
       },
       {
         "ticker": "USAU",
-        "date": "2026-07-13",
+        "date": "2026-07-17",
         "reason": "rolling_unreported_date"
       }
     ]
