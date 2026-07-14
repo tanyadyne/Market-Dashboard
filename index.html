@@ -77,32 +77,34 @@ button{font:inherit}
 .themes-card{height:100%;padding:20px;overflow:hidden}
 .theme-period-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
 .theme-period{min-width:0;border:1px solid var(--bdr);border-radius:6px;background:var(--card2);overflow:hidden}
-.theme-period-title{position:relative;padding:13px 14px 12px;color:var(--t2);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--bdr2)}
-.theme-period-title::after{content:"";position:absolute;left:14px;bottom:-1px;width:42px;height:2px;background:var(--accent2)}
+.theme-period-title{padding:13px 14px 12px;color:var(--t2);font-size:14px;font-weight:800;line-height:1.15;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--bdr2)}
+.theme-period-title span{position:relative;display:inline-block}
+.theme-period-title span::after{content:"";position:absolute;left:0;bottom:-13px;width:100%;height:2px;background:var(--accent2)}
 .theme-list{display:flex;flex-direction:column}
 .theme-row{display:grid;grid-template-columns:22px minmax(0,1fr);align-items:center;min-height:53px;padding:7px 13px;border-top:1px solid var(--bdr2)}
 .theme-row:first-child{border-top:0}
 .theme-row:hover{background:var(--card-hover)}
-.theme-rank{align-self:start;padding-top:1px;color:var(--t4);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600}
+.theme-rank{align-self:center;justify-self:center;color:var(--t4);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-align:center}
 .theme-name{display:block;font-size:13px;font-weight:800;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .theme-name:hover{color:var(--accent2)}
 .theme-holdings{font-size:11px;font-weight:800;color:var(--orange);letter-spacing:.3px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .theme-holding:hover{color:var(--t1)}
 .positive{color:var(--green2)}.negative{color:var(--red)}.neutral{color:var(--t3)}
-.table-card{overflow:hidden}
-.table-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px 22px 15px;border-bottom:1px solid var(--bdr2)}
-.stocks-shell{max-height:505px;overflow:auto}
+.table-card{overflow:hidden;padding:20px}
+.table-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 2px 16px}
+.stocks-shell{max-height:505px;overflow:auto;border:1px solid var(--bdr);border-radius:6px}
 .stocks-table{width:100%;border-collapse:collapse;table-layout:fixed}
-.stocks-table th{position:sticky;top:0;background:#161616;z-index:2;color:var(--t3);font-size:9px;text-transform:uppercase;letter-spacing:.75px;text-align:left;font-weight:800;padding:9px 10px;border-bottom:1px solid var(--bdr)}
+.stocks-table th{position:sticky;top:0;background:#161616;z-index:2;color:var(--t3);font-size:10px;text-transform:uppercase;letter-spacing:.8px;text-align:left;font-weight:800;padding:8px 6px;border-bottom:1px solid var(--bdr);white-space:nowrap}
 [data-theme="light"] .stocks-table th{background:#f3f4f6}
-.stocks-table td{height:37px;padding:7px 10px;border-bottom:1px solid var(--bdr2);font-size:10.5px;color:var(--t2);vertical-align:middle}
+.stocks-table td{padding:7px 6px;border-bottom:1px solid var(--bdr2);font-size:12px;color:var(--t2);vertical-align:middle}
 .stocks-table tr:hover td{background:var(--card-hover)}
-.rank{font-family:'JetBrains Mono',monospace;color:var(--t4);font-weight:500}
-.ticker{font-family:'JetBrains Mono',monospace;color:var(--t1);font-weight:800;letter-spacing:.5px}
+.rank{font-family:'JetBrains Mono',monospace;color:var(--t4);font-size:11px;font-weight:500;text-align:center}
+.ticker{font-family:'JetBrains Mono',monospace;color:var(--t1);font-size:12px;font-weight:700;letter-spacing:.5px}
 .ticker:hover{color:var(--accent2)}
-.company-cell,.theme-cell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mono{font-family:'JetBrains Mono',monospace;font-weight:700}
-.rs-pill{display:inline-flex;align-items:center;justify-content:center;min-width:32px;border-radius:6px;padding:3px 7px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;background:var(--bdr2);color:var(--t2)}
+.company-cell,.theme-cell{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mono{font-family:'JetBrains Mono',monospace;font-size:11px}
+.metric-col{text-align:center}
+.rs-pill{display:inline-flex;align-items:center;justify-content:center;min-width:32px;border-radius:4px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;background:var(--bdr2);color:var(--t2)}
 .rs-strong{background:rgba(34,197,94,.16);color:var(--green2)}
 .rs-mid{background:rgba(148,163,184,.16);color:var(--t2)}
 .rs-weak{background:rgba(255,90,102,.14);color:var(--red)}
@@ -212,15 +214,15 @@ button{font:inherit}
               <h2 class="dashboard-section-title">Leading Themes</h2>
               <div class="theme-period-grid">
                 <section class="theme-period" aria-labelledby="pastWeekTitle">
-                  <h3 class="theme-period-title" id="pastWeekTitle">Past Week</h3>
+                  <h3 class="theme-period-title" id="pastWeekTitle"><span>Past Week</span></h3>
                   <div class="theme-list" id="weeklyThemes"><div class="loading">Loading themes...</div></div>
                 </section>
                 <section class="theme-period" aria-labelledby="pastQuarterTitle">
-                  <h3 class="theme-period-title" id="pastQuarterTitle">Past Quarter</h3>
+                  <h3 class="theme-period-title" id="pastQuarterTitle"><span>Past Quarter</span></h3>
                   <div class="theme-list" id="quarterThemes"><div class="loading">Loading themes...</div></div>
                 </section>
                 <section class="theme-period" aria-labelledby="pastYearTitle">
-                  <h3 class="theme-period-title" id="pastYearTitle">Past Year</h3>
+                  <h3 class="theme-period-title" id="pastYearTitle"><span>Past Year</span></h3>
                   <div class="theme-list" id="yearThemes"><div class="loading">Loading themes...</div></div>
                 </section>
               </div>
@@ -259,10 +261,10 @@ button{font:inherit}
           <div class="stocks-shell">
             <table class="stocks-table">
               <colgroup>
-                <col style="width:42px"><col style="width:70px"><col style="width:180px"><col><col style="width:68px"><col style="width:68px"><col style="width:66px"><col style="width:76px"><col style="width:52px">
+                <col style="width:42px"><col style="width:70px"><col style="width:180px"><col><col style="width:62px"><col style="width:62px"><col style="width:60px"><col style="width:72px"><col style="width:72px"><col style="width:52px">
               </colgroup>
-              <thead><tr><th>#</th><th>Ticker</th><th>Company Name</th><th>Theme</th><th>1D</th><th>1W</th><th>Streak</th><th>% Since</th><th>RS</th></tr></thead>
-              <tbody id="leadingStocks"><tr><td colspan="9" class="loading">Loading stocks...</td></tr></tbody>
+              <thead><tr><th class="metric-col">#</th><th>Ticker</th><th>Company Name</th><th>Theme</th><th class="metric-col">1D</th><th class="metric-col">1W</th><th class="metric-col">Streak</th><th class="metric-col">% Since</th><th class="metric-col">YTD</th><th class="metric-col">RS</th></tr></thead>
+              <tbody id="leadingStocks"><tr><td colspan="10" class="loading">Loading stocks...</td></tr></tbody>
             </table>
           </div>
         </section>
@@ -566,7 +568,7 @@ function renderStocks(){
     .sort((a,b)=>Number(a.w_rk)-Number(b.w_rk))
     .slice(0,40);
   if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="9" class="loading">No stock data</td></tr>';
+    tbody.innerHTML='<tr><td colspan="10" class="loading">No stock data</td></tr>';
     return;
   }
   tbody.innerHTML=rows.map(stock=>{
@@ -576,11 +578,12 @@ function renderStocks(){
       <td><a class="ticker" href="${profileUrl(stock.t)}">${esc(stock.t)}</a></td>
       <td class="company-cell" title="${esc(stock.n||'-')}">${esc(stock.n||'-')}</td>
       <td class="theme-cell" title="${esc(stock.th||'-')}">${esc(stock.th||'-')}</td>
-      <td class="mono ${pctClass(stock.ch)}">${pctText(stock.ch,2)}</td>
-      <td class="mono ${pctClass(stock.c5)}">${pctText(stock.c5,2)}</td>
-      <td class="mono ${stats.streak===1?'positive':''}">${esc(streakText(stats.streak))}</td>
-      <td class="mono ${pctClass(stats.pctSince)}">${esc(pctSinceText(stats.pctSince,stats.streak))}</td>
-      <td><span class="rs-pill ${rsClass(stock.w_rs)}">${stock.w_rs!=null?esc(stock.w_rs):'-'}</span></td>
+      <td class="mono metric-col ${pctClass(stock.ch)}">${pctText(stock.ch,2)}</td>
+      <td class="mono metric-col ${pctClass(stock.c5)}">${pctText(stock.c5,2)}</td>
+      <td class="mono metric-col ${stats.streak===1?'positive':''}">${esc(streakText(stats.streak))}</td>
+      <td class="mono metric-col ${pctClass(stats.pctSince)}">${esc(pctSinceText(stats.pctSince,stats.streak))}</td>
+      <td class="mono metric-col ${pctClass(stock.ytd)}">${pctText(stock.ytd,2)}</td>
+      <td class="metric-col"><span class="rs-pill ${rsClass(stock.w_rs)}">${stock.w_rs!=null?esc(stock.w_rs):'-'}</span></td>
     </tr>`;
   }).join('');
 }
@@ -626,7 +629,7 @@ async function loadDashboard(){
     document.getElementById('weeklyThemes').innerHTML='<div class="loading">Unable to load dashboard data</div>';
     document.getElementById('quarterThemes').innerHTML='<div class="loading">Unable to load dashboard data</div>';
     document.getElementById('yearThemes').innerHTML='<div class="loading">Unable to load dashboard data</div>';
-    document.getElementById('leadingStocks').innerHTML='<tr><td colspan="9" class="loading">Unable to load stock data</td></tr>';
+    document.getElementById('leadingStocks').innerHTML='<tr><td colspan="10" class="loading">Unable to load stock data</td></tr>';
     renderEvents();
   }
 }
