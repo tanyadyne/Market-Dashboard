@@ -107,6 +107,13 @@ button{font:inherit}
 .rs-mid{background:rgba(148,163,184,.16);color:var(--t2)}
 .rs-weak{background:rgba(255,90,102,.14);color:var(--red)}
 .events-card{height:100%;min-height:278px;display:flex;flex-direction:column}
+.events-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.events-legend{display:grid;gap:6px;min-width:76px;padding:8px 10px;border:1px solid var(--bdr2);border-radius:8px;background:#171717}
+[data-theme="light"] .events-legend{background:#f3f4f6}
+.events-legend-item{display:flex;align-items:center;gap:7px;color:var(--t2);font-size:9px;font-weight:800;line-height:1;text-transform:uppercase;letter-spacing:.45px;white-space:nowrap}
+.events-legend-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.events-legend-dot.pre{background:var(--orange)}
+.events-legend-dot.post{background:var(--accent2)}
 .events-section{padding:18px 20px;min-height:132px}
 .events-section + .events-section{border-top:1px solid var(--bdr2)}
 .events-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;color:var(--t3);margin-bottom:12px}
@@ -223,9 +230,15 @@ button{font:inherit}
 
         <aside class="side-col">
           <section class="card events-card">
-            <div class="card-pad" style="padding-bottom:0">
-              <div class="card-title">Today's events</div>
-              <div class="card-subtitle" id="todayLabel">Today</div>
+            <div class="card-pad events-head" style="padding-bottom:0">
+              <div>
+                <div class="card-title">Today's events</div>
+                <div class="card-subtitle" id="todayLabel">Today</div>
+              </div>
+              <div class="events-legend" aria-label="Earnings timing legend">
+                <span class="events-legend-item"><span class="events-legend-dot pre"></span>BMO</span>
+                <span class="events-legend-item"><span class="events-legend-dot post"></span>AMC</span>
+              </div>
             </div>
             <div class="events-section">
               <div class="events-label">Economic data</div>
