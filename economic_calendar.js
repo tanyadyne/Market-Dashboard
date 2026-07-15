@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-07-14 23:54 UTC",
-  "generated_at_et": "14/07/2026, 19:53 EDT",
+  "generated_at_utc": "2026-07-15 23:58 UTC",
+  "generated_at_et": "15/07/2026, 19:58 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -132,11 +132,11 @@ window.ECONOMIC_CALENDAR_DATA = {
           "day": "Wednesday, July 15, 2026",
           "time": "08:30 AM",
           "period": "JUN",
-          "actual": "-",
+          "actual": "-0.3",
           "consensus": "-",
           "previous": "1.1",
           "forecast": "-",
-          "revised": "-"
+          "revised": "0.6"
         },
         {
           "key": "retail_sales",
@@ -171,10 +171,50 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-13",
           "day": "Monday, July 13, 2026",
-          "ticker": "FBK",
-          "company": "FB Financial Corporation",
-          "group": "Banks - Regional",
+          "ticker": "ASML",
+          "company": "ASML Holding N.V.",
+          "group": "Semiconductor Equipment & Materials",
           "time": "AMC"
+        },
+        {
+          "date": "2026-07-14",
+          "day": "Tuesday, July 14, 2026",
+          "ticker": "AEHR",
+          "company": "Aehr Test Systems, Inc.",
+          "group": "Semiconductor Equipment & Materials",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-14",
+          "day": "Tuesday, July 14, 2026",
+          "ticker": "BMNR",
+          "company": "Bitmine Immersion Technologies, Inc.",
+          "group": "Capital Markets",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-14",
+          "day": "Tuesday, July 14, 2026",
+          "ticker": "GLDG",
+          "company": "GoldMining Inc.",
+          "group": "Gold",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-14",
+          "day": "Tuesday, July 14, 2026",
+          "ticker": "BAC",
+          "company": "Bank of America Corporation",
+          "group": "Banks - Diversified",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-14",
+          "day": "Tuesday, July 14, 2026",
+          "ticker": "C",
+          "company": "Citigroup Inc.",
+          "group": "Banks - Diversified",
+          "time": "BMO"
         },
         {
           "date": "2026-07-14",
@@ -185,11 +225,43 @@ window.ECONOMIC_CALENDAR_DATA = {
           "time": "BMO"
         },
         {
+          "date": "2026-07-14",
+          "day": "Tuesday, July 14, 2026",
+          "ticker": "FAST",
+          "company": "Fastenal Company",
+          "group": "Industrial Distribution",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-14",
+          "day": "Tuesday, July 14, 2026",
+          "ticker": "GS",
+          "company": "The Goldman Sachs Group, Inc.",
+          "group": "Capital Markets",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-14",
+          "day": "Tuesday, July 14, 2026",
+          "ticker": "JPM",
+          "company": "JPMorgan Chase & Co.",
+          "group": "Banks - Diversified",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-14",
+          "day": "Tuesday, July 14, 2026",
+          "ticker": "WFC",
+          "company": "Wells Fargo & Company",
+          "group": "Banks - Diversified",
+          "time": "BMO"
+        },
+        {
           "date": "2026-07-15",
           "day": "Wednesday, July 15, 2026",
-          "ticker": "FEIM",
-          "company": "Frequency Electronics, Inc.",
-          "group": "Communication Equipment",
+          "ticker": "BMNR",
+          "company": "Bitmine Immersion Technologies, Inc.",
+          "group": "Capital Markets",
           "time": "AMC"
         },
         {
@@ -207,30 +279,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "company": "J.B. Hunt Transport Services, Inc.",
           "group": "Integrated Freight & Logistics",
           "time": "AMC"
-        },
-        {
-          "date": "2026-07-15",
-          "day": "Wednesday, July 15, 2026",
-          "ticker": "KMI",
-          "company": "Kinder Morgan, Inc.",
-          "group": "Oil & Gas Midstream",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-15",
-          "day": "Wednesday, July 15, 2026",
-          "ticker": "UAL",
-          "company": "United Airlines Holdings, Inc.",
-          "group": "Airlines",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-15",
-          "day": "Wednesday, July 15, 2026",
-          "ticker": "ASML",
-          "company": "ASML Holding N.V.",
-          "group": "Semiconductor Equipment & Materials",
-          "time": "BMO"
         },
         {
           "date": "2026-07-15",
@@ -823,14 +871,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-21",
           "day": "Tuesday, July 21, 2026",
-          "ticker": "PNR",
-          "company": "Pentair plc",
-          "group": "Specialty Industrial Machinery",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-21",
-          "day": "Tuesday, July 21, 2026",
           "ticker": "SCHW",
           "company": "The Charles Schwab Corporation",
           "group": "Capital Markets",
@@ -1242,6 +1282,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "NTRS",
           "company": "Northern Trust Corporation",
           "group": "Asset Management",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-22",
+          "day": "Wednesday, July 22, 2026",
+          "ticker": "NVR",
+          "company": "NVR, Inc.",
+          "group": "Residential Construction",
           "time": "BMO"
         },
         {
@@ -1751,14 +1799,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-23",
           "day": "Thursday, July 23, 2026",
-          "ticker": "NVR",
-          "company": "NVR, Inc.",
-          "group": "Residential Construction",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-23",
-          "day": "Thursday, July 23, 2026",
           "ticker": "ORI",
           "company": "Old Republic International Corporation",
           "group": "Insurance - Property & Casualty",
@@ -2063,11 +2103,11 @@ window.ECONOMIC_CALENDAR_DATA = {
       "day": "Wednesday, July 15, 2026",
       "time": "08:30 AM",
       "period": "JUN",
-      "actual": "-",
+      "actual": "-0.3",
       "consensus": "-",
       "previous": "1.1",
       "forecast": "-",
-      "revised": "-"
+      "revised": "0.6"
     },
     {
       "key": "retail_sales",
@@ -2102,10 +2142,50 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-07-13",
       "day": "Monday, July 13, 2026",
-      "ticker": "FBK",
-      "company": "FB Financial Corporation",
-      "group": "Banks - Regional",
+      "ticker": "ASML",
+      "company": "ASML Holding N.V.",
+      "group": "Semiconductor Equipment & Materials",
       "time": "AMC"
+    },
+    {
+      "date": "2026-07-14",
+      "day": "Tuesday, July 14, 2026",
+      "ticker": "AEHR",
+      "company": "Aehr Test Systems, Inc.",
+      "group": "Semiconductor Equipment & Materials",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-14",
+      "day": "Tuesday, July 14, 2026",
+      "ticker": "BMNR",
+      "company": "Bitmine Immersion Technologies, Inc.",
+      "group": "Capital Markets",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-14",
+      "day": "Tuesday, July 14, 2026",
+      "ticker": "GLDG",
+      "company": "GoldMining Inc.",
+      "group": "Gold",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-14",
+      "day": "Tuesday, July 14, 2026",
+      "ticker": "BAC",
+      "company": "Bank of America Corporation",
+      "group": "Banks - Diversified",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-14",
+      "day": "Tuesday, July 14, 2026",
+      "ticker": "C",
+      "company": "Citigroup Inc.",
+      "group": "Banks - Diversified",
+      "time": "BMO"
     },
     {
       "date": "2026-07-14",
@@ -2116,11 +2196,43 @@ window.ECONOMIC_CALENDAR_DATA = {
       "time": "BMO"
     },
     {
+      "date": "2026-07-14",
+      "day": "Tuesday, July 14, 2026",
+      "ticker": "FAST",
+      "company": "Fastenal Company",
+      "group": "Industrial Distribution",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-14",
+      "day": "Tuesday, July 14, 2026",
+      "ticker": "GS",
+      "company": "The Goldman Sachs Group, Inc.",
+      "group": "Capital Markets",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-14",
+      "day": "Tuesday, July 14, 2026",
+      "ticker": "JPM",
+      "company": "JPMorgan Chase & Co.",
+      "group": "Banks - Diversified",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-14",
+      "day": "Tuesday, July 14, 2026",
+      "ticker": "WFC",
+      "company": "Wells Fargo & Company",
+      "group": "Banks - Diversified",
+      "time": "BMO"
+    },
+    {
       "date": "2026-07-15",
       "day": "Wednesday, July 15, 2026",
-      "ticker": "FEIM",
-      "company": "Frequency Electronics, Inc.",
-      "group": "Communication Equipment",
+      "ticker": "BMNR",
+      "company": "Bitmine Immersion Technologies, Inc.",
+      "group": "Capital Markets",
       "time": "AMC"
     },
     {
@@ -2138,30 +2250,6 @@ window.ECONOMIC_CALENDAR_DATA = {
       "company": "J.B. Hunt Transport Services, Inc.",
       "group": "Integrated Freight & Logistics",
       "time": "AMC"
-    },
-    {
-      "date": "2026-07-15",
-      "day": "Wednesday, July 15, 2026",
-      "ticker": "KMI",
-      "company": "Kinder Morgan, Inc.",
-      "group": "Oil & Gas Midstream",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-15",
-      "day": "Wednesday, July 15, 2026",
-      "ticker": "UAL",
-      "company": "United Airlines Holdings, Inc.",
-      "group": "Airlines",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-15",
-      "day": "Wednesday, July 15, 2026",
-      "ticker": "ASML",
-      "company": "ASML Holding N.V.",
-      "group": "Semiconductor Equipment & Materials",
-      "time": "BMO"
     },
     {
       "date": "2026-07-15",
@@ -2406,13 +2494,13 @@ window.ECONOMIC_CALENDAR_DATA = {
     "suppressed_count": 3,
     "suppressed": [
       {
-        "ticker": "BMNR",
-        "date": "2026-07-15",
+        "ticker": "KMI",
+        "date": "2026-07-22",
         "reason": "rolling_unreported_date"
       },
       {
         "ticker": "RR",
-        "date": "2026-07-14",
+        "date": "2026-07-15",
         "reason": "rolling_unreported_date"
       },
       {
