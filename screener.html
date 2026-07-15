@@ -352,6 +352,14 @@ tr:hover{background:var(--bg3)}
 .profile-price{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;margin-top:8px}
 .profile-price .chg{font-size:13px;margin-left:8px;font-weight:500}
 .profile-desc{font-size:12px;color:var(--t2);line-height:1.5;margin-top:8px;max-height:180px;overflow-y:auto;padding-right:6px}
+.profile-baskets{display:flex;align-items:baseline;gap:8px;min-height:20px;margin-top:auto;padding-top:8px;font-size:11px;line-height:1.4}
+.profile-baskets-label{flex:0 0 auto;color:var(--t3);font-weight:800;letter-spacing:.35px}
+.profile-baskets-list{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-weight:700}
+.profile-basket-link{color:#2563eb;text-decoration:none;text-underline-offset:2px}
+.profile-basket-link:hover,.profile-basket-link:focus-visible{color:#1d4ed8;text-decoration:underline;outline:none}
+.profile-basket-sep,.profile-baskets-empty{color:var(--t4);font-weight:500}
+[data-theme="dark"] .profile-basket-link{color:#60a5fa}
+[data-theme="dark"] .profile-basket-link:hover,[data-theme="dark"] .profile-basket-link:focus-visible{color:#93c5fd}
 .profile-subtabs{display:grid;grid-template-columns:repeat(4,1fr);margin:0 0 16px 0;border-bottom:1px solid var(--bdr);overflow:hidden}
 .profile-subtab{position:relative;padding:11px 10px 12px;border:0;border-right:1px solid var(--bdr2);border-radius:0;background:transparent;color:var(--t3);font-family:inherit;font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:color .15s,background .15s}
 .profile-subtab:last-child{border-right:0}
@@ -469,7 +477,7 @@ a.press-release-item:hover,a.press-release-item:focus-visible{background:var(--b
 .fund-tv-widget .tradingview-widget-container{height:100%;width:100%}
 .fund-tv-widget .tradingview-widget-container__widget{height:calc(100% - 32px);width:100%}
 .profile-section-empty{margin-top:16px;padding:34px 18px;border:1px dashed var(--bdr);border-radius:10px;text-align:center;color:var(--t3);font-size:12px;background:var(--bg2)}
-@media(max-width:768px){.profile-box{grid-template-columns:1fr}.profile-chart{height:240px;min-height:240px}.profile-info-top{flex-direction:row;gap:12px;align-items:flex-start}.profile-title-block{flex:1 1 auto}.profile-metrics{flex:0 0 45%;width:auto;box-sizing:border-box;padding:10px 12px;gap:7px}.profile-metric{gap:8px;font-size:10.5px}.profile-tk{font-size:22px}.profile-price{font-size:16px}}
+@media(max-width:768px){.profile-box{grid-template-columns:1fr}.profile-chart{height:240px;min-height:240px}.profile-info-top{flex-direction:row;gap:12px;align-items:flex-start}.profile-title-block{flex:1 1 auto}.profile-metrics{flex:0 0 45%;width:auto;box-sizing:border-box;padding:10px 12px;gap:7px}.profile-metric{gap:8px;font-size:10.5px}.profile-tk{font-size:22px}.profile-price{font-size:16px}.profile-baskets{margin-top:2px;padding-top:6px}}
 /* History delta arrow */
 .hist-delta{text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600}
 .hist-delta .up{color:var(--g)}
@@ -2187,6 +2195,42 @@ function getThemeRankInfo(themeName){
   return null;
 }
 
+function profileBasketTickerKey(ticker){
+  return String(ticker||'').trim().toUpperCase().replace(/\./g,'-');
+}
+
+function getProfileBasketMembership(stockTicker){
+  if(!ETF_DATA||!Array.isArray(ETF_DATA.e))return[];
+  const stockKey=profileBasketTickerKey(stockTicker);
+  if(!stockKey)return[];
+  const seen=new Set();
+  const matches=[];
+  for(const basket of ETF_DATA.e){
+    const basketTicker=String(basket.t||'').trim().toUpperCase();
+    if(!basketTicker||seen.has(basketTicker))continue;
+    const isHolding=String(basket.h||'')
+      .split(',')
+      .some(holding=>profileBasketTickerKey(holding)===stockKey);
+    if(!isHolding)continue;
+    seen.add(basketTicker);
+    matches.push({ticker:basketTicker,name:String(basket.n||'').trim()});
+  }
+  return matches;
+}
+
+function profileBasketLinksHtml(stockTicker){
+  const baskets=getProfileBasketMembership(stockTicker);
+  const content=baskets.length
+    ?baskets.map((basket,index)=>{
+      const href=`rs.html?tab=profile&tk=${encodeURIComponent(basket.ticker)}`;
+      const title=basket.name?`Open ${basket.ticker} - ${basket.name}`:`Open ${basket.ticker} profile`;
+      const separator=index?'<span class="profile-basket-sep" aria-hidden="true">&middot;</span>':'';
+      return `${separator}<a class="profile-basket-link" href="${href}" title="${esc(title)}">${esc(basket.ticker)}</a>`;
+    }).join('')
+    :'<span class="profile-baskets-empty">&mdash;</span>';
+  return `<div class="profile-baskets"><span class="profile-baskets-label">ETF Baskets:</span><span class="profile-baskets-list">${content}</span></div>`;
+}
+
 function rsHistoryDotClass(pos){
   if(pos==='Strong Leader')return'rs-history-strong';
   if(pos==='Moderate Leader')return'rs-history-leader';
@@ -2845,6 +2889,7 @@ function searchStock(){
         ${profileMetricsHtml(stock)}
       </div>
       <div class="profile-desc">${esc(stock.d||'No description available.')}</div>
+      ${profileBasketLinksHtml(stock.t)}
     </div>
   </div>`;
 
