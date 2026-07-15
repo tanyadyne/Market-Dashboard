@@ -837,7 +837,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
   <div id="searchResults"></div>
 </div>
 <script>
-let DATA=null,HISTORY=null,ETF_DATA=null,FUNDAMENTALS=null,OWNERSHIP_13F=null,sortKey='rk',sortDir=1,currentTab='weekly',currentPage=1;
+let DATA=null,HISTORY=null,ETF_DATA=null,FUNDAMENTALS=null,OWNERSHIP_13F=null,PROFILE_ETF_OVERRIDES=null,sortKey='rk',sortDir=1,currentTab='weekly',currentPage=1;
 const PRESS_RELEASE_SHARDS=new Map();
 const PRESS_RELEASE_REQUESTS=new Map();
 const PRESS_RELEASE_ERRORS=new Map();
@@ -2199,6 +2199,32 @@ function profileBasketTickerKey(ticker){
   return String(ticker||'').trim().toUpperCase().replace(/\./g,'-');
 }
 
+let _profileBasketOverrideSource=null;
+let _profileBasketOverrideLookup=Object.create(null);
+
+function getProfileBasketOverrideMembership(stockKey){
+  const groups=PROFILE_ETF_OVERRIDES&&PROFILE_ETF_OVERRIDES.baskets;
+  if(!groups||!ETF_DATA||!Array.isArray(ETF_DATA.e))return[];
+  if(_profileBasketOverrideSource!==PROFILE_ETF_OVERRIDES){
+    const lookup=Object.create(null);
+    for(const [basketTicker,stocks] of Object.entries(groups)){
+      if(!Array.isArray(stocks))continue;
+      for(const stock of stocks){
+        const key=profileBasketTickerKey(stock);
+        if(!key)continue;
+        if(!lookup[key])lookup[key]=[];
+        if(!lookup[key].includes(basketTicker))lookup[key].push(basketTicker);
+      }
+    }
+    _profileBasketOverrideLookup=lookup;
+    _profileBasketOverrideSource=PROFILE_ETF_OVERRIDES;
+  }
+  return (_profileBasketOverrideLookup[stockKey]||[]).map(ticker=>{
+    const basket=ETF_DATA.e.find(item=>String(item.t||'').trim().toUpperCase()===ticker);
+    return basket?{ticker,name:String(basket.n||'').trim()}:null;
+  }).filter(Boolean);
+}
+
 function getProfileBasketMembership(stockTicker){
   if(!ETF_DATA||!Array.isArray(ETF_DATA.e))return[];
   const stockKey=profileBasketTickerKey(stockTicker);
@@ -2215,7 +2241,7 @@ function getProfileBasketMembership(stockTicker){
     seen.add(basketTicker);
     matches.push({ticker:basketTicker,name:String(basket.n||'').trim()});
   }
-  return matches;
+  return matches.length?matches:getProfileBasketOverrideMembership(stockKey);
 }
 
 function profileBasketLinksHtml(stockTicker){
@@ -3040,12 +3066,13 @@ function setProfileHistoryPage(page){
 
 async function loadData(){
   try{
-    const [dataRes,histRes,etfRes,fundRes,ownershipRes]=await Promise.all([
+    const [dataRes,histRes,etfRes,fundRes,ownershipRes,profileEtfRes]=await Promise.all([
       fetch('leaders.json?_='+Date.now()),
       fetch('leaders_score_history.json?_='+Date.now()).catch(()=>null),
       fetch('data.json?_='+Date.now()).catch(()=>null),
       fetch('fundamentals.json?_='+Date.now()).catch(()=>null),
-      fetch('ownership_top_holders_13f.json?_='+Date.now()).catch(()=>null)
+      fetch('ownership_top_holders_13f.json?_='+Date.now()).catch(()=>null),
+      fetch('profile_etf_basket_overrides.json?_='+Date.now()).catch(()=>null)
     ]);
     if(!dataRes.ok)throw new Error('leaders.json not found');
     DATA=await dataRes.json();
@@ -3053,6 +3080,7 @@ async function loadData(){
     if(etfRes&&etfRes.ok){try{ETF_DATA=await etfRes.json();}catch(e){}}
     if(fundRes&&fundRes.ok){try{FUNDAMENTALS=await fundRes.json();}catch(e){}}
     if(ownershipRes&&ownershipRes.ok){try{OWNERSHIP_13F=await ownershipRes.json();}catch(e){}}
+    if(profileEtfRes&&profileEtfRes.ok){try{PROFILE_ETF_OVERRIDES=await profileEtfRes.json();}catch(e){}}
     pruneExcludedScreenerData();
     document.getElementById('statusBar').style.display='none';
     if(currentTab==='overview'){
