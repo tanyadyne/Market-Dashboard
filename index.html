@@ -110,8 +110,14 @@ button{font:inherit}
 .rs-weak{background:rgba(255,90,102,.14);color:var(--red)}
 .events-card{height:100%;min-height:278px;display:flex;flex-direction:column}
 .events-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.events-legend{display:inline-grid;width:max-content;gap:6px;padding:8px 9px;border:1px solid var(--bdr2);border-radius:8px;background:#171717}
+.events-legend{position:relative;flex:0 0 auto;width:28px;height:28px;padding:0;overflow:hidden;border:1px solid var(--bdr2);border-radius:50%;background:#171717;color:var(--t2);cursor:pointer;transition:width .26s cubic-bezier(.22,.8,.26,1),border-radius .2s ease,box-shadow .2s ease}
 [data-theme="light"] .events-legend{background:#f3f4f6}
+.events-legend:hover,.events-legend:focus-visible,.events-legend.is-open{width:82px;border-radius:8px;box-shadow:0 4px 14px var(--shadow)}
+.events-legend:focus-visible{outline:2px solid var(--bdr3);outline-offset:2px}
+.events-legend-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:800;color:var(--t2);transition:opacity .14s ease,transform .2s ease}
+.events-legend-content{position:absolute;top:50%;left:9px;display:grid;gap:5px;width:64px;opacity:0;transform:translate(7px,-50%);transition:opacity .16s ease .05s,transform .22s ease;pointer-events:none}
+.events-legend:hover .events-legend-icon,.events-legend:focus-visible .events-legend-icon,.events-legend.is-open .events-legend-icon{opacity:0;transform:scale(.75)}
+.events-legend:hover .events-legend-content,.events-legend:focus-visible .events-legend-content,.events-legend.is-open .events-legend-content{opacity:1;transform:translate(0,-50%)}
 .events-legend-item{display:flex;align-items:center;gap:7px;color:var(--t2);font-size:9px;font-weight:800;line-height:1;text-transform:uppercase;letter-spacing:.45px;white-space:nowrap}
 .events-legend-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
 .events-legend-dot.pre{background:var(--orange)}
@@ -121,6 +127,13 @@ button{font:inherit}
 .events-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;color:var(--t3);margin-bottom:12px}
 .event-list{display:flex;flex-direction:column;gap:10px}
 .event-list.earnings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:18px;row-gap:10px;align-items:start}
+.event-list.is-scrollable{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--bdr3) transparent;padding-right:4px}
+.event-list.is-scrollable::-webkit-scrollbar{width:5px}
+.event-list.is-scrollable::-webkit-scrollbar-thumb{background:var(--bdr3);border-radius:999px}
+#economicToday .event-item,#earningsToday .event-item{min-height:16px}
+#economicToday.is-scrollable{max-height:68px}
+#earningsToday.is-scrollable{max-height:120px}
+#economicToday .event-item>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .earnings-column{display:flex;flex-direction:column;gap:10px;min-width:0}
 .event-item{display:flex;align-items:center;gap:9px;color:var(--t2);font-weight:700;line-height:1.25}
 .event-dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);flex:0 0 auto}
@@ -237,10 +250,13 @@ button{font:inherit}
                 <div class="card-title">Today's events</div>
                 <div class="card-subtitle" id="todayLabel">Today</div>
               </div>
-              <div class="events-legend" aria-label="Earnings timing legend">
-                <span class="events-legend-item"><span class="events-legend-dot pre"></span>= BMO</span>
-                <span class="events-legend-item"><span class="events-legend-dot post"></span>= AMC</span>
-              </div>
+              <button class="events-legend" id="eventsLegend" type="button" aria-label="Show earnings timing legend: orange equals BMO, blue equals AMC" aria-expanded="false">
+                <span class="events-legend-icon" aria-hidden="true">i</span>
+                <span class="events-legend-content" aria-hidden="true">
+                  <span class="events-legend-item"><span class="events-legend-dot pre"></span>= BMO</span>
+                  <span class="events-legend-item"><span class="events-legend-dot post"></span>= AMC</span>
+                </span>
+              </button>
             </div>
             <div class="events-section">
               <div class="events-label">Economic data</div>
@@ -425,10 +441,17 @@ function millisecondsUntilEventsRollover(now=new Date()){
   if(next<=now.getTime())next+=24*60*60*1000;
   return next-now.getTime()+100;
 }
-function compactDate(dateText){
-  const dt=new Date(`${dateText}T00:00:00`);
+function eventsDisplayDate(dateText){
+  const match=String(dateText||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!match)return dateText||'Today';
+  const year=Number(match[1]);
+  const month=Number(match[2]);
+  const day=Number(match[3]);
+  const dt=new Date(Date.UTC(year,month-1,day));
   if(Number.isNaN(dt.getTime()))return dateText||'Today';
-  return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  const weekdays=['SUN','MON','TUES','WEDS','THURS','FRI','SAT'];
+  const months=['JAN','FEB','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPT','OCT','NOV','DEC'];
+  return `${weekdays[dt.getUTCDay()]}, ${months[month-1]} ${day} ${year}`;
 }
 function calendarItemsForDate(key,dateText){
   const data=window.ECONOMIC_CALENDAR_DATA||{};
@@ -589,19 +612,43 @@ function renderStocks(){
 }
 function renderEvents(){
   const today=eventsDateIso();
-  document.getElementById('todayLabel').textContent=compactDate(today)+' ET';
+  document.getElementById('todayLabel').textContent=eventsDisplayDate(today);
   const econ=calendarItemsForDate('events',today)
     .sort((a,b)=>eventTimingRank(a)-eventTimingRank(b)||String(a.time||'').localeCompare(String(b.time||''))||String(a.event||'').localeCompare(String(b.event||'')));
   const earn=calendarItemsForDate('earnings_events',today)
     .sort((a,b)=>eventTimingRank(a)-eventTimingRank(b)||String(a.ticker||'').localeCompare(String(b.ticker||'')));
-  document.getElementById('economicToday').innerHTML=econ.length
-    ? econ.map(e=>`<div class="event-item ${eventTimingClass(e)}"><span class="event-dot"></span><span>${esc(e.event)}</span></div>`).join('')
+  const economicTarget=document.getElementById('economicToday');
+  economicTarget.classList.toggle('is-scrollable',econ.length>3);
+  economicTarget.innerHTML=econ.length
+    ? econ.map(e=>`<div class="event-item ${eventTimingClass(e)}"><span class="event-dot"></span><span title="${esc(e.event)}">${esc(e.event)}</span></div>`).join('')
     : '<div class="empty-state">No economic releases scheduled</div>';
   const earningsTarget=document.getElementById('earningsToday');
   earningsTarget.classList.toggle('earnings-grid',earn.length>1);
+  earningsTarget.classList.toggle('is-scrollable',earn.length>15);
   earningsTarget.innerHTML=earn.length
     ? renderEarningsItems(earn)
     : '<div class="empty-state">No earnings scheduled</div>';
+}
+function initEventsLegend(){
+  const legend=document.getElementById('eventsLegend');
+  if(!legend)return;
+  const setOpen=open=>{
+    legend.classList.toggle('is-open',open);
+    legend.setAttribute('aria-expanded',String(open));
+  };
+  legend.addEventListener('click',event=>{
+    event.stopPropagation();
+    setOpen(!legend.classList.contains('is-open'));
+  });
+  legend.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){
+      setOpen(false);
+      legend.blur();
+    }
+  });
+  document.addEventListener('click',event=>{
+    if(!legend.contains(event.target))setOpen(false);
+  });
 }
 let eventsRolloverTimer=null;
 function scheduleEventsRollover(){
@@ -653,6 +700,7 @@ if(mobileLandingQuery.addEventListener)mobileLandingQuery.addEventListener('chan
 else mobileLandingQuery.addListener(syncResponsiveDashboard);
 syncResponsiveDashboard();
 scheduleEventsRollover();
+initEventsLegend();
 </script>
 </body>
 </html>
