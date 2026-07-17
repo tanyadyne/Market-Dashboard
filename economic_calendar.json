@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-07-15 23:58 UTC",
-  "generated_at_et": "15/07/2026, 19:58 EDT",
+  "generated_at_utc": "2026-07-17 00:00 UTC",
+  "generated_at_et": "16/07/2026, 20:00 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -146,11 +146,11 @@
           "day": "Thursday, July 16, 2026",
           "time": "08:30 AM",
           "period": "JUN",
-          "actual": "-",
+          "actual": "0.2",
           "consensus": "-",
           "previous": "0.9",
           "forecast": "-",
-          "revised": "-"
+          "revised": "1"
         },
         {
           "key": "uom_sentiment",
@@ -259,9 +259,9 @@
         {
           "date": "2026-07-15",
           "day": "Wednesday, July 15, 2026",
-          "ticker": "BMNR",
-          "company": "Bitmine Immersion Technologies, Inc.",
-          "group": "Capital Markets",
+          "ticker": "FEIM",
+          "company": "Frequency Electronics, Inc.",
+          "group": "Communication Equipment",
           "time": "AMC"
         },
         {
@@ -278,6 +278,14 @@
           "ticker": "JBHT",
           "company": "J.B. Hunt Transport Services, Inc.",
           "group": "Integrated Freight & Logistics",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-15",
+          "day": "Wednesday, July 15, 2026",
+          "ticker": "UAL",
+          "company": "United Airlines Holdings, Inc.",
+          "group": "Airlines",
           "time": "AMC"
         },
         {
@@ -363,46 +371,6 @@
         {
           "date": "2026-07-16",
           "day": "Thursday, July 16, 2026",
-          "ticker": "AA",
-          "company": "Alcoa Corporation",
-          "group": "Aluminum",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
-          "ticker": "FNB",
-          "company": "F.N.B. Corporation",
-          "group": "Banks - Regional",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
-          "ticker": "INDB",
-          "company": "Independent Bank Corp.",
-          "group": "Banks - Regional",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
-          "ticker": "ISRG",
-          "company": "Intuitive Surgical, Inc.",
-          "group": "Medical Instruments & Supplies",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
-          "ticker": "NFLX",
-          "company": "Netflix, Inc.",
-          "group": "Entertainment",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
           "ticker": "ABT",
           "company": "Abbott Laboratories",
           "group": "Medical Devices",
@@ -427,6 +395,14 @@
         {
           "date": "2026-07-16",
           "day": "Thursday, July 16, 2026",
+          "ticker": "DDOG",
+          "company": "Datadog, Inc.",
+          "group": "Software - Application",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-16",
+          "day": "Thursday, July 16, 2026",
           "ticker": "GE",
           "company": "GE Aerospace",
           "group": "Aerospace & Defense",
@@ -446,14 +422,6 @@
           "ticker": "STT",
           "company": "State Street Corporation",
           "group": "Asset Management",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
-          "ticker": "TSM",
-          "company": "Taiwan Semiconductor Manufacturing Company Limited",
-          "group": "Semiconductors",
           "time": "BMO"
         },
         {
@@ -1335,6 +1303,14 @@
         {
           "date": "2026-07-22",
           "day": "Wednesday, July 22, 2026",
+          "ticker": "SF",
+          "company": "Stifel Financial Corp.",
+          "group": "Capital Markets",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-22",
+          "day": "Wednesday, July 22, 2026",
           "ticker": "T",
           "company": "AT&T Inc.",
           "group": "Telecom Services",
@@ -2117,11 +2093,11 @@
       "day": "Thursday, July 16, 2026",
       "time": "08:30 AM",
       "period": "JUN",
-      "actual": "-",
+      "actual": "0.2",
       "consensus": "-",
       "previous": "0.9",
       "forecast": "-",
-      "revised": "-"
+      "revised": "1"
     },
     {
       "key": "uom_sentiment",
@@ -2230,9 +2206,9 @@
     {
       "date": "2026-07-15",
       "day": "Wednesday, July 15, 2026",
-      "ticker": "BMNR",
-      "company": "Bitmine Immersion Technologies, Inc.",
-      "group": "Capital Markets",
+      "ticker": "FEIM",
+      "company": "Frequency Electronics, Inc.",
+      "group": "Communication Equipment",
       "time": "AMC"
     },
     {
@@ -2249,6 +2225,14 @@
       "ticker": "JBHT",
       "company": "J.B. Hunt Transport Services, Inc.",
       "group": "Integrated Freight & Logistics",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-15",
+      "day": "Wednesday, July 15, 2026",
+      "ticker": "UAL",
+      "company": "United Airlines Holdings, Inc.",
+      "group": "Airlines",
       "time": "AMC"
     },
     {
@@ -2334,46 +2318,6 @@
     {
       "date": "2026-07-16",
       "day": "Thursday, July 16, 2026",
-      "ticker": "AA",
-      "company": "Alcoa Corporation",
-      "group": "Aluminum",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-16",
-      "day": "Thursday, July 16, 2026",
-      "ticker": "FNB",
-      "company": "F.N.B. Corporation",
-      "group": "Banks - Regional",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-16",
-      "day": "Thursday, July 16, 2026",
-      "ticker": "INDB",
-      "company": "Independent Bank Corp.",
-      "group": "Banks - Regional",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-16",
-      "day": "Thursday, July 16, 2026",
-      "ticker": "ISRG",
-      "company": "Intuitive Surgical, Inc.",
-      "group": "Medical Instruments & Supplies",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-16",
-      "day": "Thursday, July 16, 2026",
-      "ticker": "NFLX",
-      "company": "Netflix, Inc.",
-      "group": "Entertainment",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-16",
-      "day": "Thursday, July 16, 2026",
       "ticker": "ABT",
       "company": "Abbott Laboratories",
       "group": "Medical Devices",
@@ -2398,6 +2342,14 @@
     {
       "date": "2026-07-16",
       "day": "Thursday, July 16, 2026",
+      "ticker": "DDOG",
+      "company": "Datadog, Inc.",
+      "group": "Software - Application",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-16",
+      "day": "Thursday, July 16, 2026",
       "ticker": "GE",
       "company": "GE Aerospace",
       "group": "Aerospace & Defense",
@@ -2417,14 +2369,6 @@
       "ticker": "STT",
       "company": "State Street Corporation",
       "group": "Asset Management",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-16",
-      "day": "Thursday, July 16, 2026",
-      "ticker": "TSM",
-      "company": "Taiwan Semiconductor Manufacturing Company Limited",
-      "group": "Semiconductors",
       "time": "BMO"
     },
     {
@@ -2500,7 +2444,7 @@
       },
       {
         "ticker": "RR",
-        "date": "2026-07-15",
+        "date": "2026-07-16",
         "reason": "rolling_unreported_date"
       },
       {
