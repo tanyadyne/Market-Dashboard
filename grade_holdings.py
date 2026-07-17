@@ -125,6 +125,22 @@ ETF_INFO = [
 ]
 
 
+def ensure_holdings_superset(target_ticker, source_ticker):
+    """Keep target holdings inclusive of every source holding."""
+    etfs = {entry["t"]: entry for entry in ETF_INFO}
+    target = etfs[target_ticker]
+    source = etfs[source_ticker]
+    target_holdings = target["h"].split(",")
+    target_set = set(target_holdings)
+    target["h"] = ",".join(
+        target_holdings
+        + [ticker for ticker in source["h"].split(",") if ticker not in target_set]
+    )
+
+
+ensure_holdings_superset("IGV", "CIBR")
+
+
 # ─── Dynamic Holdings Scraper ──────────────────────────────────────────────
 
 def fetch_holdings_from_perplexity(ticker):

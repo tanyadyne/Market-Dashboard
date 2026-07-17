@@ -116,10 +116,25 @@ ETF_INFO = [
     {"t":"IDGT","n":"Digital Infrastructure","fn":"IDGT ETF","h":"EQIX,AMT,DLR,CRDO,NOK,SBAC,CIEN,CSCO,UNIT,QCOM,CCI,NTAP,CRWV,SMCI,ANET,EXTR,ERIC,UI,FSLY,CALX,MSI,VISN,ATEN,ADTN,CLFD"},
 ]
 
-CUSTOM_ETF_DESCRIPTIONS = {'MAGS': 'This theme tracks the dominant U.S. mega-cap technology platforms across AI, cloud infrastructure, digital '
-         'advertising, consumer devices, e-commerce, software, and electric vehicles. These companies often act as '
-         'broad market leadership proxies because they combine scale, profitability, global distribution, and heavy '
-         'exposure to secular technology adoption.',
+
+def ensure_holdings_superset(target_ticker, source_ticker):
+    """Keep target holdings inclusive of every source holding."""
+    etfs = {entry["t"]: entry for entry in ETF_INFO}
+    target = etfs[target_ticker]
+    source = etfs[source_ticker]
+    target_holdings = target["h"].split(",")
+    target_set = set(target_holdings)
+    target["h"] = ",".join(
+        target_holdings
+        + [ticker for ticker in source["h"].split(",") if ticker not in target_set]
+    )
+
+
+ensure_holdings_superset("IGV", "CIBR")
+
+CUSTOM_ETF_DESCRIPTIONS = {'MAGS': 'This theme tracks the “Magnificent Seven” stocks - a group of the largest and most dominant tech giants in '
+         'the U.S. stock market. Together, these seven mega-cap companies represent a significant fraction of the '
+         "U.S. stock market and have historically influenced much of the S&P 500's performance.",
  'XOP': 'This theme tracks companies involved in oil and gas exploration, production, refining, and upstream energy '
         'operations. It is designed to capture exposure to crude oil prices, shale activity, refining margins, '
         'drilling cycles, and the broader profitability of traditional hydrocarbon producers.',
