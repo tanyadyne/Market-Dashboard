@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-07-17 00:00 UTC",
-  "generated_at_et": "16/07/2026, 20:00 EDT",
+  "generated_at_utc": "2026-07-17 23:53 UTC",
+  "generated_at_et": "17/07/2026, 19:53 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -160,7 +160,7 @@ window.ECONOMIC_CALENDAR_DATA = {
           "day": "Friday, July 17, 2026",
           "time": "10:00 AM",
           "period": "JUL",
-          "actual": "-",
+          "actual": "54.4",
           "consensus": "-",
           "previous": "49.5",
           "forecast": "-",
@@ -371,6 +371,46 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-16",
           "day": "Thursday, July 16, 2026",
+          "ticker": "AA",
+          "company": "Alcoa Corporation",
+          "group": "Aluminum",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-16",
+          "day": "Thursday, July 16, 2026",
+          "ticker": "FNB",
+          "company": "F.N.B. Corporation",
+          "group": "Banks - Regional",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-16",
+          "day": "Thursday, July 16, 2026",
+          "ticker": "INDB",
+          "company": "Independent Bank Corp.",
+          "group": "Banks - Regional",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-16",
+          "day": "Thursday, July 16, 2026",
+          "ticker": "ISRG",
+          "company": "Intuitive Surgical, Inc.",
+          "group": "Medical Instruments & Supplies",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-16",
+          "day": "Thursday, July 16, 2026",
+          "ticker": "NFLX",
+          "company": "Netflix, Inc.",
+          "group": "Entertainment",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-16",
+          "day": "Thursday, July 16, 2026",
           "ticker": "ABT",
           "company": "Abbott Laboratories",
           "group": "Medical Devices",
@@ -395,14 +435,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-16",
           "day": "Thursday, July 16, 2026",
-          "ticker": "DDOG",
-          "company": "Datadog, Inc.",
-          "group": "Software - Application",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
           "ticker": "GE",
           "company": "GE Aerospace",
           "group": "Aerospace & Defense",
@@ -422,6 +454,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "STT",
           "company": "State Street Corporation",
           "group": "Asset Management",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-16",
+          "day": "Thursday, July 16, 2026",
+          "ticker": "TSM",
+          "company": "Taiwan Semiconductor Manufacturing Company Limited",
+          "group": "Semiconductors",
           "time": "BMO"
         },
         {
@@ -1039,14 +1079,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-22",
           "day": "Wednesday, July 22, 2026",
-          "ticker": "MOH",
-          "company": "Molina Healthcare, Inc.",
-          "group": "Healthcare Plans",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-22",
-          "day": "Wednesday, July 22, 2026",
           "ticker": "NOW",
           "company": "ServiceNow, Inc.",
           "group": "Software - Application",
@@ -1138,6 +1170,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "RS",
           "company": "Reliance, Inc.",
           "group": "Steel",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-22",
+          "day": "Wednesday, July 22, 2026",
+          "ticker": "SEIC",
+          "company": "SEI Investments Company",
+          "group": "Asset Management",
           "time": "AMC"
         },
         {
@@ -2107,7 +2147,7 @@ window.ECONOMIC_CALENDAR_DATA = {
       "day": "Friday, July 17, 2026",
       "time": "10:00 AM",
       "period": "JUL",
-      "actual": "-",
+      "actual": "54.4",
       "consensus": "-",
       "previous": "49.5",
       "forecast": "-",
@@ -2318,6 +2358,46 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-07-16",
       "day": "Thursday, July 16, 2026",
+      "ticker": "AA",
+      "company": "Alcoa Corporation",
+      "group": "Aluminum",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-16",
+      "day": "Thursday, July 16, 2026",
+      "ticker": "FNB",
+      "company": "F.N.B. Corporation",
+      "group": "Banks - Regional",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-16",
+      "day": "Thursday, July 16, 2026",
+      "ticker": "INDB",
+      "company": "Independent Bank Corp.",
+      "group": "Banks - Regional",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-16",
+      "day": "Thursday, July 16, 2026",
+      "ticker": "ISRG",
+      "company": "Intuitive Surgical, Inc.",
+      "group": "Medical Instruments & Supplies",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-16",
+      "day": "Thursday, July 16, 2026",
+      "ticker": "NFLX",
+      "company": "Netflix, Inc.",
+      "group": "Entertainment",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-16",
+      "day": "Thursday, July 16, 2026",
       "ticker": "ABT",
       "company": "Abbott Laboratories",
       "group": "Medical Devices",
@@ -2342,14 +2422,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-07-16",
       "day": "Thursday, July 16, 2026",
-      "ticker": "DDOG",
-      "company": "Datadog, Inc.",
-      "group": "Software - Application",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-16",
-      "day": "Thursday, July 16, 2026",
       "ticker": "GE",
       "company": "GE Aerospace",
       "group": "Aerospace & Defense",
@@ -2369,6 +2441,14 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "STT",
       "company": "State Street Corporation",
       "group": "Asset Management",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-16",
+      "day": "Thursday, July 16, 2026",
+      "ticker": "TSM",
+      "company": "Taiwan Semiconductor Manufacturing Company Limited",
+      "group": "Semiconductors",
       "time": "BMO"
     },
     {
@@ -2444,7 +2524,7 @@ window.ECONOMIC_CALENDAR_DATA = {
       },
       {
         "ticker": "RR",
-        "date": "2026-07-16",
+        "date": "2026-07-20",
         "reason": "rolling_unreported_date"
       },
       {
