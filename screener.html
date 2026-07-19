@@ -264,7 +264,7 @@ tr:hover{background:var(--bg3)}
 .info-box-theme .val{font-size:14px !important}
 .rs-history-card{position:relative;margin-top:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:10px}
 [data-theme="light"] .rs-history-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-.rs-history-title{margin:8px 34px 38px;text-align:center;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;line-height:1.25;letter-spacing:.8px;color:var(--t1)}
+.rs-history-title{margin:13px 34px 38px;text-align:center;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;line-height:1.25;letter-spacing:.8px;color:var(--t1)}
 .rs-history-help{position:absolute;top:7px;right:7px;z-index:6}
 .rs-history-info{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--bdr);border-radius:50%;background:var(--bg3);color:var(--t2);font-family:Georgia,serif;font-size:13px;font-weight:700;font-style:italic;line-height:1;cursor:pointer;transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease}
 .rs-history-info:hover,.rs-history-info:focus-visible,.rs-history-help.open .rs-history-info{background:var(--bg4);border-color:var(--t4);color:var(--t1);transform:scale(1.04);outline:none}
@@ -279,7 +279,14 @@ tr:hover{background:var(--bg3)}
 .rs-history-label{fill:var(--t3);font-size:10px;font-family:'DM Sans',sans-serif}
 .rs-history-segment{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .rs-history-segment.excluded{opacity:.35}
-.rs-history-hit{fill:none;stroke:transparent;stroke-width:12;pointer-events:stroke}
+.rs-history-hover-line{stroke:var(--t3);stroke-width:1;opacity:0;pointer-events:none;transition:opacity .12s ease}
+.rs-history-hover-line.visible{opacity:.55}
+.rs-history-overlay{fill:transparent;pointer-events:all;touch-action:pan-y}
+.rs-history-tooltip{position:absolute;z-index:7;min-width:168px;padding:10px 12px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg3);box-shadow:0 10px 24px rgba(0,0,0,.18);font-family:'DM Sans',sans-serif;color:var(--t2);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-4px);transition:opacity .12s ease,transform .12s ease,visibility .12s ease}
+.rs-history-tooltip.visible{opacity:1;visibility:visible;transform:translateY(0)}
+.rs-history-tooltip-date{display:block;margin-bottom:4px;font-size:12px;font-weight:700;color:var(--t1)}
+.rs-history-tooltip-row{display:block;font-size:11px;line-height:1.45}
+.rs-history-tooltip-row strong{font-weight:600;color:var(--t1)}
 .rs-history-strong{stroke:#15803d;background:#15803d}
 .rs-history-leader{stroke:#4ade80;background:#4ade80}
 .rs-history-neutral{stroke:#94a3b8;background:#94a3b8}
@@ -508,6 +515,9 @@ a.press-release-item:hover,a.press-release-item:focus-visible{background:var(--b
 [data-view="mobile"] .rs-history-legend{right:0;max-width:min(220px,calc(100vw - 46px));font-size:10px}
 [data-view="mobile"] .rs-history-label{font-size:13px}
 [data-view="mobile"] .rs-history-plot{height:230px}
+[data-view="mobile"] .rs-history-tooltip{min-width:160px;padding:9px 10px}
+[data-view="mobile"] .rs-history-tooltip-date{font-size:13px}
+[data-view="mobile"] .rs-history-tooltip-row{font-size:12px}
 [data-view="mobile"] .profile-subtabs{margin-top:2px;margin-bottom:12px}
 [data-view="mobile"] .profile-subtab{padding:9px 5px 10px;font-size:8px;letter-spacing:.45px}
 [data-view="mobile"] .profile-subtab::after{left:10px;right:10px}
@@ -2296,6 +2306,74 @@ function formatHistoryAxisDate(dt){
   return month&&Number.isFinite(day)?`${month} ${day}`:dt||'';
 }
 
+function formatHistoryTooltipDate(dt){
+  const parts=(dt||'').split('-');
+  if(parts.length!==3)return dt||'';
+  const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const month=monthNames[Number(parts[1])-1];
+  const day=Number(parts[2]);
+  const year=Number(parts[0]);
+  return month&&Number.isFinite(day)&&Number.isFinite(year)?`${month} ${day}, ${year}`:dt||'';
+}
+
+function updateRSHistoryTooltip(event,overlay,pinned){
+  const svg=overlay&&overlay.ownerSVGElement;
+  const card=overlay&&overlay.closest('.rs-history-card');
+  if(!svg||!card)return;
+  let points=[];
+  try{points=JSON.parse(decodeURIComponent(overlay.dataset.points||''));}catch(_err){return;}
+  if(!points.length)return;
+
+  const matrix=svg.getScreenCTM();
+  if(!matrix)return;
+  const cursor=svg.createSVGPoint();
+  cursor.x=event.clientX;
+  cursor.y=event.clientY;
+  const local=cursor.matrixTransform(matrix.inverse());
+  const nearest=points.reduce((best,point)=>Math.abs(point.x-local.x)<Math.abs(best.x-local.x)?point:best,points[0]);
+  const guide=svg.querySelector('.rs-history-hover-line');
+  const tooltip=card.querySelector('.rs-history-tooltip');
+  if(!guide||!tooltip)return;
+
+  guide.setAttribute('x1',nearest.x);
+  guide.setAttribute('x2',nearest.x);
+  guide.classList.add('visible');
+  tooltip.querySelector('.rs-history-tooltip-date').textContent=nearest.date;
+  tooltip.querySelector('[data-field="score"]').textContent=Number(nearest.score).toFixed(2);
+  tooltip.querySelector('[data-field="rank"]').textContent=`#${nearest.rank} - ${nearest.position}`;
+  tooltip.dataset.pinned=pinned?'true':'false';
+  tooltip.classList.add('visible');
+  tooltip.setAttribute('aria-hidden','false');
+
+  const anchor=svg.createSVGPoint();
+  anchor.x=nearest.x;
+  anchor.y=nearest.y;
+  const screen=anchor.matrixTransform(matrix);
+  const cardRect=card.getBoundingClientRect();
+  const tooltipWidth=tooltip.offsetWidth;
+  const tooltipHeight=tooltip.offsetHeight;
+  let x=screen.x-cardRect.left+14;
+  if(x+tooltipWidth>cardRect.width-8)x=screen.x-cardRect.left-tooltipWidth-14;
+  x=Math.max(8,Math.min(x,cardRect.width-tooltipWidth-8));
+  let y=screen.y-cardRect.top-tooltipHeight-12;
+  if(y<8)y=screen.y-cardRect.top+12;
+  y=Math.max(8,Math.min(y,cardRect.height-tooltipHeight-8));
+  tooltip.style.left=`${x}px`;
+  tooltip.style.top=`${y}px`;
+}
+
+function hideRSHistoryTooltip(overlay,force){
+  const svg=overlay&&overlay.ownerSVGElement;
+  const card=overlay&&overlay.closest('.rs-history-card');
+  const tooltip=card&&card.querySelector('.rs-history-tooltip');
+  if(!tooltip||(!force&&tooltip.dataset.pinned==='true'))return;
+  const guide=svg&&svg.querySelector('.rs-history-hover-line');
+  if(guide)guide.classList.remove('visible');
+  tooltip.classList.remove('visible');
+  tooltip.setAttribute('aria-hidden','true');
+  tooltip.dataset.pinned='false';
+}
+
 function renderRSHistoryChart(dates,h,total,excluded){
   const wrArr=h&&h.wr?h.wr:[];
   const points=[];
@@ -2333,18 +2411,24 @@ function renderRSHistoryChart(dates,h,total,excluded){
     const anchor=tickPosition===0?'start':tickPosition===tickIdxs.length-1?'end':'middle';
     return `<text class="rs-history-label" x="${x}" y="${hgt-9}" text-anchor="${anchor}">${formatHistoryAxisDate(dates[idx])}</text>`;
   }).join('');
+  const tooltipPoints=points.map(point=>({
+    x:Number(xFor(point.i).toFixed(2)),
+    y:Number(yForScore(point.score).toFixed(2)),
+    date:formatHistoryTooltipDate(point.dt),
+    score:Number(point.score).toFixed(2),
+    rank:point.rank,
+    position:point.pos
+  }));
+  const encodedTooltipPoints=encodeURIComponent(JSON.stringify(tooltipPoints));
   const pointByIndex=new Map(points.map(point=>[point.i,point]));
   let segments='';
-  let hitSegments='';
   for(let i=1;i<dates.length;i++){
     const from=pointByIndex.get(i-1);
     const to=pointByIndex.get(i);
     if(!from||!to)continue;
     const d=`M${xFor(i-1).toFixed(1)} ${yForScore(from.score).toFixed(1)} L${xFor(i).toFixed(1)} ${yForScore(to.score).toFixed(1)}`;
     const segmentClass=`rs-history-segment ${rsHistoryLineClass(to.pos)}${from.excluded||to.excluded?' excluded':''}`;
-    const title=`${formatHistoryAxisDate(to.dt)}: RS score ${to.score}, rank #${to.rank}, ${to.pos}`;
     segments+=`<path class="${segmentClass}" d="${d}"></path>`;
-    hitSegments+=`<path class="rs-history-hit" d="${d}"><title>${title}</title></path>`;
   }
 
   return `<div class="rs-history-card">
@@ -2366,9 +2450,19 @@ function renderRSHistoryChart(dates,h,total,excluded){
       <line class="rs-history-axis" x1="${left}" y1="${top}" x2="${left}" y2="${top+plotH}"></line>
       <line class="rs-history-axis" x1="${left}" y1="${top+plotH}" x2="${w-right}" y2="${top+plotH}"></line>
       ${segments}
-      ${hitSegments}
+      <line class="rs-history-hover-line" x1="${left}" y1="${top}" x2="${left}" y2="${top+plotH}"></line>
       ${xTicks}
+      <rect class="rs-history-overlay" x="${left}" y="${top}" width="${plotW}" height="${plotH}" data-points="${encodedTooltipPoints}"
+        onpointerenter="if(event.pointerType!=='touch')updateRSHistoryTooltip(event,this,false)"
+        onpointermove="if(event.pointerType!=='touch')updateRSHistoryTooltip(event,this,false)"
+        onpointerleave="if(event.pointerType!=='touch')hideRSHistoryTooltip(this,true)"
+        onpointerdown="if(event.pointerType==='touch')updateRSHistoryTooltip(event,this,true)"></rect>
     </svg>
+    <div class="rs-history-tooltip" role="tooltip" aria-hidden="true">
+      <span class="rs-history-tooltip-date"></span>
+      <span class="rs-history-tooltip-row">RS Score: <strong data-field="score"></strong></span>
+      <span class="rs-history-tooltip-row">Rank: <strong data-field="rank"></strong></span>
+    </div>
   </div>`;
 }
 
