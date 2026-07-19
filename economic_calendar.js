@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-07-18 23:54 UTC",
-  "generated_at_et": "18/07/2026, 19:54 EDT",
+  "generated_at_utc": "2026-07-19 23:58 UTC",
+  "generated_at_et": "19/07/2026, 19:58 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -46,20 +46,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "revised": "-"
         },
         {
-          "key": "ppi",
-          "event": "PPI inflation",
-          "source_event": "PPI Final Demand MM",
-          "date": "2026-07-15",
-          "day": "Wednesday, July 15, 2026",
-          "time": "08:30 AM",
-          "period": "JUN",
-          "actual": "-0.3",
-          "consensus": "-",
-          "previous": "1.1",
-          "forecast": "-",
-          "revised": "0.6"
-        },
-        {
           "key": "retail_sales",
           "event": "Retail sales",
           "source_event": "Retail Sales MM",
@@ -95,14 +81,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "ASML",
           "company": "ASML Holding N.V.",
           "group": "Semiconductor Equipment & Materials",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-13",
-          "day": "Monday, July 13, 2026",
-          "ticker": "FBK",
-          "company": "FB Financial Corporation",
-          "group": "Banks - Regional",
           "time": "AMC"
         },
         {
@@ -428,7 +406,6 @@ window.ECONOMIC_CALENDAR_DATA = {
       ],
       "event_keys": [
         "cpi",
-        "ppi",
         "retail_sales",
         "uom_sentiment"
       ]
@@ -1192,6 +1169,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-22",
           "day": "Wednesday, July 22, 2026",
+          "ticker": "NVR",
+          "company": "NVR, Inc.",
+          "group": "Residential Construction",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-22",
+          "day": "Wednesday, July 22, 2026",
           "ticker": "ONB",
           "company": "Old National Bancorp",
           "group": "Banks - Regional",
@@ -1712,14 +1697,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-23",
           "day": "Thursday, July 23, 2026",
-          "ticker": "NVR",
-          "company": "NVR, Inc.",
-          "group": "Residential Construction",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-23",
-          "day": "Thursday, July 23, 2026",
           "ticker": "ORI",
           "company": "Old Republic International Corporation",
           "group": "Insurance - Property & Casualty",
@@ -2054,14 +2031,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "key": "pce",
           "event": "PCE inflation",
-          "source_event": "PCE Price Index MM",
+          "source_event": "Dallas Fed PCE",
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
-          "time": "08:30 AM",
+          "time": "10:00 AM",
           "period": "JUN",
           "actual": "-",
           "consensus": "-",
-          "previous": "0.4",
+          "previous": "2.8",
           "forecast": "-",
           "revised": "-"
         },
@@ -2789,6 +2766,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "GLXY",
           "company": "Galaxy Digital",
           "group": "Capital Markets",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-28",
+          "day": "Tuesday, July 28, 2026",
+          "ticker": "HAYW",
+          "company": "Hayward Holdings, Inc.",
+          "group": "Electrical Equipment & Parts",
           "time": "BMO"
         },
         {
@@ -3877,14 +3862,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "GTX",
           "company": "Garrett Motion Inc.",
           "group": "Auto Parts",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
-          "ticker": "HAYW",
-          "company": "Hayward Holdings, Inc.",
-          "group": "Electrical Equipment & Parts",
           "time": "BMO"
         },
         {
@@ -6472,6 +6449,14 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-07-22",
       "day": "Wednesday, July 22, 2026",
+      "ticker": "NVR",
+      "company": "NVR, Inc.",
+      "group": "Residential Construction",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-22",
+      "day": "Wednesday, July 22, 2026",
       "ticker": "ONB",
       "company": "Old National Bancorp",
       "group": "Banks - Regional",
@@ -6987,14 +6972,6 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "NSC",
       "company": "Norfolk Southern Corporation",
       "group": "Railroads",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-23",
-      "day": "Thursday, July 23, 2026",
-      "ticker": "NVR",
-      "company": "NVR, Inc.",
-      "group": "Residential Construction",
       "time": "BMO"
     },
     {
