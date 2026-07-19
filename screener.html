@@ -262,18 +262,22 @@ tr:hover{background:var(--bg3)}
 .info-pair{display:contents}
 /* Desktop: shrink Theme value font so long theme names fit nicely in their own box. */
 .info-box-theme .val{font-size:14px !important}
-.rs-history-card{margin-top:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px}
+.rs-history-card{margin-top:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:12px 10px}
 [data-theme="light"] .rs-history-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-.rs-history-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
-.rs-history-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t2)}
-.rs-history-legend{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;font-size:9px;font-weight:600;color:var(--t3)}
+.rs-history-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;padding-right:4px}
+.rs-history-title{margin-left:26px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t2)}
+.rs-history-help{position:relative;z-index:6;margin-left:auto}
+.rs-history-info{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--bdr);border-radius:50%;background:var(--bg3);color:var(--t2);font-family:Georgia,serif;font-size:13px;font-weight:700;font-style:italic;line-height:1;cursor:pointer;transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease}
+.rs-history-info:hover,.rs-history-info:focus-visible,.rs-history-help.open .rs-history-info{background:var(--bg4);border-color:var(--t4);color:var(--t1);transform:scale(1.04);outline:none}
+.rs-history-legend{position:absolute;top:calc(100% + 7px);right:0;width:max-content;max-width:230px;display:grid;gap:7px;padding:10px 12px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg3);box-shadow:0 10px 24px rgba(0,0,0,.16);font-size:9px;font-weight:600;color:var(--t2);opacity:0;visibility:hidden;transform:translateY(-5px) scale(.98);transform-origin:top right;pointer-events:none;transition:opacity .18s ease,transform .18s ease,visibility .18s ease}
+.rs-history-help:hover .rs-history-legend,.rs-history-help.open .rs-history-legend,.rs-history-info:focus-visible+.rs-history-legend{opacity:1;visibility:visible;transform:translateY(0) scale(1);pointer-events:auto}
 .rs-history-legend span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-.rs-history-legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.rs-history-legend i{width:17px;height:3px;border-radius:2px;display:inline-block}
 .rs-history-plot{width:100%;height:240px;display:block}
 .rs-history-axis{stroke:var(--bdr);stroke-width:1}
-.rs-history-grid{stroke:var(--bdr2);stroke-width:1}
-.rs-history-midline{stroke:var(--t4);stroke-width:1;stroke-dasharray:4 5;opacity:.55}
-.rs-history-label{fill:var(--t3);font-size:10px;font-family:'JetBrains Mono',monospace}
+.rs-history-grid{stroke:var(--bdr);stroke-width:1;opacity:.72}
+.rs-history-midline{stroke:var(--t4);stroke-width:1;stroke-dasharray:4 5;opacity:.62}
+.rs-history-label{fill:var(--t3);font-size:10px;font-family:'DM Sans',sans-serif}
 .rs-history-segment{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .rs-history-segment.excluded{opacity:.35}
 .rs-history-hit{fill:none;stroke:transparent;stroke-width:12;pointer-events:stroke}
@@ -499,9 +503,11 @@ a.press-release-item:hover,a.press-release-item:focus-visible{background:var(--b
 /* Theme value needs to wrap and shrink further on mobile since it can be long. */
 [data-view="mobile"] .info-box-theme .val{font-size:11px !important;line-height:1.2;word-break:break-word;white-space:normal}
 [data-view="mobile"] .info-box-theme .sub{font-size:8px;line-height:1.2;word-break:break-word;white-space:normal}
-[data-view="mobile"] .rs-history-card{padding:10px 8px;margin-top:12px}
-[data-view="mobile"] .rs-history-head{align-items:flex-start;flex-direction:column;gap:6px}
-[data-view="mobile"] .rs-history-legend{justify-content:flex-start;gap:7px}
+[data-view="mobile"] .rs-history-card{padding:10px 5px;margin-top:12px}
+[data-view="mobile"] .rs-history-head{align-items:center;flex-direction:row;gap:6px;padding-right:3px}
+[data-view="mobile"] .rs-history-title{margin-left:21px;font-size:10.5px}
+[data-view="mobile"] .rs-history-legend{right:0;max-width:min(220px,calc(100vw - 46px));font-size:10px}
+[data-view="mobile"] .rs-history-label{font-size:11.5px}
 [data-view="mobile"] .rs-history-plot{height:210px}
 [data-view="mobile"] .profile-subtabs{margin-top:2px;margin-bottom:12px}
 [data-view="mobile"] .profile-subtab{padding:9px 5px 10px;font-size:8px;letter-spacing:.45px}
@@ -1182,6 +1188,12 @@ document.addEventListener('click',e=>{
   }
   const smaDropdown=document.getElementById('priceSmaDropdown');
   if(smaDropdown && !smaDropdown.contains(e.target))closeSmaDropdown();
+  document.querySelectorAll('.rs-history-help.open').forEach(help=>{
+    if(help.contains(e.target))return;
+    help.classList.remove('open');
+    const button=help.querySelector('.rs-history-info');
+    if(button)button.setAttribute('aria-expanded','false');
+  });
 });
 window.addEventListener('resize',()=>{
   const menu=document.getElementById('filterMenu');
@@ -2262,10 +2274,27 @@ function rsHistoryLineClass(pos){
   return'rs-history-neutral';
 }
 
+function toggleRSHistoryLegend(button,event){
+  if(event)event.stopPropagation();
+  const help=button.closest('.rs-history-help');
+  if(!help)return;
+  const shouldOpen=!help.classList.contains('open');
+  document.querySelectorAll('.rs-history-help.open').forEach(openHelp=>{
+    openHelp.classList.remove('open');
+    const openButton=openHelp.querySelector('.rs-history-info');
+    if(openButton)openButton.setAttribute('aria-expanded','false');
+  });
+  help.classList.toggle('open',shouldOpen);
+  button.setAttribute('aria-expanded',shouldOpen?'true':'false');
+}
+
 function formatHistoryAxisDate(dt){
   const parts=(dt||'').split('-');
   if(parts.length!==3)return dt||'';
-  return `${parts[2]}/${parts[1]}`;
+  const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const month=monthNames[Number(parts[1])-1];
+  const day=Number(parts[2]);
+  return month&&Number.isFinite(day)?`${month} ${day}`:dt||'';
 }
 
 function renderRSHistoryChart(dates,h,total,excluded){
@@ -2282,7 +2311,7 @@ function renderRSHistoryChart(dates,h,total,excluded){
   if(!points.length)return'';
 
   const w=760,hgt=240;
-  const left=52,right=18,top=18,bottom=34;
+  const left=38,right=8,top=18,bottom=34;
   const plotW=w-left-right;
   const plotH=hgt-top-bottom;
   const xFor=i=>left+(dates.length===1?plotW/2:(i/(dates.length-1))*plotW);
@@ -2300,9 +2329,10 @@ function renderRSHistoryChart(dates,h,total,excluded){
     const idx=tickCount===1?0:Math.round(i*(dates.length-1)/(tickCount-1));
     if(!tickIdxs.includes(idx))tickIdxs.push(idx);
   }
-  const xTicks=tickIdxs.map(idx=>{
+  const xTicks=tickIdxs.map((idx,tickPosition)=>{
     const x=xFor(idx).toFixed(1);
-    return `<text class="rs-history-label" x="${x}" y="${hgt-9}" text-anchor="middle">${formatHistoryAxisDate(dates[idx])}</text>`;
+    const anchor=tickPosition===0?'start':tickPosition===tickIdxs.length-1?'end':'middle';
+    return `<text class="rs-history-label" x="${x}" y="${hgt-9}" text-anchor="${anchor}">${formatHistoryAxisDate(dates[idx])}</text>`;
   }).join('');
   const pointByIndex=new Map(points.map(point=>[point.i,point]));
   let segments='';
@@ -2321,12 +2351,15 @@ function renderRSHistoryChart(dates,h,total,excluded){
   return `<div class="rs-history-card">
     <div class="rs-history-head">
       <div class="rs-history-title">RS Score History</div>
-      <div class="rs-history-legend">
-        <span><i class="rs-history-strong"></i>Strong Leader</span>
-        <span><i class="rs-history-leader"></i>Moderate Leader</span>
-        <span><i class="rs-history-neutral"></i>Neutral</span>
-        <span><i class="rs-history-laggard"></i>Moderate Laggard</span>
-        <span><i class="rs-history-deep"></i>Deep Laggard</span>
+      <div class="rs-history-help">
+        <button type="button" class="rs-history-info" aria-label="Show RS position legend" aria-expanded="false" onclick="toggleRSHistoryLegend(this,event)">i</button>
+        <div class="rs-history-legend" role="tooltip">
+          <span><i class="rs-history-strong"></i>Strong Leader</span>
+          <span><i class="rs-history-leader"></i>Moderate Leader</span>
+          <span><i class="rs-history-neutral"></i>Neutral</span>
+          <span><i class="rs-history-laggard"></i>Moderate Laggard</span>
+          <span><i class="rs-history-deep"></i>Deep Laggard</span>
+        </div>
       </div>
     </div>
     <svg class="rs-history-plot" viewBox="0 0 ${w} ${hgt}" role="img" aria-label="RS score history">
