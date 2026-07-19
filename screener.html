@@ -262,7 +262,7 @@ tr:hover{background:var(--bg3)}
 .info-pair{display:contents}
 /* Desktop: shrink Theme value font so long theme names fit nicely in their own box. */
 .info-box-theme .val{font-size:14px !important}
-.rs-history-card{position:relative;margin-top:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:2px 4px 0}
+.rs-history-card{position:relative;margin-top:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:10px}
 [data-theme="light"] .rs-history-card{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .rs-history-help{position:absolute;top:7px;right:7px;z-index:6}
 .rs-history-info{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--bdr);border-radius:50%;background:var(--bg3);color:var(--t2);font-family:Georgia,serif;font-size:13px;font-weight:700;font-style:italic;line-height:1;cursor:pointer;transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease}
@@ -271,7 +271,7 @@ tr:hover{background:var(--bg3)}
 .rs-history-help:hover .rs-history-legend,.rs-history-help.open .rs-history-legend,.rs-history-info:focus-visible+.rs-history-legend{opacity:1;visibility:visible;transform:translateY(0) scale(1);pointer-events:auto}
 .rs-history-legend span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .rs-history-legend i{width:17px;height:3px;border-radius:2px;display:inline-block}
-.rs-history-plot{width:100%;height:220px;display:block}
+.rs-history-plot{width:100%;height:230px;display:block}
 .rs-history-axis{stroke:var(--bdr);stroke-width:1}
 .rs-history-grid{stroke:var(--bdr);stroke-width:1;opacity:.72}
 .rs-history-midline{stroke:var(--t4);stroke-width:1;stroke-dasharray:4 5;opacity:.62}
@@ -501,11 +501,11 @@ a.press-release-item:hover,a.press-release-item:focus-visible{background:var(--b
 /* Theme value needs to wrap and shrink further on mobile since it can be long. */
 [data-view="mobile"] .info-box-theme .val{font-size:11px !important;line-height:1.2;word-break:break-word;white-space:normal}
 [data-view="mobile"] .info-box-theme .sub{font-size:8px;line-height:1.2;word-break:break-word;white-space:normal}
-[data-view="mobile"] .rs-history-card{padding:0 2px;margin-top:12px}
+[data-view="mobile"] .rs-history-card{padding:8px;margin-top:12px}
 [data-view="mobile"] .rs-history-help{top:6px;right:6px}
 [data-view="mobile"] .rs-history-legend{right:0;max-width:min(220px,calc(100vw - 46px));font-size:10px}
 [data-view="mobile"] .rs-history-label{font-size:13px}
-[data-view="mobile"] .rs-history-plot{height:220px}
+[data-view="mobile"] .rs-history-plot{height:230px}
 [data-view="mobile"] .profile-subtabs{margin-top:2px;margin-bottom:12px}
 [data-view="mobile"] .profile-subtab{padding:9px 5px 10px;font-size:8px;letter-spacing:.45px}
 [data-view="mobile"] .profile-subtab::after{left:10px;right:10px}
@@ -2307,8 +2307,8 @@ function renderRSHistoryChart(dates,h,total,excluded){
   });
   if(!points.length)return'';
 
-  const w=760,hgt=220;
-  const left=38,right=8,top=9,bottom=27;
+  const w=760,hgt=230;
+  const left=38,right=8,top=16,bottom=32;
   const plotW=w-left-right;
   const plotH=hgt-top-bottom;
   const xFor=i=>left+(dates.length===1?plotW/2:(i/(dates.length-1))*plotW);
