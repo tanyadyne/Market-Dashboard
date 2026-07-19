@@ -268,28 +268,25 @@ tr:hover{background:var(--bg3)}
 .rs-history-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t2)}
 .rs-history-legend{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;font-size:9px;font-weight:600;color:var(--t3)}
 .rs-history-legend span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-.rs-history-legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.rs-history-legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
 .rs-history-plot{width:100%;height:240px;display:block}
 .rs-history-axis{stroke:var(--bdr);stroke-width:1}
 .rs-history-grid{stroke:var(--bdr2);stroke-width:1}
 .rs-history-midline{stroke:var(--t4);stroke-width:1;stroke-dasharray:4 5;opacity:.55}
-.rs-history-line{fill:none;stroke:var(--t4);stroke-width:1.5;opacity:.55}
-.rs-history-area{fill:rgba(20,184,166,.08)}
 .rs-history-label{fill:var(--t3);font-size:10px;font-family:'JetBrains Mono',monospace}
-.rs-history-dot{stroke:var(--bg2);stroke-width:1.4}
-.rs-history-dot.excluded{opacity:.35}
-.rs-history-strong{fill:#16a34a;background:#16a34a}
-.rs-history-leader{fill:#84cc16;background:#84cc16}
-.rs-history-neutral{fill:#94a3b8;background:#94a3b8}
-.rs-history-laggard{fill:#f59e0b;background:#f59e0b}
-.rs-history-deep{fill:#ef4444;background:#ef4444}
-[data-theme="dark"] .rs-history-area{fill:rgba(45,212,191,.11)}
-[data-theme="dark"] .rs-history-dot{stroke:var(--bg2)}
-[data-theme="dark"] .rs-history-strong{fill:#22c55e;background:#22c55e}
-[data-theme="dark"] .rs-history-leader{fill:#a3e635;background:#a3e635}
-[data-theme="dark"] .rs-history-neutral{fill:#94a3b8;background:#94a3b8}
-[data-theme="dark"] .rs-history-laggard{fill:#f59e0b;background:#f59e0b}
-[data-theme="dark"] .rs-history-deep{fill:#fb7185;background:#fb7185}
+.rs-history-segment{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.rs-history-segment.excluded{opacity:.35}
+.rs-history-hit{fill:none;stroke:transparent;stroke-width:12;pointer-events:stroke}
+.rs-history-strong{stroke:#15803d;background:#15803d}
+.rs-history-leader{stroke:#4ade80;background:#4ade80}
+.rs-history-neutral{stroke:#94a3b8;background:#94a3b8}
+.rs-history-laggard{stroke:#f87171;background:#f87171}
+.rs-history-deep{stroke:#991b1b;background:#991b1b}
+[data-theme="dark"] .rs-history-strong{stroke:#22c55e;background:#22c55e}
+[data-theme="dark"] .rs-history-leader{stroke:#86efac;background:#86efac}
+[data-theme="dark"] .rs-history-neutral{stroke:#94a3b8;background:#94a3b8}
+[data-theme="dark"] .rs-history-laggard{stroke:#fca5a5;background:#fca5a5}
+[data-theme="dark"] .rs-history-deep{stroke:#ef4444;background:#ef4444}
 .hist-table{margin-top:16px}
 .hist-table table{font-size:12px}
 .hist-table th{font-size:9px;padding:6px}
@@ -2257,7 +2254,7 @@ function profileBasketLinksHtml(stockTicker){
   return `<div class="profile-baskets"><span class="profile-baskets-label">ETF Baskets:</span><span class="profile-baskets-list">${content}</span></div>`;
 }
 
-function rsHistoryDotClass(pos){
+function rsHistoryLineClass(pos){
   if(pos==='Strong Leader')return'rs-history-strong';
   if(pos==='Moderate Leader')return'rs-history-leader';
   if(pos==='Deep Laggard')return'rs-history-deep';
@@ -2278,7 +2275,9 @@ function renderRSHistoryChart(dates,h,total,excluded){
     const rank=wrArr[i];
     if(rank==null)return;
     const pos=getPosition(rank,total);
-    points.push({dt,rank,pos,excluded:excluded&&excluded.has(dt)});
+    const boundedRank=Math.max(1,Math.min(total,Number(rank)));
+    const score=Number((100*(1-(boundedRank-1)/Math.max(1,total-1))).toFixed(1));
+    points.push({dt,i,rank:Number(rank),score,pos,excluded:excluded&&excluded.has(dt)});
   });
   if(!points.length)return'';
 
@@ -2286,41 +2285,42 @@ function renderRSHistoryChart(dates,h,total,excluded){
   const left=52,right=18,top=18,bottom=34;
   const plotW=w-left-right;
   const plotH=hgt-top-bottom;
-  const xFor=i=>left+(points.length===1?plotW/2:(i/(points.length-1))*plotW);
-  const yForRank=rank=>top+(((Math.max(1,Math.min(total,rank))-1)/Math.max(1,total-1))*plotH);
-  const lineD=points.map((p,i)=>`${i?'L':'M'}${xFor(i).toFixed(1)} ${yForRank(p.rank).toFixed(1)}`).join(' ');
-  const areaD=points.length>1?`${lineD} L${xFor(points.length-1).toFixed(1)} ${top+plotH} L${xFor(0).toFixed(1)} ${top+plotH} Z`:'';
-  const yTicks=[
-    {rank:1},
-    {rank:Math.round(total*0.25)},
-    {rank:Math.round(total*0.5)},
-    {rank:Math.round(total*0.75)}
-  ];
-  const grid=yTicks.map((tick,idx)=>{
-    const y=yForRank(tick.rank).toFixed(1);
-    const cls=idx===2?'rs-history-midline':'rs-history-grid';
-    return `<line class="${cls}" x1="${left}" y1="${y}" x2="${w-right}" y2="${y}"></line>`;
+  const xFor=i=>left+(dates.length===1?plotW/2:(i/(dates.length-1))*plotW);
+  const yForScore=score=>top+(((100-score)/100)*plotH);
+  const yTicks=[100,75,50,25,0];
+  const grid=yTicks.map(score=>{
+    const y=yForScore(score).toFixed(1);
+    const cls=score===50?'rs-history-midline':'rs-history-grid';
+    return `<line class="${cls}" x1="${left}" y1="${y}" x2="${w-right}" y2="${y}"></line>
+      <text class="rs-history-label" x="${left-12}" y="${Number(y)+4}" text-anchor="end">${score}</text>`;
   }).join('');
-  const tickCount=Math.min(5,points.length);
+  const tickCount=Math.min(5,dates.length);
   const tickIdxs=[];
   for(let i=0;i<tickCount;i++){
-    const idx=tickCount===1?0:Math.round(i*(points.length-1)/(tickCount-1));
+    const idx=tickCount===1?0:Math.round(i*(dates.length-1)/(tickCount-1));
     if(!tickIdxs.includes(idx))tickIdxs.push(idx);
   }
   const xTicks=tickIdxs.map(idx=>{
     const x=xFor(idx).toFixed(1);
-    return `<text class="rs-history-label" x="${x}" y="${hgt-9}" text-anchor="middle">${formatHistoryAxisDate(points[idx].dt)}</text>`;
+    return `<text class="rs-history-label" x="${x}" y="${hgt-9}" text-anchor="middle">${formatHistoryAxisDate(dates[idx])}</text>`;
   }).join('');
-  const dots=points.map((p,i)=>{
-    const x=xFor(i).toFixed(1);
-    const y=yForRank(p.rank).toFixed(1);
-    const cls=`rs-history-dot ${rsHistoryDotClass(p.pos)}${p.excluded?' excluded':''}`;
-    return `<circle class="${cls}" cx="${x}" cy="${y}" r="4"><title>${formatHistoryAxisDate(p.dt)}: rank #${p.rank}, ${p.pos}</title></circle>`;
-  }).join('');
+  const pointByIndex=new Map(points.map(point=>[point.i,point]));
+  let segments='';
+  let hitSegments='';
+  for(let i=1;i<dates.length;i++){
+    const from=pointByIndex.get(i-1);
+    const to=pointByIndex.get(i);
+    if(!from||!to)continue;
+    const d=`M${xFor(i-1).toFixed(1)} ${yForScore(from.score).toFixed(1)} L${xFor(i).toFixed(1)} ${yForScore(to.score).toFixed(1)}`;
+    const segmentClass=`rs-history-segment ${rsHistoryLineClass(to.pos)}${from.excluded||to.excluded?' excluded':''}`;
+    const title=`${formatHistoryAxisDate(to.dt)}: RS score ${to.score}, rank #${to.rank}, ${to.pos}`;
+    segments+=`<path class="${segmentClass}" d="${d}"></path>`;
+    hitSegments+=`<path class="rs-history-hit" d="${d}"><title>${title}</title></path>`;
+  }
 
   return `<div class="rs-history-card">
     <div class="rs-history-head">
-      <div class="rs-history-title">RS Rank History</div>
+      <div class="rs-history-title">RS Score History</div>
       <div class="rs-history-legend">
         <span><i class="rs-history-strong"></i>Strong Leader</span>
         <span><i class="rs-history-leader"></i>Moderate Leader</span>
@@ -2329,13 +2329,14 @@ function renderRSHistoryChart(dates,h,total,excluded){
         <span><i class="rs-history-deep"></i>Deep Laggard</span>
       </div>
     </div>
-    <svg class="rs-history-plot" viewBox="0 0 ${w} ${hgt}" role="img" aria-label="RS rank history">
+    <svg class="rs-history-plot" viewBox="0 0 ${w} ${hgt}" role="img" aria-label="RS score history">
+      <title>RS score history</title>
+      <desc>Historical RS score reconstructed from weekly rank and colored by relative-strength position.</desc>
       ${grid}
       <line class="rs-history-axis" x1="${left}" y1="${top}" x2="${left}" y2="${top+plotH}"></line>
       <line class="rs-history-axis" x1="${left}" y1="${top+plotH}" x2="${w-right}" y2="${top+plotH}"></line>
-      ${areaD?`<path class="rs-history-area" d="${areaD}"></path>`:''}
-      ${points.length>1?`<path class="rs-history-line" d="${lineD}"></path>`:''}
-      ${dots}
+      ${segments}
+      ${hitSegments}
       ${xTicks}
     </svg>
   </div>`;
@@ -2934,6 +2935,8 @@ function searchStock(){
   if(HISTORY&&HISTORY.dates&&HISTORY.d[input]){
     const h=HISTORY.d[input];
     const dates=HISTORY.dates;
+    const tickerExcluded=getExcludedWeeklyForTicker(input);
+    html+=renderRSHistoryChart(dates,h,total,tickerExcluded);
     // Build the full list of rows to render: actual history dates PLUS any holiday
     // weekdays that fall between them (so users can see the gap was a holiday).
     // Each entry is {date, isHoliday}. Sorted oldest → newest.
@@ -2965,7 +2968,6 @@ function searchStock(){
     if(profileHistoryPage<1)profileHistoryPage=1;
     const pageStart=(profileHistoryPage-1)*PROFILE_HISTORY_PAGE_SIZE;
     const pageRows=newestRows.slice(pageStart,pageStart+PROFILE_HISTORY_PAGE_SIZE);
-    const tickerExcluded=getExcludedWeeklyForTicker(input);
     html+=`<div class="hist-table"><table><thead><tr>
       <th class="l">Date</th><th class="c">Rank</th><th class="c">Δ</th><th class="c">Position</th><th class="l">Theme</th>
     </tr></thead><tbody>`;
