@@ -3161,7 +3161,7 @@ function searchStock(){
       let themeCell=esc(historicalTheme);
       if(themeSnapshot?.[1]!=null&&themeSnapshot?.[2]&&themeSnapshot?.[3]!=null){
         const historicalStatus=themeSnapshot[2];
-        themeCell+=` <span class="${themeTag(historicalStatus)}">(${esc(historicalStatus)}: #${esc(themeSnapshot[1])} of ${esc(themeSnapshot[3])})</span>`;
+        themeCell+=` <span class="${themeTag(historicalStatus)}">(${esc(historicalStatus)}: #${esc(String(themeSnapshot[1]))} of ${esc(String(themeSnapshot[3]))})</span>`;
       }
       const rowClass=isExcluded?' class="hist-row-excluded"':'';
       const excludedNote=isExcluded?' <span style="font-size:9px;font-weight:400;font-style:italic">(excluded)</span>':'';
