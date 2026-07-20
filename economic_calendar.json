@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-07-19 23:58 UTC",
-  "generated_at_et": "19/07/2026, 19:58 EDT",
+  "generated_at_utc": "2026-07-20 23:56 UTC",
+  "generated_at_et": "20/07/2026, 19:56 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -46,6 +46,20 @@
           "revised": "-"
         },
         {
+          "key": "ppi",
+          "event": "PPI inflation",
+          "source_event": "PPI Final Demand MM",
+          "date": "2026-07-15",
+          "day": "Wednesday, July 15, 2026",
+          "time": "08:30 AM",
+          "period": "JUN",
+          "actual": "-0.3",
+          "consensus": "-",
+          "previous": "1.1",
+          "forecast": "-",
+          "revised": "0.6"
+        },
+        {
           "key": "retail_sales",
           "event": "Retail sales",
           "source_event": "Retail Sales MM",
@@ -81,6 +95,14 @@
           "ticker": "ASML",
           "company": "ASML Holding N.V.",
           "group": "Semiconductor Equipment & Materials",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-13",
+          "day": "Monday, July 13, 2026",
+          "ticker": "FBK",
+          "company": "FB Financial Corporation",
+          "group": "Banks - Regional",
           "time": "AMC"
         },
         {
@@ -150,10 +172,26 @@
         {
           "date": "2026-07-14",
           "day": "Tuesday, July 14, 2026",
+          "ticker": "VIRT",
+          "company": "Virtu Financial, Inc.",
+          "group": "Capital Markets",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-14",
+          "day": "Tuesday, July 14, 2026",
           "ticker": "WFC",
           "company": "Wells Fargo & Company",
           "group": "Banks - Diversified",
           "time": "BMO"
+        },
+        {
+          "date": "2026-07-15",
+          "day": "Wednesday, July 15, 2026",
+          "ticker": "FEIM",
+          "company": "Frequency Electronics, Inc.",
+          "group": "Communication Equipment",
+          "time": "AMC"
         },
         {
           "date": "2026-07-15",
@@ -406,6 +444,7 @@
       ],
       "event_keys": [
         "cpi",
+        "ppi",
         "retail_sales",
         "uom_sentiment"
       ]
@@ -460,46 +499,6 @@
           "ticker": "CALX",
           "company": "Calix, Inc.",
           "group": "Software - Infrastructure",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-20",
-          "day": "Monday, July 20, 2026",
-          "ticker": "CCK",
-          "company": "Crown Holdings, Inc.",
-          "group": "Packaging & Containers",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-20",
-          "day": "Monday, July 20, 2026",
-          "ticker": "STLD",
-          "company": "Steel Dynamics, Inc.",
-          "group": "Steel",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-20",
-          "day": "Monday, July 20, 2026",
-          "ticker": "WRB",
-          "company": "W. R. Berkley Corporation",
-          "group": "Insurance - Property & Casualty",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-20",
-          "day": "Monday, July 20, 2026",
-          "ticker": "WTFC",
-          "company": "Wintrust Financial Corporation",
-          "group": "Banks - Regional",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-20",
-          "day": "Monday, July 20, 2026",
-          "ticker": "ZION",
-          "company": "Zions Bancorporation, National Association",
-          "group": "Banks - Regional",
           "time": "AMC"
         },
         {
@@ -1169,14 +1168,6 @@
         {
           "date": "2026-07-22",
           "day": "Wednesday, July 22, 2026",
-          "ticker": "NVR",
-          "company": "NVR, Inc.",
-          "group": "Residential Construction",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-22",
-          "day": "Wednesday, July 22, 2026",
           "ticker": "ONB",
           "company": "Old National Bancorp",
           "group": "Banks - Regional",
@@ -1697,6 +1688,14 @@
         {
           "date": "2026-07-23",
           "day": "Thursday, July 23, 2026",
+          "ticker": "NVR",
+          "company": "NVR, Inc.",
+          "group": "Residential Construction",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
           "ticker": "ORI",
           "company": "Old Republic International Corporation",
           "group": "Insurance - Property & Casualty",
@@ -2031,14 +2030,14 @@
         {
           "key": "pce",
           "event": "PCE inflation",
-          "source_event": "Dallas Fed PCE",
+          "source_event": "PCE Price Index MM",
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
-          "time": "10:00 AM",
+          "time": "08:30 AM",
           "period": "JUN",
           "actual": "-",
           "consensus": "-",
-          "previous": "2.8",
+          "previous": "0.4",
           "forecast": "-",
           "revised": "-"
         },
@@ -2219,6 +2218,14 @@
         {
           "date": "2026-07-27",
           "day": "Monday, July 27, 2026",
+          "ticker": "SUI",
+          "company": "Sun Communities, Inc.",
+          "group": "REIT - Residential",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-27",
+          "day": "Monday, July 27, 2026",
           "ticker": "UDR",
           "company": "UDR, Inc.",
           "group": "REIT - Residential",
@@ -2230,6 +2237,14 @@
           "ticker": "WELL",
           "company": "Welltower Inc.",
           "group": "REIT - Healthcare Facilities",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-27",
+          "day": "Monday, July 27, 2026",
+          "ticker": "WHR",
+          "company": "Whirlpool Corporation",
+          "group": "Furnishings, Fixtures & Appliances",
           "time": "AMC"
         },
         {
@@ -2771,14 +2786,6 @@
         {
           "date": "2026-07-28",
           "day": "Tuesday, July 28, 2026",
-          "ticker": "HAYW",
-          "company": "Hayward Holdings, Inc.",
-          "group": "Electrical Equipment & Parts",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-28",
-          "day": "Tuesday, July 28, 2026",
           "ticker": "HLT",
           "company": "Hilton Worldwide Holdings Inc.",
           "group": "Lodging",
@@ -2846,14 +2853,6 @@
           "ticker": "JBLU",
           "company": "JetBlue Airways Corporation",
           "group": "Airlines",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-28",
-          "day": "Tuesday, July 28, 2026",
-          "ticker": "JCI",
-          "company": "Johnson Controls International plc",
-          "group": "Building Products & Equipment",
           "time": "BMO"
         },
         {
@@ -3387,6 +3386,14 @@
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
+          "ticker": "NEU",
+          "company": "NewMarket Corporation",
+          "group": "Specialty Chemicals",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
           "ticker": "OHI",
           "company": "Omega Healthcare Investors, Inc.",
           "group": "REIT - Healthcare Facilities",
@@ -3539,14 +3546,6 @@
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
-          "ticker": "SUI",
-          "company": "Sun Communities, Inc.",
-          "group": "REIT - Residential",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
           "ticker": "TENB",
           "company": "Tenable Holdings, Inc.",
           "group": "Software - Infrastructure",
@@ -3630,14 +3629,6 @@
           "ticker": "WHD",
           "company": "Cactus, Inc.",
           "group": "Oil & Gas Equipment & Services",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
-          "ticker": "WHR",
-          "company": "Whirlpool Corporation",
-          "group": "Furnishings, Fixtures & Appliances",
           "time": "AMC"
         },
         {
@@ -3867,6 +3858,14 @@
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
+          "ticker": "HAYW",
+          "company": "Hayward Holdings, Inc.",
+          "group": "Electrical Equipment & Parts",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
           "ticker": "HBM",
           "company": "Hudbay Minerals Inc.",
           "group": "Copper",
@@ -3894,6 +3893,14 @@
           "ticker": "IONS",
           "company": "Ionis Pharmaceuticals, Inc.",
           "group": "Biotechnology",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
+          "ticker": "JCI",
+          "company": "Johnson Controls International plc",
+          "group": "Building Products & Equipment",
           "time": "BMO"
         },
         {
@@ -4046,14 +4053,6 @@
           "ticker": "SOFI",
           "company": "SoFi Technologies, Inc.",
           "group": "Credit Services",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
-          "ticker": "STNG",
-          "company": "Scorpio Tankers Inc.",
-          "group": "Oil & Gas Midstream",
           "time": "BMO"
         },
         {
@@ -4382,14 +4381,6 @@
           "ticker": "FHI",
           "company": "Federated Hermes, Inc.",
           "group": "Asset Management",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-30",
-          "day": "Thursday, July 30, 2026",
-          "ticker": "FIVN",
-          "company": "Five9, Inc.",
-          "group": "Software - Infrastructure",
           "time": "AMC"
         },
         {
@@ -5363,6 +5354,14 @@
         {
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
+          "ticker": "STNG",
+          "company": "Scorpio Tankers Inc.",
+          "group": "Oil & Gas Midstream",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-30",
+          "day": "Thursday, July 30, 2026",
           "ticker": "TEX",
           "company": "Terex Corporation",
           "group": "Farm & Heavy Construction Machinery",
@@ -5740,46 +5739,6 @@
       "ticker": "CALX",
       "company": "Calix, Inc.",
       "group": "Software - Infrastructure",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-20",
-      "day": "Monday, July 20, 2026",
-      "ticker": "CCK",
-      "company": "Crown Holdings, Inc.",
-      "group": "Packaging & Containers",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-20",
-      "day": "Monday, July 20, 2026",
-      "ticker": "STLD",
-      "company": "Steel Dynamics, Inc.",
-      "group": "Steel",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-20",
-      "day": "Monday, July 20, 2026",
-      "ticker": "WRB",
-      "company": "W. R. Berkley Corporation",
-      "group": "Insurance - Property & Casualty",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-20",
-      "day": "Monday, July 20, 2026",
-      "ticker": "WTFC",
-      "company": "Wintrust Financial Corporation",
-      "group": "Banks - Regional",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-20",
-      "day": "Monday, July 20, 2026",
-      "ticker": "ZION",
-      "company": "Zions Bancorporation, National Association",
-      "group": "Banks - Regional",
       "time": "AMC"
     },
     {
@@ -6449,14 +6408,6 @@
     {
       "date": "2026-07-22",
       "day": "Wednesday, July 22, 2026",
-      "ticker": "NVR",
-      "company": "NVR, Inc.",
-      "group": "Residential Construction",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-22",
-      "day": "Wednesday, July 22, 2026",
       "ticker": "ONB",
       "company": "Old National Bancorp",
       "group": "Banks - Regional",
@@ -6972,6 +6923,14 @@
       "ticker": "NSC",
       "company": "Norfolk Southern Corporation",
       "group": "Railroads",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
+      "ticker": "NVR",
+      "company": "NVR, Inc.",
+      "group": "Residential Construction",
       "time": "BMO"
     },
     {
