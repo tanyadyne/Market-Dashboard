@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone, timedelta
 
 import yfinance as yf
+from theme_history import load_theme_snapshot_index, prepare_theme_history, set_theme_snapshot, snapshot_for_stock
 
 try:
     from zoneinfo import ZoneInfo
@@ -573,8 +574,10 @@ def update_score_history(entries):
         except Exception:
             history = {"dates": [], "d": {}}
 
+    history = prepare_theme_history(history)
     dates = history.get("dates", [])
     scores = history.get("d", {})
+    theme_snapshots = load_theme_snapshot_index()
     for item in scores.values():
         if isinstance(item, dict):
             item.pop("ws", None)
@@ -603,6 +606,7 @@ def update_score_history(entries):
             scores[tk]["wr"][-1] = entry.get("w_rk")
         else:
             scores[tk]["wr"].append(entry.get("w_rk"))
+        set_theme_snapshot(scores[tk], len(dates), snapshot_for_stock(entry, theme_snapshots))
 
     if len(dates) > MAX_HISTORY_DAYS:
         trim = len(dates) - MAX_HISTORY_DAYS
@@ -610,6 +614,8 @@ def update_score_history(entries):
         for tk in scores:
             if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
                 scores[tk]["wr"] = scores[tk]["wr"][trim:]
+            if "tm" in scores[tk] and len(scores[tk]["tm"]) > MAX_HISTORY_DAYS:
+                scores[tk]["tm"] = scores[tk]["tm"][trim:]
 
     def in_top40(rk):
         return rk is not None and rk <= 40
@@ -636,7 +642,11 @@ def update_score_history(entries):
             item["te"] = {"d": dates[start_idx] if start_idx < len(dates) else today, "p": entry["p"]}
 
     with open(HISTORY_FILE, "w") as f:
-        json.dump({"dates": dates, "d": scores}, f, separators=(",", ":"))
+        json.dump({
+            "dates": dates,
+            "d": scores,
+            "theme_history_version": history.get("theme_history_version"),
+        }, f, separators=(",", ":"))
     return is_new_day
 
 

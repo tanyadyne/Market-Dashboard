@@ -27,6 +27,7 @@ except ImportError:
 
 # Import shared functions from fetch_data.py
 from fetch_data import ETF_INFO, compute_atr, compute_atr_series, compute_vcp_tightness_score, percentrank_inc
+from theme_history import load_theme_snapshot_index, prepare_theme_history, set_theme_snapshot, snapshot_for_stock
 
 LOOKBACK = 50      # daily: compute deltas for last 50 bars
 MA_LENGTH = 20     # daily: SMA of deltas (smoothing)
@@ -3905,8 +3906,10 @@ def main():
         except Exception:
             score_history = {"dates": [], "d": {}}
 
+    score_history = prepare_theme_history(score_history)
     dates = score_history.get("dates", [])
     scores = score_history.get("d", {})
+    theme_snapshots = load_theme_snapshot_index()
 
     # ─── One-time cleanup: strip daily-RS fields ('s', 'r') from existing history. ──
     # The dashboard now uses only the weekly rank, so score/rank arrays not used by
@@ -3944,6 +3947,7 @@ def main():
                 while len(scores[tk]["wr"]) < len(dates) - 1:
                     scores[tk]["wr"].append(None)
                 scores[tk]["wr"].append(r.get("w_rk"))
+                set_theme_snapshot(scores[tk], len(dates), snapshot_for_stock(r, theme_snapshots))
             # Trim to MAX_HISTORY_DAYS
             if len(dates) > MAX_HISTORY_DAYS:
                 trim = len(dates) - MAX_HISTORY_DAYS
@@ -3951,6 +3955,8 @@ def main():
                 for tk in scores:
                     if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
                         scores[tk]["wr"] = scores[tk]["wr"][trim:]
+                    if "tm" in scores[tk] and len(scores[tk]["tm"]) > MAX_HISTORY_DAYS:
+                        scores[tk]["tm"] = scores[tk]["tm"][trim:]
         else:
             # Same-day update: refresh today's wr in place.
             for r in results:
@@ -3967,6 +3973,7 @@ def main():
                     while len(scores[tk]["wr"]) < len(dates) - 1:
                         scores[tk]["wr"].append(None)
                     scores[tk]["wr"].append(r.get("w_rk"))
+                set_theme_snapshot(scores[tk], len(dates), snapshot_for_stock(r, theme_snapshots))
 
         # ─── top40_entry tracking ────────────────────────────────────
         # Captures the entry price + entry date when a stock enters the top 40 (by w_rk),
@@ -4020,7 +4027,11 @@ def main():
                     entry["te"] = {"d": streak_start_date, "p": r["p"]}
             # else: still in top 40 with an existing entry — leave untouched.
 
-    score_history = {"dates": dates, "d": scores}
+    score_history = {
+        "dates": dates,
+        "d": scores,
+        "theme_history_version": score_history.get("theme_history_version"),
+    }
     with open("leaders_score_history.json", "w") as f:
         json.dump(score_history, f, separators=(",", ":"))
 

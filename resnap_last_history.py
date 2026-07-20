@@ -13,6 +13,8 @@ Run after a fresh run of fetch_leaders.py has produced an updated leaders.json.
 import json
 import os
 
+from theme_history import load_theme_snapshot_index, prepare_theme_history, set_theme_snapshot, snapshot_for_stock
+
 HIST_PATH = "leaders_score_history.json"
 LEADERS_PATH = "leaders.json"
 
@@ -33,8 +35,10 @@ def main():
     with open(LEADERS_PATH) as f:
         leaders = json.load(f)
 
+    hist = prepare_theme_history(hist)
     dates = hist.get("dates", [])
     scores = hist.get("d", {})
+    theme_snapshots = load_theme_snapshot_index()
 
     if not dates:
         print("History is empty — nothing to overwrite.")
@@ -71,6 +75,7 @@ def main():
             scores[tk] = {
                 "wr": [None] * (len(dates) - 1) + [r.get("w_rk")],
             }
+            set_theme_snapshot(scores[tk], len(dates), snapshot_for_stock(r, theme_snapshots))
             new_tickers += 1
             continue
 
@@ -82,6 +87,7 @@ def main():
         # Overwrite the last index
         wr_arr[-1] = r.get("w_rk")
         rec["wr"] = wr_arr
+        set_theme_snapshot(rec, len(dates), snapshot_for_stock(r, theme_snapshots))
         updated += 1
 
     # Pad tickers no longer in leaders.json so their arrays stay aligned

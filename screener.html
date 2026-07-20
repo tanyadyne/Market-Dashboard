@@ -2194,20 +2194,18 @@ function injectFundamentalWidgets(){
 }
 
 function getThemeRankInfo(themeName){
-  // Returns {rk, total, status} for the mapped sector name, or null
+  // Theme badges use the weekly theme ranking, matching stock history snapshots.
   if(!ETF_DATA||!ETF_DATA.e||!themeName)return null;
   const etfs=ETF_DATA.e;
   const total=etfs.length;
   for(const e of etfs){
     if(e.n===themeName){
-      const rk=e.rk||total;
       const wrk=e.w_rk||total;
-      const avg=(rk+wrk)/2;
-      const q=avg/total;
+      const q=wrk/total;
       let status='Mid-Range';
       if(q<=0.25)status='Leader';
       else if(q>0.75)status='Laggard';
-      return {rk,total,status,avg:Math.round(avg)};
+      return {rk:wrk,total,status};
     }
   }
   return null;
@@ -3018,7 +3016,7 @@ function searchStock(){
   const rankSubline=hasRsData?`of ${DATA.e.filter(e=>e.w_rk!=null).length}`:'';
   let themeSubline;
   if(themeRankInfo){
-    themeSubline=`<span class="${themeTag(themeRankInfo.status)}">${themeRankInfo.status}: #${themeRankInfo.avg} of ${themeRankInfo.total}</span>`;
+    themeSubline=`<span class="${themeTag(themeRankInfo.status)}">${themeRankInfo.status}: #${themeRankInfo.rk} of ${themeRankInfo.total}</span>`;
   }else{
     themeSubline=`<span class="${themeTag(ts)}">${ts}</span>`;
   }
@@ -3158,12 +3156,12 @@ function searchStock(){
         continue;
       }
       const p=wr!=null?getPosition(wr,total):'—';
-      // Theme column uses current theme status (history doesn't store per-day theme status)
-      let themeCell=esc(mappedSector||'—');
-      if(themeRankInfo){
-        themeCell+=` <span class="${themeTag(themeRankInfo.status)}">(${themeRankInfo.status}: #${themeRankInfo.avg} of ${themeRankInfo.total})</span>`;
-      }else{
-        themeCell+=` <span class="${themeTag(ts)}">(${ts})</span>`;
+      const themeSnapshot=Array.isArray(h.tm)&&Array.isArray(h.tm[i])?h.tm[i]:null;
+      const historicalTheme=themeSnapshot?.[0]||mappedSector||'—';
+      let themeCell=esc(historicalTheme);
+      if(themeSnapshot?.[1]!=null&&themeSnapshot?.[2]&&themeSnapshot?.[3]!=null){
+        const historicalStatus=themeSnapshot[2];
+        themeCell+=` <span class="${themeTag(historicalStatus)}">(${esc(historicalStatus)}: #${esc(themeSnapshot[1])} of ${esc(themeSnapshot[3])})</span>`;
       }
       const rowClass=isExcluded?' class="hist-row-excluded"':'';
       const excludedNote=isExcluded?' <span style="font-size:9px;font-weight:400;font-style:italic">(excluded)</span>':'';
