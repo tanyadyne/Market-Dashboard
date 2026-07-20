@@ -510,7 +510,7 @@ a.press-release-item:hover,a.press-release-item:focus-visible{background:var(--b
 [data-view="mobile"] .info-box-theme .val{font-size:11px !important;line-height:1.2;word-break:break-word;white-space:normal}
 [data-view="mobile"] .info-box-theme .sub{font-size:8px;line-height:1.2;word-break:break-word;white-space:normal}
 [data-view="mobile"] .rs-history-card{padding:8px;margin-top:12px}
-[data-view="mobile"] .rs-history-title{margin:4px 30px 5px;font-size:16px;letter-spacing:.65px}
+[data-view="mobile"] .rs-history-title{margin:4px 30px 20px;font-size:16px;letter-spacing:.65px}
 [data-view="mobile"] .rs-history-help{top:6px;right:6px}
 [data-view="mobile"] .rs-history-legend{right:0;max-width:min(220px,calc(100vw - 46px));font-size:10px}
 [data-view="mobile"] .rs-history-label{font-size:13px}
@@ -2374,6 +2374,16 @@ function hideRSHistoryTooltip(overlay,force){
   tooltip.dataset.pinned='false';
 }
 
+document.addEventListener('pointerdown',event=>{
+  if(document.documentElement.getAttribute('data-view')!=='mobile')return;
+  document.querySelectorAll('.rs-history-tooltip.visible').forEach(tooltip=>{
+    const card=tooltip.closest('.rs-history-card');
+    if(!card||card.contains(event.target))return;
+    const overlay=card.querySelector('.rs-history-overlay');
+    if(overlay)hideRSHistoryTooltip(overlay,true);
+  });
+});
+
 function renderRSHistoryChart(dates,h,total,excluded){
   const wrArr=h&&h.wr?h.wr:[];
   const points=[];
@@ -2438,7 +2448,7 @@ function renderRSHistoryChart(dates,h,total,excluded){
       <div class="rs-history-legend" role="tooltip">
         <span><i class="rs-history-strong"></i>Strong Leader</span>
         <span><i class="rs-history-leader"></i>Moderate Leader</span>
-        <span><i class="rs-history-neutral"></i>Neutral</span>
+        <span><i class="rs-history-neutral"></i>Mid-range</span>
         <span><i class="rs-history-laggard"></i>Moderate Laggard</span>
         <span><i class="rs-history-deep"></i>Deep Laggard</span>
       </div>
