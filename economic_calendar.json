@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-07-20 23:56 UTC",
-  "generated_at_et": "20/07/2026, 19:56 EDT",
+  "generated_at_utc": "2026-07-21 23:56 UTC",
+  "generated_at_et": "21/07/2026, 19:56 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -488,6 +488,14 @@
         {
           "date": "2026-07-20",
           "day": "Monday, July 20, 2026",
+          "ticker": "AUB",
+          "company": "Atlantic Union Bankshares Corporation",
+          "group": "Banks - Regional",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-20",
+          "day": "Monday, July 20, 2026",
           "ticker": "BOKF",
           "company": "BOK Financial Corporation",
           "group": "Banks - Regional",
@@ -500,6 +508,54 @@
           "company": "Calix, Inc.",
           "group": "Software - Infrastructure",
           "time": "AMC"
+        },
+        {
+          "date": "2026-07-20",
+          "day": "Monday, July 20, 2026",
+          "ticker": "CCK",
+          "company": "Crown Holdings, Inc.",
+          "group": "Packaging & Containers",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-20",
+          "day": "Monday, July 20, 2026",
+          "ticker": "STLD",
+          "company": "Steel Dynamics, Inc.",
+          "group": "Steel",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-20",
+          "day": "Monday, July 20, 2026",
+          "ticker": "WRB",
+          "company": "W. R. Berkley Corporation",
+          "group": "Insurance - Property & Casualty",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-20",
+          "day": "Monday, July 20, 2026",
+          "ticker": "WTFC",
+          "company": "Wintrust Financial Corporation",
+          "group": "Banks - Regional",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-20",
+          "day": "Monday, July 20, 2026",
+          "ticker": "ZION",
+          "company": "Zions Bancorporation, National Association",
+          "group": "Banks - Regional",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-20",
+          "day": "Monday, July 20, 2026",
+          "ticker": "AMC",
+          "company": "AMC Entertainment Holdings, Inc.",
+          "group": "Entertainment",
+          "time": "BMO"
         },
         {
           "date": "2026-07-20",
@@ -648,14 +704,6 @@
         {
           "date": "2026-07-21",
           "day": "Tuesday, July 21, 2026",
-          "ticker": "AUB",
-          "company": "Atlantic Union Bankshares Corporation",
-          "group": "Banks - Regional",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-21",
-          "day": "Tuesday, July 21, 2026",
           "ticker": "DHI",
           "company": "D.R. Horton, Inc.",
           "group": "Residential Construction",
@@ -795,14 +843,6 @@
           "ticker": "AVB",
           "company": "AvalonBay Communities, Inc.",
           "group": "REIT - Residential",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-22",
-          "day": "Wednesday, July 22, 2026",
-          "ticker": "BANC",
-          "company": "Banc of California, Inc.",
-          "group": "Banks - Regional",
           "time": "AMC"
         },
         {
@@ -3018,14 +3058,6 @@
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
-          "ticker": "AM",
-          "company": "Antero Midstream Corporation",
-          "group": "Oil & Gas Midstream",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
           "ticker": "AR",
           "company": "Antero Resources Corporation",
           "group": "Oil & Gas E&P",
@@ -3109,14 +3141,6 @@
           "ticker": "COKE",
           "company": "Coca-Cola Consolidated, Inc.",
           "group": "Beverages - Non-Alcoholic",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
-          "ticker": "COMP",
-          "company": "Compass, Inc.",
-          "group": "Real Estate Services",
           "time": "AMC"
         },
         {
@@ -3674,6 +3698,14 @@
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
+          "ticker": "BANC",
+          "company": "Banc of California, Inc.",
+          "group": "Banks - Regional",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
           "ticker": "BG",
           "company": "Bunge Global SA",
           "group": "Farm Products",
@@ -3762,14 +3794,6 @@
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
-          "ticker": "EEFT",
-          "company": "Euronet Worldwide, Inc.",
-          "group": "Software - Infrastructure",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
           "ticker": "ETR",
           "company": "Entergy Corporation",
           "group": "Utilities - Regulated Electric",
@@ -3789,14 +3813,6 @@
           "ticker": "EXP",
           "company": "Eagle Materials Inc.",
           "group": "Building Materials",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
-          "ticker": "FDP",
-          "company": "Del Monte Corporation",
-          "group": "Farm Products",
           "time": "BMO"
         },
         {
@@ -4068,14 +4084,6 @@
           "day": "Wednesday, July 29, 2026",
           "ticker": "SWK",
           "company": "Stanley Black & Decker, Inc.",
-          "group": "Tools & Accessories",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
-          "ticker": "TKR",
-          "company": "The Timken Company",
           "group": "Tools & Accessories",
           "time": "BMO"
         },
@@ -5010,6 +5018,14 @@
         {
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
+          "ticker": "EEFT",
+          "company": "Euronet Worldwide, Inc.",
+          "group": "Software - Infrastructure",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-30",
+          "day": "Thursday, July 30, 2026",
           "ticker": "EME",
           "company": "EMCOR Group, Inc.",
           "group": "Engineering & Construction",
@@ -5579,7 +5595,7 @@
           "date": "2026-07-31",
           "day": "Friday, July 31, 2026",
           "ticker": "GTES",
-          "company": "Gates Industrial Corporation plc",
+          "company": "Gates Industrial Corporation Ltd.",
           "group": "Specialty Industrial Machinery",
           "time": "BMO"
         },
@@ -5728,6 +5744,14 @@
     {
       "date": "2026-07-20",
       "day": "Monday, July 20, 2026",
+      "ticker": "AUB",
+      "company": "Atlantic Union Bankshares Corporation",
+      "group": "Banks - Regional",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-20",
+      "day": "Monday, July 20, 2026",
       "ticker": "BOKF",
       "company": "BOK Financial Corporation",
       "group": "Banks - Regional",
@@ -5740,6 +5764,54 @@
       "company": "Calix, Inc.",
       "group": "Software - Infrastructure",
       "time": "AMC"
+    },
+    {
+      "date": "2026-07-20",
+      "day": "Monday, July 20, 2026",
+      "ticker": "CCK",
+      "company": "Crown Holdings, Inc.",
+      "group": "Packaging & Containers",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-20",
+      "day": "Monday, July 20, 2026",
+      "ticker": "STLD",
+      "company": "Steel Dynamics, Inc.",
+      "group": "Steel",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-20",
+      "day": "Monday, July 20, 2026",
+      "ticker": "WRB",
+      "company": "W. R. Berkley Corporation",
+      "group": "Insurance - Property & Casualty",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-20",
+      "day": "Monday, July 20, 2026",
+      "ticker": "WTFC",
+      "company": "Wintrust Financial Corporation",
+      "group": "Banks - Regional",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-20",
+      "day": "Monday, July 20, 2026",
+      "ticker": "ZION",
+      "company": "Zions Bancorporation, National Association",
+      "group": "Banks - Regional",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-20",
+      "day": "Monday, July 20, 2026",
+      "ticker": "AMC",
+      "company": "AMC Entertainment Holdings, Inc.",
+      "group": "Entertainment",
+      "time": "BMO"
     },
     {
       "date": "2026-07-20",
@@ -5888,14 +5960,6 @@
     {
       "date": "2026-07-21",
       "day": "Tuesday, July 21, 2026",
-      "ticker": "AUB",
-      "company": "Atlantic Union Bankshares Corporation",
-      "group": "Banks - Regional",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-21",
-      "day": "Tuesday, July 21, 2026",
       "ticker": "DHI",
       "company": "D.R. Horton, Inc.",
       "group": "Residential Construction",
@@ -6035,14 +6099,6 @@
       "ticker": "AVB",
       "company": "AvalonBay Communities, Inc.",
       "group": "REIT - Residential",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-22",
-      "day": "Wednesday, July 22, 2026",
-      "ticker": "BANC",
-      "company": "Banc of California, Inc.",
-      "group": "Banks - Regional",
       "time": "AMC"
     },
     {
