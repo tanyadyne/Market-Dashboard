@@ -7,6 +7,7 @@ This is step 2 of the ownership tile pipeline:
   - download/cache each submission
   - parse the information table
   - emit matched holdings whose CUSIP/CINS appears in ticker_cusip_map.json
+    or in the SEC-verified alternate identifier map
 
 Large raw output is written as NDJSON so later aggregation can stream it.
 """
@@ -32,6 +33,7 @@ from urllib.request import Request, urlopen
 SEC_ARCHIVES = "https://www.sec.gov/Archives"
 DEFAULT_CACHE_DIR = Path(".sec_13f_cache")
 DEFAULT_CUSIP_MAP = Path("ticker_cusip_map.json")
+DEFAULT_CUSIP_ALIASES = Path("ticker_cusip_aliases.json")
 DEFAULT_PRICE_MAP = Path("leaders_mcap.json")
 DEFAULT_FORM_TYPES = ("13F-HR",)
 DEFAULT_USER_AGENT = "WIN_MarketDashboard/1.0 contact:tanya@example.com"
@@ -186,15 +188,26 @@ def parse_form_index(text: str, form_types: set[str]) -> list[Filing]:
     return filings
 
 
-def load_cusip_map(path: Path) -> dict[str, list[str]]:
+def load_cusip_map(path: Path, aliases_path: Path | None = None) -> dict[str, list[str]]:
     payload = read_json(path)
     if not payload or "tickers" not in payload:
         raise ValueError(f"Invalid CUSIP map: {path}")
     by_cusip: dict[str, list[str]] = {}
+
+    def add_mapping(cusip: Any, ticker: str) -> None:
+        normalized = normalize_cusip(cusip)
+        if normalized and ticker not in by_cusip.setdefault(normalized, []):
+            by_cusip[normalized].append(ticker)
+
     for ticker, item in payload["tickers"].items():
-        cusip = normalize_cusip(item.get("cusip"))
-        if cusip:
-            by_cusip.setdefault(cusip, []).append(ticker)
+        add_mapping(item.get("cusip"), ticker)
+
+    if aliases_path and aliases_path.exists():
+        aliases_payload = read_json(aliases_path, {}) or {}
+        for ticker, entry in (aliases_payload.get("tickers", {}) or {}).items():
+            alias_values = entry.get("cusips", []) if isinstance(entry, dict) else entry
+            for cusip in alias_values or []:
+                add_mapping(cusip, ticker)
     return by_cusip
 
 
@@ -458,6 +471,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report-period", default=None)
     parser.add_argument("--forms", default=",".join(DEFAULT_FORM_TYPES))
     parser.add_argument("--cusip-map", type=Path, default=DEFAULT_CUSIP_MAP)
+    parser.add_argument("--cusip-aliases", type=Path, default=DEFAULT_CUSIP_ALIASES)
     parser.add_argument("--price-map", type=Path, default=DEFAULT_PRICE_MAP)
     parser.add_argument("--no-price-map", action="store_true")
     parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE_DIR)
@@ -481,7 +495,10 @@ def main() -> int:
     summary_path = summary_path_for(output)
     progress_path = progress_path_for(output)
 
-    cusip_to_tickers = load_cusip_map(args.cusip_map)
+    cusip_to_tickers = load_cusip_map(
+        args.cusip_map,
+        args.cusip_aliases if args.cusip_aliases.exists() else None,
+    )
     prices = {} if args.no_price_map else load_price_map(args.price_map)
     index_text = load_form_index(args.year, args.quarter, args.cache_dir, user_agent, args.refresh)
     filings = parse_form_index(index_text, form_types)
@@ -578,6 +595,7 @@ def main() -> int:
         "report_period": report_period,
         "report_period_label": quarter_label(report_period),
         "cusip_map": str(args.cusip_map),
+        "cusip_aliases": str(args.cusip_aliases) if args.cusip_aliases.exists() else None,
         "price_map": None if args.no_price_map else str(args.price_map),
         "price_map_tickers": len(prices),
         "output": str(output),

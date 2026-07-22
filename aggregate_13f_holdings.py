@@ -4,7 +4,7 @@ Aggregate raw SEC 13F rows into manager/ticker positions.
 
 This is step 3 of the ownership tile pipeline:
   - read raw matched 13F holdings from fetch_13f_holdings.py
-  - ignore option and non-share rows by default
+  - ignore option and non-equity rows by default
   - sum duplicate rows inside the same filing
   - keep the latest filing for each manager/ticker/report period
   - emit one row per manager + ticker + report period
@@ -25,6 +25,16 @@ from typing import Any, Iterable
 DEFAULT_INPUT = Path("13f_holdings_2026_q2_raw.ndjson")
 DEFAULT_OUTPUT = Path("13f_holdings_2026_q2_aggregated.ndjson")
 DEFAULT_PRICE_MAP = Path("leaders_mcap.json")
+
+EQUITY_TITLE_MARKERS = (
+    "SHS",
+    "SHARE",
+    "ORDINARY",
+    "COMMON",
+    "CLASS A",
+    "CLASS B",
+    "CLASS C",
+)
 
 
 @dataclass
@@ -106,6 +116,15 @@ def clean_text(value: Any) -> str | None:
     return text or None
 
 
+def is_equity_like_position(row: dict[str, Any]) -> bool:
+    """Keep malformed SEC principal rows when their title identifies equity."""
+    title = clean_text(row.get("title"))
+    if not title:
+        return False
+    normalized = title.upper()
+    return any(marker in normalized for marker in EQUITY_TITLE_MARKERS)
+
+
 def add_text(target: set[str], value: Any) -> None:
     text = clean_text(value)
     if text:
@@ -184,8 +203,11 @@ def aggregate_raw_rows(
 
         share_type = clean_text(row.get("share_type"))
         if share_type and share_type.upper() != "SH" and not include_non_share_types:
-            skipped["non_share_type_rows"] += 1
-            continue
+            if is_equity_like_position(row):
+                skipped["equity_like_principal_rows"] += 1
+            else:
+                skipped["non_share_type_rows"] += 1
+                continue
 
         shares = as_positive_int(row.get("shares"))
         if shares is None:
