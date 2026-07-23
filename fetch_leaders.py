@@ -71,6 +71,8 @@ CSV_EXTRAS = [
     "NTSK","SAIL","HIMS",
     "OKTA",
     "PSNL", "LQDA", "WRBY", "ABCL", "PGEN", "BHVN",
+    # Explicitly tracked additions.
+    "SIMO", "LB", "SPCX", "CBRS", "RACE", "VSXY", "VG", "CHYM",
 ]
 
 # MANUAL_INCLUDE — tickers that bypass all filtering (liquidity, market cap, pharma/biotech).
@@ -92,6 +94,8 @@ MANUAL_INCLUDE = {
     "OKTA",
     # Force-tracked names — bypass liquidity / mcap gates so rank history builds.
     "PSNL", "LQDA", "WRBY", "ABCL", "PGEN", "BHVN",
+    # Explicitly tracked additions.
+    "SIMO", "LB", "SPCX", "CBRS", "RACE", "VSXY", "VG", "CHYM",
 }
 
 # MANUAL_EXCLUDE — tickers dropped from the universe before any filtering or data
@@ -109,6 +113,8 @@ MANUAL_EXCLUDE = {
 HARD_EXCLUDE = {
     "CWAN", "TECH", "AHR", "LILA", "LILAK", "BAND", "JOYY",
     "GOOG", "MRX", "OZK", "SVC", "UPBD", "XMTR",
+    "DD", "DBD", "ETHA", "KRKNF", "NXDR", "SWMR", "VISN", "NOV",
+    "COCO", "PAG", "ATAI", "GTLS",
 }
 
 # ─── ADR-collapse filter ───────────────────────────────────────────────────────
