@@ -1049,20 +1049,20 @@ def close_on_or_before(df_index, closes, target_date):
     return None
 
 
-def sma_adr_distances(price, avg_range_pct, sma_values):
-    """Return price-to-SMA distances in ADR multiples for 10/20/50/200 SMA."""
+def ma_atr_distances(price, atr_dollars, ma_values):
+    """Return signed price-to-MA distances in ATR multiples."""
     try:
         price = float(price)
-        adr_dollars = price * float(avg_range_pct) / 100
+        atr_dollars = float(atr_dollars)
     except (TypeError, ValueError):
-        return [None, None, None, None]
-    if not np.isfinite(price) or not np.isfinite(adr_dollars) or price <= 0 or adr_dollars <= 0:
-        return [None, None, None, None]
+        return [None, None, None, None, None]
+    if not np.isfinite(price) or not np.isfinite(atr_dollars) or price <= 0 or atr_dollars <= 0:
+        return [None, None, None, None, None]
     distances = []
-    for period in (10, 20, 50, 200):
-        sma = sma_values.get(period)
+    for key in ("ema9", "ema21", "sma50", "ema65", "sma200"):
+        moving_average = ma_values.get(key)
         try:
-            value = (price - float(sma)) / adr_dollars
+            value = (price - float(moving_average)) / atr_dollars
             distances.append(round(value, 3) if np.isfinite(value) else None)
         except (TypeError, ValueError):
             distances.append(None)
@@ -1196,14 +1196,19 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     if adr_samples:
         avg_range_pct = float(np.mean(adr_samples))
 
-    sma_values = {}
+    ma_values = {
+        "ema9": compute_ema_value(valid_c, 9),
+        "ema21": compute_ema_value(valid_c, 21),
+        "sma50": float(np.mean(valid_c[-50:])) if len(valid_c) >= 50 else None,
+        "ema65": compute_ema_value(valid_c, 65),
+        "sma200": float(np.mean(valid_c[-200:])) if len(valid_c) >= 200 else None,
+    }
     ma_flags = 0
-    for bit, period in ((1, 10), (2, 20), (4, 50), (8, 200)):
-        sma = float(np.mean(valid_c[-period:])) if len(valid_c) >= period else None
-        sma_values[period] = sma
-        if sma is not None and price > sma:
+    for bit, key in ((1, "ema9"), (2, "ema21"), (4, "sma50"), (8, "ema65"), (16, "sma200")):
+        moving_average = ma_values[key]
+        if moving_average is not None and price > moving_average:
             ma_flags |= bit
-    ma_distances = sma_adr_distances(price, avg_range_pct, sma_values)
+    ma_distances = ma_atr_distances(price, atr, ma_values)
 
     # ─── Trailing 5-day R.Vol (rolling, week-of-day-agnostic) ────────────────
     # Unlike `w_rv` (week-to-date, resets every Monday), this is a rolling 5-session
@@ -1261,10 +1266,11 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "_5b": w_base,
                 "_20b": m_base,
                 "_yb": ytd_base,
-                "_sma10": sma_values[10],
-                "_sma20": sma_values[20],
-                "_sma50": sma_values[50],
-                "_sma200": sma_values[200],
+                "_ma_ema9": ma_values["ema9"],
+                "_ma_ema21": ma_values["ema21"],
+                "_ma_sma50": ma_values["sma50"],
+                "_ma_ema65": ma_values["ema65"],
+                "_ma_sma200": ma_values["sma200"],
                 **_setup_base}
 
     # Handle IPOs with <252 bars: use actual bar count (mirrors Pine's "n63/n126/n189/n252" logic)
@@ -1466,10 +1472,11 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "_5b": w_base,
         "_20b": m_base,
         "_yb": ytd_base,
-        "_sma10": sma_values[10],
-        "_sma20": sma_values[20],
-        "_sma50": sma_values[50],
-        "_sma200": sma_values[200],
+        "_ma_ema9": ma_values["ema9"],
+        "_ma_ema21": ma_values["ema21"],
+        "_ma_sma50": ma_values["sma50"],
+        "_ma_ema65": ma_values["ema65"],
+        "_ma_sma200": ma_values["sma200"],
         **setup_base,
     }
 
@@ -2240,21 +2247,21 @@ def apply_intraday_overlay(results):
             if live_volume is not None and live_volume >= 0:
                 r["rv"] = round((live_volume / avg_vol_30d) * 100)
         atr = r.get("_atr")
-        sma50 = r.get("_sma50")
+        sma50 = r.get("_ma_sma50")
         if atr and sma50 and atr > 0 and sma50 > 0:
             gain_pct = (live - sma50) / sma50 * 100
             atr_pct = atr / live * 100
             r["ax"] = round((gain_pct / atr_pct) * 100) if atr_pct > 0 else r.get("ax")
         ma_flags = 0
-        for bit, key in ((1, "_sma10"), (2, "_sma20"), (4, "_sma50"), (8, "_sma200")):
-            sma = r.get(key)
-            if sma and live > sma:
+        for bit, key in ((1, "_ma_ema9"), (2, "_ma_ema21"), (4, "_ma_sma50"), (8, "_ma_ema65"), (16, "_ma_sma200")):
+            moving_average = r.get(key)
+            if moving_average and live > moving_average:
                 ma_flags |= bit
         r["ma"] = ma_flags
-        r["md"] = sma_adr_distances(
+        r["md"] = ma_atr_distances(
             live,
-            r.get("ad"),
-            {period: r.get(key) for period, key in ((10, "_sma10"), (20, "_sma20"), (50, "_sma50"), (200, "_sma200"))},
+            r.get("_atr"),
+            {name: r.get(key) for name, key in (("ema9", "_ma_ema9"), ("ema21", "_ma_ema21"), ("sma50", "_ma_sma50"), ("ema65", "_ma_ema65"), ("sma200", "_ma_sma200"))},
         )
         if r.get("_5b") and r["_5b"] > 0:
             r["c5"] = round((live / r["_5b"] - 1) * 100, 2)
@@ -2276,7 +2283,7 @@ def write_intraday_baselines(results):
         "p", "w_fr", "w_vs", "w_rs", "w_rk",
         "w_pen_engulf", "w_pen_crash5", "w_pen_mult",
         "_pc", "_5b", "_20b", "_yb", "_atr", "_avg_vol30", "_hi52",
-        "_sma10", "_sma20", "_sma50", "_sma200",
+        "_ma_ema9", "_ma_ema21", "_ma_sma50", "_ma_ema65", "_ma_sma200",
         "_setup_ema9", "_setup_ema21", "_setup_adr",
         "_w_deltas", "_w_week", "_w_date",
         "_w_stock_prev", "_w_stock_last", "_w_stock_atr",
