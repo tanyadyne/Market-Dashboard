@@ -3653,11 +3653,14 @@ def main():
     # Rehydrate the prior public row with its saved intraday baseline, then let it
     # participate in the normal cross-sectional rerank below. This applies only to
     # explicit daily-history failures, never to stocks legitimately removed by the
-    # liquidity, market-cap, healthcare, or MANUAL_EXCLUDE rules.
+    # liquidity, market-cap, healthcare, MANUAL_EXCLUDE, or HARD_EXCLUDE rules.
+    # Permanent removals must never be revived from a prior snapshot.
     result_tickers = {r.get("t") for r in results}
     carried_tickers = []
     carry_failures = []
     for tk in sorted(data_failures):
+        if tk in HARD_EXCLUDE:
+            continue
         if tk in result_tickers or tk not in previous_entries:
             continue
         previous_entry = previous_entries.get(tk) or {}
@@ -4068,6 +4071,10 @@ def main():
     # Add theme status to each result
     for r in results:
         r["ts"] = theme_status.get(r.get("thm", ""), "Neutral")
+
+    # Defense in depth: every published artifact must honor permanent removals,
+    # including rows that might have entered through a recovery path.
+    results = [r for r in results if r.get("t") not in HARD_EXCLUDE]
 
     write_universe_grace_state(grace_state, _et_today)
     write_repair_queue(repair_records)
