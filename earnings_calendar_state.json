@@ -1,20 +1,20 @@
 {
   "version": 1,
-  "updated": "2026-07-21",
+  "updated": "2026-07-22",
   "tickers": {
     "BMNR": {
       "last_date": "2026-07-15",
       "stable_since": "2026-07-14",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 5,
       "quarantined": false,
       "last_reported_date": "2026-07-14"
     },
     "RR": {
-      "last_date": "2026-07-20",
-      "stable_since": "2026-07-17",
-      "last_seen": "2026-07-17",
-      "roll_count": 12,
+      "last_date": "2026-07-22",
+      "stable_since": "2026-07-22",
+      "last_seen": "2026-07-22",
+      "roll_count": 13,
       "quarantined": true,
       "reason": "rolling_unreported_date",
       "quarantined_at": "2026-06-30"
@@ -61,7 +61,7 @@
     "AA": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -69,19 +69,19 @@
     "AAL": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ABCB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ABT": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -89,13 +89,13 @@
     "ACI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AEHR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-14",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-14",
       "quarantined": false
@@ -103,7 +103,7 @@
     "AGNC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-20",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-20",
       "quarantined": false
@@ -111,25 +111,27 @@
     "AGYS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ALK": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "ALLE": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ALLY": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -137,31 +139,31 @@
     "AMP": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "APPF": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ARGX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ASB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ASML": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-13",
       "quarantined": false
@@ -183,13 +185,13 @@
     "AXP": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BAC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-14",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-14",
       "quarantined": false
@@ -197,25 +199,27 @@
     "BAH": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BANC": {
       "stable_since": "2026-07-21",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BKU": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "BLK": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -223,13 +227,15 @@
     "BMI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "BOKF": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-20",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-20",
       "quarantined": false
@@ -237,25 +243,25 @@
     "BPOP": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BYD": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "C": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-14",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-14",
       "quarantined": false
@@ -263,7 +269,7 @@
     "CAG": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -271,7 +277,7 @@
     "CALX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-20",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-20",
       "quarantined": false
@@ -279,13 +285,15 @@
     "CB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "CBSH": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -293,13 +301,13 @@
     "CCI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CCK": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-20",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-20",
       "quarantined": false
@@ -307,7 +315,7 @@
     "CFG": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -315,55 +323,61 @@
     "CHTR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CLF": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CMCSA": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CME": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "COCO": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "COF": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "COLB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CSX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "CTAS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -371,25 +385,25 @@
     "CTS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DECK": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DGX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DHI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -397,7 +411,7 @@
     "DHR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -405,25 +419,25 @@
     "DLR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DOV": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DOW": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DPZ": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-20",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-20",
       "quarantined": false
@@ -431,13 +445,13 @@
     "EBC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EFX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -451,13 +465,13 @@
     "ELS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ELV": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -465,37 +479,39 @@
     "ENSG": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ENVA": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EPRT": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EQR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EQT": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "ERIC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-14",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-14",
       "quarantined": false
@@ -503,25 +519,27 @@
     "EW": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EWBC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "FAF": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FAST": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-14",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-14",
       "quarantined": false
@@ -529,7 +547,7 @@
     "FBK": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-13",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-13",
       "quarantined": false
@@ -537,25 +555,25 @@
     "FCFS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FCNCA": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FCX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FEIM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -563,7 +581,7 @@
     "FHN": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -571,7 +589,7 @@
     "FIBK": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FISV": {
@@ -583,7 +601,7 @@
     "FITB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-17",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-17",
       "quarantined": false
@@ -591,19 +609,19 @@
     "FIX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FLG": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FNB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -617,13 +635,13 @@
     "GBCI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GE": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -631,19 +649,23 @@
     "GEV": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "GGG": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "GL": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GLDG": {
@@ -657,7 +679,7 @@
     "GM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -665,19 +687,21 @@
     "GNTX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GOOGL": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "GPC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -685,13 +709,13 @@
     "GRC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-14",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-14",
       "quarantined": false
@@ -699,13 +723,13 @@
     "GTX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HAL": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -713,7 +737,7 @@
     "HAS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -721,25 +745,25 @@
     "HBAN": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HCA": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HIG": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HLX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HOMB": {
@@ -753,20 +777,24 @@
     "HON": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HWC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "IBKR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "IBM": {
       "stable_since": "2026-07-13",
@@ -777,7 +805,7 @@
     "INDB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -785,25 +813,27 @@
     "INFY": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "INTC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "IRDM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "ISRG": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -811,7 +841,7 @@
     "JBHT": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -819,7 +849,7 @@
     "JNJ": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -827,7 +857,7 @@
     "JPM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-14",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-14",
       "quarantined": false
@@ -841,7 +871,7 @@
     "KEY": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -858,19 +888,19 @@
     "KN": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KNSL": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KNX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LAZ": {
@@ -882,31 +912,31 @@
     "LBRT": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LBTYA": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LBTYK": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LMT": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LUV": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LVS": {
@@ -918,31 +948,33 @@
     "LW": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MBLY": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MCO": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "MEDP": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MLI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -950,7 +982,7 @@
     "MMM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -964,7 +996,7 @@
     "MRSH": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -972,7 +1004,7 @@
     "MS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -980,7 +1012,7 @@
     "MSCI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -988,7 +1020,7 @@
     "MTB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -996,31 +1028,31 @@
     "MXL": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NDAQ": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NEE": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NEM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NFLX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -1034,13 +1066,15 @@
     "NLY": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "NOC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -1048,7 +1082,7 @@
     "NOK": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NOW": {
@@ -1060,14 +1094,16 @@
     "NSC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NTRS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "NTST": {
       "stable_since": "2026-07-13",
@@ -1084,61 +1120,67 @@
     "NVR": {
       "stable_since": "2026-07-20",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OII": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ONB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "ORI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OTIS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "OVV": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PCG": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PEGA": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "PFSI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PGR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -1146,19 +1188,21 @@
     "PHM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "PKG": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PLD": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -1166,13 +1210,15 @@
     "PM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "PNC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -1186,37 +1232,37 @@
     "PNR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "POOL": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "QS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "R": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "REXR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RF": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-17",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-17",
       "quarantined": false
@@ -1224,7 +1270,7 @@
     "RJF": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RLI": {
@@ -1236,13 +1282,13 @@
     "RNG": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RNR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ROL": {
@@ -1254,20 +1300,24 @@
     "ROP": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RPM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "RRC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "RS": {
       "stable_since": "2026-07-13",
@@ -1278,13 +1328,13 @@
     "RTX": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RYAAY": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-20",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-20",
       "quarantined": false
@@ -1292,7 +1342,7 @@
     "SCHW": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -1306,25 +1356,25 @@
     "SIGI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SKYW": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SLB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SNA": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SON": {
@@ -1336,19 +1386,19 @@
     "SSB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SSNC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "STLD": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-20",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-20",
       "quarantined": false
@@ -1356,13 +1406,13 @@
     "STM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "STT": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -1376,7 +1426,7 @@
     "SYF": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -1384,8 +1434,10 @@
     "T": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "TCBI": {
       "stable_since": "2026-07-13",
@@ -1396,19 +1448,21 @@
     "TDY": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "TECK": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TFC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-17",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-17",
       "quarantined": false
@@ -1416,37 +1470,40 @@
     "THC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TMHC": {
-      "stable_since": "2026-07-13",
-      "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "stable_since": "2026-07-22",
+      "last_date": "2026-07-23",
+      "last_seen": "2026-07-22",
+      "roll_count": 1,
+      "quarantined": true,
+      "reason": "rolling_unreported_date",
+      "quarantined_at": "2026-07-22"
     },
     "TMO": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TMUS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TRV": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-17",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-17",
       "quarantined": false
@@ -1454,7 +1511,7 @@
     "TSCO": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TSLA": {
@@ -1466,7 +1523,7 @@
     "TSM": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -1480,7 +1537,7 @@
     "UAL": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-15",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-15",
       "quarantined": false
@@ -1488,7 +1545,7 @@
     "UNH": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -1496,25 +1553,25 @@
     "UNP": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "URI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "UROY": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-17",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "USB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-16",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-16",
       "quarantined": false
@@ -1522,13 +1579,13 @@
     "VC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VICR": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -1536,13 +1593,13 @@
     "VLY": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VMI": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-21",
       "quarantined": false
@@ -1550,32 +1607,38 @@
     "VRSN": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VZ": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-24",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WAB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "WAL": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "WBS": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "WEX": {
       "stable_since": "2026-07-13",
@@ -1586,7 +1649,7 @@
     "WFC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-14",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-14",
       "quarantined": false
@@ -1594,8 +1657,10 @@
     "WFRD": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "WH": {
       "stable_since": "2026-07-13",
@@ -1606,7 +1671,7 @@
     "WRB": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-20",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-20",
       "quarantined": false
@@ -1614,19 +1679,21 @@
     "WSBC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-21",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-21",
+      "quarantined": false
     },
     "WST": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WTFC": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-20",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-20",
       "quarantined": false
@@ -1634,7 +1701,7 @@
     "ZION": {
       "stable_since": "2026-07-13",
       "last_date": "2026-07-20",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-20",
       "quarantined": false
@@ -1648,8 +1715,10 @@
     "SF": {
       "stable_since": "2026-07-16",
       "last_date": "2026-07-22",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-22",
+      "quarantined": false
     },
     "SEIC": {
       "stable_since": "2026-07-17",
@@ -1660,121 +1729,121 @@
     "AAPL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ABBV": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ACGL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ADC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ADP": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ADPT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AEE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AEM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AEP": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AES": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AGCO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AGI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AGIO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AJG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ALGM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ALGN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ALKS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ALKT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ALNY": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AM": {
@@ -1784,483 +1853,483 @@
       "roll_count": 0
     },
     "AMG": {
-      "stable_since": "2026-07-18",
-      "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "stable_since": "2026-07-22",
+      "last_date": "2026-07-29",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AMH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AMKR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AMT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AMZN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AON": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AOS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "APD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "APG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "APH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "APLD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ARM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ARW": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AU": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AUR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AVY": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AWI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AWK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AXGN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AXS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AXTA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AXTI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AZN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BAX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BDC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BELFB": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BEN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BEPC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BFLY": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BHE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BIIB": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BKR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-26",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BLDP": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BLDR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BLKB": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BMY": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BOOT": {
-      "stable_since": "2026-07-18",
-      "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "stable_since": "2026-07-22",
+      "last_date": "2026-07-29",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BRO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BRX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BSX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BTSG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BTU": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BWIN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "BXP": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CACC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CAKE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CAR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CARR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CBOE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CBRE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CCC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CCJ": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CDNS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CFR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CHD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CHDN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CHEF": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CHKP": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CHRW": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CINF": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CLH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CLVT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CMG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CMRE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CMS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CNC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CNK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CNO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CNP": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CNX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CNXN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "COHU": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "COIN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "COKE": {
@@ -2276,285 +2345,285 @@
       "roll_count": 0
     },
     "CORT": {
-      "stable_since": "2026-07-18",
-      "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "stable_since": "2026-07-22",
+      "last_date": "2026-07-29",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CPT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CRH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CROX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CRS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CSGP": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CSL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CSW": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CTSH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CTVA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CUBE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CVCO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CVLT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CVNA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CVX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "CZR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "D": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DAR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DBD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DFIN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DFTX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DINO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DJT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DLB": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DRS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DTE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DTM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DXC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "DXCM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ECL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EEFT": {
       "stable_since": "2026-07-21",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EIX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EME": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EMN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ENPH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EPD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EQIX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ERIE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ES": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ESI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ESS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ETN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ETR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EVR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EVTC": {
@@ -2566,49 +2635,49 @@
     "EXC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EXE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EXK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EXLS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EXP": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EXPO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "EXR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "F": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FCN": {
@@ -2626,31 +2695,31 @@
     "FE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FELE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FFIV": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FHI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FICO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FIVN": {
@@ -2662,115 +2731,115 @@
     "FLEX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FLS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FMC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FND": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FORM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FRT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FSLR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FSS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FTAI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FTI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FTNT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "FTV": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GDDY": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GEHC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GKOS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GLPI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GLW": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GLXY": {
@@ -2782,109 +2851,109 @@
     "GNRC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GRMN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GTES": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GTLS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "GVA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "H": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HAYW": {
       "stable_since": "2026-07-20",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HBM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HII": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HLI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HLIT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HLT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HOOD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HRI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HSY": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HUBB": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HUM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HUN": {
@@ -2896,319 +2965,319 @@
     "HWKN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HXL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "HYMC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ICE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "IDA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "IDCC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "IESC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "IEX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ILMN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "INCY": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "INGM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "INVH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "IONS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "IP": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "IQV": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "IR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ITRI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ITW": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "IVZ": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "JBLU": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "JCI": {
       "stable_since": "2026-07-20",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "JLL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KBR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KEX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KGC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KKR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KLAC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KNSA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KRG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "KWR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LAD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LEA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LECO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LFUS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LHX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LII": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LIN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LKQ": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LMND": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LNC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LNT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LPLA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LRCX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LSTR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LTH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LXU": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LYB": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "LYV": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MAA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MANH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MARA": {
@@ -3220,7 +3289,7 @@
     "MAS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MC": {
@@ -3232,103 +3301,103 @@
     "MDGL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MDLZ": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MEOH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "META": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MGM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MHK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MHO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MIR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MKL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MLM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MMSI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MOD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MORN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MPWR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MRNA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MSFT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MSI": {
@@ -3340,673 +3409,675 @@
     "MSTR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MTD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MTH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MTX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MTZ": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "MYRG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NBIX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NBR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NCLH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NOV": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NUE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NVT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NVTS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NWL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NXPI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NXT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ODFL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OGE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OHI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OLED": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OLN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OMC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OMF": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OPCH": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ORLY": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OSK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "OWL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PATK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PB": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PBF": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PCAR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PCOR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PEN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PFG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PGY": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PIPR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PKX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PLPC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PLXS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "POR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PPG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PSA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PSN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PTC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PTCT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PTEN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PUMP": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PWR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "PYPL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "QCOM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "QRVO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "QTWO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "QURE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RAL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RBC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RBLX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RCL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RDDT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "REG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "REGN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RGEN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RHI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-23",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RIO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RIOT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RIVN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RKT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RMBS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ROG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ROKU": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RSI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "RYAN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SAIA": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SANM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SBCF": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SBUX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SCCO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
-      "roll_count": 0
+      "last_seen": "2026-07-22",
+      "roll_count": 0,
+      "last_reported_date": "2026-07-20",
+      "quarantined": false
     },
     "SCI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SEB": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SFM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SHEL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SHW": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SIRI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SITE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SMG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SNDR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SOFI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SOLS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SONO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SPGI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SPSC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SPXC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SSD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ST": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "STAG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "STNG": {
       "stable_since": "2026-07-20",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "STX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SUI": {
       "stable_since": "2026-07-20",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SW": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SWK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SWKS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SXI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "SYK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TEM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TENB": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TER": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TEX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "THG": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TKR": {
@@ -4024,31 +4095,31 @@
     "TNK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TROW": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TRU": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TTEK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TTMI": {
@@ -4060,67 +4131,67 @@
     "TW": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TXNM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TXT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "TYL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "UAN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "UDR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "UMBF": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "UMC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "UNIT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "UNM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "UPS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "UTHR": {
@@ -4132,37 +4203,37 @@
     "V": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VALE": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VCYT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VFC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VICI": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VIRT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0,
       "last_reported_date": "2026-07-14",
       "quarantined": false
@@ -4170,43 +4241,43 @@
     "VKTX": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VLO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VLTO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VMC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VRNS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VRSK": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VRT": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "VSEC": {
@@ -4218,145 +4289,169 @@
     "VTR": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WCC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WEC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WELL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WERN": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WHD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WHR": {
       "stable_since": "2026-07-20",
       "last_date": "2026-07-27",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WING": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WPC": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WSO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WTW": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WU": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WWD": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "WY": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "XEL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "XOM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-31",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "XPO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "XPRO": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "XYL": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "YUM": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-30",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "ZWS": {
       "stable_since": "2026-07-18",
       "last_date": "2026-07-28",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "NEU": {
       "stable_since": "2026-07-20",
       "last_date": "2026-07-29",
-      "last_seen": "2026-07-21",
+      "last_seen": "2026-07-22",
       "roll_count": 0
     },
     "AMC": {
       "last_reported_date": "2026-07-20",
       "last_seen": "2026-07-21",
       "quarantined": false
+    },
+    "FHB": {
+      "stable_since": "2026-07-22",
+      "last_date": "2026-07-24",
+      "last_seen": "2026-07-22",
+      "roll_count": 0
+    },
+    "FVRR": {
+      "stable_since": "2026-07-22",
+      "last_date": "2026-07-29",
+      "last_seen": "2026-07-22",
+      "roll_count": 0
+    },
+    "TLRY": {
+      "stable_since": "2026-07-22",
+      "last_date": "2026-07-28",
+      "last_seen": "2026-07-22",
+      "roll_count": 0
+    },
+    "ULCC": {
+      "stable_since": "2026-07-22",
+      "last_date": "2026-07-29",
+      "last_seen": "2026-07-22",
+      "roll_count": 0
     }
   }
 }
