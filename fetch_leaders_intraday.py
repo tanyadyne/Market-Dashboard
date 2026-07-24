@@ -47,7 +47,7 @@ from fetch_leaders import (
     is_us_market_holiday,
     off_high_penalty_multiplier,
     previous_off_high_multiplier,
-    sma_adr_distances,
+    ma_atr_distances,
 )
 
 LEADERS_FILE = "leaders.json"
@@ -476,7 +476,7 @@ def update_change_fields(entry, base, quote):
             entry[out_key] = round((live / b - 1) * 100, 2)
 
     atr = finite_num(base.get("_atr"))
-    sma50 = finite_num(base.get("_sma50"))
+    sma50 = finite_num(base.get("_ma_sma50"))
     atr_pct = (atr / live * 100) if atr and live > 0 else None
     if atr_pct and atr_pct > 0:
         entry["atr"] = round(atr_pct, 2)
@@ -486,15 +486,15 @@ def update_change_fields(entry, base, quote):
             entry["ax"] = round((gain_pct / atr_pct) * 100)
 
     ma_flags = 0
-    for bit, key in ((1, "_sma10"), (2, "_sma20"), (4, "_sma50"), (8, "_sma200")):
-        sma = finite_num(base.get(key))
-        if sma and live > sma:
+    for bit, key in ((1, "_ma_ema9"), (2, "_ma_ema21"), (4, "_ma_sma50"), (8, "_ma_ema65"), (16, "_ma_sma200")):
+        moving_average = finite_num(base.get(key))
+        if moving_average and live > moving_average:
             ma_flags |= bit
     entry["ma"] = ma_flags
-    entry["md"] = sma_adr_distances(
+    entry["md"] = ma_atr_distances(
         live,
-        entry.get("ad"),
-        {period: finite_num(base.get(key)) for period, key in ((10, "_sma10"), (20, "_sma20"), (50, "_sma50"), (200, "_sma200"))},
+        atr,
+        {name: finite_num(base.get(key)) for name, key in (("ema9", "_ma_ema9"), ("ema21", "_ma_ema21"), ("sma50", "_ma_sma50"), ("ema65", "_ma_ema65"), ("sma200", "_ma_sma200"))},
     )
 
 def rerank(entries, baselines, quotes, spy_quote):
