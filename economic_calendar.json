@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-07-24 00:01 UTC",
-  "generated_at_et": "23/07/2026, 20:01 EDT",
+  "generated_at_utc": "2026-07-25 00:04 UTC",
+  "generated_at_et": "24/07/2026, 20:04 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -30,36 +30,7 @@
           "label": "Friday, July 17, 2026"
         }
       ],
-      "events": [
-        {
-          "key": "retail_sales",
-          "event": "Retail sales",
-          "source_event": "Retail Sales MM",
-          "date": "2026-07-16",
-          "day": "Thursday, July 16, 2026",
-          "time": "08:30 AM",
-          "period": "JUN",
-          "actual": "0.2",
-          "consensus": "-",
-          "previous": "0.9",
-          "forecast": "-",
-          "revised": "1"
-        },
-        {
-          "key": "uom_sentiment",
-          "event": "Consumer sentiment (UoM)",
-          "source_event": "U Mich Sentiment Prelim",
-          "date": "2026-07-17",
-          "day": "Friday, July 17, 2026",
-          "time": "10:00 AM",
-          "period": "JUL",
-          "actual": "54.4",
-          "consensus": "-",
-          "previous": "49.5",
-          "forecast": "-",
-          "revised": "-"
-        }
-      ],
+      "events": [],
       "earnings_events": [
         {
           "date": "2026-07-13",
@@ -67,14 +38,6 @@
           "ticker": "ASML",
           "company": "ASML Holding N.V.",
           "group": "Semiconductor Equipment & Materials",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-13",
-          "day": "Monday, July 13, 2026",
-          "ticker": "FBK",
-          "company": "FB Financial Corporation",
-          "group": "Banks - Regional",
           "time": "AMC"
         },
         {
@@ -163,6 +126,14 @@
           "ticker": "FEIM",
           "company": "Frequency Electronics, Inc.",
           "group": "Communication Equipment",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-15",
+          "day": "Wednesday, July 15, 2026",
+          "ticker": "HOMB",
+          "company": "Home BancShares, Inc.",
+          "group": "Banks - Regional",
           "time": "AMC"
         },
         {
@@ -406,10 +377,7 @@
           "time": "BMO"
         }
       ],
-      "event_keys": [
-        "retail_sales",
-        "uom_sentiment"
-      ]
+      "event_keys": []
     },
     {
       "key": "current",
@@ -461,6 +429,14 @@
           "ticker": "CALX",
           "company": "Calix, Inc.",
           "group": "Software - Infrastructure",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-20",
+          "day": "Monday, July 20, 2026",
+          "ticker": "CCK",
+          "company": "Crown Holdings, Inc.",
+          "group": "Packaging & Containers",
           "time": "AMC"
         },
         {
@@ -970,14 +946,6 @@
         {
           "date": "2026-07-22",
           "day": "Wednesday, July 22, 2026",
-          "ticker": "NTST",
-          "company": "NETSTREIT Corp.",
-          "group": "REIT - Retail",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-22",
-          "day": "Wednesday, July 22, 2026",
           "ticker": "OII",
           "company": "Oceaneering International, Inc.",
           "group": "Oil & Gas Equipment & Services",
@@ -1050,6 +1018,14 @@
         {
           "date": "2026-07-22",
           "day": "Wednesday, July 22, 2026",
+          "ticker": "SON",
+          "company": "Sonoco Products Company",
+          "group": "Packaging & Containers",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-22",
+          "day": "Wednesday, July 22, 2026",
           "ticker": "TSLA",
           "company": "Tesla, Inc.",
           "group": "Auto Manufacturers",
@@ -1101,6 +1077,14 @@
           "ticker": "BMI",
           "company": "Badger Meter, Inc.",
           "group": "Scientific & Technical Instruments",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-22",
+          "day": "Wednesday, July 22, 2026",
+          "ticker": "CALM",
+          "company": "Cal-Maine Foods, Inc.",
+          "group": "Farm Products",
           "time": "BMO"
         },
         {
@@ -1234,9 +1218,41 @@
         {
           "date": "2026-07-23",
           "day": "Thursday, July 23, 2026",
+          "ticker": "APPF",
+          "company": "AppFolio, Inc.",
+          "group": "Software - Application",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
           "ticker": "ASB",
           "company": "Associated Banc-Corp",
           "group": "Banks - Regional",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
+          "ticker": "BYD",
+          "company": "Boyd Gaming Corporation",
+          "group": "Resorts & Casinos",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
+          "ticker": "COLB",
+          "company": "Columbia Banking System, Inc.",
+          "group": "Banks - Regional",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
+          "ticker": "DECK",
+          "company": "Deckers Outdoor Corporation",
+          "group": "Footwear & Accessories",
           "time": "AMC"
         },
         {
@@ -1258,14 +1274,6 @@
         {
           "date": "2026-07-23",
           "day": "Thursday, July 23, 2026",
-          "ticker": "ENSG",
-          "company": "The Ensign Group, Inc.",
-          "group": "Medical Care Facilities",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-23",
-          "day": "Thursday, July 23, 2026",
           "ticker": "ENVA",
           "company": "Enova International, Inc.",
           "group": "Credit Services",
@@ -1277,6 +1285,14 @@
           "ticker": "EW",
           "company": "Edwards Lifesciences Corporation",
           "group": "Medical Devices",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
+          "ticker": "FIBK",
+          "company": "First Interstate BancSystem, Inc.",
+          "group": "Banks - Regional",
           "time": "AMC"
         },
         {
@@ -1298,9 +1314,25 @@
         {
           "date": "2026-07-23",
           "day": "Thursday, July 23, 2026",
+          "ticker": "HIG",
+          "company": "The Hartford Insurance Group, Inc.",
+          "group": "Insurance - Diversified",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
           "ticker": "INTC",
           "company": "Intel Corporation",
           "group": "Semiconductors",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
+          "ticker": "KN",
+          "company": "Knowles Corporation",
+          "group": "Electronic Components",
           "time": "AMC"
         },
         {
@@ -1346,6 +1378,14 @@
         {
           "date": "2026-07-23",
           "day": "Thursday, July 23, 2026",
+          "ticker": "RHI",
+          "company": "Robert Half Inc.",
+          "group": "Staffing & Employment Services",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
           "ticker": "RNG",
           "company": "RingCentral, Inc.",
           "group": "Software - Application",
@@ -1362,9 +1402,33 @@
         {
           "date": "2026-07-23",
           "day": "Thursday, July 23, 2026",
+          "ticker": "SKYW",
+          "company": "SkyWest, Inc.",
+          "group": "Airlines",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
           "ticker": "SSB",
           "company": "SouthState Bank Corporation",
           "group": "Banks - Regional",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
+          "ticker": "SSNC",
+          "company": "SS&C Technologies Holdings, Inc.",
+          "group": "Software - Application",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-23",
+          "day": "Thursday, July 23, 2026",
+          "ticker": "THC",
+          "company": "Tenet Healthcare Corporation",
+          "group": "Medical Care Facilities",
           "time": "AMC"
         },
         {
@@ -1770,14 +1834,6 @@
         {
           "date": "2026-07-24",
           "day": "Friday, July 24, 2026",
-          "ticker": "LBTYK",
-          "company": "Liberty Global Ltd.",
-          "group": "Telecom Services",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-24",
-          "day": "Friday, July 24, 2026",
           "ticker": "LW",
           "company": "Lamb Weston Holdings, Inc.",
           "group": "Packaged Foods",
@@ -2112,6 +2168,14 @@
           "company": "Welltower Inc.",
           "group": "REIT - Healthcare Facilities",
           "time": "AMC"
+        },
+        {
+          "date": "2026-07-27",
+          "day": "Monday, July 27, 2026",
+          "ticker": "CMRE",
+          "company": "Costamare Inc.",
+          "group": "Marine Shipping",
+          "time": "BMO"
         },
         {
           "date": "2026-07-27",
@@ -2700,6 +2764,14 @@
         {
           "date": "2026-07-28",
           "day": "Tuesday, July 28, 2026",
+          "ticker": "JCI",
+          "company": "Johnson Controls International plc",
+          "group": "Building Products & Equipment",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-28",
+          "day": "Tuesday, July 28, 2026",
           "ticker": "KNSA",
           "company": "Kiniksa Pharmaceuticals International, plc",
           "group": "Drug Manufacturers - Specialty & Generic",
@@ -3204,14 +3276,6 @@
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
-          "ticker": "NEU",
-          "company": "NewMarket Corporation",
-          "group": "Specialty Chemicals",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
           "ticker": "OHI",
           "company": "Omega Healthcare Investors, Inc.",
           "group": "REIT - Healthcare Facilities",
@@ -3343,6 +3407,14 @@
           "ticker": "SFM",
           "company": "Sprouts Farmers Market, Inc.",
           "group": "Grocery Stores",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
+          "ticker": "SIMO",
+          "company": "Silicon Motion Technology Corporation",
+          "group": "General",
           "time": "AMC"
         },
         {
@@ -3695,14 +3767,6 @@
           "ticker": "IONS",
           "company": "Ionis Pharmaceuticals, Inc.",
           "group": "Biotechnology",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-29",
-          "day": "Wednesday, July 29, 2026",
-          "ticker": "JCI",
-          "company": "Johnson Controls International plc",
-          "group": "Building Products & Equipment",
           "time": "BMO"
         },
         {
@@ -4644,14 +4708,6 @@
         {
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
-          "ticker": "CMRE",
-          "company": "Costamare Inc.",
-          "group": "Marine Shipping",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-30",
-          "day": "Thursday, July 30, 2026",
           "ticker": "CNK",
           "company": "Cinemark Holdings, Inc.",
           "group": "Entertainment",
@@ -4703,14 +4759,6 @@
           "ticker": "DAR",
           "company": "Darling Ingredients Inc.",
           "group": "Packaged Foods",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-30",
-          "day": "Thursday, July 30, 2026",
-          "ticker": "DFIN",
-          "company": "Donnelley Financial Solutions, Inc.",
-          "group": "Software - Application",
           "time": "BMO"
         },
         {
@@ -4996,14 +5044,6 @@
         {
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
-          "ticker": "PGY",
-          "company": "Pagaya Technologies Ltd.",
-          "group": "Software - Infrastructure",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-30",
-          "day": "Thursday, July 30, 2026",
           "ticker": "PIPR",
           "company": "Piper Sandler Companies",
           "group": "Capital Markets",
@@ -5023,6 +5063,14 @@
           "ticker": "PWR",
           "company": "Quanta Services, Inc.",
           "group": "Engineering & Construction",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-30",
+          "day": "Thursday, July 30, 2026",
+          "ticker": "RACE",
+          "company": "Ferrari N.V.",
+          "group": "General",
           "time": "BMO"
         },
         {
@@ -5485,6 +5533,14 @@
       "ticker": "CALX",
       "company": "Calix, Inc.",
       "group": "Software - Infrastructure",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-20",
+      "day": "Monday, July 20, 2026",
+      "ticker": "CCK",
+      "company": "Crown Holdings, Inc.",
+      "group": "Packaging & Containers",
       "time": "AMC"
     },
     {
@@ -5994,14 +6050,6 @@
     {
       "date": "2026-07-22",
       "day": "Wednesday, July 22, 2026",
-      "ticker": "NTST",
-      "company": "NETSTREIT Corp.",
-      "group": "REIT - Retail",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-22",
-      "day": "Wednesday, July 22, 2026",
       "ticker": "OII",
       "company": "Oceaneering International, Inc.",
       "group": "Oil & Gas Equipment & Services",
@@ -6074,6 +6122,14 @@
     {
       "date": "2026-07-22",
       "day": "Wednesday, July 22, 2026",
+      "ticker": "SON",
+      "company": "Sonoco Products Company",
+      "group": "Packaging & Containers",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-22",
+      "day": "Wednesday, July 22, 2026",
       "ticker": "TSLA",
       "company": "Tesla, Inc.",
       "group": "Auto Manufacturers",
@@ -6125,6 +6181,14 @@
       "ticker": "BMI",
       "company": "Badger Meter, Inc.",
       "group": "Scientific & Technical Instruments",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-22",
+      "day": "Wednesday, July 22, 2026",
+      "ticker": "CALM",
+      "company": "Cal-Maine Foods, Inc.",
+      "group": "Farm Products",
       "time": "BMO"
     },
     {
@@ -6258,9 +6322,41 @@
     {
       "date": "2026-07-23",
       "day": "Thursday, July 23, 2026",
+      "ticker": "APPF",
+      "company": "AppFolio, Inc.",
+      "group": "Software - Application",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
       "ticker": "ASB",
       "company": "Associated Banc-Corp",
       "group": "Banks - Regional",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
+      "ticker": "BYD",
+      "company": "Boyd Gaming Corporation",
+      "group": "Resorts & Casinos",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
+      "ticker": "COLB",
+      "company": "Columbia Banking System, Inc.",
+      "group": "Banks - Regional",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
+      "ticker": "DECK",
+      "company": "Deckers Outdoor Corporation",
+      "group": "Footwear & Accessories",
       "time": "AMC"
     },
     {
@@ -6282,14 +6378,6 @@
     {
       "date": "2026-07-23",
       "day": "Thursday, July 23, 2026",
-      "ticker": "ENSG",
-      "company": "The Ensign Group, Inc.",
-      "group": "Medical Care Facilities",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-07-23",
-      "day": "Thursday, July 23, 2026",
       "ticker": "ENVA",
       "company": "Enova International, Inc.",
       "group": "Credit Services",
@@ -6301,6 +6389,14 @@
       "ticker": "EW",
       "company": "Edwards Lifesciences Corporation",
       "group": "Medical Devices",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
+      "ticker": "FIBK",
+      "company": "First Interstate BancSystem, Inc.",
+      "group": "Banks - Regional",
       "time": "AMC"
     },
     {
@@ -6322,9 +6418,25 @@
     {
       "date": "2026-07-23",
       "day": "Thursday, July 23, 2026",
+      "ticker": "HIG",
+      "company": "The Hartford Insurance Group, Inc.",
+      "group": "Insurance - Diversified",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
       "ticker": "INTC",
       "company": "Intel Corporation",
       "group": "Semiconductors",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
+      "ticker": "KN",
+      "company": "Knowles Corporation",
+      "group": "Electronic Components",
       "time": "AMC"
     },
     {
@@ -6370,6 +6482,14 @@
     {
       "date": "2026-07-23",
       "day": "Thursday, July 23, 2026",
+      "ticker": "RHI",
+      "company": "Robert Half Inc.",
+      "group": "Staffing & Employment Services",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
       "ticker": "RNG",
       "company": "RingCentral, Inc.",
       "group": "Software - Application",
@@ -6386,9 +6506,33 @@
     {
       "date": "2026-07-23",
       "day": "Thursday, July 23, 2026",
+      "ticker": "SKYW",
+      "company": "SkyWest, Inc.",
+      "group": "Airlines",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
       "ticker": "SSB",
       "company": "SouthState Bank Corporation",
       "group": "Banks - Regional",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
+      "ticker": "SSNC",
+      "company": "SS&C Technologies Holdings, Inc.",
+      "group": "Software - Application",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-23",
+      "day": "Thursday, July 23, 2026",
+      "ticker": "THC",
+      "company": "Tenet Healthcare Corporation",
+      "group": "Medical Care Facilities",
       "time": "AMC"
     },
     {
@@ -6794,14 +6938,6 @@
     {
       "date": "2026-07-24",
       "day": "Friday, July 24, 2026",
-      "ticker": "LBTYK",
-      "company": "Liberty Global Ltd.",
-      "group": "Telecom Services",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-24",
-      "day": "Friday, July 24, 2026",
       "ticker": "LW",
       "company": "Lamb Weston Holdings, Inc.",
       "group": "Packaged Foods",
@@ -6834,11 +6970,16 @@
   ],
   "event_keys": [],
   "earnings_guard": {
-    "suppressed_count": 3,
+    "suppressed_count": 5,
     "suppressed": [
       {
+        "ticker": "ENSG",
+        "date": "2026-07-27",
+        "reason": "rolling_unreported_date"
+      },
+      {
         "ticker": "HLX",
-        "date": "2026-07-23",
+        "date": "2026-07-24",
         "reason": "rolling_unreported_date"
       },
       {
@@ -6849,6 +6990,11 @@
       {
         "ticker": "TMHC",
         "date": "2026-07-29",
+        "reason": "rolling_unreported_date"
+      },
+      {
+        "ticker": "USAU",
+        "date": "2026-07-24",
         "reason": "rolling_unreported_date"
       }
     ]
