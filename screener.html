@@ -847,7 +847,7 @@ let DATA=null,HISTORY=null,ETF_DATA=null,FUNDAMENTALS=null,OWNERSHIP_13F=null,PR
 const PRESS_RELEASE_SHARDS=new Map();
 const PRESS_RELEASE_REQUESTS=new Map();
 const PRESS_RELEASE_ERRORS=new Map();
-const HARD_EXCLUDED_TICKERS=new Set(['BAND','CWAN','TECH','AHR','LILA','LILAK','GOOG','MRX','OZK','SVC','UPBD','XMTR']);
+const HARD_EXCLUDED_TICKERS=new Set(['BAND','CWAN','TECH','AHR','LILA','LILAK','GOOG','MRX','OZK','SVC','UPBD','XMTR','MAN']);
 
 function pruneExcludedScreenerData(){
   if(DATA&&Array.isArray(DATA.e)){
@@ -1728,7 +1728,7 @@ function buildHeader(){
   let cols=[
     {key:'rk',label:'#',w:'36px',mw:'7%'},{key:'rd',label:'Δ',w:'56px',mw:'11%'},
     {key:'t',label:'Ticker',w:'64px',al:'l',mw:'14%'},{key:'n',label:'Company Name',w:'160px',al:'l'},{key:'th',label:'Theme',w:'140px',al:'l',mw:''},
-    {key:'mc',label:'MCap',w:'76px'},{key:'dv',label:'Avg$Vol',w:'76px',title:'Average Dollar Volume'},
+    {key:'mc',label:'MCap',w:'76px'},{key:'dv',label:'Avg$Vol',w:'76px',title:'20-day Average Dollar Volume'},
     {key:'rv',label:'R.Vol',w:'62px'},{key:'ax',label:'ATR Ext',w:'70px'},
     {key:'ch',label:'1D',w:'60px',mw:'13%'},
     {key:'c5',label:'1W',w:'60px'},{key:'c20',label:'1M',w:'60px'},{key:'ytd',label:'YTD',w:'60px',mw:'13%'},
@@ -2481,7 +2481,7 @@ function profileSubtabsHtml(){
 function profileMetricsHtml(stock){
   const rows=[
     ['MCap:', moneyText(stock.mc)],
-    ['Avg$Vol:', moneyText(stock.dv)],
+    ['Avg$Vol (20D):', moneyText(stock.dv)],
     ['ATR:', rangePctText(stock.atr)]
   ];
   return `<div class="profile-metrics" aria-label="Stock characteristics">

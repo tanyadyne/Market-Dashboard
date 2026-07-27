@@ -460,14 +460,16 @@ def update_change_fields(entry, base, quote):
     entry["p"] = round(live, 2)
     if prev:
         entry["ch"] = round((live / prev - 1) * 100, 2)
-    avg_vol_30d = finite_num(base.get("_avg_vol30"))
-    if not avg_vol_30d:
+    avg_vol_20d = finite_num(base.get("_avg_vol20"))
+    if not avg_vol_20d:
         prior_dollar_vol = finite_num(entry.get("dv"))
         if prior_price and prior_dollar_vol:
-            avg_vol_30d = prior_dollar_vol / prior_price
+            avg_vol_20d = prior_dollar_vol / prior_price
+    avg_vol_30d = finite_num(base.get("_avg_vol30"))
     live_volume = finite_num(quote.get("volume"))
+    if avg_vol_20d and avg_vol_20d > 0:
+        entry["dv"] = round(live * avg_vol_20d)
     if avg_vol_30d and avg_vol_30d > 0:
-        entry["dv"] = round(live * avg_vol_30d)
         if live_volume is not None and live_volume >= 0:
             entry["rv"] = round((live_volume / avg_vol_30d) * 100)
     for key, out_key in (("_5b", "c5"), ("_20b", "c20"), ("_yb", "ytd")):

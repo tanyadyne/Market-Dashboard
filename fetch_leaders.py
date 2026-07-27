@@ -114,7 +114,7 @@ HARD_EXCLUDE = {
     "CWAN", "TECH", "AHR", "LILA", "LILAK", "BAND", "JOYY",
     "GOOG", "MRX", "OZK", "SVC", "UPBD", "XMTR",
     "DD", "DBD", "ETHA", "KRKNF", "NXDR", "SWMR", "VISN", "NOV",
-    "COCO", "PAG", "ATAI", "GTLS",
+    "COCO", "PAG", "ATAI", "GTLS", "MAN",
 }
 
 # ─── ADR-collapse filter ───────────────────────────────────────────────────────
@@ -1173,6 +1173,9 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         high_52w = 0
 
     vols = [x for x in v if x is not None and x > 0]
+    # Avg$Vol is a 20-session dollar-volume measure. Keep the 30-session
+    # baseline below solely for relative-volume calculations.
+    avg_vol_20d = float(np.mean(vols[-20:])) if len(vols) >= 20 else None
     avg_vol_30d = float(np.mean(vols[-30:])) if len(vols) >= 10 else None
     rvol_base_30d = float(np.mean(vols[:-1][-30:])) if len(vols) > 30 else None
     rvol = (vols[-1] / rvol_base_30d) if rvol_base_30d and rvol_base_30d > 0 else None
@@ -1181,8 +1184,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     # These all come from the daily bars already downloaded for RS, so they add no
     # extra Yahoo calls to either the full or intraday workflow.
     avg_dollar_vol = None
-    if avg_vol_30d is not None:
-        avg_dollar_vol = display_price * avg_vol_30d
+    if avg_vol_20d is not None:
+        avg_dollar_vol = display_price * avg_vol_20d
 
     avg_range_pct = None
     adr_samples = []
@@ -1260,6 +1263,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "w_pen_engulf": False, "w_pen_ema21": False, "w_pen_crash5": False,
                 # Internal baselines for intraday overlay (stripped before output)
                 "_atr": round(float(atr), 6) if atr else None,
+                "_avg_vol20": round(float(avg_vol_20d), 6) if avg_vol_20d is not None else None,
                 "_avg_vol30": round(float(avg_vol_30d), 6) if avg_vol_30d is not None else None,
                 "_hi52": round(float(high_52w), 6) if high_52w else None,
                 "_pc": float(c[-2]) if n >= 2 else None,
@@ -1466,6 +1470,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "w_pen_mult": round(float(pen_multiplier), 4),
         # Internal baselines for intraday overlay (stripped before output)
         "_atr": round(float(atr), 6) if atr else None,
+        "_avg_vol20": round(float(avg_vol_20d), 6) if avg_vol_20d is not None else None,
         "_avg_vol30": round(float(avg_vol_30d), 6) if avg_vol_30d is not None else None,
         "_hi52": round(float(high_52w), 6) if high_52w else None,
         "_pc": float(c[-2]) if n >= 2 else None,
@@ -2236,14 +2241,16 @@ def apply_intraday_overlay(results):
         # Apply overlay
         r["p"] = round(live, 2)
         r["ch"] = round(candidate_ch, 2)
-        avg_vol_30d = r.get("_avg_vol30")
-        if not avg_vol_30d:
+        avg_vol_20d = r.get("_avg_vol20")
+        if not avg_vol_20d:
             prior_price = eod or live
             prior_dollar_vol = r.get("dv")
             if prior_price and prior_dollar_vol:
-                avg_vol_30d = prior_dollar_vol / prior_price
+                avg_vol_20d = prior_dollar_vol / prior_price
+        avg_vol_30d = r.get("_avg_vol30")
+        if avg_vol_20d and avg_vol_20d > 0:
+            r["dv"] = round(live * avg_vol_20d)
         if avg_vol_30d and avg_vol_30d > 0:
-            r["dv"] = round(live * avg_vol_30d)
             if live_volume is not None and live_volume >= 0:
                 r["rv"] = round((live_volume / avg_vol_30d) * 100)
         atr = r.get("_atr")
@@ -2282,7 +2289,7 @@ def write_intraday_baselines(results):
     keep = {
         "p", "w_fr", "w_vs", "w_rs", "w_rk",
         "w_pen_engulf", "w_pen_crash5", "w_pen_mult",
-        "_pc", "_5b", "_20b", "_yb", "_atr", "_avg_vol30", "_hi52",
+        "_pc", "_5b", "_20b", "_yb", "_atr", "_avg_vol20", "_avg_vol30", "_hi52",
         "_ma_ema9", "_ma_ema21", "_ma_sma50", "_ma_ema65", "_ma_sma200",
         "_setup_ema9", "_setup_ema21", "_setup_adr",
         "_w_deltas", "_w_week", "_w_date",
@@ -2873,9 +2880,8 @@ def main():
     # Narrows universe before expensive mcap/industry lookups.
     # Tiered threshold: small caps (< $5B) need higher dollar volume to qualify, since
     # they're more prone to in/out churn near the standard $70M threshold.
-    # Note: market cap lookup happens later, but we use the CACHED market cap from the
-    # last successful run to apply the tiered threshold here. New/uncached tickers fall
-    # back to the standard threshold (they'll get classified properly on the next run).
+    # Cached market cap selects the tier when available. Unknown market caps use the
+    # conservative small-cap tier until metadata resolves them in this same run.
     MIN_DOLLAR_VOL = 70_000_000
     MIN_DOLLAR_VOL_SMALL_CAP = 100_000_000
     SMALL_CAP_THRESHOLD = 5_000_000_000
@@ -3110,7 +3116,7 @@ def main():
 
     daily_mcap_updated = refresh_daily_market_caps(current_data_tickers(all_tickers))
 
-    print(f"\nPre-filtering by liquidity (price × avg_vol_10d >= ${MIN_DOLLAR_VOL/1e6:.0f}M, or ${MIN_DOLLAR_VOL_SMALL_CAP/1e6:.0f}M for small caps < ${SMALL_CAP_THRESHOLD/1e9:.0f}B)...")
+    print(f"\nPre-filtering by liquidity (price × avg_vol_20d >= ${MIN_DOLLAR_VOL/1e6:.0f}M, or ${MIN_DOLLAR_VOL_SMALL_CAP/1e6:.0f}M for small caps < ${SMALL_CAP_THRESHOLD/1e9:.0f}B)...")
 
     # Tickers to log verbosely through each filter (for debugging why a stock is missing)
     DEBUG_TICKERS = {"RIG", "OKTA"}
@@ -3145,16 +3151,22 @@ def main():
             pass
         c = df["Close"].values
         v = df["Volume"].values
-        # Dollar volume check (price × avg_vol_10d) with tiered threshold by market cap
+        # Dollar volume check (price × avg_vol_20d) with tiered threshold by market cap
         last_price = float(c[-1])
-        avg_vol_10d = float(np.mean(v[-10:]))
-        dollar_vol = last_price * avg_vol_10d
-        # Use cached market cap to choose the threshold. If unknown (new ticker), use
-        # the standard threshold and let the normal market cap filter handle it later.
+        avg_vol_20d = float(np.mean(v[-20:]))
+        dollar_vol = last_price * avg_vol_20d
+        # Use cached market cap to choose the threshold. An unknown market cap must
+        # take the conservative small-cap tier until metadata resolves it. Using the
+        # $70M tier here let names such as MAN pass liquidity before a later metadata
+        # lookup established that they were below the $5B small-cap cutoff.
         cached_mcap = computed_market_cap(tk, last_price)
         if cached_mcap:
             mcap_cache[tk] = cached_mcap
-        threshold = MIN_DOLLAR_VOL_SMALL_CAP if (cached_mcap and cached_mcap < SMALL_CAP_THRESHOLD) else MIN_DOLLAR_VOL
+        threshold = (
+            MIN_DOLLAR_VOL
+            if cached_mcap and cached_mcap >= SMALL_CAP_THRESHOLD
+            else MIN_DOLLAR_VOL_SMALL_CAP
+        )
         cap_only_policy = is_cap_only_industry(industry_cache.get(tk, ""))
         is_theme_holding = tk in theme_holding_tickers
         if is_theme_holding and tk not in MANUAL_INCLUDE and not cap_only_policy and dollar_vol < threshold:
@@ -3179,6 +3191,13 @@ def main():
                 cached_mcap = computed_market_cap(tk, last_price)
                 if cached_mcap:
                     mcap_cache[tk] = cached_mcap
+            # Metadata may have resolved a previously unknown market cap. Recompute
+            # the liquidity tier before deciding whether this ticker survives.
+            threshold = (
+                MIN_DOLLAR_VOL
+                if cached_mcap and cached_mcap >= SMALL_CAP_THRESHOLD
+                else MIN_DOLLAR_VOL_SMALL_CAP
+            )
         if cap_only_policy:
             cap_only_prefilter_kept += 1
             grace_records.pop(tk, None)
@@ -3197,7 +3216,7 @@ def main():
                 rec["last_grace_kept"] = _et_today
                 if tk in DEBUG_TICKERS:
                     print(f"  [DEBUG] {tk}: GRACE-KEPT — illiquid day {failures}/{UNIVERSE_GRACE_DAYS} "
-                          f"(price ${last_price:.2f} × avg_vol_10d {avg_vol_10d/1e6:.2f}M = "
+                          f"(price ${last_price:.2f} × avg_vol_20d {avg_vol_20d/1e6:.2f}M = "
                           f"${dollar_vol/1e6:.1f}M < ${threshold/1e6:.0f}M)")
             else:
                 excluded["illiquid"] += 1
@@ -3205,7 +3224,7 @@ def main():
                     grace_expired += 1
                 if tk in DEBUG_TICKERS:
                     print(f"  [DEBUG] {tk}: EXCLUDED — illiquid "
-                          f"(price ${last_price:.2f} × avg_vol_10d {avg_vol_10d/1e6:.2f}M = "
+                          f"(price ${last_price:.2f} × avg_vol_20d {avg_vol_20d/1e6:.2f}M = "
                           f"${dollar_vol/1e6:.1f}M < ${threshold/1e6:.0f}M; "
                           f"grace failures {failures}/{UNIVERSE_GRACE_DAYS})")
                 continue
