@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-07-26 00:01 UTC",
-  "generated_at_et": "25/07/2026, 20:01 EDT",
+  "generated_at_utc": "2026-07-27 00:00 UTC",
+  "generated_at_et": "26/07/2026, 20:00 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -2157,14 +2157,6 @@
         {
           "date": "2026-07-28",
           "day": "Tuesday, July 28, 2026",
-          "ticker": "JCI",
-          "company": "Johnson Controls International plc",
-          "group": "Building Products & Equipment",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-28",
-          "day": "Tuesday, July 28, 2026",
           "ticker": "KNSA",
           "company": "Kiniksa Pharmaceuticals International, plc",
           "group": "Drug Manufacturers - Specialty & Generic",
@@ -2597,6 +2589,14 @@
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
+          "ticker": "NEU",
+          "company": "NewMarket Corporation",
+          "group": "Specialty Chemicals",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
           "ticker": "OHI",
           "company": "Omega Healthcare Investors, Inc.",
           "group": "REIT - Healthcare Facilities",
@@ -2965,6 +2965,14 @@
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
+          "ticker": "JCI",
+          "company": "Johnson Controls International plc",
+          "group": "Building Products & Equipment",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
           "ticker": "KEX",
           "company": "Kirby Corporation",
           "group": "Marine Shipping",
@@ -3008,6 +3016,14 @@
           "ticker": "MAS",
           "company": "Masco Corporation",
           "group": "Building Products & Equipment",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
+          "ticker": "MHO",
+          "company": "M/I Homes, Inc.",
+          "group": "Residential Construction",
           "time": "BMO"
         },
         {
@@ -6081,14 +6097,6 @@
         {
           "date": "2026-08-05",
           "day": "Wednesday, August 5, 2026",
-          "ticker": "NEU",
-          "company": "NewMarket Corporation",
-          "group": "Specialty Chemicals",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-05",
-          "day": "Wednesday, August 5, 2026",
           "ticker": "NTR",
           "company": "Nutrien Ltd.",
           "group": "Agricultural Inputs",
@@ -6516,6 +6524,14 @@
           "ticker": "ELAN",
           "company": "Elanco Animal Health Incorporated",
           "group": "Drug Manufacturers - Specialty & Generic",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-08-05",
+          "day": "Wednesday, August 5, 2026",
+          "ticker": "EXTR",
+          "company": "Extreme Networks, Inc.",
+          "group": "Communication Equipment",
           "time": "BMO"
         },
         {
@@ -7570,7 +7586,7 @@
           "date": "2026-08-06",
           "day": "Thursday, August 6, 2026",
           "ticker": "QBTS",
-          "company": "D-Wave Quantum Inc.",
+          "company": "D-Wave Quantum Inc. Common Stock",
           "group": "Computer Hardware",
           "time": "BMO"
         },
@@ -8573,14 +8589,6 @@
     {
       "date": "2026-07-28",
       "day": "Tuesday, July 28, 2026",
-      "ticker": "JCI",
-      "company": "Johnson Controls International plc",
-      "group": "Building Products & Equipment",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-07-28",
-      "day": "Tuesday, July 28, 2026",
       "ticker": "KNSA",
       "company": "Kiniksa Pharmaceuticals International, plc",
       "group": "Drug Manufacturers - Specialty & Generic",
@@ -9013,6 +9021,14 @@
     {
       "date": "2026-07-29",
       "day": "Wednesday, July 29, 2026",
+      "ticker": "NEU",
+      "company": "NewMarket Corporation",
+      "group": "Specialty Chemicals",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-07-29",
+      "day": "Wednesday, July 29, 2026",
       "ticker": "OHI",
       "company": "Omega Healthcare Investors, Inc.",
       "group": "REIT - Healthcare Facilities",
@@ -9381,6 +9397,14 @@
     {
       "date": "2026-07-29",
       "day": "Wednesday, July 29, 2026",
+      "ticker": "JCI",
+      "company": "Johnson Controls International plc",
+      "group": "Building Products & Equipment",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-29",
+      "day": "Wednesday, July 29, 2026",
       "ticker": "KEX",
       "company": "Kirby Corporation",
       "group": "Marine Shipping",
@@ -9424,6 +9448,14 @@
       "ticker": "MAS",
       "company": "Masco Corporation",
       "group": "Building Products & Equipment",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-07-29",
+      "day": "Wednesday, July 29, 2026",
+      "ticker": "MHO",
+      "company": "M/I Homes, Inc.",
+      "group": "Residential Construction",
       "time": "BMO"
     },
     {
