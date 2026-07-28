@@ -334,6 +334,10 @@ assert.ok(
   "Presets belongs before the RS Ranking search input",
 );
 assert.ok(
+  html.includes('class="preset-icon"') && html.includes("flex:0 0 18px"),
+  "The Presets sliders icon must keep a visible fixed width inside the button",
+);
+assert.ok(
   html.includes('<script src="screener-presets.js"></script>'),
   "The preset predicate bundle must load on the screener page",
 );
