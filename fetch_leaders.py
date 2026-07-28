@@ -38,6 +38,7 @@ from preset_metrics import (
     build_preset_intraday_baseline,
     compute_intraday_preset_state,
     compute_preset_flags,
+    json_numpy_scalar,
 )
 from vcp_coils import (
     compute_vcp_coil_definition_2,
@@ -1245,7 +1246,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         last_date=_last_date.isoformat() if _last_date is not None else None,
     )
     if display_price > 0:
-        preset_intraday_baseline["_preset_price_scale"] = price / display_price
+        preset_intraday_baseline["_preset_price_scale"] = float(price / display_price)
 
     # ─── Trailing 5-day R.Vol (rolling, week-of-day-agnostic) ────────────────
     # Unlike `w_rv` (week-to-date, resets every Monday), this is a rolling 5-session
@@ -2410,8 +2411,16 @@ def write_intraday_baselines(results):
         },
         "d": baselines,
     }
+    # Serialize before opening the destination so validation failures cannot leave a
+    # truncated baseline file behind. The default is a final guard for NumPy scalars
+    # originating in numerical calculations.
+    serialized = json.dumps(
+        payload,
+        separators=(",", ":"),
+        default=json_numpy_scalar,
+    )
     with open(INTRADAY_BASELINES_FILE, "w") as f:
-        json.dump(payload, f, separators=(",", ":"))
+        f.write(serialized)
     print(f"  {INTRADAY_BASELINES_FILE} ({len(baselines)} baselines)")
 
 
@@ -2428,8 +2437,9 @@ def strip_internal_fields(results):
 
 
 def ensure_vcp_coil_fields(results):
-    """Ensure every published stock has both explicit VCP definition fields."""
+    """Ensure every published stock exposes the complete preset data contract."""
     for result in results:
+        result.setdefault("pf", None)
         if "vcp_coil_1" not in result:
             setup_flags = result.get("sf")
             result["vcp_coil_1"] = (

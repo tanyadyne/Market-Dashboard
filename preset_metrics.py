@@ -15,6 +15,17 @@ PRESET_EMA9_ABOVE_EMA21 = 256
 PRESET_EMA9_BELOW_EMA21 = 512
 
 
+def json_numpy_scalar(value):
+    """Convert NumPy values at JSON boundaries without masking other type errors."""
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    raise TypeError(
+        f"Object of type {value.__class__.__name__} is not JSON serializable"
+    )
+
+
 def _finite_float(value):
     try:
         value = float(value)
@@ -47,7 +58,7 @@ def _is_rolling_extreme(values, index, *, lookback=252, find_high=True):
     if not np.isfinite(window).any():
         return False
     extreme = np.nanmax(window) if find_high else np.nanmin(window)
-    return value >= extreme if find_high else value <= extreme
+    return bool(value >= extreme if find_high else value <= extreme)
 
 
 def _finite_extreme(values, *, find_high=True):
@@ -176,14 +187,14 @@ def build_preset_intraday_baseline(
         return {}
 
     def candle_is_red(index):
-        return (
+        return bool(
             np.isfinite(opens[index])
             and np.isfinite(closes[index])
             and closes[index] < opens[index]
         )
 
     def candle_is_green(index):
-        return (
+        return bool(
             np.isfinite(opens[index])
             and np.isfinite(closes[index])
             and closes[index] > opens[index]

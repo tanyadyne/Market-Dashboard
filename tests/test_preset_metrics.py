@@ -1,3 +1,4 @@
+import json
 import unittest
 
 import numpy as np
@@ -16,6 +17,7 @@ from preset_metrics import (
     build_preset_intraday_baseline,
     compute_intraday_preset_state,
     compute_preset_flags,
+    json_numpy_scalar,
 )
 
 
@@ -28,6 +30,50 @@ def bars(closes):
 
 
 class PresetMetricTests(unittest.TestCase):
+    def test_intraday_baseline_writer_normalizes_numpy_scalars(self):
+        payload = {
+            "d": {
+                "TEST": {
+                    "_preset_closes": np.asarray([99.0, 100.0]),
+                    "_preset_prior_red_same": np.bool_(True),
+                    "_preset_high_threshold_same": np.float64(101.0),
+                },
+            },
+        }
+
+        decoded = json.loads(json.dumps(payload, default=json_numpy_scalar))
+        baseline = decoded["d"]["TEST"]
+        self.assertIs(type(baseline["_preset_prior_red_same"]), bool)
+        self.assertEqual(baseline["_preset_closes"], [99.0, 100.0])
+        self.assertEqual(baseline["_preset_high_threshold_same"], 101.0)
+
+    def test_intraday_baseline_is_natively_json_serializable(self):
+        opens, highs, lows, closes = bars(np.linspace(50, 100, 260))
+        opens[-2] = closes[-2] + 2
+        highs[-1] = 120
+        lows[-2] = 40
+
+        baseline = build_preset_intraday_baseline(
+            opens,
+            highs,
+            lows,
+            closes,
+            last_date="2026-07-28",
+        )
+
+        decoded = json.loads(json.dumps(baseline))
+        boolean_keys = [
+            key
+            for key in baseline
+            if key.startswith("_preset_prior_")
+            or "_preset_high_prior_" in key
+            or "_preset_low_prior_" in key
+        ]
+        self.assertTrue(boolean_keys)
+        for key in boolean_keys:
+            self.assertIs(type(baseline[key]), bool)
+            self.assertIs(type(decoded[key]), bool)
+
     def test_leader_structure_and_prior_red_candle(self):
         opens, highs, lows, closes = bars(np.linspace(50, 100, 260))
         opens[-2] = closes[-2] + 2

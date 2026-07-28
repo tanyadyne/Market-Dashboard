@@ -8,6 +8,9 @@ const {
   PRESETS,
   matchesPreset,
 } = require("../screener-presets.js");
+const {
+  validatePresetData,
+} = require("./validate_screener_preset_data.js");
 
 const rankedTotal = 1000;
 
@@ -355,6 +358,30 @@ assert.ok(
 assert.ok(
   html.includes('onclick="resetAllFilters()"'),
   "The dropdown reset action must clear preset and manual filters",
+);
+
+const validationRows = Object.entries(fixtures).map(([ticker, value]) => ({
+  ...value,
+  t: ticker,
+}));
+const validationBaselines = Object.fromEntries(
+  validationRows.map((row) => [
+    row.t,
+    { _preset_last_date: "2026-07-28" },
+  ]),
+);
+const validation = validatePresetData(
+  { e: validationRows },
+  { d: validationBaselines },
+);
+assert.strictEqual(validation.baselineCoverage, 1);
+assert.strictEqual(validation.rowCount, PRESETS.length);
+assert.throws(
+  () => validatePresetData(
+    { e: [{ ...validationRows[0], pf: undefined }] },
+    { d: { [validationRows[0].t]: validationBaselines[validationRows[0].t] } },
+  ),
+  /invalid pf value/,
 );
 
 console.log("screener preset tests: ok");

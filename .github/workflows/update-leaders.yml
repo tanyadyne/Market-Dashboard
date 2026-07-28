@@ -89,12 +89,16 @@ jobs:
           if [ "${{ inputs.force || false }}" = "true" ]; then
             export FORCE_INTRADAY=1
           fi
-          if [ -f leaders_intraday_baselines.json ] && python -c "import json; b=json.load(open('leaders_intraday_baselines.json')).get('d',{}); e=json.load(open('leaders.json')).get('e',[]); assert b and e and all('_preset_last_date' in v for v in b.values()) and all('pf' in v and 'vcp_coil_1' in v and 'vcp_coil_2' in v for v in e)"; then
+          if [ -f leaders_intraday_baselines.json ] && python -c "import json; b=json.load(open('leaders_intraday_baselines.json')).get('d',{}); e=json.load(open('leaders.json')).get('e',[]); assert b and e and all('pf' in v and 'vcp_coil_1' in v and 'vcp_coil_2' in v for v in e)"; then
             python fetch_leaders_intraday.py
           else
             echo "Preset-ready intraday baselines missing — running one full rebuild"
             python fetch_leaders.py
           fi
+
+      - name: Validate generated preset data
+        if: steps.market_check.outputs.skip != 'true'
+        run: node tests/validate_screener_preset_data.js
 
       - name: Commit and push
         if: steps.market_check.outputs.skip != 'true'
