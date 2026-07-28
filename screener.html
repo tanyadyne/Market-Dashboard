@@ -108,7 +108,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 [data-theme="dark"] .metric-muted{color:var(--t2)}
 .metric-emphasis{font-weight:900!important;color:var(--t1)!important;text-shadow:0 0 0 currentColor}
 .rvol-value{position:relative;display:inline-block}
-.rvol-signal{position:absolute;left:calc(100% + 2px);top:-3px;width:8px;height:7px;overflow:visible;stroke:#06b6d4;stroke-width:1.3;stroke-linecap:round;fill:none;pointer-events:none}
+.rvol-signal{position:absolute;left:calc(100% + 3px);top:-1px;width:4px;height:4px;border-radius:50%;background:#0ea5e9;box-shadow:0 0 0 2px rgba(14,165,233,.16);pointer-events:none}
 /* Filter dropdown */
 .filter-wrap{position:relative;display:inline-block}
 .filter-search-row .filter-wrap{display:block;min-width:0}
@@ -2004,7 +2004,7 @@ function render(){
     const highDollarVol=e.dv!=null&&Number(e.dv)>1000000000;
     const activeRvol=rv!=null&&Number(rv)>100;
     const liquidityEmphasis=highDollarVol?' metric-emphasis':'';
-    const rvolSignal=activeRvol?'<svg class="rvol-signal" viewBox="0 0 9 7" aria-hidden="true"><line x1="1" y1="1" x2="5" y2="5"/><line x1="3.5" y1=".5" x2="8" y2="5"/></svg>':'';
+    const rvolSignal=activeRvol?'<span class="rvol-signal" aria-hidden="true"></span>':'';
     const cellMap={
       rk:`<td class="rk">${origRank}</td>`,
       rd:rankDelta(e.t),
