@@ -335,21 +335,18 @@ assert.ok(
 );
 assert.ok(
   html.includes('class="preset-icon"') &&
-    html.includes("height:10px") &&
-    html.includes("flex:0 0 15px"),
-  "The Presets sliders icon must match the label height without shrinking",
-);
-assert.strictEqual(
-  (html.match(/<span class="preset-icon-line /g) || []).length,
-  2,
-  "The Presets icon must render exactly two slider rails",
+    html.includes("height:12px") &&
+    html.includes("flex:0 0 12px"),
+  "The Presets funnel icon must match the label height without shrinking",
 );
 assert.ok(
-  html.includes("--preset-knob:#7c3aed") &&
-    html.includes("--preset-knob-outline:#3b0764") &&
-    html.includes("background:var(--preset-knob)") &&
-    html.includes("border:1px solid var(--preset-knob-outline)"),
-  "The Presets icon must render matching purple knobs with dark-purple edges",
+  html.includes('stroke="currentColor"') &&
+    html.includes('<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"></path>'),
+  "The Presets button must render a gray-by-default funnel icon",
+);
+assert.ok(
+  html.includes(".preset-btn.has-preset .preset-icon{filter:drop-shadow"),
+  "The Presets funnel icon must glow with the active purple state",
 );
 assert.ok(
   html.includes('<script src="screener-presets.js"></script>'),
