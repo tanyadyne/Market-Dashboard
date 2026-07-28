@@ -346,8 +346,10 @@ assert.strictEqual(
 );
 assert.ok(
   html.includes("--preset-knob:#7c3aed") &&
-    html.includes("background:var(--preset-knob)"),
-  "The Presets icon must render both slider knobs in the same dark purple",
+    html.includes("--preset-knob-outline:#3b0764") &&
+    html.includes("background:var(--preset-knob)") &&
+    html.includes("border:1px solid var(--preset-knob-outline)"),
+  "The Presets icon must render matching purple knobs with dark-purple edges",
 );
 assert.ok(
   html.includes('<script src="screener-presets.js"></script>'),
