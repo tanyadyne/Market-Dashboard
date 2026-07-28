@@ -114,7 +114,7 @@ HARD_EXCLUDE = {
     "CWAN", "TECH", "AHR", "LILA", "LILAK", "BAND", "JOYY",
     "GOOG", "MRX", "OZK", "SVC", "UPBD", "XMTR",
     "DD", "DBD", "ETHA", "KRKNF", "NXDR", "SWMR", "VISN", "NOV",
-    "COCO", "PAG", "ATAI", "GTLS", "MAN",
+    "COCO", "PAG", "ATAI", "GTLS", "MAN", "VSXY",
 }
 
 # ─── ADR-collapse filter ───────────────────────────────────────────────────────

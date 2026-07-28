@@ -849,7 +849,7 @@ let DATA=null,HISTORY=null,ETF_DATA=null,FUNDAMENTALS=null,OWNERSHIP_13F=null,PR
 const PRESS_RELEASE_SHARDS=new Map();
 const PRESS_RELEASE_REQUESTS=new Map();
 const PRESS_RELEASE_ERRORS=new Map();
-const HARD_EXCLUDED_TICKERS=new Set(['BAND','CWAN','TECH','AHR','LILA','LILAK','GOOG','MRX','OZK','SVC','UPBD','XMTR','MAN']);
+const HARD_EXCLUDED_TICKERS=new Set(['BAND','CWAN','TECH','AHR','LILA','LILAK','GOOG','MRX','OZK','SVC','UPBD','XMTR','MAN','VSXY']);
 
 function pruneExcludedScreenerData(){
   if(DATA&&Array.isArray(DATA.e)){
