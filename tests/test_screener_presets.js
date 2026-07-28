@@ -345,8 +345,9 @@ assert.strictEqual(
   "The Presets icon must render exactly two slider rails",
 );
 assert.ok(
-  html.includes("background:#2388f5") && html.includes("background:#4d96f7"),
-  "The Presets icon must render two solid blue slider knobs",
+  html.includes("--preset-knob:#7c3aed") &&
+    html.includes("background:var(--preset-knob)"),
+  "The Presets icon must render both slider knobs in the same dark purple",
 );
 assert.ok(
   html.includes('<script src="screener-presets.js"></script>'),

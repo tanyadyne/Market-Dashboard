@@ -143,13 +143,13 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .preset-wrap{position:relative;display:block;min-width:0}
 .preset-btn{width:100%;padding:5px 9px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.18s;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .preset-btn:hover{background:var(--bg3);color:var(--t1)}
-.preset-icon{position:relative;width:15px;height:10px;display:block;flex:0 0 15px}
+.preset-icon{--preset-knob:#7c3aed;position:relative;width:15px;height:10px;display:block;flex:0 0 15px}
 .preset-icon-line{position:absolute;left:0;width:100%;height:1.5px;border-radius:999px;background:#504d55;transform:translateY(-50%)}
-.preset-icon-line::after{content:"";position:absolute;top:50%;width:5px;height:5px;border-radius:50%;transform:translate(-50%,-50%)}
+.preset-icon-line::after{content:"";position:absolute;top:50%;width:5px;height:5px;border-radius:50%;background:var(--preset-knob);transform:translate(-50%,-50%)}
 .preset-icon-line-top{top:25%}
-.preset-icon-line-top::after{left:68%;background:#2388f5}
+.preset-icon-line-top::after{left:68%}
 .preset-icon-line-bottom{top:75%}
-.preset-icon-line-bottom::after{left:32%;background:#4d96f7}
+.preset-icon-line-bottom::after{left:32%}
 [data-theme="dark"] .preset-icon-line{background:#8b8790}
 .preset-btn.has-preset{border-color:#8b5cf6;color:#a78bfa;box-shadow:0 0 0 1px rgba(139,92,246,.18),0 0 14px rgba(139,92,246,.3)}
 [data-theme="light"] .preset-btn.has-preset{color:#6d28d9;box-shadow:0 0 0 1px rgba(109,40,217,.16),0 0 12px rgba(109,40,217,.2)}
