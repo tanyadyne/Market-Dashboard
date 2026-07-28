@@ -91,8 +91,8 @@ assert.deepStrictEqual(
 assert.deepStrictEqual(
   PRESETS.filter((preset) => preset.group === "laggards").map((preset) => preset.name),
   [
-    "Fresh laggard (tight)",
-    "Fresh laggard (loose)",
+    "Below 50sma (tight)",
+    "Below 50sma (loose)",
     "New 52wk Lows",
   ],
 );

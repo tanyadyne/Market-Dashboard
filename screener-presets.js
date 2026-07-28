@@ -70,7 +70,7 @@
     {
       id: "fresh-laggard-tight",
       group: "laggards",
-      name: "Fresh laggard (tight)",
+      name: "Below 50sma (tight)",
       info: "This preset scans for lagging stocks that are trading below a tight pivot.",
       criteria: [
         "Price is below the 50 SMA by less than 0.5× ATR.",
@@ -83,7 +83,7 @@
     {
       id: "fresh-laggard-loose",
       group: "laggards",
-      name: "Fresh laggard (loose)",
+      name: "Below 50sma (loose)",
       info: "This preset scans for lagging stocks that are trading below a loose pivot.",
       criteria: [
         "Price is below the 50 SMA by less than 1× ATR.",
