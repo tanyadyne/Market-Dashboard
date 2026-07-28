@@ -111,13 +111,14 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .rvol-signal{position:absolute;left:calc(100% + 3px);top:-1px;width:4px;height:4px;border-radius:50%;background:#0ea5e9;box-shadow:0 0 0 2px rgba(14,165,233,.16);pointer-events:none}
 /* Filter dropdown */
 .filter-wrap{position:relative;display:inline-block}
-.filter-search-row .filter-wrap{display:block;min-width:0}
 .filter-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.15s;font-family:inherit}
-.filter-search-row .filter-btn{width:100%}
 .filter-search-row .srch{width:100%;min-width:0}
 .filter-btn:hover{background:var(--bg3);color:var(--t1)}
 .filter-btn.has-filter{border-color:#f59e0b;color:#fbbf24}
-.filter-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:8px 0;min-width:280px;max-height:calc(100vh - 80px);overflow-y:auto;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.filter-icon-btn{width:28px;height:28px;padding:5px;display:inline-flex;align-items:center;justify-content:center}
+.filter-icon-btn svg{width:16px;height:16px;display:block}
+.header-filter-wrap{line-height:normal}
+.filter-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:8px 0;min-width:280px;max-height:var(--screener-menu-max-height,calc(100vh - 80px));overflow-y:auto;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.4)}
 .filter-menu.open{display:block}
 .filter-menu-hdr{padding:6px 16px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t4);font-weight:700}
 .filter-item{padding:7px 16px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--t2);transition:.1s}
@@ -138,6 +139,32 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 .price-ma-select{height:25px;min-width:66px;padding-top:0;padding-bottom:0}
 .price-atr-select{height:25px;min-width:55px;padding-top:0;padding-bottom:0}
 .price-atr-select:disabled{opacity:.38;cursor:not-allowed;color:var(--t3)}
+/* Preset dropdown */
+.preset-wrap{position:relative;display:block;min-width:0}
+.preset-btn{width:100%;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t2);transition:.18s;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.preset-btn:hover{background:var(--bg3);color:var(--t1)}
+.preset-btn svg{width:15px;height:15px;display:block}
+.preset-btn.has-preset{border-color:#8b5cf6;color:#a78bfa;box-shadow:0 0 0 1px rgba(139,92,246,.18),0 0 14px rgba(139,92,246,.3)}
+[data-theme="light"] .preset-btn.has-preset{color:#6d28d9;box-shadow:0 0 0 1px rgba(109,40,217,.16),0 0 12px rgba(109,40,217,.2)}
+.preset-menu{display:none;position:absolute;left:0;top:calc(100% + 6px);width:390px;max-height:var(--screener-menu-max-height,calc(100vh - 190px));overflow-y:auto;overscroll-behavior:contain;background:var(--bg2);border:1px solid var(--bdr);border-radius:11px;padding:8px 0;z-index:110;box-shadow:0 10px 32px rgba(0,0,0,.32)}
+.preset-menu.open{display:block}
+.preset-section-title{padding:8px 14px 5px;font-size:9px;line-height:1;text-transform:uppercase;letter-spacing:1.15px;color:var(--t4);font-weight:800}
+.preset-section-title.laggards{margin-top:5px;padding-top:11px;border-top:1px solid var(--bdr2)}
+.preset-row{position:relative;display:flex;align-items:center;gap:7px;padding:4px 8px 4px 10px}
+.preset-choice{min-width:0;flex:1;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--t2);font-family:inherit;font-size:11px;font-weight:650;line-height:1.2;text-align:left;padding:7px 8px;cursor:pointer;transition:.16s}
+.preset-choice:hover{background:var(--bg3);color:var(--t1)}
+.preset-choice.active{color:#c4b5fd;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.55);box-shadow:0 0 12px rgba(139,92,246,.28)}
+[data-theme="light"] .preset-choice.active{color:#6d28d9;background:#f3e8ff;border-color:#c4b5fd;box-shadow:0 0 10px rgba(109,40,217,.17)}
+.preset-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.preset-help-wrap{position:relative}
+.preset-help{border:1px solid var(--bdr);border-radius:5px;background:var(--bg3);color:var(--t3);font-family:inherit;font-size:8px;font-weight:800;line-height:1;padding:5px 6px;cursor:help;text-transform:uppercase;letter-spacing:.25px}
+.preset-help:hover,.preset-help:focus-visible{color:var(--t1);border-color:var(--t4);outline:none}
+.preset-tooltip{display:none;position:absolute;right:0;top:calc(100% + 7px);width:270px;padding:10px 11px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg3);color:var(--t2);font-size:10px;font-weight:500;line-height:1.45;text-align:left;text-transform:none;letter-spacing:0;white-space:normal;z-index:140;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.preset-help-wrap:hover .preset-tooltip,.preset-help:focus+.preset-tooltip{display:block}
+.preset-tooltip ol{padding-left:17px;display:grid;gap:4px}
+.preset-row.tooltip-up .preset-tooltip{top:auto;bottom:calc(100% + 7px)}
+.preset-reset{margin:8px 10px 2px;width:calc(100% - 20px);padding:8px;border:1px solid var(--bdr);border-radius:7px;background:var(--bg3);color:var(--t3);font-family:inherit;font-size:10px;font-weight:750;cursor:pointer;text-transform:uppercase;letter-spacing:.55px}
+.preset-reset:hover{color:var(--t1);border-color:var(--t4)}
 /* Table */
 table{width:100%;border-collapse:collapse}
 th{position:sticky;top:var(--top-h);background:var(--bg3);padding:8px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);cursor:pointer;border-bottom:1px solid var(--bdr);white-space:nowrap;z-index:2}
@@ -625,23 +652,26 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 [data-view="mobile"] .seg-toggle .lbl-text{display:none}
 [data-view="mobile"] .seg-toggle .lbl-icon{display:inline-block}
 [data-view="mobile"] .filter-btn{padding:4px 8px;font-size:10px}
+[data-view="mobile"] .filter-icon-btn{width:26px;height:26px;padding:4px}
+[data-view="mobile"] .preset-btn{padding:4px 7px;font-size:10px}
 /* Keep the mobile filter panel fixed to the visible viewport so an empty result
-   table cannot collapse its containing layout and clip the controls. */
-[data-view="mobile"] .filter-menu{
+  table cannot collapse its containing layout and clip the controls. */
+[data-view="mobile"] .filter-menu,
+[data-view="mobile"] .preset-menu{
   position:fixed;
   right:auto;
   left:12px;
   right:12px;
-  top:var(--filter-menu-top,160px);
+  top:var(--screener-menu-top,160px);
   width:auto;
   min-width:0;
   max-width:none;
-  max-height:calc(100vh - var(--filter-menu-top,160px) - 12px);
-  max-height:calc(100dvh - var(--filter-menu-top,160px) - 12px);
+  max-height:var(--screener-menu-max-height,calc(100vh - var(--screener-menu-top,160px) - 12px));
   overflow-y:auto;
   overscroll-behavior:contain;
   padding-bottom:max(8px,env(safe-area-inset-bottom));
 }
+[data-view="mobile"] .preset-tooltip{width:min(270px,calc(100vw - 64px))}
 </style>
 <link rel="stylesheet" href="sidebar.css?v=20260710-mode2tabs">
 <script src="sidebar.js"></script>
@@ -665,6 +695,106 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
     <div style="font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Stock Screener</div>
   </div>
   <div class="hdr-r">
+    <div class="filter-wrap header-filter-wrap" id="filterWrap">
+      <button class="filter-btn filter-icon-btn" id="filterBtn" type="button" onclick="toggleFilterMenu()" aria-label="Filters" aria-controls="filterMenu" aria-haspopup="true" aria-expanded="false" title="Filters">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.08-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98L14.5 2.42A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.49.49 0 0 0-.61.22l-2 3.46a.49.49 0 0 0 .12.64l2.11 1.65c-.04.32-.08.66-.08.98s.03.66.08.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.12.22.38.31.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.04.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.08.49 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg>
+      </button>
+      <div class="filter-menu" id="filterMenu">
+        <div class="filter-menu-hdr">Filters</div>
+        <label class="filter-item filter-choice">
+          <span class="filter-label">VCP coil</span>
+          <input class="filter-check" id="filterCoiled" type="checkbox" data-bit="128" onchange="toggleSetupFilter(this)">
+        </label>
+        <label class="filter-item filter-choice">
+          <span class="filter-label">Not Extended (&lt;6x)</span>
+          <input class="filter-check" id="filterNotExtended" type="checkbox" onchange="toggleNotExtended(this)">
+        </label>
+        <div class="filter-item filter-choice">
+          <span class="filter-label">Top
+            <select class="filter-select" id="topOnlySelect" onchange="updateTopOnlyPercent(this)">
+              <option value="5">5%</option>
+              <option value="10">10%</option>
+              <option value="15">15%</option>
+              <option value="25">25%</option>
+              <option value="40">40%</option>
+              <option value="50" selected>50%</option>
+              <option value="70">70%</option>
+              <option value="85">85%</option>
+              <option value="100">100%</option>
+            </select>
+            only
+          </span>
+          <input class="filter-check" id="filterTopOnly" type="checkbox" onchange="toggleTopOnly(this)">
+        </div>
+        <div class="filter-item filter-choice">
+          <span class="filter-label">Positive
+            <select class="filter-select" id="positiveDeltaSelect" onchange="updatePositiveDeltaDays(this)">
+              <option value="1" selected>1D</option>
+              <option value="2">2D</option>
+              <option value="3">3D</option>
+              <option value="4">4D</option>
+              <option value="5">5D</option>
+              <option value="6">6D</option>
+              <option value="7">7D</option>
+              <option value="8">8D</option>
+              <option value="9">9D</option>
+              <option value="10">10D</option>
+            </select>
+            delta
+          </span>
+          <input class="filter-check" id="filterPositiveDelta" type="checkbox" onchange="togglePositiveDelta(this)">
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-label">Positive % Change</div>
+          <div class="filter-options">
+            <label class="filter-option">1D<input class="filter-check positive-change-check" type="checkbox" data-period="ch" onchange="togglePositiveChangePeriod(this)"></label>
+            <label class="filter-option">1W<input class="filter-check positive-change-check" type="checkbox" data-period="c5" onchange="togglePositiveChangePeriod(this)"></label>
+            <label class="filter-option">1M<input class="filter-check positive-change-check" type="checkbox" data-period="c20" onchange="togglePositiveChangePeriod(this)"></label>
+            <label class="filter-option">YTD<input class="filter-check positive-change-check" type="checkbox" data-period="ytd" onchange="togglePositiveChangePeriod(this)"></label>
+          </div>
+        </div>
+        <div class="filter-item filter-choice">
+          <span class="filter-label">MCap
+            <select class="filter-select" id="marketCapSelect" onchange="updateMarketCapBand(this)">
+              <option value="gt2" selected>&gt;2B</option>
+              <option value="2to10">2B to 10B</option>
+              <option value="gt10">&gt;10B</option>
+              <option value="10to100">10B to 100B</option>
+              <option value="gt100">&gt;100B</option>
+              <option value="gt200">&gt;200B</option>
+              <option value="gt500">&gt;500B</option>
+            </select>
+          </span>
+          <input class="filter-check" id="filterMarketCap" type="checkbox" onchange="toggleMarketCap(this)">
+        </div>
+        <div class="filter-group">
+          <div class="price-proximity-row">
+            <span>Price</span>
+            <button class="price-direction-btn" id="priceDirectionButton" type="button" onclick="togglePriceDirection()">above</button>
+            <select class="filter-select price-ma-select" id="priceMaSelect" onchange="updatePriceMovingAverage(this)">
+              <option value="" selected>Select</option>
+              <option value="ema9">9ema</option>
+              <option value="ema21">21ema</option>
+              <option value="sma50">50sma</option>
+              <option value="ema65">65ema</option>
+              <option value="sma200">200sma</option>
+            </select>
+            <span>by &lt;</span>
+            <select class="filter-select price-atr-select" id="priceAtrSelect" onchange="updatePriceAtrLimit(this)" disabled>
+              <option value="1" selected>1x</option>
+              <option value="0.5">0.5x</option>
+              <option value="0.4">0.4x</option>
+              <option value="0.3">0.3x</option>
+              <option value="0.2">0.2x</option>
+              <option value="0.1">0.1x</option>
+            </select>
+            <span>ATR</span>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--bdr);margin:6px 0"></div>
+        <div class="filter-item" onclick="resetAllFilters()" style="color:var(--t3);font-size:11px">Clear All Filters</div>
+      </div>
+    </div>
     <div class="seg-toggle" id="viewToggle">
       <button id="viewList" class="on" onclick="switchView('list')" title="List view">
         <span class="lbl-text">List</span>
@@ -697,102 +827,19 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
   </div>
 </div>
 <div class="filter-search-row">
-  <div class="filter-wrap">
-    <button class="filter-btn" id="filterBtn" onclick="toggleFilterMenu()">⚙ Filters</button>
-    <div class="filter-menu" id="filterMenu">
-      <div class="filter-menu-hdr">Filters</div>
-      <label class="filter-item filter-choice">
-        <span class="filter-label">VCP coil</span>
-        <input class="filter-check" id="filterCoiled" type="checkbox" data-bit="128" onchange="toggleSetupFilter(this)">
-      </label>
-      <label class="filter-item filter-choice">
-        <span class="filter-label">Not Extended (&lt;6x)</span>
-        <input class="filter-check" id="filterNotExtended" type="checkbox" onchange="toggleNotExtended(this)">
-      </label>
-      <div class="filter-item filter-choice">
-        <span class="filter-label">Top
-          <select class="filter-select" id="topOnlySelect" onchange="updateTopOnlyPercent(this)">
-            <option value="5">5%</option>
-            <option value="10">10%</option>
-            <option value="15">15%</option>
-            <option value="25">25%</option>
-            <option value="40">40%</option>
-            <option value="50" selected>50%</option>
-            <option value="70">70%</option>
-            <option value="85">85%</option>
-            <option value="100">100%</option>
-          </select>
-          only
-        </span>
-        <input class="filter-check" id="filterTopOnly" type="checkbox" onchange="toggleTopOnly(this)">
-      </div>
-      <div class="filter-item filter-choice">
-        <span class="filter-label">Positive
-          <select class="filter-select" id="positiveDeltaSelect" onchange="updatePositiveDeltaDays(this)">
-            <option value="1" selected>1D</option>
-            <option value="2">2D</option>
-            <option value="3">3D</option>
-            <option value="4">4D</option>
-            <option value="5">5D</option>
-            <option value="6">6D</option>
-            <option value="7">7D</option>
-            <option value="8">8D</option>
-            <option value="9">9D</option>
-            <option value="10">10D</option>
-          </select>
-          delta
-        </span>
-        <input class="filter-check" id="filterPositiveDelta" type="checkbox" onchange="togglePositiveDelta(this)">
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-label">Positive % Change</div>
-        <div class="filter-options">
-          <label class="filter-option">1D<input class="filter-check positive-change-check" type="checkbox" data-period="ch" onchange="togglePositiveChangePeriod(this)"></label>
-          <label class="filter-option">1W<input class="filter-check positive-change-check" type="checkbox" data-period="c5" onchange="togglePositiveChangePeriod(this)"></label>
-          <label class="filter-option">1M<input class="filter-check positive-change-check" type="checkbox" data-period="c20" onchange="togglePositiveChangePeriod(this)"></label>
-          <label class="filter-option">YTD<input class="filter-check positive-change-check" type="checkbox" data-period="ytd" onchange="togglePositiveChangePeriod(this)"></label>
-        </div>
-      </div>
-      <div class="filter-item filter-choice">
-        <span class="filter-label">MCap
-          <select class="filter-select" id="marketCapSelect" onchange="updateMarketCapBand(this)">
-            <option value="gt2" selected>&gt;2B</option>
-            <option value="2to10">2B to 10B</option>
-            <option value="gt10">&gt;10B</option>
-            <option value="10to100">10B to 100B</option>
-            <option value="gt100">&gt;100B</option>
-            <option value="gt200">&gt;200B</option>
-            <option value="gt500">&gt;500B</option>
-          </select>
-        </span>
-        <input class="filter-check" id="filterMarketCap" type="checkbox" onchange="toggleMarketCap(this)">
-      </div>
-      <div class="filter-group">
-        <div class="price-proximity-row">
-          <span>Price</span>
-          <button class="price-direction-btn" id="priceDirectionButton" type="button" onclick="togglePriceDirection()">above</button>
-          <select class="filter-select price-ma-select" id="priceMaSelect" onchange="updatePriceMovingAverage(this)">
-            <option value="" selected>Select</option>
-            <option value="ema9">9ema</option>
-            <option value="ema21">21ema</option>
-            <option value="sma50">50sma</option>
-            <option value="ema65">65ema</option>
-            <option value="sma200">200sma</option>
-          </select>
-          <span>by &lt;</span>
-          <select class="filter-select price-atr-select" id="priceAtrSelect" onchange="updatePriceAtrLimit(this)" disabled>
-            <option value="1" selected>1x</option>
-            <option value="0.5">0.5x</option>
-            <option value="0.4">0.4x</option>
-            <option value="0.3">0.3x</option>
-            <option value="0.2">0.2x</option>
-            <option value="0.1">0.1x</option>
-          </select>
-          <span>ATR</span>
-        </div>
-      </div>
-      <div style="border-top:1px solid var(--bdr);margin:6px 0"></div>
-      <div class="filter-item" onclick="clearFilters()" style="color:var(--t3);font-size:11px">Clear All Filters</div>
+  <div class="preset-wrap" id="presetWrap">
+    <button class="preset-btn" id="presetsBtn" type="button" onclick="togglePresetMenu()" aria-controls="presetMenu" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <path d="M4 6h16M4 12h16M4 18h16"></path>
+        <circle cx="14.5" cy="6" r="2.2" fill="var(--bg2)"></circle>
+        <circle cx="8.5" cy="12" r="2.2" fill="var(--bg2)"></circle>
+        <circle cx="15.5" cy="18" r="2.2" fill="var(--bg2)"></circle>
+      </svg>
+      <span>Presets</span>
+    </button>
+    <div class="preset-menu" id="presetMenu">
+      <div id="presetOptions"></div>
+      <button class="preset-reset" type="button" onclick="resetAllFilters()">Reset filters</button>
     </div>
   </div>
   <input class="srch" id="si" placeholder="Search ticker, name, theme..." oninput="handleScreenerSearch()">
@@ -844,6 +891,7 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
   <input class="search-input" id="searchInput" placeholder="Enter stock ticker (e.g. AAPL, TSLA, NVDA)..." oninput="searchStock()">
   <div id="searchResults"></div>
 </div>
+<script src="screener-presets.js"></script>
 <script>
 let DATA=null,HISTORY=null,ETF_DATA=null,FUNDAMENTALS=null,OWNERSHIP_13F=null,PROFILE_ETF_OVERRIDES=null,sortKey='rk',sortDir=1,currentTab='weekly',currentPage=1;
 const PRESS_RELEASE_SHARDS=new Map();
@@ -869,6 +917,7 @@ const CHART_PAGE_SIZE=24;  // chart grid pagination
 const PROFILE_HISTORY_PAGE_SIZE=20;
 let rankLookback=1;
 let activeFilters=0; // bitmask of required setup flags
+let activePreset='';
 let filterNotExtended=false;
 let filterTopOnly=false;
 let topOnlyPercent=50;
@@ -1039,15 +1088,85 @@ function switchView(view){
 
 function toggleFilterMenu(){
   const menu=document.getElementById('filterMenu');
-  menu.classList.toggle('open');
-  if(menu.classList.contains('open'))positionMobileFilterMenu();
+  const willOpen=menu&&!menu.classList.contains('open');
+  closeScreenerMenu('presetMenu','presetsBtn');
+  setScreenerMenuOpen('filterMenu','filterBtn',willOpen);
 }
-function positionMobileFilterMenu(){
-  const menu=document.getElementById('filterMenu');
-  const button=document.getElementById('filterBtn');
-  if(!menu||!button||document.documentElement.getAttribute('data-view')!=='mobile')return;
+function togglePresetMenu(){
+  const menu=document.getElementById('presetMenu');
+  const willOpen=menu&&!menu.classList.contains('open');
+  closeScreenerMenu('filterMenu','filterBtn');
+  setScreenerMenuOpen('presetMenu','presetsBtn',willOpen);
+}
+function setScreenerMenuOpen(menuId,buttonId,open){
+  const menu=document.getElementById(menuId);
+  const button=document.getElementById(buttonId);
+  if(!menu||!button)return;
+  menu.classList.toggle('open',!!open);
+  button.setAttribute('aria-expanded',open?'true':'false');
+  if(open)positionScreenerMenu(menuId,buttonId);
+}
+function closeScreenerMenu(menuId,buttonId){
+  setScreenerMenuOpen(menuId,buttonId,false);
+}
+function closeScreenerMenus(){
+  closeScreenerMenu('filterMenu','filterBtn');
+  closeScreenerMenu('presetMenu','presetsBtn');
+}
+function positionScreenerMenu(menuId,buttonId){
+  const menu=document.getElementById(menuId);
+  const button=document.getElementById(buttonId);
+  if(!menu||!button)return;
   const buttonRect=button.getBoundingClientRect();
-  menu.style.setProperty('--filter-menu-top',`${Math.ceil(buttonRect.bottom+6)}px`);
+  const availableHeight=Math.max(96,Math.floor(window.innerHeight-buttonRect.bottom-12));
+  menu.style.setProperty('--screener-menu-max-height',`${availableHeight}px`);
+  if(document.documentElement.getAttribute('data-view')==='mobile'){
+    menu.style.setProperty('--screener-menu-top',`${Math.ceil(buttonRect.bottom+6)}px`);
+  }
+}
+function renderPresetOptions(){
+  const host=document.getElementById('presetOptions');
+  if(!host||!window.ScreenerPresets)return;
+  const presets=window.ScreenerPresets.PRESETS;
+  const rows=presets.map((preset,index)=>{
+    const criteria=preset.criteria.map(item=>`<li>${esc(item)}</li>`).join('');
+    return `<div class="preset-row${index>=4?' tooltip-up':''}">
+      <button class="preset-choice" type="button" data-preset-id="${esc(preset.id)}" aria-pressed="false" onclick="selectPreset('${esc(preset.id)}')">${esc(preset.name)}</button>
+      <div class="preset-actions">
+        <div class="preset-help-wrap">
+          <button class="preset-help" type="button" aria-label="Info for ${esc(preset.name)}" aria-describedby="preset-info-${index}" onclick="event.stopPropagation()">Info</button>
+          <div class="preset-tooltip" id="preset-info-${index}" role="tooltip">${esc(preset.info)}</div>
+        </div>
+        <div class="preset-help-wrap">
+          <button class="preset-help" type="button" aria-label="Criteria for ${esc(preset.name)}" aria-describedby="preset-criteria-${index}" onclick="event.stopPropagation()">Criteria</button>
+          <div class="preset-tooltip" id="preset-criteria-${index}" role="tooltip"><ol>${criteria}</ol></div>
+        </div>
+      </div>
+    </div>`;
+  });
+  const leaderCount=presets.filter(preset=>preset.group==='leaders').length;
+  host.innerHTML=`<div class="preset-section-title">Leaders</div>${rows.slice(0,leaderCount).join('')}
+    <div class="preset-section-title laggards">Laggards</div>${rows.slice(leaderCount).join('')}`;
+  updatePresetButton();
+}
+function selectPreset(presetId){
+  if(!window.ScreenerPresets||!window.ScreenerPresets.PRESET_BY_ID[presetId])return;
+  clearManualFilterState();
+  activePreset=presetId;
+  updateFilterButton();
+  updatePresetButton();
+  currentPage=1;
+  chartPage=1;
+  renderActiveScreenerView();
+}
+function updatePresetButton(){
+  const button=document.getElementById('presetsBtn');
+  if(button)button.classList.toggle('has-preset',!!activePreset);
+  document.querySelectorAll('.preset-choice').forEach(choice=>{
+    const selected=choice.dataset.presetId===activePreset;
+    choice.classList.toggle('active',selected);
+    choice.setAttribute('aria-pressed',selected?'true':'false');
+  });
 }
 function renderActiveScreenerView(){
   if(currentView==='chart'&&currentTab!=='overview'&&currentTab!=='search')renderChartView();
@@ -1061,7 +1180,8 @@ function filterChanged(){
 }
 function updateFilterButton(){
   const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly||filterPositiveDelta||positiveChangePeriods.size||filterMarketCap||priceMovingAverage);
-  document.getElementById('filterBtn').className=hasFilter?'filter-btn has-filter':'filter-btn';
+  const button=document.getElementById('filterBtn');
+  if(button)button.classList.toggle('has-filter',hasFilter);
 }
 function toggleSetupFilter(el){
   const bit=parseInt(el.dataset.bit,10);
@@ -1133,7 +1253,7 @@ function handleScreenerSearch(){
   chartPage=1;
   renderActiveScreenerView();
 }
-function clearFilters(){
+function clearManualFilterState(){
   activeFilters=0;
   filterNotExtended=false;
   filterTopOnly=false;
@@ -1160,19 +1280,32 @@ function clearFilters(){
   const priceAtrSelect=document.getElementById('priceAtrSelect');
   if(priceAtrSelect)priceAtrSelect.value='1';
   updatePriceFilterControls();
+}
+function resetAllFilters(){
+  const focusTarget=document.getElementById('presetMenu').classList.contains('open')
+    ?document.getElementById('presetsBtn')
+    :document.getElementById('filterMenu').classList.contains('open')
+      ?document.getElementById('filterBtn')
+      :null;
+  clearManualFilterState();
+  activePreset='';
   updateFilterButton();
-  document.getElementById('filterMenu').classList.remove('open');
+  updatePresetButton();
+  closeScreenerMenus();
+  if(focusTarget)focusTarget.focus();
   currentPage=1;
   chartPage=1;
   renderActiveScreenerView();
 }
-// Close filter menu when clicking outside
+function clearFilters(){
+  resetAllFilters();
+}
+// Close screener menus when clicking outside
 document.addEventListener('click',e=>{
-  const wrap=document.getElementById('filterMenu');
-  const btn=document.getElementById('filterBtn');
-  if(wrap && !wrap.contains(e.target) && e.target!==btn){
-    wrap.classList.remove('open');
-  }
+  const filterWrap=document.getElementById('filterWrap');
+  const presetWrap=document.getElementById('presetWrap');
+  if(filterWrap&&!filterWrap.contains(e.target))closeScreenerMenu('filterMenu','filterBtn');
+  if(presetWrap&&!presetWrap.contains(e.target))closeScreenerMenu('presetMenu','presetsBtn');
   document.querySelectorAll('.rs-history-help.open').forEach(help=>{
     if(help.contains(e.target))return;
     help.classList.remove('open');
@@ -1180,15 +1313,30 @@ document.addEventListener('click',e=>{
     if(button)button.setAttribute('aria-expanded','false');
   });
 });
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const focusTarget=document.getElementById('presetMenu').classList.contains('open')
+    ?document.getElementById('presetsBtn')
+    :document.getElementById('filterMenu').classList.contains('open')
+      ?document.getElementById('filterBtn')
+      :null;
+  closeScreenerMenus();
+  if(focusTarget)focusTarget.focus();
+});
 window.addEventListener('resize',()=>{
-  const menu=document.getElementById('filterMenu');
-  if(menu&&menu.classList.contains('open'))positionMobileFilterMenu();
+  for(const [menuId,buttonId] of [['filterMenu','filterBtn'],['presetMenu','presetsBtn']]){
+    const menu=document.getElementById(menuId);
+    if(menu&&menu.classList.contains('open'))positionScreenerMenu(menuId,buttonId);
+  }
 });
 if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>{
-  const menu=document.getElementById('filterMenu');
-  if(menu&&menu.classList.contains('open'))positionMobileFilterMenu();
+  for(const [menuId,buttonId] of [['filterMenu','filterBtn'],['presetMenu','presetsBtn']]){
+    const menu=document.getElementById(menuId);
+    if(menu&&menu.classList.contains('open'))positionScreenerMenu(menuId,buttonId);
+  }
 });
 updatePriceFilterControls();
+renderPresetOptions();
 
 function toSGT(utcStr){
   try{const s=utcStr.replace(' UTC','Z').replace(' ','T');const d=new Date(s);if(isNaN(d))return utcStr;
@@ -1340,8 +1488,7 @@ function switchTab(tab){
   currentTab=tab;currentPage=1;chartPage=1;sortKey='rk';sortDir=1;
   // Close the filter popup if open — it's anchored to the filter button which may
   // be hidden when leaving the RS Ranking tab.
-  const fm=document.getElementById('filterMenu');
-  if(fm)fm.classList.remove('open');
+  closeScreenerMenus();
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(tab==='overview'?'tabO':tab==='weekly'?'tabW':'tabS').classList.add('active');
   const viewToggle=document.getElementById('viewToggle');
@@ -1353,8 +1500,8 @@ function switchTab(tab){
     document.getElementById('searchPanel').style.display='none';
     document.getElementById('si').style.display='none';
     if(viewToggle)viewToggle.style.display='none';
-    const filterBtn=document.getElementById('filterBtn');
-    if(filterBtn)filterBtn.style.display='none';
+    const filterWrap=document.getElementById('filterWrap');
+    if(filterWrap)filterWrap.style.display='none';
     // Hide the whole filter-search row since both of its controls (Filters + Search)
     // are hidden on Overview — otherwise the empty bar still occupies space.
     const fsRow=document.querySelector('.filter-search-row');
@@ -1372,8 +1519,8 @@ function switchTab(tab){
     document.getElementById('searchPanel').style.display='block';
     document.getElementById('si').style.display='none';
     viewToggle.style.display='none';  // view toggle hidden in search tab
-    const filterBtn=document.getElementById('filterBtn');
-    if(filterBtn)filterBtn.style.display='none';
+    const filterWrap=document.getElementById('filterWrap');
+    if(filterWrap)filterWrap.style.display='none';
     // Hide the whole filter-search row — both Filters and Search are hidden on
     // Individual Profile, so the empty bar shouldn't take up space.
     const fsRow=document.querySelector('.filter-search-row');
@@ -1390,8 +1537,8 @@ function switchTab(tab){
     document.getElementById('searchPanel').style.display='none';
     document.getElementById('si').style.display='';
     viewToggle.style.display='';
-    const filterBtn=document.getElementById('filterBtn');
-    if(filterBtn)filterBtn.style.display='';
+    const filterWrap=document.getElementById('filterWrap');
+    if(filterWrap)filterWrap.style.display='';
     // Re-show the filter-search row (both Filters and Search are visible here).
     const fsRow=document.querySelector('.filter-search-row');
     if(fsRow)fsRow.style.display='';
@@ -1699,6 +1846,7 @@ function setLayout(mobile){
   document.getElementById('btnDesktop').classList.toggle('on',!mobile);
   document.getElementById('btnMobile').classList.toggle('on',mobile);
   document.documentElement.setAttribute('data-view',mobile?'mobile':'desktop');
+  closeScreenerMenus();
   // Note: the manual toggle only affects the current session. On refresh, detectIsMobile()
   // re-runs and picks the layout based on current viewport/UA.
   if(currentTab!=='search'){
@@ -1908,6 +2056,10 @@ function prioritizeTickerMatches(items, f){
   return [...exact, ...prefix, ...contains, ...rest];
 }
 function applyScreenerFilters(items,isW){
+  if(activePreset&&window.ScreenerPresets){
+    const total=rankedStockCount();
+    items=items.filter(e=>window.ScreenerPresets.matchesPreset(activePreset,e,total));
+  }
   if(activeFilters)items=items.filter(e=>((e.sf||0)&activeFilters)===activeFilters);
   if(filterNotExtended)items=items.filter(e=>e.ax!=null&&e.ax<600);
   if(filterPositiveDelta)items=items.filter(e=>{
@@ -3198,7 +3350,7 @@ async function loadData(){
       document.getElementById('ovPanel').style.display='grid';
       document.getElementById('si').style.display='none';
       const vt=document.getElementById('viewToggle');if(vt)vt.style.display='none';
-      const fb=document.getElementById('filterBtn');if(fb)fb.style.display='none';
+      const fw=document.getElementById('filterWrap');if(fw)fw.style.display='none';
     }else if(currentView==='chart'&&currentTab!=='search'){
       document.getElementById('chartGrid').style.display='';
       document.getElementById('chartPagination').style.display='';

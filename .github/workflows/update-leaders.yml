@@ -77,16 +77,22 @@ jobs:
         if: steps.market_check.outputs.skip != 'true'
         run: pip install --retries 5 --timeout 60 yfinance numpy requests curl_cffi
 
+      - name: Test screener preset calculations
+        if: steps.market_check.outputs.skip != 'true'
+        run: |
+          python -m unittest tests.test_preset_metrics tests.test_vcp_coils -v
+          node tests/test_screener_presets.js
+
       - name: Fetch Liquid Leaders data
         if: steps.market_check.outputs.skip != 'true'
         run: |
           if [ "${{ inputs.force || false }}" = "true" ]; then
             export FORCE_INTRADAY=1
           fi
-          if [ -f leaders_intraday_baselines.json ]; then
+          if [ -f leaders_intraday_baselines.json ] && python -c "import json; b=json.load(open('leaders_intraday_baselines.json')).get('d',{}); e=json.load(open('leaders.json')).get('e',[]); assert b and e and all('_preset_last_date' in v for v in b.values()) and all('pf' in v and 'vcp_coil_1' in v and 'vcp_coil_2' in v for v in e)"; then
             python fetch_leaders_intraday.py
           else
-            echo "leaders_intraday_baselines.json missing — running one full rebuild to seed intraday baselines"
+            echo "Preset-ready intraday baselines missing — running one full rebuild"
             python fetch_leaders.py
           fi
 

@@ -31,6 +31,11 @@ jobs:
       - name: Install dependencies
         run: pip install --retries 5 --timeout 60 yfinance numpy requests curl_cffi
 
+      - name: Test screener preset calculations
+        run: |
+          python -m unittest tests.test_preset_metrics tests.test_vcp_coils -v
+          node tests/test_screener_presets.js
+
       - name: Fetch full Liquid Leaders data
         run: python fetch_leaders.py
 

@@ -37,6 +37,7 @@ except ImportError:
     _session = None
 
 from fetch_data import percentrank_inc
+from preset_metrics import compute_intraday_preset_state
 from fetch_leaders import (
     HARD_EXCLUDE,
     INTRADAY_BASELINES_FILE,
@@ -135,8 +136,17 @@ def fetch_quotes_yahoo_endpoint(tickers):
                 last = quote_get(q, "regularMarketPrice", "postMarketPrice", "preMarketPrice")
                 prev = quote_get(q, "regularMarketPreviousClose", "regularMarketPreviousCloseRaw")
                 vol = quote_get(q, "regularMarketVolume")
+                day_high = quote_get(q, "regularMarketDayHigh")
+                day_low = quote_get(q, "regularMarketDayLow")
                 if last is not None:
-                    out[tk] = {"last": last, "prev": prev, "volume": vol, "source": "quote"}
+                    out[tk] = {
+                        "last": last,
+                        "prev": prev,
+                        "volume": vol,
+                        "day_high": day_high,
+                        "day_low": day_low,
+                        "source": "quote",
+                    }
         except Exception:
             pass
         time.sleep(0.2)
@@ -171,6 +181,23 @@ def extract_download_ticker(df, tk):
         return None
 
 
+def download_day_extremes(sub):
+    day_high = None
+    day_low = None
+    try:
+        if "High" in sub:
+            highs = sub["High"].dropna()
+            if len(highs):
+                day_high = float(highs.iloc[-1])
+        if "Low" in sub:
+            lows = sub["Low"].dropna()
+            if len(lows):
+                day_low = float(lows.iloc[-1])
+    except Exception:
+        pass
+    return day_high, day_low
+
+
 def fetch_quotes_yfinance_download(tickers):
     out = {}
     if not tickers:
@@ -203,7 +230,15 @@ def fetch_quotes_yfinance_download(tickers):
                             volumes = volumes.dropna()
                             if len(volumes) >= 1:
                                 volume = float(volumes.iloc[-1])
-                        out[batch[0]] = {"last": float(closes.iloc[-1]), "prev": prev, "volume": volume, "source": "download"}
+                        day_high, day_low = download_day_extremes(sub)
+                        out[batch[0]] = {
+                            "last": float(closes.iloc[-1]),
+                            "prev": prev,
+                            "volume": volume,
+                            "day_high": day_high,
+                            "day_low": day_low,
+                            "source": "download",
+                        }
             else:
                 for tk in batch:
                     sub = extract_download_ticker(df, tk)
@@ -217,7 +252,15 @@ def fetch_quotes_yfinance_download(tickers):
                             volumes = sub["Volume"].dropna()
                             if len(volumes) >= 1:
                                 volume = float(volumes.iloc[-1])
-                        out[tk] = {"last": float(closes.iloc[-1]), "prev": prev, "volume": volume, "source": "download"}
+                        day_high, day_low = download_day_extremes(sub)
+                        out[tk] = {
+                            "last": float(closes.iloc[-1]),
+                            "prev": prev,
+                            "volume": volume,
+                            "day_high": day_high,
+                            "day_low": day_low,
+                            "source": "download",
+                        }
         except Exception:
             pass
         time.sleep(0.4)
@@ -231,8 +274,17 @@ def fetch_fast_info_one(ticker):
         last = quote_get(fi, "lastPrice", "last_price")
         prev = quote_get(fi, "previousClose", "previous_close")
         volume = quote_get(fi, "lastVolume", "last_volume", "regularMarketVolume", "regular_market_volume")
+        day_high = quote_get(fi, "dayHigh", "day_high")
+        day_low = quote_get(fi, "dayLow", "day_low")
         if last is not None:
-            return ticker, {"last": last, "prev": prev, "volume": volume, "source": "fast_info"}
+            return ticker, {
+                "last": last,
+                "prev": prev,
+                "volume": volume,
+                "day_high": day_high,
+                "day_low": day_low,
+                "source": "fast_info",
+            }
     except Exception:
         pass
     return ticker, None
@@ -361,7 +413,16 @@ def valid_quote(ticker, quote, old_price):
             print(f"  [reject] {ticker}: 1D change {ch:.1f}% implausible")
             return None
     volume = finite_num(quote.get("volume"))
-    return {"last": last, "prev": prev, "volume": volume, "source": quote.get("source", "")}
+    day_high = finite_num(quote.get("day_high"))
+    day_low = finite_num(quote.get("day_low"))
+    return {
+        "last": last,
+        "prev": prev,
+        "volume": volume,
+        "day_high": max(last, day_high) if day_high else last,
+        "day_low": min(last, day_low) if day_low else last,
+        "source": quote.get("source", ""),
+    }
 
 
 WEEKLY_WEIGHTS = [0.12, 0.11, 0.10, 0.09, 0.08, 0.08, 0.08, 0.08, 0.07, 0.07, 0.06, 0.06]
@@ -477,27 +538,56 @@ def update_change_fields(entry, base, quote):
         if b:
             entry[out_key] = round((live / b - 1) * 100, 2)
 
+    preset_state = None
+    if quote.get("source") != "prior_entry":
+        preset_state = compute_intraday_preset_state(
+            base,
+            live,
+            session_date=et_now().date().isoformat(),
+            day_high=quote.get("day_high"),
+            day_low=quote.get("day_low"),
+        )
+        if preset_state:
+            entry["pf"] = preset_state["flags"]
+
+    ma_values = {
+        name: finite_num(base.get(key))
+        for name, key in (
+            ("ema9", "_ma_ema9"),
+            ("ema21", "_ma_ema21"),
+            ("sma50", "_ma_sma50"),
+            ("ema65", "_ma_ema65"),
+            ("sma200", "_ma_sma200"),
+        )
+    }
+    if preset_state:
+        for name in ("ema9", "ema21", "sma50"):
+            live_value = finite_num(preset_state["ma_values"].get(name))
+            if live_value:
+                ma_values[name] = live_value
+
+    technical_live = (
+        preset_state.get("technical_price")
+        if preset_state
+        else live
+    )
     atr = finite_num(base.get("_atr"))
-    sma50 = finite_num(base.get("_ma_sma50"))
-    atr_pct = (atr / live * 100) if atr and live > 0 else None
+    sma50 = ma_values["sma50"]
+    atr_pct = (atr / technical_live * 100) if atr and technical_live > 0 else None
     if atr_pct and atr_pct > 0:
         entry["atr"] = round(atr_pct, 2)
     if atr and sma50:
-        gain_pct = (live - sma50) / sma50 * 100
+        gain_pct = (technical_live - sma50) / sma50 * 100
         if atr_pct > 0:
             entry["ax"] = round((gain_pct / atr_pct) * 100)
 
     ma_flags = 0
-    for bit, key in ((1, "_ma_ema9"), (2, "_ma_ema21"), (4, "_ma_sma50"), (8, "_ma_ema65"), (16, "_ma_sma200")):
-        moving_average = finite_num(base.get(key))
-        if moving_average and live > moving_average:
+    for bit, name in ((1, "ema9"), (2, "ema21"), (4, "sma50"), (8, "ema65"), (16, "sma200")):
+        moving_average = ma_values[name]
+        if moving_average and technical_live > moving_average:
             ma_flags |= bit
     entry["ma"] = ma_flags
-    entry["md"] = ma_atr_distances(
-        live,
-        atr,
-        {name: finite_num(base.get(key)) for name, key in (("ema9", "_ma_ema9"), ("ema21", "_ma_ema21"), ("sma50", "_ma_sma50"), ("ema65", "_ma_ema65"), ("sma200", "_ma_sma200"))},
-    )
+    entry["md"] = ma_atr_distances(technical_live, atr, ma_values)
 
 def rerank(entries, baselines, quotes, spy_quote):
     week_id, _ = current_week_id()

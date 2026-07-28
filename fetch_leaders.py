@@ -34,6 +34,11 @@ from fetch_data import (
     percentrank_inc,
 )
 from theme_history import load_theme_snapshot_index, prepare_theme_history, set_theme_snapshot, snapshot_for_stock
+from preset_metrics import (
+    build_preset_intraday_baseline,
+    compute_intraday_preset_state,
+    compute_preset_flags,
+)
 from vcp_coils import (
     compute_vcp_coil_definition_2,
     set_aligned_vcp_history_value,
@@ -1073,7 +1078,7 @@ def ma_atr_distances(price, atr_dollars, ma_values):
         moving_average = ma_values.get(key)
         try:
             value = (price - float(moving_average)) / atr_dollars
-            distances.append(round(value, 3) if np.isfinite(value) else None)
+            distances.append(float(value) if np.isfinite(value) else None)
         except (TypeError, ValueError):
             distances.append(None)
     return distances
@@ -1224,6 +1229,23 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         if moving_average is not None and price > moving_average:
             ma_flags |= bit
     ma_distances = ma_atr_distances(price, atr, ma_values)
+    preset_flags = compute_preset_flags(
+        o,
+        h,
+        l,
+        c,
+        ma_values["ema9"],
+        ma_values["ema21"],
+    )
+    preset_intraday_baseline = build_preset_intraday_baseline(
+        o,
+        h,
+        l,
+        c,
+        last_date=_last_date.isoformat() if _last_date is not None else None,
+    )
+    if display_price > 0:
+        preset_intraday_baseline["_preset_price_scale"] = price / display_price
 
     # ─── Trailing 5-day R.Vol (rolling, week-of-day-agnostic) ────────────────
     # Unlike `w_rv` (week-to-date, resets every Monday), this is a rolling 5-session
@@ -1267,6 +1289,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "atr": round(atr_pct, 2) if atr_pct is not None else None,
                 "ma": ma_flags,
                 "md": ma_distances,
+                "pf": preset_flags,
                 "c5": round(c5, 2) if c5 is not None else None,
                 "c20": round(c20, 2) if c20 is not None else None,
                 "ytd": round(ytd, 2) if ytd is not None else None,
@@ -1289,6 +1312,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "_ma_sma50": ma_values["sma50"],
                 "_ma_ema65": ma_values["ema65"],
                 "_ma_sma200": ma_values["sma200"],
+                **preset_intraday_baseline,
                 **_setup_base}
 
     # Handle IPOs with <252 bars: use actual bar count (mirrors Pine's "n63/n126/n189/n252" logic)
@@ -1470,6 +1494,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "atr": round(atr_pct, 2) if atr_pct is not None else None,
         "ma": ma_flags,
         "md": ma_distances,
+        "pf": preset_flags,
         "c5": round(c5, 2) if c5 is not None else None,
         "c20": round(c20, 2) if c20 is not None else None,
         "ytd": round(ytd, 2) if ytd is not None else None,
@@ -1498,6 +1523,7 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "_ma_sma50": ma_values["sma50"],
         "_ma_ema65": ma_values["ema65"],
         "_ma_sma200": ma_values["sma200"],
+        **preset_intraday_baseline,
         **setup_base,
     }
 
@@ -2079,7 +2105,7 @@ def fetch_bulk_market_caps(tickers, chunk_size=MARKET_CAP_QUOTE_CHUNK):
 
 def fetch_live_quote(ticker):
     """Fetch live (intraday) quote for a single ticker via fast_info.
-    Returns (last_price, prev_close, live_volume) or (None, None, None) on failure.
+    Returns price, prior close, volume, day high, and day low.
     """
     try:
         ti = yf.Ticker(ticker, session=_session)
@@ -2090,16 +2116,20 @@ def fetch_live_quote(ticker):
             "lastVolume",
             fi.get("last_volume", fi.get("regularMarketVolume", fi.get("regular_market_volume"))),
         )
+        day_high = fi.get("dayHigh", fi.get("day_high"))
+        day_low = fi.get("dayLow", fi.get("day_low"))
         last = float(last) if last not in (None, 0) else None
         prev = float(prev) if prev not in (None, 0) else None
         volume = float(volume) if volume not in (None, 0) else None
-        return last, prev, volume
+        day_high = float(day_high) if day_high not in (None, 0) else None
+        day_low = float(day_low) if day_low not in (None, 0) else None
+        return last, prev, volume, day_high, day_low
     except Exception:
-        return None, None, None
+        return None, None, None, None, None
 
 
 def fetch_live_quotes_bulk(tickers, max_workers=20):
-    """Parallel-fetch live quotes for many tickers. Returns {ticker: (last, prev, volume)}."""
+    """Parallel-fetch live quotes for many tickers."""
     out = {}
     if not tickers:
         return out
@@ -2108,9 +2138,9 @@ def fetch_live_quotes_bulk(tickers, max_workers=20):
         for fut in as_completed(futs):
             tk = futs[fut]
             try:
-                last, prev, volume = fut.result(timeout=15)
+                last, prev, volume, day_high, day_low = fut.result(timeout=15)
                 if last is not None and prev is not None:
-                    out[tk] = (last, prev, volume)
+                    out[tk] = (last, prev, volume, day_high, day_low)
             except Exception:
                 pass
     return out
@@ -2184,6 +2214,17 @@ def is_us_market_holiday(date_str=None):
     return date_str in US_MARKET_HOLIDAYS
 
 
+def current_us_market_date():
+    """Return today's calendar date in the US Eastern market timezone."""
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(timezone.utc).astimezone(
+            ZoneInfo("America/New_York")
+        ).date()
+    except Exception:
+        return (datetime.now(timezone.utc) - timedelta(hours=5)).date()
+
+
 def is_us_market_open_or_recently_closed():
     """Return True if US equity regular session is currently OPEN (9:30am–4:00pm ET, Mon–Fri).
 
@@ -2242,7 +2283,7 @@ def apply_intraday_overlay(results):
         q = quotes.get(r["t"])
         if not q:
             continue
-        live, prev_close, live_volume = q
+        live, prev_close, live_volume, day_high, day_low = q
         if not live or not prev_close or live <= 0 or prev_close <= 0:
             continue
         eod = r.get("p")
@@ -2269,23 +2310,48 @@ def apply_intraday_overlay(results):
         if avg_vol_30d and avg_vol_30d > 0:
             if live_volume is not None and live_volume >= 0:
                 r["rv"] = round((live_volume / avg_vol_30d) * 100)
+        preset_state = compute_intraday_preset_state(
+            r,
+            live,
+            session_date=current_us_market_date().isoformat(),
+            day_high=day_high,
+            day_low=day_low,
+        )
+        if preset_state:
+            r["pf"] = preset_state["flags"]
+        ma_values = {
+            name: r.get(key)
+            for name, key in (
+                ("ema9", "_ma_ema9"),
+                ("ema21", "_ma_ema21"),
+                ("sma50", "_ma_sma50"),
+                ("ema65", "_ma_ema65"),
+                ("sma200", "_ma_sma200"),
+            )
+        }
+        if preset_state:
+            for name in ("ema9", "ema21", "sma50"):
+                live_value = preset_state["ma_values"].get(name)
+                if live_value is not None:
+                    ma_values[name] = live_value
+        technical_live = (
+            preset_state.get("technical_price")
+            if preset_state
+            else live
+        )
         atr = r.get("_atr")
-        sma50 = r.get("_ma_sma50")
+        sma50 = ma_values["sma50"]
         if atr and sma50 and atr > 0 and sma50 > 0:
-            gain_pct = (live - sma50) / sma50 * 100
-            atr_pct = atr / live * 100
+            gain_pct = (technical_live - sma50) / sma50 * 100
+            atr_pct = atr / technical_live * 100
             r["ax"] = round((gain_pct / atr_pct) * 100) if atr_pct > 0 else r.get("ax")
         ma_flags = 0
-        for bit, key in ((1, "_ma_ema9"), (2, "_ma_ema21"), (4, "_ma_sma50"), (8, "_ma_ema65"), (16, "_ma_sma200")):
-            moving_average = r.get(key)
-            if moving_average and live > moving_average:
+        for bit, name in ((1, "ema9"), (2, "ema21"), (4, "sma50"), (8, "ema65"), (16, "sma200")):
+            moving_average = ma_values[name]
+            if moving_average and technical_live > moving_average:
                 ma_flags |= bit
         r["ma"] = ma_flags
-        r["md"] = ma_atr_distances(
-            live,
-            r.get("_atr"),
-            {name: r.get(key) for name, key in (("ema9", "_ma_ema9"), ("ema21", "_ma_ema21"), ("sma50", "_ma_sma50"), ("ema65", "_ma_ema65"), ("sma200", "_ma_sma200"))},
-        )
+        r["md"] = ma_atr_distances(technical_live, r.get("_atr"), ma_values)
         if r.get("_5b") and r["_5b"] > 0:
             r["c5"] = round((live / r["_5b"] - 1) * 100, 2)
         if r.get("_20b") and r["_20b"] > 0:
@@ -2323,7 +2389,17 @@ def write_intraday_baselines(results):
         for k in keep:
             if k in r:
                 b[k] = r.get(k)
-        if b.get("_w_deltas") and b.get("_w_stock_atr") and b.get("_w_spy_atr"):
+        for k, value in r.items():
+            if k.startswith("_preset_"):
+                b[k] = value
+        if (
+            b.get("_preset_last_date")
+            or (
+                b.get("_w_deltas")
+                and b.get("_w_stock_atr")
+                and b.get("_w_spy_atr")
+            )
+        ):
             baselines[tk] = b
 
     payload = {
