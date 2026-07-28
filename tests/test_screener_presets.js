@@ -335,9 +335,18 @@ assert.ok(
 );
 assert.ok(
   html.includes('class="preset-icon"') &&
-    html.includes("height:12px") &&
+    html.includes("height:10px") &&
     html.includes("flex:0 0 15px"),
   "The Presets sliders icon must match the label height without shrinking",
+);
+assert.strictEqual(
+  (html.match(/<span class="preset-icon-line /g) || []).length,
+  2,
+  "The Presets icon must render exactly two slider rails",
+);
+assert.ok(
+  html.includes("background:#2388f5") && html.includes("background:#4d96f7"),
+  "The Presets icon must render two solid blue slider knobs",
 );
 assert.ok(
   html.includes('<script src="screener-presets.js"></script>'),
