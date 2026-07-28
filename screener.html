@@ -108,7 +108,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 [data-theme="dark"] .metric-muted{color:var(--t2)}
 .metric-emphasis{font-weight:900!important;color:var(--t1)!important;text-shadow:0 0 0 currentColor}
 .rvol-value{position:relative;display:inline-block}
-.rvol-signal{position:absolute;left:calc(100% + 2px);top:-6px;width:12px;height:12px;overflow:visible;stroke:#0ea5e9;stroke-width:1.7;stroke-linecap:round;fill:none;pointer-events:none}
+.rvol-signal{position:absolute;left:calc(100% + 2px);top:-7px;width:13px;height:13px;overflow:visible;stroke:#06b6d4;stroke-width:1.8;stroke-linecap:round;fill:none;pointer-events:none}
 /* Filter dropdown */
 .filter-wrap{position:relative;display:inline-block}
 .filter-search-row .filter-wrap{display:block;min-width:0}
@@ -2002,9 +2002,9 @@ function render(){
     const origRank=isW?(e.w_rk||'—'):(e.rk||'—');
     const rv=e[rvKey],rs=e[rsKey],vs=e[vsKey];
     const highDollarVol=e.dv!=null&&Number(e.dv)>1000000000;
-    const activeRvol=rv!=null&&Number(rv)>=100;
+    const activeRvol=rv!=null&&Number(rv)>100;
     const liquidityEmphasis=highDollarVol?' metric-emphasis':'';
-    const rvolSignal=activeRvol?'<svg class="rvol-signal" viewBox="0 0 14 14" aria-hidden="true"><line x1="2" y1="1" x2="2" y2="5.5"/><line x1="5" y1="7.5" x2="8.5" y2="4"/><line x1="9" y1="10.5" x2="13" y2="10.5"/></svg>':'';
+    const rvolSignal=activeRvol?'<svg class="rvol-signal" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h3.5A9.5 9.5 0 0 1 14 11.5V15M4 6h2a4.5 4.5 0 0 1 4.5 4.5V13"/></svg>':'';
     const cellMap={
       rk:`<td class="rk">${origRank}</td>`,
       rd:rankDelta(e.t),
