@@ -22,6 +22,10 @@ from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from zoneinfo import ZoneInfo
 import numpy as np
+from vcp_coils import (
+    compute_vcp_coil_definition_1,
+    compute_vcp_coil_definition_1_score as compute_vcp_tightness_score,
+)
 import yfinance as yf
 
 # Use curl_cffi to bypass Yahoo Finance rate limiting (impersonates Chrome)
@@ -457,58 +461,6 @@ def compute_ma_status(closes):
     }
 
 
-def compute_vcp_tightness_score(c, h, l, length=10, adr_len=21, baseline=100):
-    """Return Pine-compatible VCP tightness score; len=10, ADR=21, <=10 is super tight."""
-    try:
-        c = np.asarray(c, dtype=float)
-        h = np.asarray(h, dtype=float)
-        l = np.asarray(l, dtype=float)
-    except Exception:
-        return None
-    n = len(c)
-    if n < max(length, adr_len) or len(h) != n or len(l) != n:
-        return None
-
-    with np.errstate(divide="ignore", invalid="ignore"):
-        bar_range_pct = np.where(l != 0, ((h - l) / l) * 100, np.nan)
-
-    combined = np.full(n, np.nan)
-    for i in range(n):
-        if i + 1 < max(length, adr_len):
-            continue
-        adr_window = bar_range_pct[i - adr_len + 1:i + 1]
-        adr_pct = float(np.nanmean(adr_window))
-        if not np.isfinite(adr_pct):
-            continue
-        safe_adr = 0.0001 if adr_pct == 0 else adr_pct
-
-        close_window = c[i - length + 1:i + 1]
-        high_window = h[i - length + 1:i + 1]
-        low_window = l[i - length + 1:i + 1]
-        if not (np.isfinite(close_window).any() and np.isfinite(high_window).any() and np.isfinite(low_window).any()):
-            continue
-        hi_c, lo_c = float(np.nanmax(close_window)), float(np.nanmin(close_window))
-        hi_p, lo_p = float(np.nanmax(high_window)), float(np.nanmin(low_window))
-        if lo_c <= 0 or lo_p <= 0:
-            continue
-
-        close_spread_pct = ((hi_c - lo_c) / lo_c) * 100
-        price_spread_pct = ((hi_p - lo_p) / lo_p) * 100
-        combined[i] = ((close_spread_pct / safe_adr) + (price_spread_pct / safe_adr)) / 2
-
-    current = combined[-1]
-    if not np.isfinite(current):
-        return None
-    window = combined[max(0, n - baseline):]
-    window = window[np.isfinite(window)]
-    if len(window) == 0:
-        return None
-    lowest_ratio = float(np.min(window))
-    highest_ratio = float(np.max(window))
-    range_ratio = highest_ratio - lowest_ratio
-    return 0.0 if range_ratio == 0 else ((float(current) - lowest_ratio) / range_ratio) * 100
-
-
 def compute_setup_adjustment(c, h, l, n):
     """Evaluate technical setup criteria. Returns (adj, flags) tuple where adj is the
     score adjustment in percentile points and flags is a bitmask of which criteria
@@ -559,8 +511,7 @@ def compute_setup_adjustment(c, h, l, n):
 
     # Bronze (bonus only)
     BB = 0.5
-    vcp_score = compute_vcp_tightness_score(c, h, l)
-    if vcp_score is not None and vcp_score <= 10:
+    if compute_vcp_coil_definition_1(c, h, l):
         adj += BB
         flags |= 128
     if sma200 is not None and price > sma200:

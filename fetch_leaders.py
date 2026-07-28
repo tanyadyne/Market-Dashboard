@@ -26,8 +26,18 @@ except ImportError:
     _session = None
 
 # Import shared functions from fetch_data.py
-from fetch_data import ETF_INFO, compute_atr, compute_atr_series, compute_vcp_tightness_score, percentrank_inc
+from fetch_data import (
+    ETF_INFO,
+    compute_atr,
+    compute_atr_series,
+    compute_vcp_coil_definition_1,
+    percentrank_inc,
+)
 from theme_history import load_theme_snapshot_index, prepare_theme_history, set_theme_snapshot, snapshot_for_stock
+from vcp_coils import (
+    compute_vcp_coil_definition_2,
+    set_aligned_vcp_history_value,
+)
 
 LOOKBACK = 50      # daily: compute deltas for last 50 bars
 MA_LENGTH = 20     # daily: SMA of deltas (smoothing)
@@ -35,6 +45,7 @@ LOOKBACK_W = 20    # weekly: compute deltas for last 20 weeks
 MA_LENGTH_W = 12   # weekly: window length for recency-weighted average of deltas
 ATR_PERIOD = 14
 MAX_HISTORY_DAYS = 90
+VCP_COIL_HISTORY_FIELDS = ("vcp_coil_1", "vcp_coil_2")
 INTRADAY_BASELINES_FILE = "leaders_intraday_baselines.json"
 UNIVERSE_GRACE_FILE = "leaders_universe_grace.json"
 REPAIR_QUEUE_FILE = "leaders_missing_tickers.json"
@@ -914,9 +925,8 @@ def compute_setup_adjustment(c, h, l, n):
     # Bronze criteria (bonus only, no penalty)
     BRONZE_BONUS = 0.5
 
-    # B1: VCP tightness score <= 10 (Pine-compatible logic)
-    vcp_score = compute_vcp_tightness_score(c, h, l)
-    if vcp_score is not None and vcp_score <= 10:
+    # B1: VCP Coil (definition 1)
+    if compute_vcp_coil_definition_1(c, h, l):
         adj += BRONZE_BONUS
         flags |= 128
 
@@ -1078,8 +1088,10 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
     c = df["Close"].values
     h = df["High"].values
     l = df["Low"].values
+    o = df["Open"].values
     v = df["Volume"].values
     n = len(c)
+    vcp_coil_definition_2 = compute_vcp_coil_definition_2(o, h, l, c)
 
     price = float(c[-1])
     display_price = price
@@ -1260,6 +1272,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "ytd": round(ytd, 2) if ytd is not None else None,
                 "rs": None, "rf": 0, "ra": 0, "p": round(display_price, 2), "fr": None, "vs": None,
                 "sa": _sa, "sf": _sf, "tz": "neutral",
+                "vcp_coil_1": bool(_sf & 128),
+                "vcp_coil_2": vcp_coil_definition_2,
                 "w_pen_engulf": False, "w_pen_ema21": False, "w_pen_crash5": False,
                 # Internal baselines for intraday overlay (stripped before output)
                 "_atr": round(float(atr), 6) if atr else None,
@@ -1463,6 +1477,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "rf": dec_streak, "ra": adv_streak,
         "p": round(display_price, 2), "fr": round(final_rs, 4), "vs": sma_series,
         "sa": setup_adj, "sf": setup_flags, "tz": trend_zone,
+        "vcp_coil_1": bool(setup_flags & 128),
+        "vcp_coil_2": vcp_coil_definition_2,
         # Internal scoring-only fields (stripped before output)
         "w_pen_engulf": pen_engulf,
         "w_pen_ema21": pen_ema21,
@@ -2333,6 +2349,19 @@ def strip_internal_fields(results):
         for k in list(r.keys()):
             if k.startswith("_") or k in INTERNAL_NON_UNDERSCORE or k in DAILY_RS_FIELDS:
                 del r[k]
+
+
+def ensure_vcp_coil_fields(results):
+    """Ensure every published stock has both explicit VCP definition fields."""
+    for result in results:
+        if "vcp_coil_1" not in result:
+            setup_flags = result.get("sf")
+            result["vcp_coil_1"] = (
+                bool(setup_flags & 128)
+                if isinstance(setup_flags, (int, np.integer))
+                else None
+            )
+        result.setdefault("vcp_coil_2", None)
 
 
 def load_universe_grace_state():
@@ -3897,6 +3926,8 @@ def main():
         unranked_tks = sorted(r["t"] for r in unrankable)
         print(f"  Weekly rank: {len(unrankable)} stock(s) unranked due to missing w_rs: {unranked_tks}")
 
+    ensure_vcp_coil_fields(results)
+
     # ─── Rank history (rolling weekly snapshots) ──────────────
     # IMPORTANT: use US EASTERN date, not UTC date. The market trades on ET, and this
     # script's purpose is to track daily rank changes tied to trading sessions. If we
@@ -3963,15 +3994,10 @@ def main():
         pass
     else:
         is_new_day = not dates or dates[-1] != today_str
-        profile_only_tickers = {r["t"] for r in results if r.get("po")}
-        for tk in profile_only_tickers:
-            scores.pop(tk, None)
-        results_by_tk = {r["t"]: r for r in results if not r.get("po")}
+        results_by_tk = {r["t"]: r for r in results}
         if is_new_day:
             dates.append(today_str)
             for r in results:
-                if r.get("po"):
-                    continue
                 tk = r["t"]
                 if tk not in scores:
                     scores[tk] = {"wr": []}
@@ -3981,8 +4007,21 @@ def main():
                 # partway through the history window).
                 while len(scores[tk]["wr"]) < len(dates) - 1:
                     scores[tk]["wr"].append(None)
-                scores[tk]["wr"].append(r.get("w_rk"))
-                set_theme_snapshot(scores[tk], len(dates), snapshot_for_stock(r, theme_snapshots))
+                scores[tk]["wr"].append(None if r.get("po") else r.get("w_rk"))
+                for field in VCP_COIL_HISTORY_FIELDS:
+                    set_aligned_vcp_history_value(
+                        scores[tk],
+                        field,
+                        len(dates),
+                        r.get(field),
+                    )
+                if not r.get("po"):
+                    set_theme_snapshot(scores[tk], len(dates), snapshot_for_stock(r, theme_snapshots))
+            current_tickers = set(results_by_tk)
+            for tk, entry in scores.items():
+                if tk not in current_tickers:
+                    for field in VCP_COIL_HISTORY_FIELDS:
+                        set_aligned_vcp_history_value(entry, field, len(dates), None)
             # Trim to MAX_HISTORY_DAYS
             if len(dates) > MAX_HISTORY_DAYS:
                 trim = len(dates) - MAX_HISTORY_DAYS
@@ -3992,23 +4031,32 @@ def main():
                         scores[tk]["wr"] = scores[tk]["wr"][trim:]
                     if "tm" in scores[tk] and len(scores[tk]["tm"]) > MAX_HISTORY_DAYS:
                         scores[tk]["tm"] = scores[tk]["tm"][trim:]
+                    for field in VCP_COIL_HISTORY_FIELDS:
+                        if field in scores[tk] and len(scores[tk][field]) > MAX_HISTORY_DAYS:
+                            scores[tk][field] = scores[tk][field][trim:]
         else:
-            # Same-day update: refresh today's wr in place.
+            # Same-day update: refresh today's rank and VCP definitions in place.
             for r in results:
-                if r.get("po"):
-                    continue
                 tk = r["t"]
                 if tk not in scores:
                     scores[tk] = {"wr": []}
                 if "wr" not in scores[tk]:
                     scores[tk]["wr"] = []
                 if len(scores[tk]["wr"]) == len(dates):
-                    scores[tk]["wr"][-1] = r.get("w_rk")
+                    scores[tk]["wr"][-1] = None if r.get("po") else r.get("w_rk")
                 else:
                     while len(scores[tk]["wr"]) < len(dates) - 1:
                         scores[tk]["wr"].append(None)
-                    scores[tk]["wr"].append(r.get("w_rk"))
-                set_theme_snapshot(scores[tk], len(dates), snapshot_for_stock(r, theme_snapshots))
+                    scores[tk]["wr"].append(None if r.get("po") else r.get("w_rk"))
+                for field in VCP_COIL_HISTORY_FIELDS:
+                    set_aligned_vcp_history_value(
+                        scores[tk],
+                        field,
+                        len(dates),
+                        r.get(field),
+                    )
+                if not r.get("po"):
+                    set_theme_snapshot(scores[tk], len(dates), snapshot_for_stock(r, theme_snapshots))
 
         # ─── top40_entry tracking ────────────────────────────────────
         # Captures the entry price + entry date when a stock enters the top 40 (by w_rk),

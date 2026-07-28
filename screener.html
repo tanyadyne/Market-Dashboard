@@ -1430,7 +1430,7 @@ const MOBILE_COLS=new Set(['rk','rd','t','th','ch','ytd','rs']);
 //   S1=16    Price>SMA100
 //   S2=32    SMA50>SMA100
 //   S3=64    SMA200 rising
-//   B1=128   VCP tightness score <= 10
+//   B1=128   VCP Coil (definition 1): tightness score <= 10
 //   B2=256   Price>SMA200
 //   X1=512   Price>EMA9
 //   X2=1024  EMA9>EMA21
@@ -1616,7 +1616,7 @@ function renderOverview(){
   // Bottom 40 weakest — by w_rk descending
   const bot=[...items].filter(e=>e.w_rk!=null).sort((a,b)=>b.w_rk-a.w_rk).slice(0,40);
 
-  // VCP setups: mirrors the manual RS Ranking filters for
+  // VCP setups: uses VCP Coil (definition 1) and mirrors the manual RS Ranking filters for
   // VCP coil + Not Extended (<6x) + Top 50% + positive 1M + MCap > $2B,
   // with the extra requirement that price is above both the 20sma and 50sma.
   const rankedTotal=items.reduce((count,e)=>count+(e.w_rk!=null?1:0),0);
