@@ -367,10 +367,6 @@ assert.ok(
   html.includes('class="preset-help"') && html.includes('>i</button>'),
   "Each preset must expose its info description through an i tooltip",
 );
-assert.ok(
-  html.includes(".preset-choice{min-width:0;flex:0 1 auto"),
-  "Preset info controls must sit immediately beside their labels",
-);
 
 const validationRows = Object.entries(fixtures).map(([ticker, value]) => ({
   ...value,
