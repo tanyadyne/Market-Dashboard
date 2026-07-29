@@ -83,8 +83,8 @@ assert.deepStrictEqual(
   PRESETS.filter((preset) => preset.group === "leaders").map((preset) => preset.name),
   [
     "VCP Coil (Liquid)",
-    "Fresh leader (tight)",
-    "Fresh leader (loose)",
+    "Above 9/21ema (tight)",
+    "Above 21/50sma (loose)",
     "New 52wk Highs",
   ],
 );
@@ -358,6 +358,14 @@ assert.ok(
 assert.ok(
   html.includes('onclick="resetAllFilters()"'),
   "The dropdown reset action must clear preset and manual filters",
+);
+assert.ok(
+  !html.includes("preset-section-title") && !html.includes("preset-criteria-"),
+  "The preset list must not render leader/laggard sections or criteria tooltips",
+);
+assert.ok(
+  html.includes('class="preset-help"') && html.includes('>i</button>'),
+  "Each preset must expose its info description through an i tooltip",
 );
 
 const validationRows = Object.entries(fixtures).map(([ticker, value]) => ({

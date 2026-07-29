@@ -35,7 +35,7 @@
     {
       id: "fresh-leader-tight",
       group: "leaders",
-      name: "Fresh leader (tight)",
+      name: "Above 9/21ema (tight)",
       info: "This preset scans for fresh leaders that are near a tight entry point.",
       criteria: [
         "Price is above the 21 EMA by less than 0.5× ATR, or above the 9 EMA by less than 0.5× ATR.",
@@ -48,7 +48,7 @@
     {
       id: "fresh-leader-loose",
       group: "leaders",
-      name: "Fresh leader (loose)",
+      name: "Above 21/50sma (loose)",
       info: "This preset scans for fresh leaders that are near a loose entry point.",
       criteria: [
         "Price is above the 21 EMA by less than 1× ATR, or above the 50 SMA by less than 0.5× ATR.",
