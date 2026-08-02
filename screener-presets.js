@@ -28,8 +28,9 @@
         "Either VCP Coil definition 1 or definition 2 is active.",
         "RS position is Mid-Range or better.",
         "Market cap is above $5B.",
-        "Price is above the 21 EMA by less than 1× ATR.",
-        "10 SMA is above the 50 SMA.",
+        "Price is above the 21 EMA by less than 1× ATR, or above the 50 SMA by less than 1× ATR.",
+        "21 EMA is above the 50 SMA.",
+        "Average 20-day dollar volume is above $100M.",
       ],
     },
     {
@@ -129,6 +130,18 @@
     return distance != null && distance < 0 && Math.abs(distance) < limit;
   }
 
+  function ema21AboveSma50(stock) {
+    // md stores (price - MA) / ATR, so the smaller distance corresponds to
+    // the higher moving average when both values use the same current ATR.
+    const ema21Distance = atrDistance(stock, 1);
+    const sma50Distance = atrDistance(stock, 2);
+    return (
+      ema21Distance != null
+      && sma50Distance != null
+      && ema21Distance < sma50Distance
+    );
+  }
+
   function positionTier(rank, total) {
     if (rank == null || rank === "") return null;
     rank = Number(rank);
@@ -178,8 +191,9 @@
           (definition1Active(stock) || definition2Active(stock))
           && isMidRangeOrBetter(stock, rankedTotal)
           && Number(stock.mc) > 5e9
-          && priceAboveWithin(stock, 1, 1)
-          && hasFlag(stock, FLAGS.SMA10_ABOVE_SMA50)
+          && (priceAboveWithin(stock, 1, 1) || priceAboveWithin(stock, 2, 1))
+          && ema21AboveSma50(stock)
+          && Number(stock.dv) > 100e6
         );
       case "fresh-leader-tight":
         return (

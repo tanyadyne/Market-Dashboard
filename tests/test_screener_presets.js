@@ -38,8 +38,8 @@ function withoutFlag(value, flag) {
 
 const fixtures = {
   "vcp-liquid": stock({
+    md: [0.2, 0.25, 0.5, 0, 0],
     vcp_coil_2: true,
-    pf: FLAGS.SMA10_ABOVE_SMA50,
   }),
   "fresh-leader-tight": stock({
     pf: hasAll(
@@ -110,8 +110,9 @@ const requiredFailures = {
     { ...fixtures["vcp-liquid"], vcp_coil_2: false },
     { ...fixtures["vcp-liquid"], w_rk: 501 },
     { ...fixtures["vcp-liquid"], mc: 5e9 },
-    { ...fixtures["vcp-liquid"], md: [0.2, -0.1, 0.25, 0, 0] },
-    withoutFlag(fixtures["vcp-liquid"], FLAGS.SMA10_ABOVE_SMA50),
+    { ...fixtures["vcp-liquid"], md: [0.2, -0.1, -0.25, 0, 0] },
+    { ...fixtures["vcp-liquid"], md: [0.2, 0.5, 0.25, 0, 0] },
+    { ...fixtures["vcp-liquid"], dv: 100e6 },
   ],
   "fresh-leader-tight": [
     { ...fixtures["fresh-leader-tight"], md: [0.2, 0.5, 0.25, 0, 0] },
@@ -168,6 +169,16 @@ assert.strictEqual(
   ),
   true,
   "VCP Liquid should retain definition 1 bit-128 compatibility",
+);
+
+assert.strictEqual(
+  matchesPreset(
+    "vcp-liquid",
+    { ...fixtures["vcp-liquid"], pf: 0 },
+    rankedTotal,
+  ),
+  true,
+  "VCP Liquid no longer requires the 10 SMA above 50 SMA flag",
 );
 
 assert.strictEqual(
@@ -261,7 +272,7 @@ assert.strictEqual(
 assert.strictEqual(
   matchesPreset(
     "vcp-liquid",
-    { ...fixtures["vcp-liquid"], mc: 2e9 },
+    { ...fixtures["vcp-liquid"], mc: 5e9 },
     rankedTotal,
   ),
   false,
