@@ -17,7 +17,7 @@ const rankedTotal = 1000;
 function stock(overrides = {}) {
   return {
     w_rk: 250,
-    mc: 3e9,
+    mc: 6e9,
     dv: 150e6,
     md: [0.2, 0.3, 0.25, 0, 0],
     pf: 0,
@@ -49,9 +49,11 @@ const fixtures = {
     ),
   }),
   "fresh-leader-loose": stock({
+    md: [0.2, 0.8, 0.25, 0, 0],
     pf: hasAll(
       FLAGS.EMA9_ABOVE_EMA21,
       FLAGS.SMA10_ABOVE_SMA50,
+      FLAGS.PRIOR_TWO_HAS_RED,
     ),
   }),
   "new-52w-highs": stock({
@@ -70,7 +72,6 @@ const fixtures = {
     pf: hasAll(
       FLAGS.EMA9_BELOW_EMA21,
       FLAGS.SMA10_BELOW_SMA50,
-      FLAGS.SMA50_DECLINING,
     ),
   }),
   "new-52w-lows": stock({
@@ -83,16 +84,16 @@ assert.deepStrictEqual(
   PRESETS.filter((preset) => preset.group === "leaders").map((preset) => preset.name),
   [
     "VCP Coil (Liquid)",
-    "Above 9/21ema (tight)",
-    "Above 21/50sma (loose)",
+    "Above 21ema",
+    "Above 50sma",
     "New 52wk Highs",
   ],
 );
 assert.deepStrictEqual(
   PRESETS.filter((preset) => preset.group === "laggards").map((preset) => preset.name),
   [
-    "Below 50sma (tight)",
-    "Below 50sma (loose)",
+    "Below 50sma",
+    "Below 21ema",
     "New 52wk Lows",
   ],
 );
@@ -108,21 +109,23 @@ const requiredFailures = {
   "vcp-liquid": [
     { ...fixtures["vcp-liquid"], vcp_coil_2: false },
     { ...fixtures["vcp-liquid"], w_rk: 501 },
-    { ...fixtures["vcp-liquid"], mc: 2e9 },
+    { ...fixtures["vcp-liquid"], mc: 5e9 },
     { ...fixtures["vcp-liquid"], md: [0.2, -0.1, 0.25, 0, 0] },
     withoutFlag(fixtures["vcp-liquid"], FLAGS.SMA10_ABOVE_SMA50),
   ],
   "fresh-leader-tight": [
-    { ...fixtures["fresh-leader-tight"], md: [0.5, 0.5, 0.25, 0, 0] },
+    { ...fixtures["fresh-leader-tight"], md: [0.2, 0.5, 0.25, 0, 0] },
+    { ...fixtures["fresh-leader-tight"], md: [0.2, -0.2, 0.25, 0, 0] },
     withoutFlag(fixtures["fresh-leader-tight"], FLAGS.EMA9_ABOVE_EMA21),
     withoutFlag(fixtures["fresh-leader-tight"], FLAGS.SMA10_ABOVE_SMA50),
     withoutFlag(fixtures["fresh-leader-tight"], FLAGS.PRIOR_TWO_HAS_RED),
     { ...fixtures["fresh-leader-tight"], w_rk: 501 },
   ],
   "fresh-leader-loose": [
-    { ...fixtures["fresh-leader-loose"], md: [0.2, 1, 0.5, 0, 0] },
+    { ...fixtures["fresh-leader-loose"], md: [0.2, 0.2, 0.5, 0, 0] },
     withoutFlag(fixtures["fresh-leader-loose"], FLAGS.EMA9_ABOVE_EMA21),
     withoutFlag(fixtures["fresh-leader-loose"], FLAGS.SMA10_ABOVE_SMA50),
+    withoutFlag(fixtures["fresh-leader-loose"], FLAGS.PRIOR_TWO_HAS_RED),
     { ...fixtures["fresh-leader-loose"], w_rk: 501 },
   ],
   "new-52w-highs": [
@@ -137,13 +140,9 @@ const requiredFailures = {
     { ...fixtures["fresh-laggard-tight"], w_rk: 200 },
   ],
   "fresh-laggard-loose": [
-    { ...fixtures["fresh-laggard-loose"], md: [-0.2, -0.3, -1, 0, 0] },
+    { ...fixtures["fresh-laggard-loose"], md: [-0.2, -0.5, -0.25, 0, 0] },
     withoutFlag(fixtures["fresh-laggard-loose"], FLAGS.EMA9_BELOW_EMA21),
     withoutFlag(fixtures["fresh-laggard-loose"], FLAGS.SMA10_BELOW_SMA50),
-    {
-      ...fixtures["fresh-laggard-loose"],
-      pf: hasAll(FLAGS.EMA9_BELOW_EMA21, FLAGS.SMA10_BELOW_SMA50),
-    },
     { ...fixtures["fresh-laggard-loose"], w_rk: 200 },
   ],
   "new-52w-lows": [
@@ -171,51 +170,40 @@ assert.strictEqual(
   "VCP Liquid should retain definition 1 bit-128 compatibility",
 );
 
-for (const md of [
-  [0.6, 0.4, 0.25, 0, 0],
-  [0.4, 0.6, 0.25, 0, 0],
-]) {
-  assert.strictEqual(
-    matchesPreset(
-      "fresh-leader-tight",
-      { ...fixtures["fresh-leader-tight"], md },
-      rankedTotal,
-    ),
-    true,
-    "Tight leader accepts either the 21 EMA or 9 EMA proximity branch",
-  );
-}
+assert.strictEqual(
+  matchesPreset(
+    "fresh-leader-tight",
+    {
+      ...fixtures["fresh-leader-tight"],
+      md: [0.2, -0.2, 0.25, 0, 0],
+    },
+    rankedTotal,
+  ),
+  false,
+  "Above 21ema does not accept proximity to the 9 EMA alone",
+);
 
-for (const md of [
-  [0.2, 0.9, 0.5, 0, 0],
-  [0.2, 1, 0.4, 0, 0],
-]) {
-  assert.strictEqual(
-    matchesPreset(
-      "fresh-leader-loose",
-      { ...fixtures["fresh-leader-loose"], md },
-      rankedTotal,
-    ),
-    true,
-    "Loose leader accepts either the 21 EMA or 50 SMA proximity branch",
-  );
-}
+assert.strictEqual(
+  matchesPreset(
+    "fresh-leader-loose",
+    { ...fixtures["fresh-leader-loose"], md: [0.2, 0.8, 0.25, 0, 0] },
+    rankedTotal,
+  ),
+  true,
+  "Above 50sma requires the 50 SMA proximity branch",
+);
 
 assert.strictEqual(
   matchesPreset(
     "fresh-laggard-loose",
     {
       ...fixtures["fresh-laggard-loose"],
-      pf: hasAll(
-        FLAGS.EMA9_BELOW_EMA21,
-        FLAGS.SMA10_BELOW_SMA50,
-        FLAGS.SMA10_DECLINING,
-      ),
+      pf: hasAll(FLAGS.EMA9_BELOW_EMA21, FLAGS.SMA10_BELOW_SMA50),
     },
     rankedTotal,
   ),
   true,
-  "Loose laggard accepts a declining 10 SMA without a declining 50 SMA",
+  "Below 21ema does not require declining moving averages",
 );
 
 for (const presetId of ["fresh-leader-tight", "fresh-laggard-tight"]) {
@@ -277,20 +265,7 @@ assert.strictEqual(
     rankedTotal,
   ),
   false,
-  "Market cap must be strictly above $2B",
-);
-
-assert.strictEqual(
-  matchesPreset(
-    "fresh-laggard-loose",
-    {
-      ...fixtures["fresh-laggard-loose"],
-      pf: hasAll(FLAGS.EMA9_BELOW_EMA21, FLAGS.SMA10_BELOW_SMA50),
-    },
-    rankedTotal,
-  ),
-  false,
-  "Loose laggard requires at least one declining SMA",
+  "Market cap must be strictly above $5B",
 );
 
 assert.strictEqual(

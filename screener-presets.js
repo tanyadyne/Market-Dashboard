@@ -27,7 +27,7 @@
       criteria: [
         "Either VCP Coil definition 1 or definition 2 is active.",
         "RS position is Mid-Range or better.",
-        "Market cap is above $2B.",
+        "Market cap is above $5B.",
         "Price is above the 21 EMA by less than 1× ATR.",
         "10 SMA is above the 50 SMA.",
       ],
@@ -35,10 +35,10 @@
     {
       id: "fresh-leader-tight",
       group: "leaders",
-      name: "Above 9/21ema (tight)",
-      info: "This preset scans for fresh leaders that are near a tight entry point.",
+      name: "Above 21ema",
+      info: "This preset scans for leaders trading just above the 21 EMA.",
       criteria: [
-        "Price is above the 21 EMA by less than 0.5× ATR, or above the 9 EMA by less than 0.5× ATR.",
+        "Price is above the 21 EMA by less than 0.5× ATR.",
         "9 EMA is above the 21 EMA.",
         "10 SMA is above the 50 SMA.",
         "At least one of the prior two daily candles was red.",
@@ -48,12 +48,13 @@
     {
       id: "fresh-leader-loose",
       group: "leaders",
-      name: "Above 21/50sma (loose)",
-      info: "This preset scans for fresh leaders that are near a loose entry point.",
+      name: "Above 50sma",
+      info: "This preset scans for leaders trading just above the 50 SMA.",
       criteria: [
-        "Price is above the 21 EMA by less than 1× ATR, or above the 50 SMA by less than 0.5× ATR.",
+        "Price is above the 50 SMA by less than 0.5× ATR.",
         "9 EMA is above the 21 EMA.",
         "10 SMA is above the 50 SMA.",
+        "At least one of the prior two daily candles was red.",
         "RS position is Mid-Range or better.",
       ],
     },
@@ -70,8 +71,8 @@
     {
       id: "fresh-laggard-tight",
       group: "laggards",
-      name: "Below 50sma (tight)",
-      info: "This preset scans for lagging stocks that are trading below a tight pivot.",
+      name: "Below 50sma",
+      info: "This preset scans for lagging stocks trading just below the 50 SMA.",
       criteria: [
         "Price is below the 50 SMA by less than 0.5× ATR.",
         "9 EMA is below the 21 EMA.",
@@ -83,13 +84,12 @@
     {
       id: "fresh-laggard-loose",
       group: "laggards",
-      name: "Below 50sma (loose)",
-      info: "This preset scans for lagging stocks that are trading below a loose pivot.",
+      name: "Below 21ema",
+      info: "This preset scans for lagging stocks trading just below the 21 EMA.",
       criteria: [
-        "Price is below the 50 SMA by less than 1× ATR.",
+        "Price is below the 21 EMA by less than 0.5× ATR.",
         "9 EMA is below the 21 EMA.",
         "10 SMA is below the 50 SMA.",
-        "10 SMA or 50 SMA is declining.",
         "RS position is Mid-Range or worse.",
       ],
     },
@@ -177,13 +177,13 @@
         return (
           (definition1Active(stock) || definition2Active(stock))
           && isMidRangeOrBetter(stock, rankedTotal)
-          && Number(stock.mc) > 2e9
+          && Number(stock.mc) > 5e9
           && priceAboveWithin(stock, 1, 1)
           && hasFlag(stock, FLAGS.SMA10_ABOVE_SMA50)
         );
       case "fresh-leader-tight":
         return (
-          (priceAboveWithin(stock, 1, 0.5) || priceAboveWithin(stock, 0, 0.5))
+          priceAboveWithin(stock, 1, 0.5)
           && hasFlag(stock, FLAGS.EMA9_ABOVE_EMA21)
           && hasFlag(stock, FLAGS.SMA10_ABOVE_SMA50)
           && hasFlag(stock, FLAGS.PRIOR_TWO_HAS_RED)
@@ -191,9 +191,10 @@
         );
       case "fresh-leader-loose":
         return (
-          (priceAboveWithin(stock, 1, 1) || priceAboveWithin(stock, 2, 0.5))
+          priceAboveWithin(stock, 2, 0.5)
           && hasFlag(stock, FLAGS.EMA9_ABOVE_EMA21)
           && hasFlag(stock, FLAGS.SMA10_ABOVE_SMA50)
+          && hasFlag(stock, FLAGS.PRIOR_TWO_HAS_RED)
           && isMidRangeOrBetter(stock, rankedTotal)
         );
       case "new-52w-highs":
@@ -211,13 +212,9 @@
         );
       case "fresh-laggard-loose":
         return (
-          priceBelowWithin(stock, 2, 1)
+          priceBelowWithin(stock, 1, 0.5)
           && hasFlag(stock, FLAGS.EMA9_BELOW_EMA21)
           && hasFlag(stock, FLAGS.SMA10_BELOW_SMA50)
-          && (
-            hasFlag(stock, FLAGS.SMA10_DECLINING)
-            || hasFlag(stock, FLAGS.SMA50_DECLINING)
-          )
           && isMidRangeOrWorse(stock, rankedTotal)
         );
       case "new-52w-lows":
