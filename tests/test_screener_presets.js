@@ -342,6 +342,26 @@ assert.ok(
   !html.includes("preset-help") && !html.includes("preset-tooltip"),
   "The preset dropdown must not render info tooltip controls",
 );
+assert.ok(
+  !html.includes("Positive % Change") && !html.includes("positiveChangePeriods"),
+  "The Positive % Change filter must be removed",
+);
+assert.ok(
+  html.includes('id="filterDollarVolume"')
+    && html.includes('id="dollarVolumeSelect"')
+    && html.includes('value="200000000" selected>&gt;$200M</option>'),
+  "Avg $ Volume must default to a >$200M threshold when activated",
+);
+for (const threshold of ["$100M", "$200M", "$300M", "$400M", "$500M", "$800M", "$1B"]) {
+  assert.ok(
+    html.includes(`&gt;${threshold}</option>`),
+    `Avg $ Volume must include the >${threshold} option`,
+  );
+}
+assert.ok(
+  html.includes("Number(e.dv)>dollarVolumeThreshold"),
+  "Avg $ Volume must filter strictly above the selected threshold",
+);
 
 const validationRows = Object.entries(fixtures).map(([ticker, value]) => ({
   ...value,

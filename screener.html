@@ -735,15 +735,6 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
           </span>
           <input class="filter-check" id="filterPositiveDelta" type="checkbox" onchange="togglePositiveDelta(this)">
         </div>
-        <div class="filter-group">
-          <div class="filter-group-label">Positive % Change</div>
-          <div class="filter-options">
-            <label class="filter-option">1D<input class="filter-check positive-change-check" type="checkbox" data-period="ch" onchange="togglePositiveChangePeriod(this)"></label>
-            <label class="filter-option">1W<input class="filter-check positive-change-check" type="checkbox" data-period="c5" onchange="togglePositiveChangePeriod(this)"></label>
-            <label class="filter-option">1M<input class="filter-check positive-change-check" type="checkbox" data-period="c20" onchange="togglePositiveChangePeriod(this)"></label>
-            <label class="filter-option">YTD<input class="filter-check positive-change-check" type="checkbox" data-period="ytd" onchange="togglePositiveChangePeriod(this)"></label>
-          </div>
-        </div>
         <div class="filter-item filter-choice">
           <span class="filter-label">MCap
             <select class="filter-select" id="marketCapSelect" onchange="updateMarketCapBand(this)">
@@ -757,6 +748,20 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
             </select>
           </span>
           <input class="filter-check" id="filterMarketCap" type="checkbox" onchange="toggleMarketCap(this)">
+        </div>
+        <div class="filter-item filter-choice">
+          <span class="filter-label">Avg $ Volume
+            <select class="filter-select" id="dollarVolumeSelect" onchange="updateDollarVolumeThreshold(this)">
+              <option value="100000000">&gt;$100M</option>
+              <option value="200000000" selected>&gt;$200M</option>
+              <option value="300000000">&gt;$300M</option>
+              <option value="400000000">&gt;$400M</option>
+              <option value="500000000">&gt;$500M</option>
+              <option value="800000000">&gt;$800M</option>
+              <option value="1000000000">&gt;$1B</option>
+            </select>
+          </span>
+          <input class="filter-check" id="filterDollarVolume" type="checkbox" onchange="toggleDollarVolume(this)">
         </div>
         <div class="filter-group">
           <div class="price-proximity-row">
@@ -911,9 +916,10 @@ let filterTopOnly=false;
 let topOnlyPercent=50;
 let filterPositiveDelta=false;
 let positiveDeltaDays=1;
-let positiveChangePeriods=new Set();
 let filterMarketCap=false;
 let marketCapBand='gt2';
+let filterDollarVolume=false;
+let dollarVolumeThreshold=200e6;
 let priceMovingAverage='';
 let priceDirection='above';
 let priceAtrLimit=1;
@@ -1154,7 +1160,7 @@ function filterChanged(){
   renderActiveScreenerView();
 }
 function updateFilterButton(){
-  const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly||filterPositiveDelta||positiveChangePeriods.size||filterMarketCap||priceMovingAverage);
+  const hasFilter=!!(activeFilters||filterNotExtended||filterTopOnly||filterPositiveDelta||filterMarketCap||filterDollarVolume||priceMovingAverage);
   const button=document.getElementById('filterBtn');
   if(button)button.classList.toggle('has-filter',hasFilter);
 }
@@ -1184,11 +1190,6 @@ function updatePositiveDeltaDays(el){
   positiveDeltaDays=parseInt(el.value,10)||1;
   if(filterPositiveDelta)filterChanged();
 }
-function togglePositiveChangePeriod(el){
-  if(el.checked)positiveChangePeriods.add(el.dataset.period);
-  else positiveChangePeriods.delete(el.dataset.period);
-  filterChanged();
-}
 function toggleMarketCap(el){
   filterMarketCap=el.checked;
   filterChanged();
@@ -1196,6 +1197,14 @@ function toggleMarketCap(el){
 function updateMarketCapBand(el){
   marketCapBand=el.value||'gt2';
   if(filterMarketCap)filterChanged();
+}
+function toggleDollarVolume(el){
+  filterDollarVolume=el.checked;
+  filterChanged();
+}
+function updateDollarVolumeThreshold(el){
+  dollarVolumeThreshold=Number(el.value)||200e6;
+  if(filterDollarVolume)filterChanged();
 }
 const PRICE_MA_FILTERS={
   ema9:{bit:1,index:0}, ema21:{bit:2,index:1}, sma50:{bit:4,index:2},
@@ -1235,9 +1244,10 @@ function clearManualFilterState(){
   topOnlyPercent=50;
   filterPositiveDelta=false;
   positiveDeltaDays=1;
-  positiveChangePeriods.clear();
   filterMarketCap=false;
   marketCapBand='gt2';
+  filterDollarVolume=false;
+  dollarVolumeThreshold=200e6;
   priceMovingAverage='';
   priceDirection='above';
   priceAtrLimit=1;
@@ -1248,6 +1258,8 @@ function clearManualFilterState(){
   if(positiveDeltaSelect)positiveDeltaSelect.value='1';
   const marketCapSelect=document.getElementById('marketCapSelect');
   if(marketCapSelect)marketCapSelect.value='gt2';
+  const dollarVolumeSelect=document.getElementById('dollarVolumeSelect');
+  if(dollarVolumeSelect)dollarVolumeSelect.value='200000000';
   const priceMaSelect=document.getElementById('priceMaSelect');
   if(priceMaSelect)priceMaSelect.value='';
   const priceDirectionButton=document.getElementById('priceDirectionButton');
@@ -2047,10 +2059,6 @@ function applyScreenerFilters(items,isW){
     const rankLimit=Math.ceil(rankedTotal*(topOnlyPercent/100));
     items=items.filter(e=>e[rkKey]!=null&&e[rkKey]<=rankLimit);
   }
-  if(positiveChangePeriods.size){
-    const periods=[...positiveChangePeriods];
-    items=items.filter(e=>periods.every(key=>e[key]!=null&&e[key]>0));
-  }
   if(filterMarketCap){
     const bands={
       gt2:mc=>mc>2e9,
@@ -2063,6 +2071,9 @@ function applyScreenerFilters(items,isW){
     };
     const matches=bands[marketCapBand]||bands.gt2;
     items=items.filter(e=>e.mc!=null&&matches(Number(e.mc)));
+  }
+  if(filterDollarVolume){
+    items=items.filter(e=>e.dv!=null&&Number(e.dv)>dollarVolumeThreshold);
   }
   if(priceMovingAverage){
     const config=PRICE_MA_FILTERS[priceMovingAverage];
