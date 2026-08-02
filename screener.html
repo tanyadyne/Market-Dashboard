@@ -150,19 +150,11 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
 [data-theme="light"] .preset-btn.has-preset{color:#6d28d9;box-shadow:0 0 0 1px rgba(109,40,217,.16),0 0 12px rgba(109,40,217,.2)}
 .preset-menu{display:none;position:absolute;left:0;top:calc(100% + 6px);width:390px;max-height:var(--screener-menu-max-height,calc(100vh - 190px));overflow-y:auto;overscroll-behavior:contain;background:var(--bg2);border:1px solid var(--bdr);border-radius:11px;padding:8px 0;z-index:110;box-shadow:0 10px 32px rgba(0,0,0,.32)}
 .preset-menu.open{display:block}
-.preset-row{position:relative;display:flex;align-items:center;gap:7px;padding:4px 8px 4px 10px}
+.preset-row{padding:4px 8px 4px 10px}
 .preset-choice{min-width:0;flex:1;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--t2);font-family:inherit;font-size:11px;font-weight:650;line-height:1.2;text-align:left;padding:7px 8px;cursor:pointer;transition:.16s}
 .preset-choice:hover{background:var(--bg3);color:var(--t1)}
 .preset-choice.active{color:#c4b5fd;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.55);box-shadow:0 0 12px rgba(139,92,246,.28)}
 [data-theme="light"] .preset-choice.active{color:#6d28d9;background:#f3e8ff;border-color:#c4b5fd;box-shadow:0 0 10px rgba(109,40,217,.17)}
-.preset-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.preset-help-wrap{position:relative}
-.preset-help{width:20px;height:20px;padding:0;border:1px solid var(--bdr);border-radius:50%;background:var(--bg3);color:var(--t3);font-family:Georgia,serif;font-size:13px;font-weight:700;line-height:18px;cursor:help;text-align:center}
-.preset-help:hover,.preset-help:focus-visible{color:var(--t1);border-color:var(--t4);outline:none}
-.preset-tooltip{display:none;position:absolute;right:0;top:calc(100% + 7px);width:270px;padding:10px 11px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg3);color:var(--t2);font-size:10px;font-weight:500;line-height:1.45;text-align:left;text-transform:none;letter-spacing:0;white-space:normal;z-index:140;box-shadow:0 8px 24px rgba(0,0,0,.3)}
-.preset-help-wrap:hover .preset-tooltip,.preset-help:focus+.preset-tooltip{display:block}
-.preset-tooltip ol{padding-left:17px;display:grid;gap:4px}
-.preset-row.tooltip-up .preset-tooltip{top:auto;bottom:calc(100% + 7px)}
 .preset-reset{margin:8px 10px 2px;width:calc(100% - 20px);padding:8px;border:1px solid var(--bdr);border-radius:7px;background:var(--bg3);color:var(--t3);font-family:inherit;font-size:10px;font-weight:750;cursor:pointer;text-transform:uppercase;letter-spacing:.55px}
 .preset-reset:hover{color:var(--t1);border-color:var(--t4)}
 /* Table */
@@ -671,7 +663,6 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
   overscroll-behavior:contain;
   padding-bottom:max(8px,env(safe-area-inset-bottom));
 }
-[data-view="mobile"] .preset-tooltip{width:min(270px,calc(100vw - 64px))}
 </style>
 <link rel="stylesheet" href="sidebar.css?v=20260710-mode2tabs">
 <script src="sidebar.js"></script>
@@ -1125,15 +1116,9 @@ function renderPresetOptions(){
   const host=document.getElementById('presetOptions');
   if(!host||!window.ScreenerPresets)return;
   const presets=window.ScreenerPresets.PRESETS;
-  const rows=presets.map((preset,index)=>{
-    return `<div class="preset-row${index>=4?' tooltip-up':''}">
+  const rows=presets.map(preset=>{
+    return `<div class="preset-row">
       <button class="preset-choice" type="button" data-preset-id="${esc(preset.id)}" aria-pressed="false" onclick="selectPreset('${esc(preset.id)}')">${esc(preset.name)}</button>
-      <div class="preset-actions">
-        <div class="preset-help-wrap">
-          <button class="preset-help" type="button" aria-label="Info for ${esc(preset.name)}" aria-describedby="preset-info-${index}" onclick="event.stopPropagation()">i</button>
-          <div class="preset-tooltip" id="preset-info-${index}" role="tooltip">${esc(preset.info)}</div>
-        </div>
-      </div>
     </div>`;
   });
   host.innerHTML=rows.join('');

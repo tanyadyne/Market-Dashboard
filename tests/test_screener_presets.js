@@ -364,8 +364,8 @@ assert.ok(
   "The preset list must not render leader/laggard sections or criteria tooltips",
 );
 assert.ok(
-  html.includes('class="preset-help"') && html.includes('>i</button>'),
-  "Each preset must expose its info description through an i tooltip",
+  !html.includes("preset-help") && !html.includes("preset-tooltip"),
+  "The preset dropdown must not render info tooltip controls",
 );
 
 const validationRows = Object.entries(fixtures).map(([ticker, value]) => ({
