@@ -3,8 +3,9 @@
 
 The market-cap metadata outage removed valid 3 August ranks from a subset of
 established tickers.  Filling only those blank cells would mix ranks produced
-against two different universes.  This repair copies the entire validated
-cross-section from the audited pre-guard snapshot and preserves its denominator.
+against two different universes.  This repair rebuilds the validated
+cross-section from the audited pre-guard snapshot, excluding unapproved
+tickers and densely reindexing the remaining ranks and denominator.
 """
 
 import argparse
@@ -72,7 +73,7 @@ def set_aligned_value(entry, field, index, value, date_count):
 
 
 def restore_snapshot(current, seed, registry, target_date=TARGET_DATE):
-    """Copy the validated snapshot for all approved established constituents.
+    """Restore and reindex the approved historical cross-section.
 
     Returns repair metadata.  Raises ``ValueError`` before mutating anything if
     the source snapshot is incomplete or date alignment is unsafe.
@@ -81,13 +82,13 @@ def restore_snapshot(current, seed, registry, target_date=TARGET_DATE):
     seed_index = target_index(seed, target_date)
     current_scores = current.get("d") if isinstance(current.get("d"), dict) else {}
     seed_scores = seed.get("d") if isinstance(seed.get("d"), dict) else {}
-    denominator = infer_ranked_total(seed_scores, seed_index)
-    if denominator is None:
+    source_denominator = infer_ranked_total(seed_scores, seed_index)
+    if source_denominator is None:
         raise ValueError(f"Seed {target_date} ranks are incomplete; refusing to mix universes")
 
     approved = approved_tickers(registry)
     date_count = len(current.get("dates") or [])
-    restored = []
+    ranked_rows = []
     for ticker in sorted(approved):
         source_entry = seed_scores.get(ticker)
         if not isinstance(source_entry, dict):
@@ -95,8 +96,29 @@ def restore_snapshot(current, seed, registry, target_date=TARGET_DATE):
         source_ranks = source_entry.get("wr")
         if not isinstance(source_ranks, list) or seed_index >= len(source_ranks):
             continue
-        if source_ranks[seed_index] is None:
+        source_rank = source_ranks[seed_index]
+        if source_rank is None:
             continue
+        if isinstance(source_rank, bool):
+            raise ValueError(f"Seed {target_date} rank for {ticker} is invalid")
+        try:
+            numeric_rank = float(source_rank)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Seed {target_date} rank for {ticker} is invalid") from exc
+        if not numeric_rank.is_integer() or numeric_rank < 1:
+            raise ValueError(f"Seed {target_date} rank for {ticker} is invalid")
+        source_rank = int(numeric_rank)
+        ranked_rows.append((source_rank, ticker, source_entry))
+
+    ranked_rows.sort()
+    source_ranks = [row[0] for row in ranked_rows]
+    if len(source_ranks) != len(set(source_ranks)):
+        raise ValueError(
+            f"Approved {target_date} ranks contain a duplicate; refusing unstable reindex"
+        )
+
+    restored = []
+    for rank, (_, ticker, source_entry) in enumerate(ranked_rows, start=1):
         target_entry = current_scores.setdefault(ticker, {})
         for field in DATE_ALIGNED_ENTRY_FIELDS:
             source_values = source_entry.get(field)
@@ -105,10 +127,33 @@ def restore_snapshot(current, seed, registry, target_date=TARGET_DATE):
                     target_entry,
                     field,
                     current_index,
-                    source_values[seed_index],
+                    rank if field == "wr" else source_values[seed_index],
                     date_count,
                 )
+        # ``wr`` must exist for every restored ranked row even if a legacy seed
+        # lacks another aligned field.
+        set_aligned_value(target_entry, "wr", current_index, rank, date_count)
         restored.append(ticker)
+
+    restored_set = set(restored)
+    excluded = []
+    # Remove stale values for source entries that are no longer eligible.  The
+    # output date is an exact cross-section, so excluded tickers must not retain
+    # an orphaned historical rank alongside the reindexed valid universe.
+    for ticker, source_entry in seed_scores.items():
+        if ticker in restored_set or not isinstance(source_entry, dict):
+            continue
+        source_values = source_entry.get("wr")
+        if not isinstance(source_values, list) or seed_index >= len(source_values):
+            continue
+        if source_values[seed_index] is None:
+            continue
+        target_entry = current_scores.get(ticker)
+        if not isinstance(target_entry, dict):
+            continue
+        for field in DATE_ALIGNED_ENTRY_FIELDS:
+            set_aligned_value(target_entry, field, current_index, None, date_count)
+        excluded.append(ticker)
 
     totals = current.get(WEEKLY_RANK_TOTALS_FIELD)
     if not isinstance(totals, list):
@@ -116,11 +161,13 @@ def restore_snapshot(current, seed, registry, target_date=TARGET_DATE):
         current[WEEKLY_RANK_TOTALS_FIELD] = totals
     while len(totals) < date_count:
         totals.append(None)
-    totals[current_index] = denominator
+    totals[current_index] = len(restored)
     return {
         "target_date": target_date,
-        "denominator": denominator,
+        "source_denominator": source_denominator,
+        "denominator": len(restored),
         "restored": restored,
+        "excluded": sorted(excluded),
     }
 
 
@@ -146,8 +193,9 @@ def main():
         return 1
 
     print(
-        f"Established history repair: {len(repaired['restored'])} rows restored "
-        f"for {repaired['target_date']} with denominator {repaired['denominator']}"
+        f"Established history repair: {len(repaired['restored'])} rows reindexed "
+        f"for {repaired['target_date']} from source denominator "
+        f"{repaired['source_denominator']} to {repaired['denominator']}"
     )
     if args.dry_run:
         print("Dry run only; no files written.")
