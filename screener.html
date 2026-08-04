@@ -199,15 +199,17 @@ tr:hover{background:var(--bg3)}
 .pag .pg:hover{background:var(--bg3)}.pag .pg.cur{background:#1e3a5f;border-color:#3b82f6;color:#60a5fa}
 .search-panel{display:none;padding:20px;max-width:900px;margin:0 auto}
 .search-input{width:100%;padding:10px 16px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:14px;font-family:inherit;margin-bottom:16px}
-/* Search clear control: a compact outlined X parked inside the input's right edge.
-   It stays visible when empty (disabled) so every search field has the same affordance. */
+/* Search clear control: a small filled icon, tucked into the input edge.
+   It appears only when there is text to clear so it never competes with the query. */
 .search-clear-wrap{position:relative;display:block;min-width:0}
-.search-clear-wrap>input{width:100%!important;padding-right:42px!important}
-.search-clear-btn{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:22px;height:22px;display:grid;place-items:center;padding:0;border:1.5px solid currentColor;border-radius:50%;background:var(--bg2);color:var(--t2);cursor:pointer;transition:background .15s,color .15s,border-color .15s,opacity .15s}
-.search-clear-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round}
-.search-clear-btn:hover:not(:disabled){background:var(--bg3);color:var(--t1);border-color:var(--t1)}
+.search-clear-wrap>input{width:100%!important;padding-right:36px!important}
+.search-clear-btn{position:absolute;top:50%;right:9px;transform:translateY(-50%);width:18px;height:18px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:#6b7280;color:#fff;box-shadow:0 1px 2px rgba(15,23,42,.18);cursor:pointer;transition:background .15s,color .15s,opacity .15s,transform .15s}
+.search-clear-btn svg{width:9px;height:9px;fill:none;stroke:currentColor;stroke-width:2.35;stroke-linecap:round}
+.search-clear-btn:hover:not(:disabled){background:#374151;transform:translateY(-50%) scale(1.08)}
+[data-theme="dark"] .search-clear-btn{background:#d1d5db;color:#1f2937;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+[data-theme="dark"] .search-clear-btn:hover:not(:disabled){background:#f3f4f6;color:#111827}
 .search-clear-btn:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
-.search-clear-btn:disabled{opacity:.32;cursor:default}
+.search-clear-btn:disabled{opacity:0;pointer-events:none;cursor:default}
 .filter-search-row .search-clear-wrap{width:100%}
 .search-panel>.search-clear-wrap{margin-bottom:16px}
 .search-panel>.search-clear-wrap>.search-input{margin-bottom:0}
