@@ -1010,7 +1010,7 @@ function openProfile(ticker){
   profileHistoryTicker=ticker;
   switchTab('search');
   const si=document.getElementById('searchInput');
-  if(si){si.value=ticker;searchStock();}
+  if(si){setSearchInputValue(si,ticker);searchStock();}
 }
 
 // ─── Overview-tab ticker search ──────────────────────────────────────
@@ -1023,6 +1023,12 @@ function openProfile(ticker){
 function syncSearchClearButton(input){
   const button=input&&input.parentElement&&input.parentElement.querySelector('.search-clear-btn');
   if(button)button.disabled=!input.value;
+}
+
+function setSearchInputValue(input,value){
+  if(!input)return;
+  input.value=value;
+  syncSearchClearButton(input);
 }
 
 function setupSearchClearButtons(root=document){
@@ -1100,7 +1106,7 @@ function ovSearchSelect(ticker){
   // doesn't briefly flicker visible during the tab switch.
   const inputEl=document.getElementById('ovSearchInput');
   const dropdown=document.getElementById('ovSearchDropdown');
-  if(inputEl)inputEl.value='';
+  setSearchInputValue(inputEl,'');
   if(dropdown){dropdown.classList.remove('show');dropdown.innerHTML='';}
   openProfile(ticker);
 }

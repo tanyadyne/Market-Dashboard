@@ -24,4 +24,13 @@ for (const [file, expectedSearches] of [
   assert.match(source, /input\.dispatchEvent\(new Event\('input',\{bubbles:true\}\)\)/);
 }
 
+const screener = read('screener.html');
+assert.match(
+  screener,
+  /function setSearchInputValue\(input,value\)\{[\s\S]*?input\.value=value;[\s\S]*?syncSearchClearButton\(input\);/,
+  'programmatic search values should refresh the clear button state',
+);
+assert.match(screener, /setSearchInputValue\(si,ticker\);/);
+assert.match(screener, /setSearchInputValue\(inputEl,''\);/);
+
 console.log('Search clear buttons: OK');
