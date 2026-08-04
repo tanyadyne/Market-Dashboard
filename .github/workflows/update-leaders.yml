@@ -110,13 +110,13 @@ jobs:
           elif [ "${{ inputs.restore_established_history || false }}" = "true" ]; then
             # Fetch the small recent history window containing the audited
             # source snapshot; this path never fetches market data or reranks.
-            git fetch --no-tags --depth=100 origin main
+            git fetch --no-tags --depth=250 origin main
             python restore_established_history.py
           else
             if [ "${{ inputs.restore_established_universe || false }}" = "true" ]; then
               # Fetch the small recent history window containing the audited
               # seed, not the full repository history or market-data workflow.
-              git fetch --no-tags --depth=100 origin main
+              git fetch --no-tags --depth=250 origin main
               python restore_established_universe.py
             fi
             if [ "${{ inputs.force || false }}" = "true" ]; then
