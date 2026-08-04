@@ -44,6 +44,13 @@ from vcp_coils import (
     compute_vcp_coil_definition_2,
     set_aligned_vcp_history_value,
 )
+from rank_quality import (
+    adjusted_price_quality_flags,
+    append_observation,
+    prior_observation_sessions,
+    rank_hold_code,
+    technical_price_from_quote,
+)
 
 LOOKBACK = 50      # daily: compute deltas for last 50 bars
 MA_LENGTH = 20     # daily: SMA of deltas (smoothing)
@@ -1101,13 +1108,17 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
 
     price = float(c[-1])
     display_price = price
+    raw_closes = None
     if raw_df is not None and len(raw_df) > 0 and "Close" in raw_df:
         try:
+            raw_closes = raw_df["Close"].values
             raw_close = float(raw_df["Close"].values[-1])
             if np.isfinite(raw_close) and raw_close > 0:
                 display_price = raw_close
         except (TypeError, ValueError, IndexError):
             display_price = price
+            raw_closes = None
+    quality_flags = adjusted_price_quality_flags(c, raw_closes)
     change = (c[-1] / c[-2] - 1) * 100 if n >= 2 else 0
 
     # ─── 1W / 1M via CALENDAR-date lookback ─────────────────────────
@@ -1313,6 +1324,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
                 "_ma_sma50": ma_values["sma50"],
                 "_ma_ema65": ma_values["ema65"],
                 "_ma_sma200": ma_values["sma200"],
+                "_rank_price": price,
+                "_dq": quality_flags,
                 **preset_intraday_baseline,
                 **_setup_base}
 
@@ -1524,6 +1537,8 @@ def process_stock(ticker, df, spy_closes, spy_highs, spy_lows, spy_atr_series, s
         "_ma_sma50": ma_values["sma50"],
         "_ma_ema65": ma_values["ema65"],
         "_ma_sma200": ma_values["sma200"],
+        "_rank_price": price,
+        "_dq": quality_flags,
         **preset_intraday_baseline,
         **setup_base,
     }
@@ -2311,6 +2326,7 @@ def apply_intraday_overlay(results):
         if avg_vol_30d and avg_vol_30d > 0:
             if live_volume is not None and live_volume >= 0:
                 r["rv"] = round((live_volume / avg_vol_30d) * 100)
+        adjusted_live = technical_price_from_quote(live, r.get("_preset_price_scale"))
         preset_state = compute_intraday_preset_state(
             r,
             live,
@@ -2338,7 +2354,7 @@ def apply_intraday_overlay(results):
         technical_live = (
             preset_state.get("technical_price")
             if preset_state
-            else live
+            else adjusted_live
         )
         atr = r.get("_atr")
         sma50 = ma_values["sma50"]
@@ -2353,12 +2369,12 @@ def apply_intraday_overlay(results):
                 ma_flags |= bit
         r["ma"] = ma_flags
         r["md"] = ma_atr_distances(technical_live, r.get("_atr"), ma_values)
-        if r.get("_5b") and r["_5b"] > 0:
-            r["c5"] = round((live / r["_5b"] - 1) * 100, 2)
-        if r.get("_20b") and r["_20b"] > 0:
-            r["c20"] = round((live / r["_20b"] - 1) * 100, 2)
-        if r.get("_yb") and r["_yb"] > 0:
-            r["ytd"] = round((live / r["_yb"] - 1) * 100, 2)
+        if technical_live and r.get("_5b") and r["_5b"] > 0:
+            r["c5"] = round((technical_live / r["_5b"] - 1) * 100, 2)
+        if technical_live and r.get("_20b") and r["_20b"] > 0:
+            r["c20"] = round((technical_live / r["_20b"] - 1) * 100, 2)
+        if technical_live and r.get("_yb") and r["_yb"] > 0:
+            r["ytd"] = round((technical_live / r["_yb"] - 1) * 100, 2)
         refreshed += 1
     print(f"  [Intraday overlay] Refreshed {refreshed}/{len(results)} entries (rejected {rejected} with suspicious values)")
 
@@ -2487,6 +2503,25 @@ def recently_ranked_tickers(window_days=UNIVERSE_GRACE_DAYS):
         if any(rk is not None for rk in wr[start:]):
             recent.add(tk)
     return recent
+
+
+def load_rank_observation_counts():
+    """Return completed EOD observation counts used for entrant probation."""
+    if not os.path.exists("leaders_score_history.json"):
+        return {}
+    try:
+        with open("leaders_score_history.json") as f:
+            history = json.load(f)
+        scores = history.get("d") or {}
+        if not isinstance(scores, dict):
+            return {}
+        return {
+            tk: prior_observation_sessions(entry)
+            for tk, entry in scores.items()
+            if isinstance(entry, dict)
+        }
+    except Exception:
+        return {}
 
 
 def write_universe_grace_state(state, today_str):
@@ -3876,9 +3911,39 @@ def main():
     except Exception:
         prev_tz_map = {}
 
-    # ─── Cross-sectional percentrank (compare each stock vs ALL others) ──
+    # Ranking admission: keep suspect/new/downtrend profiles visible, but do not
+    # let them enter the percentile pool or influence anybody else's RS score.
+    observation_counts = load_rank_observation_counts()
+    rank_hold_counts = {"data": 0, "probation": 0, "trend": 0}
     for r in results:
         if r.get("po"):
+            continue
+        tk = r.get("t")
+        prior_sessions = observation_counts.get(tk, 0)
+        # Migration path for established rows whose old history has no explicit
+        # `seen` observations yet. Never grant this exception to a brand-new row.
+        if prior_sessions == 0 and (previous_entries.get(tk) or {}).get("w_rk") is not None:
+            prior_sessions = 4
+        hold = rank_hold_code(
+            r.get("_dq") or [],
+            prior_sessions,
+            r.get("_rank_price"),
+            r.get("_ma_sma50"),
+            r.get("_ma_sma200"),
+        )
+        if hold:
+            r["rh"] = hold
+            rank_hold_counts[hold] += 1
+        else:
+            r.pop("rh", None)
+    if any(rank_hold_counts.values()):
+        print("  Rank admission holds: " + ", ".join(
+            f"{reason}={count}" for reason, count in rank_hold_counts.items() if count
+        ))
+
+    # ─── Cross-sectional percentrank (compare each stock vs ALL others) ──
+    for r in results:
+        if r.get("po") or r.get("rh"):
             r["fr"] = None
             r["vs"] = None
             r["w_fr"] = None
@@ -3888,14 +3953,14 @@ def main():
             r["_d_rs_raw"] = None
             r["_w_rs_raw"] = None
 
-    all_d_rs = [r["fr"] for r in results if not r.get("po") and r.get("fr") is not None]
-    all_w_rs = [r.get("w_fr") for r in results if not r.get("po") and r.get("w_fr") is not None]
+    all_d_rs = [r["fr"] for r in results if not r.get("po") and not r.get("rh") and r.get("fr") is not None]
+    all_w_rs = [r.get("w_fr") for r in results if not r.get("po") and not r.get("rh") and r.get("w_fr") is not None]
 
     if STRICT_WEEKLY_RANK_RECOVERY:
         recent_ranked = recently_ranked_tickers()
         lost_recent = sorted(
             r["t"] for r in results
-            if not r.get("po") and r.get("t") in recent_ranked and r.get("w_fr") is None
+            if not r.get("po") and not r.get("rh") and r.get("t") in recent_ranked and r.get("w_fr") is None
         )
         if lost_recent:
             print("ERROR: refusing to publish; recently ranked tickers lost weekly RS after recovery")
@@ -3903,7 +3968,7 @@ def main():
             sys.exit(1)
 
     for r in results:
-        if r.get("po"):
+        if r.get("po") or r.get("rh"):
             r["rs"] = None
             r["_d_rs_raw"] = None
             r["w_rs"] = None
@@ -3998,8 +4063,8 @@ def main():
     # data for a specific ticker) are excluded from the ranking entirely and assigned
     # w_rk = None. Otherwise their null score tiebreaks to the lowest possible value
     # and pollutes the Bottom 20 list with stocks that are actually unranked.
-    rankable = [r for r in results if not r.get("po") and r.get("_w_rs_raw") is not None]
-    unrankable = [r for r in results if r.get("po") or r.get("_w_rs_raw") is None]
+    rankable = [r for r in results if not r.get("po") and not r.get("rh") and r.get("_w_rs_raw") is not None]
+    unrankable = [r for r in results if r.get("po") or r.get("rh") or r.get("_w_rs_raw") is None]
     w_sorted = sorted(rankable, key=lambda x: (x["_w_rs_raw"],
                                                 x.get("w_fr") if x.get("w_fr") is not None else -999,
                                                 x.get("c5") if x.get("c5") is not None else -999), reverse=True)
@@ -4094,6 +4159,7 @@ def main():
                 while len(scores[tk]["wr"]) < len(dates) - 1:
                     scores[tk]["wr"].append(None)
                 scores[tk]["wr"].append(None if r.get("po") else r.get("w_rk"))
+                append_observation(scores[tk], len(dates))
                 for field in VCP_COIL_HISTORY_FIELDS:
                     set_aligned_vcp_history_value(
                         scores[tk],
@@ -4117,6 +4183,8 @@ def main():
                         scores[tk]["wr"] = scores[tk]["wr"][trim:]
                     if "tm" in scores[tk] and len(scores[tk]["tm"]) > MAX_HISTORY_DAYS:
                         scores[tk]["tm"] = scores[tk]["tm"][trim:]
+                    if "seen" in scores[tk] and len(scores[tk]["seen"]) > MAX_HISTORY_DAYS:
+                        scores[tk]["seen"] = scores[tk]["seen"][trim:]
                     for field in VCP_COIL_HISTORY_FIELDS:
                         if field in scores[tk] and len(scores[tk][field]) > MAX_HISTORY_DAYS:
                             scores[tk][field] = scores[tk][field][trim:]
@@ -4134,6 +4202,7 @@ def main():
                     while len(scores[tk]["wr"]) < len(dates) - 1:
                         scores[tk]["wr"].append(None)
                     scores[tk]["wr"].append(None if r.get("po") else r.get("w_rk"))
+                append_observation(scores[tk], len(dates))
                 for field in VCP_COIL_HISTORY_FIELDS:
                     set_aligned_vcp_history_value(
                         scores[tk],

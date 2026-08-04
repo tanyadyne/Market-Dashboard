@@ -1373,6 +1373,14 @@ function atrExtBars(val){
   return`<div class="bars ${cls}">${bars}</div>`;
 }
 function getPosition(rank,total){if(rank==null||!Number.isFinite(Number(rank)))return'—';if(rank<=100)return'Strong Leader';if(rank<=200)return'Moderate Leader';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Moderate Laggard';return'Deep Laggard';}
+function rankHoldLabel(code){
+  const labels={
+    data:'Data check pending',
+    probation:'New — validating data',
+    trend:'Trend unconfirmed'
+  };
+  return labels[code]||'Not ranked';
+}
 function posClass(pos){if(pos.includes('Leader'))return'tag-leader';if(pos.includes('Laggard'))return'tag-laggard';return'tag-neutral';}
 // Used in the Individual Profile history table where the full 5-tier label is shown.
 // Splits Leader/Laggard into Strong vs Moderate visual treatments.
@@ -3125,10 +3133,11 @@ function searchStock(){
   const mappedSector=stock.thm||stock.th||'';
   const themeRankInfo=getThemeRankInfo(mappedSector);
   const hasRsData=stock.w_rs!=null&&stock.w_rk!=null;
+  const rankHold=rankHoldLabel(stock.rh);
   const rsScoreValue=hasRsData?stock.w_rs:'No RS Score';
-  const rsScoreSubline=hasRsData?`<span class="${posClass(rsLabel)}">${rsLabel}</span>`:'';
+  const rsScoreSubline=hasRsData?`<span class="${posClass(rsLabel)}">${rsLabel}</span>`:`<span>${esc(rankHold)}</span>`;
   const rsRankValue=hasRsData?`#${stock.w_rk}`:'Not Ranked';
-  const rankSubline=hasRsData?`of ${DATA.e.filter(e=>e.w_rk!=null).length}`:'';
+  const rankSubline=hasRsData?`of ${DATA.e.filter(e=>e.w_rk!=null).length}`:`<span>${esc(rankHold)}</span>`;
   let themeSubline;
   if(themeRankInfo){
     themeSubline=`<span class="${themeTag(themeRankInfo.status)}">${themeRankInfo.status}: #${themeRankInfo.rk} of ${themeRankInfo.total}</span>`;

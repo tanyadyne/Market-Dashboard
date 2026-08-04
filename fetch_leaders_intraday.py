@@ -38,6 +38,7 @@ except ImportError:
 
 from fetch_data import percentrank_inc
 from preset_metrics import compute_intraday_preset_state
+from rank_quality import live_price_quality_flags, technical_price_from_quote, trend_confirmed
 from fetch_leaders import (
     HARD_EXCLUDE,
     INTRADAY_BASELINES_FILE,
@@ -533,11 +534,6 @@ def update_change_fields(entry, base, quote):
     if avg_vol_30d and avg_vol_30d > 0:
         if live_volume is not None and live_volume >= 0:
             entry["rv"] = round((live_volume / avg_vol_30d) * 100)
-    for key, out_key in (("_5b", "c5"), ("_20b", "c20"), ("_yb", "ytd")):
-        b = finite_num(base.get(key))
-        if b:
-            entry[out_key] = round((live / b - 1) * 100, 2)
-
     preset_state = None
     if quote.get("source") != "prior_entry":
         preset_state = compute_intraday_preset_state(
@@ -569,8 +565,12 @@ def update_change_fields(entry, base, quote):
     technical_live = (
         preset_state.get("technical_price")
         if preset_state
-        else live
+        else technical_price_from_quote(live, base.get("_preset_price_scale"))
     )
+    for key, out_key in (("_5b", "c5"), ("_20b", "c20"), ("_yb", "ytd")):
+        b = finite_num(base.get(key))
+        if b and technical_live:
+            entry[out_key] = round((technical_live / b - 1) * 100, 2)
     atr = finite_num(base.get("_atr"))
     sma50 = ma_values["sma50"]
     atr_pct = (atr / technical_live * 100) if atr and technical_live > 0 else None
@@ -589,6 +589,37 @@ def update_change_fields(entry, base, quote):
     entry["ma"] = ma_flags
     entry["md"] = ma_atr_distances(technical_live, atr, ma_values)
 
+
+def intraday_rank_hold(entry, base):
+    """Apply EOD admission holds plus live quote and trend validation."""
+    existing = entry.get("rh")
+    if existing in {"data", "probation"}:
+        return existing
+    technical_price = technical_price_from_quote(
+        entry.get("p"),
+        base.get("_preset_price_scale"),
+    )
+
+    live_flags = live_price_quality_flags(
+        technical_price,
+        base.get("_pc"),
+        base.get("_atr"),
+    )
+    if live_flags:
+        return "data"
+
+    ma_flags = int(entry.get("ma") or 0)
+    if not (ma_flags & 4 and ma_flags & 16):
+        return "trend"
+    if not trend_confirmed(
+        technical_price,
+        base.get("_ma_sma50"),
+        base.get("_ma_sma200"),
+    ):
+        return "trend"
+    return None
+
+
 def rerank(entries, baselines, quotes, spy_quote):
     week_id, _ = current_week_id()
     spy_live = spy_quote["last"]
@@ -606,20 +637,29 @@ def rerank(entries, baselines, quotes, spy_quote):
             stale.append(tk)
 
         live_price = finite_num(entry.get("p"))
-        if not live_price:
+        technical_live_price = technical_price_from_quote(
+            live_price,
+            base.get("_preset_price_scale"),
+        )
+        if not technical_live_price:
             continue
-        w = compute_intraday_weekly(base, live_price, spy_live, week_id)
+        hold = intraday_rank_hold(entry, base)
+        if hold:
+            entry["rh"] = hold
+        else:
+            entry.pop("rh", None)
+        w = compute_intraday_weekly(base, technical_live_price, spy_live, week_id)
         if w:
             entry["w_fr"] = w["w_fr"]
             entry["w_vs"] = w["w_vs"]
             entry["w_rf"] = w["w_rf"]
             entry["w_ra"] = w["w_ra"]
             entry["_intraday_deltas"] = w["_intraday_deltas"]
-        entry["_live_pen_mult"] = live_crash_penalty_multiplier(base, live_price)
+        entry["_live_pen_mult"] = live_crash_penalty_multiplier(base, technical_live_price)
 
-    all_w = [e.get("w_fr") for e in entries if not e.get("po") and e.get("w_fr") is not None]
+    all_w = [e.get("w_fr") for e in entries if not e.get("po") and not e.get("rh") and e.get("w_fr") is not None]
     for entry in entries:
-        if entry.get("po") or entry.get("w_fr") is None or len(all_w) <= 1:
+        if entry.get("po") or entry.get("rh") or entry.get("w_fr") is None or len(all_w) <= 1:
             entry["_w_rs_raw"] = None
             entry["w_rs"] = None
             continue
@@ -633,8 +673,8 @@ def rerank(entries, baselines, quotes, spy_quote):
         entry["w_rs"] = round(final)
         entry["_w_rs_raw"] = final
 
-    rankable = [e for e in entries if not e.get("po") and e.get("_w_rs_raw") is not None]
-    unrankable = [e for e in entries if e.get("po") or e.get("_w_rs_raw") is None]
+    rankable = [e for e in entries if not e.get("po") and not e.get("rh") and e.get("_w_rs_raw") is not None]
+    unrankable = [e for e in entries if e.get("po") or e.get("rh") or e.get("_w_rs_raw") is None]
     ranked = sorted(
         rankable,
         key=lambda x: (
