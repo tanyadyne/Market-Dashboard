@@ -109,8 +109,12 @@ jobs:
             python repair_history.py --repair-misdated-snapshot
           elif [ "${{ inputs.restore_established_history || false }}" = "true" ]; then
             # Fetch the small recent history window containing the audited
-            # source snapshot; this path never fetches market data or reranks.
+            # source snapshot. A queued run may have resolved its checkout
+            # before the prior liquid-leaders run published, so replay this
+            # deterministic repair from the latest main before committing.
+            # This path never fetches market data or reranks.
             git fetch --no-tags --depth=250 origin main
+            git reset --hard origin/main
             python restore_established_history.py
           else
             if [ "${{ inputs.restore_established_universe || false }}" = "true" ]; then
