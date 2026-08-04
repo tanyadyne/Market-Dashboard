@@ -179,7 +179,17 @@ ACR_SHORT_BASELINE   = 40     # short baseline = ~40 bars before the recent wind
 ACR_LONG_BASELINE    = 120    # long  baseline = ~120 bars before the recent window
 ACR_MIN_SHORT_BARS   = 20     # need >= 20 short-baseline bars or skip the check
 
+STANDARD_MIN_MCAP = 2_000_000_000
 CAP_ONLY_MIN_MCAP = 1_200_000_000
+# These Yahoo industries all display in the Semiconductors theme. They retain
+# the cap-only liquidity treatment, but must meet the standard $2B size floor.
+SEMICONDUCTOR_CAP_ONLY_INDUSTRIES = {
+    "Semiconductors",
+    "Semiconductor Equipment & Materials",
+    "Electronic Components",
+    "Computer Hardware",
+    "Scientific & Technical Instruments",
+}
 CAP_ONLY_INDUSTRIES = {
     "Information Technology Services",
     "Semiconductors",
@@ -1920,10 +1930,23 @@ def normalize_industry_label(label):
 
 
 CAP_ONLY_INDUSTRIES_NORMALIZED = {normalize_industry_label(x) for x in CAP_ONLY_INDUSTRIES}
+SEMICONDUCTOR_CAP_ONLY_INDUSTRIES_NORMALIZED = {
+    normalize_industry_label(x) for x in SEMICONDUCTOR_CAP_ONLY_INDUSTRIES
+}
 
 
 def is_cap_only_industry(label):
     return normalize_industry_label(label) in CAP_ONLY_INDUSTRIES_NORMALIZED
+
+
+def min_mcap_for_industry(label):
+    """Return the rank-universe market-cap floor for a Yahoo industry."""
+    normalized = normalize_industry_label(label)
+    if normalized in SEMICONDUCTOR_CAP_ONLY_INDUSTRIES_NORMALIZED:
+        return STANDARD_MIN_MCAP
+    if normalized in CAP_ONLY_INDUSTRIES_NORMALIZED:
+        return CAP_ONLY_MIN_MCAP
+    return STANDARD_MIN_MCAP
 
 
 def fetch_ticker_metadata(tk):
@@ -3035,7 +3058,6 @@ def main():
     MIN_DOLLAR_VOL = 70_000_000
     MIN_DOLLAR_VOL_SMALL_CAP = 100_000_000
     SMALL_CAP_THRESHOLD = 5_000_000_000
-    MIN_MCAP = 2_000_000_000
     CACHE_VERSION = 6  # Bumped: adds cached shares for computed market caps
 
     # Load cached metadata before the liquidity gate. Some raw Yahoo industries have
@@ -3591,7 +3613,8 @@ def main():
         if daily_mcap_updated:
             print("  Cache updated with daily market cap refresh")
 
-    # Final filter: standard names need >= $2B; cap-only industries need >= $1.2B.
+    # Final filter: standard names and Semiconductor-theme cap-only industries
+    # need >= $2B; other cap-only industries need >= $1.2B.
     # Theme Tracker holdings that fail are retained as profile-only so ETF profile
     # pills can deep-link into stock screener profiles without affecting rankings.
     all_tickers_before_mcap = list(liquid_tickers)
@@ -3609,7 +3632,7 @@ def main():
         return mc
 
     def min_mcap_for_ticker(t):
-        return CAP_ONLY_MIN_MCAP if is_cap_only_industry(industry_cache.get(t, "")) else MIN_MCAP
+        return min_mcap_for_industry(industry_cache.get(t, ""))
     all_tickers = []
     for t in liquid_tickers:
         passes_standard_mcap = current_market_cap_for_filter(t) >= min_mcap_for_ticker(t) or t in MANUAL_INCLUDE
@@ -3619,7 +3642,7 @@ def main():
             theme_profile_only_tickers.add(t)
             all_tickers.append(t)
     removed = len(liquid_tickers) - len(all_tickers)
-    print(f"  Market cap filter: {removed} removed (< $2B standard / < $1.2B cap-only), {len(all_tickers)} remaining")
+    print(f"  Market cap filter: {removed} removed (< $2B standard/Semiconductors / < $1.2B other cap-only), {len(all_tickers)} remaining")
     # Diagnostic: log DEBUG_TICKERS that got filtered here
     for tk in DEBUG_TICKERS:
         if tk in all_tickers_before_mcap and tk not in all_tickers:

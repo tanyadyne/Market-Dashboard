@@ -33,7 +33,7 @@ jobs:
 
       - name: Test screener preset calculations
         run: |
-          python -m unittest tests.test_preset_metrics tests.test_vcp_coils -v
+          python -m unittest tests.test_preset_metrics tests.test_vcp_coils tests.test_universe_market_cap -v
           node tests/test_screener_presets.js
 
       - name: Fetch full Liquid Leaders data
