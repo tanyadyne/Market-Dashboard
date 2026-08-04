@@ -38,7 +38,7 @@ except ImportError:
 
 from fetch_data import percentrank_inc
 from preset_metrics import compute_intraday_preset_state
-from rank_quality import live_price_quality_flags, technical_price_from_quote, trend_confirmed
+from rank_quality import live_price_quality_flags, technical_price_from_quote
 from fetch_leaders import (
     HARD_EXCLUDE,
     INTRADAY_BASELINES_FILE,
@@ -591,7 +591,7 @@ def update_change_fields(entry, base, quote):
 
 
 def intraday_rank_hold(entry, base):
-    """Apply EOD admission holds plus live quote and trend validation."""
+    """Apply EOD admission holds plus live quote validation."""
     existing = entry.get("rh")
     if existing in {"data", "probation"}:
         return existing
@@ -607,16 +607,6 @@ def intraday_rank_hold(entry, base):
     )
     if live_flags:
         return "data"
-
-    ma_flags = int(entry.get("ma") or 0)
-    if not (ma_flags & 4 and ma_flags & 16):
-        return "trend"
-    if not trend_confirmed(
-        technical_price,
-        base.get("_ma_sma50"),
-        base.get("_ma_sma200"),
-    ):
-        return "trend"
     return None
 
 

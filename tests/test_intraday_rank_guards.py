@@ -49,6 +49,17 @@ class IntradayRankGuardTests(unittest.TestCase):
         }
         self.assertIsNone(fetch_leaders_intraday.intraday_rank_hold(entry, baseline))
 
+    def test_intraday_downtrend_does_not_hold_an_established_stock(self):
+        entry = {"p": 3.85, "ma": 0}
+        baseline = {
+            "_preset_price_scale": 1.0,
+            "_pc": 3.80,
+            "_atr": 0.30,
+            "_ma_sma50": 5.30,
+            "_ma_sma200": 9.50,
+        }
+        self.assertIsNone(fetch_leaders_intraday.intraday_rank_hold(entry, baseline))
+
 
 if __name__ == "__main__":
     unittest.main()

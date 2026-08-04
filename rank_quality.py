@@ -190,7 +190,7 @@ def probation_complete(prior_sessions):
 
 
 def trend_confirmed(price, sma50, sma200):
-    """Require a confirmed Stage-2-like trend for main RS-rank eligibility."""
+    """Return the Stage-2-like trend diagnostic; it does not gate RS rank."""
     price = _positive_number(price)
     sma50 = _positive_number(sma50)
     sma200 = _positive_number(sma200)
@@ -198,11 +198,14 @@ def trend_confirmed(price, sma50, sma200):
 
 
 def rank_hold_code(quality_flags, prior_sessions, price, sma50, sma200):
-    """Return public admission status, or ``None`` for a rankable stock."""
+    """Return a hard data-admission status, or ``None`` for a rankable stock.
+
+    Trend belongs in the profile/technical view, not in the cross-sectional RS
+    universe. A downtrend can be a legitimate weak-relative-strength candidate;
+    data corruption and unvalidated new entries cannot.
+    """
     if quality_flags:
         return "data"
     if not probation_complete(prior_sessions):
         return "probation"
-    if not trend_confirmed(price, sma50, sma200):
-        return "trend"
     return None

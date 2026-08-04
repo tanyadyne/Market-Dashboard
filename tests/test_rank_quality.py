@@ -50,9 +50,9 @@ class RankQualityTests(unittest.TestCase):
         legacy_entry = {"seen": [True], "wr": [12, 10, 8]}
         self.assertEqual(prior_observation_sessions(legacy_entry), 3)
 
-    def test_stage_four_trend_is_not_rank_eligible(self):
+    def test_stage_four_trend_remains_rank_eligible(self):
         self.assertFalse(trend_confirmed(3.85, 5.3, 9.5))
-        self.assertEqual(rank_hold_code([], 10, 3.85, 5.3, 9.5), "trend")
+        self.assertIsNone(rank_hold_code([], 10, 3.85, 5.3, 9.5))
         self.assertTrue(trend_confirmed(120.0, 110.0, 100.0))
 
     def test_live_raw_quote_is_scaled_before_adjusted_return_math(self):

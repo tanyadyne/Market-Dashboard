@@ -4081,10 +4081,11 @@ def main():
     except Exception:
         prev_tz_map = {}
 
-    # Ranking admission: keep suspect/new/downtrend profiles visible, but do not
-    # let them enter the percentile pool or influence anybody else's RS score.
+    # Ranking admission: keep suspect/new profiles visible, but do not let them
+    # enter the percentile pool or influence anybody else's RS score. Trend is
+    # intentionally not an admission gate: laggards belong in an RS ranking.
     observation_counts = load_rank_observation_counts()
-    rank_hold_counts = {"data": 0, "probation": 0, "trend": 0}
+    rank_hold_counts = {"data": 0, "probation": 0}
     for r in results:
         if r.get("po"):
             continue
