@@ -34,6 +34,7 @@ from fetch_data import (
     percentrank_inc,
 )
 from theme_history import load_theme_snapshot_index, prepare_theme_history, set_theme_snapshot, snapshot_for_stock
+from history_dates import latest_history_session_date, select_history_session_date
 from rank_history import (
     WEEKLY_RANK_TOTALS_FIELD,
     aligned_ranked_totals,
@@ -4272,14 +4273,9 @@ def main():
     #     the most recent bar is still April 27's EOD → we want "2026-04-27"
     #   - On weekends, the last bar is Friday's → we want Friday's date (and the
     #     weekend guard will skip the write anyway)
-    # We grab the bar date from the first stock in results that has valid data.
-    _bar_date_str = None
-    for _r in results:
-        _tk = _r.get("t")
-        if _tk and _tk in daily_data and daily_data[_tk] is not None and len(daily_data[_tk]) > 0:
-            _last_bar_ts = daily_data[_tk].index[-1]
-            _bar_date_str = _last_bar_ts.date().isoformat() if hasattr(_last_bar_ts, 'date') else str(_last_bar_ts)[:10]
-            break
+    # Use the consensus session date across the universe, rather than trusting
+    # the first result. A single stale ticker must never relabel every rank.
+    _bar_date_str = select_history_session_date(results, daily_data)
     # Fallback to ET date if no bar date found
     if not _bar_date_str:
         _bar_date_str = _et_now.date().isoformat()
@@ -4305,6 +4301,17 @@ def main():
     scores = score_history.get("d", {})
     ranked_totals = aligned_ranked_totals(score_history, dates, scores)
     theme_snapshots = load_theme_snapshot_index()
+
+    # Never append or overwrite a history row using bars older than the latest
+    # recorded session. This is a second line of defence if an upstream source
+    # is broadly stale despite the consensus-date selection above.
+    _latest_history_date = latest_history_session_date(dates)
+    if _latest_history_date and today_str < _latest_history_date:
+        skip_history_write = True
+        print(
+            "[history] Skipping stale snapshot - "
+            f"bar date={today_str}, latest recorded={_latest_history_date}"
+        )
 
     # ─── One-time cleanup: strip daily-RS fields ('s', 'r') from existing history. ──
     # The dashboard now uses only the weekly rank, so score/rank arrays not used by
