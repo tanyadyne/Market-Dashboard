@@ -73,10 +73,21 @@ MARKET_CAP_QUOTE_CHUNK = 120
 NASDAQ_MCAP_FALLBACK_LIMIT = int(os.environ.get("NASDAQ_MCAP_FALLBACK_LIMIT", "500"))
 NASDAQ_MCAP_FALLBACK_WORKERS = int(os.environ.get("NASDAQ_MCAP_FALLBACK_WORKERS", "8"))
 NASDAQ_MCAP_PRIORITY_TICKERS = {"MXL"}
-SPLIT_LIKE_RATIOS = (0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0)
+# Include 1-for-15 / 15-for-1 as well as the common split ratios.  MVIS's
+# 1-for-15 reverse split showed why this needs to cover more than powers of
+# two and ten: it is used both by the RS repair path and the market-cap guard.
+SPLIT_LIKE_RATIOS = (1/15, 0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0, 15.0)
 SPLIT_GAP_TOLERANCE = 0.08
 OFF_HIGH_MIN_MULTIPLIER = 0.70
 OFF_HIGH_RECOVERY_STEP = 0.05
+
+# Market cap comes directly from Yahoo/Nasdaq whenever either source supplies
+# it.  Shares x price is only a guarded continuity fallback; it must never
+# overwrite the direct value or be used with stale / split-mismatched shares.
+DIRECT_MCAP_SOURCES = frozenset({"yahoo_quote", "yfinance", "nasdaq"})
+TRUSTED_SHARE_SOURCES = frozenset({"yahoo_quote", "yfinance"})
+MARKET_CAP_SHARE_PRICE_MIN_RATIO = 0.5
+MARKET_CAP_SHARE_PRICE_MAX_RATIO = 2.0
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
@@ -1725,6 +1736,104 @@ def nearest_split_ratio(ratio):
     return None
 
 
+def market_cap_source_is_direct(source):
+    """Whether a persisted cap was supplied by a primary quote provider."""
+    return str(source or "") in DIRECT_MCAP_SOURCES
+
+
+def recent_split_like_close_gap(closes, lookback=3):
+    """Return True when recent raw closes cross a corporate-action-like scale gap.
+
+    A share count fetched before a split cannot safely be combined with a
+    post-split close.  This intentionally treats ambiguity as unsafe: the
+    direct market-cap field remains available when a provider can supply it.
+    """
+    if closes is None:
+        return False
+    try:
+        values = list(closes)
+    except (TypeError, ValueError):
+        return False
+    if len(values) < 2:
+        return False
+    start = max(1, len(values) - max(1, int(lookback)))
+    for i in range(start, len(values)):
+        try:
+            previous = float(values[i - 1])
+            current = float(values[i])
+        except (TypeError, ValueError):
+            continue
+        if not all(np.isfinite(x) and x > 0 for x in (previous, current)):
+            continue
+        if nearest_split_ratio(current / previous) is not None:
+            return True
+    return False
+
+
+def shares_reconcile_with_market_cap(market_cap, shares, price):
+    """Check whether provider shares are plausible against provider market cap.
+
+    This is deliberately tolerant of a normal intraday move, but rejects the
+    order-of-magnitude mismatch produced when a split-adjusted price is paired
+    with an old share count.
+    """
+    try:
+        market_cap = float(market_cap)
+        shares = float(shares)
+        price = float(price)
+    except (TypeError, ValueError):
+        return False
+    if not all(np.isfinite(x) and x > 0 for x in (market_cap, shares, price)):
+        return False
+    implied_price = market_cap / shares
+    ratio = implied_price / price
+    return MARKET_CAP_SHARE_PRICE_MIN_RATIO <= ratio <= MARKET_CAP_SHARE_PRICE_MAX_RATIO
+
+
+def select_market_cap(
+    market_cap,
+    market_cap_source,
+    market_cap_refreshed_at,
+    shares,
+    shares_source,
+    shares_refreshed_at,
+    price,
+    today,
+    raw_closes=None,
+):
+    """Return the safe market cap for screening without poisoning the cache.
+
+    Direct Yahoo/Nasdaq values are authoritative.  A cached manual calculation
+    from an older schema has no provenance and is intentionally ignored.  The
+    only calculation permitted is a same-day Yahoo share count times price when
+    there is no recent split-like price gap.
+    """
+    try:
+        direct_cap = int(market_cap or 0)
+    except (TypeError, ValueError):
+        direct_cap = 0
+    has_recent_split_gap = recent_split_like_close_gap(raw_closes)
+    if direct_cap > 0 and market_cap_source_is_direct(market_cap_source):
+        # A direct cache entry from before a newly visible split may itself be
+        # stale.  Do not use it until today's direct refresh confirms it.
+        if not has_recent_split_gap or str(market_cap_refreshed_at or "") == str(today or ""):
+            return direct_cap
+
+    if (
+        str(shares_source or "") in TRUSTED_SHARE_SOURCES
+        and str(shares_refreshed_at or "") == str(today or "")
+        and not has_recent_split_gap
+    ):
+        try:
+            shares = int(shares or 0)
+            price = float(price)
+        except (TypeError, ValueError):
+            return 0
+        if shares > 0 and np.isfinite(price) and price > 0:
+            return int(shares * price)
+    return 0
+
+
 def repair_split_gaps(df):
     """Manually repair split-like OHLC scale gaps that Yahoo Adj Close misses.
 
@@ -1979,14 +2088,6 @@ def fetch_ticker_metadata(tk):
                     shares = int(fi.get("shares", 0) or fi.get("sharesOutstanding", 0) or 0)
             except Exception:
                 pass
-        if mc == 0 and shares:
-            try:
-                fi = ticker_obj.fast_info
-                last_price = fi.get("lastPrice", fi.get("last_price", 0)) or 0
-                if last_price:
-                    mc = int(shares * last_price)
-            except Exception:
-                pass
     except Exception:
         pass
     return mc, industry, name, desc, shares
@@ -2013,9 +2114,6 @@ def fetch_ticker_market_cap(tk):
                 mc = int(fi.get("marketCap", 0) or fi.get("market_cap", 0) or 0)
             if shares == 0:
                 shares = int(fi.get("shares", 0) or fi.get("sharesOutstanding", 0) or 0)
-            last_price = fi.get("lastPrice", fi.get("last_price", 0)) or 0
-            if mc == 0 and shares and last_price:
-                mc = int(shares * last_price)
         except Exception:
             pass
     except Exception:
@@ -3058,19 +3156,23 @@ def main():
     MIN_DOLLAR_VOL = 70_000_000
     MIN_DOLLAR_VOL_SMALL_CAP = 100_000_000
     SMALL_CAP_THRESHOLD = 5_000_000_000
-    CACHE_VERSION = 6  # Bumped: adds cached shares for computed market caps
+    CACHE_VERSION = 7  # Bumped: provenance-gated direct market-cap cache
 
     # Load cached metadata before the liquidity gate. Some raw Yahoo industries have
     # a cap-only rule: no dollar-volume or ADR-collapse gate, just a lower mcap floor.
-    mcap_data = {"refreshed": "", "caps": {}, "shares": {}, "industries": {}, "names": {}, "descs": {}, "mcap_refreshed_at": {}, "shares_refreshed_at": {}, "version": 0, "refresh_in_progress": False}
+    mcap_data = {"refreshed": "", "caps": {}, "mcap_sources": {}, "shares": {}, "shares_sources": {}, "industries": {}, "names": {}, "descs": {}, "mcap_refreshed_at": {}, "shares_refreshed_at": {}, "version": 0, "refresh_in_progress": False}
     if os.path.exists("leaders_mcap.json"):
         try:
             with open("leaders_mcap.json") as f:
                 mcap_data = json.load(f)
                 if "caps" not in mcap_data:
                     mcap_data["caps"] = {}
+                if "mcap_sources" not in mcap_data:
+                    mcap_data["mcap_sources"] = {}
                 if "shares" not in mcap_data:
                     mcap_data["shares"] = {}
+                if "shares_sources" not in mcap_data:
+                    mcap_data["shares_sources"] = {}
                 if "industries" not in mcap_data:
                     mcap_data["industries"] = {}
                 if "names" not in mcap_data:
@@ -3086,10 +3188,12 @@ def main():
                 if "refresh_in_progress" not in mcap_data:
                     mcap_data["refresh_in_progress"] = False
         except Exception:
-            mcap_data = {"refreshed": "", "caps": {}, "shares": {}, "industries": {}, "names": {}, "descs": {}, "mcap_refreshed_at": {}, "shares_refreshed_at": {}, "version": 0, "refresh_in_progress": False}
+            mcap_data = {"refreshed": "", "caps": {}, "mcap_sources": {}, "shares": {}, "shares_sources": {}, "industries": {}, "names": {}, "descs": {}, "mcap_refreshed_at": {}, "shares_refreshed_at": {}, "version": 0, "refresh_in_progress": False}
 
     mcap_cache = mcap_data.get("caps", {})
+    mcap_sources = mcap_data.get("mcap_sources", {})
     shares_cache = mcap_data.get("shares", {})
+    shares_sources = mcap_data.get("shares_sources", {})
     mcap_refreshed_at = mcap_data.get("mcap_refreshed_at", {})
     shares_refreshed_at = mcap_data.get("shares_refreshed_at", {})
     industry_cache = mcap_data.get("industries", {})
@@ -3103,13 +3207,44 @@ def main():
         except Exception:
             names_fallback = {}
 
-    def merge_metadata_cache(tk, mc=0, industry="", name="", desc="", shares=0):
+    def store_direct_market_cap(tk, mc, source):
+        """Persist a provider-supplied cap with explicit provenance."""
+        try:
+            mc = int(mc or 0)
+        except (TypeError, ValueError):
+            mc = 0
+        if mc <= 0 or not market_cap_source_is_direct(source):
+            return False
+        mcap_cache[tk] = mc
+        mcap_sources[tk] = source
+        mcap_refreshed_at[tk] = _et_today
+        return True
+
+    def store_trusted_shares(tk, shares, source, market_cap=0, price=None):
+        """Persist source shares only when they do not contradict a direct cap."""
+        try:
+            shares = int(shares or 0)
+        except (TypeError, ValueError):
+            shares = 0
+        if shares <= 0 or str(source or "") not in TRUSTED_SHARE_SOURCES:
+            return False
+        if market_cap and price and not shares_reconcile_with_market_cap(market_cap, shares, price):
+            # Do not let an old pre-split share count survive beside an updated
+            # price. It is safer to have no fallback than a fabricated cap.
+            shares_cache.pop(tk, None)
+            shares_sources.pop(tk, None)
+            shares_refreshed_at.pop(tk, None)
+            return False
+        shares_cache[tk] = shares
+        shares_sources[tk] = source
+        shares_refreshed_at[tk] = _et_today
+        return True
+
+    def merge_metadata_cache(tk, mc=0, industry="", name="", desc="", shares=0, price=None):
         updated = False
-        if mc:
-            mcap_cache[tk] = int(mc)
+        if store_direct_market_cap(tk, mc, "yfinance"):
             updated = True
-        if shares:
-            shares_cache[tk] = int(shares)
+        if store_trusted_shares(tk, shares, "yfinance", mc, price):
             updated = True
         if industry:
             industry_cache[tk] = industry
@@ -3133,11 +3268,24 @@ def main():
         return updated
 
     def computed_market_cap(tk, price=None):
-        shares = int(shares_cache.get(tk, 0) or 0)
-        if shares and price and price > 0:
-            mcap_refreshed_at[tk] = _et_today
-            return int(shares * float(price))
-        return int(mcap_cache.get(tk, 0) or 0)
+        raw_closes = None
+        try:
+            df = get_df(tk)
+            if df is not None and "Close" in df:
+                raw_closes = df["Close"].values
+        except Exception:
+            pass
+        return select_market_cap(
+            mcap_cache.get(tk, 0),
+            mcap_sources.get(tk, ""),
+            mcap_refreshed_at.get(tk, ""),
+            shares_cache.get(tk, 0),
+            shares_sources.get(tk, ""),
+            shares_refreshed_at.get(tk, ""),
+            price,
+            _et_today,
+            raw_closes,
+        )
 
     def latest_close_price(tk):
         try:
@@ -3147,15 +3295,6 @@ def main():
         except Exception:
             pass
         return None
-
-    def infer_shares_from_market_cap(tk, mc):
-        price = latest_close_price(tk)
-        if not (mc and price and price > 0):
-            return 0
-        try:
-            return int(round(float(mc) / float(price)))
-        except Exception:
-            return 0
 
     def nasdaq_fallback_priority(t):
         return (
@@ -3178,31 +3317,39 @@ def main():
         nonlocal daily_mcap_updated_count, daily_mcap_failed_tickers
         due = [
             t for t in tickers
-            if mcap_refreshed_at.get(t) != _et_today or shares_refreshed_at.get(t) != _et_today
+            if (
+                mcap_refreshed_at.get(t) != _et_today
+                or not market_cap_source_is_direct(mcap_sources.get(t))
+            )
         ]
         daily_mcap_updated_count = 0
         daily_mcap_failed_tickers = []
         if not due:
             return False
-        print(f"  Refreshing market caps/shares for {len(due)} ticker(s) via Yahoo quote endpoint...")
-        updated = 0
+        print(f"  Refreshing direct market caps for {len(due)} ticker(s) via Yahoo quote endpoint...")
         bulk_meta = fetch_bulk_market_caps(due)
         for tk in due:
             meta = bulk_meta.get(normalize_yahoo_symbol(tk), {})
             mc = meta.get("mc", 0)
             shares = meta.get("shares", 0)
-            if mc and mc > 0:
-                mcap_cache[tk] = int(mc)
-                mcap_refreshed_at[tk] = _et_today
-            if shares and shares > 0:
-                shares_cache[tk] = int(shares)
-                shares_refreshed_at[tk] = _et_today
-            if mcap_refreshed_at.get(tk) == _et_today or shares_refreshed_at.get(tk) == _et_today:
-                updated += 1
+            price = latest_close_price(tk)
+            store_direct_market_cap(tk, mc, "yahoo_quote")
+            store_trusted_shares(tk, shares, "yahoo_quote", mc, price)
+
+        bulk_updated = sum(
+            1 for t in due
+            if (
+                mcap_refreshed_at.get(t) == _et_today
+                and market_cap_source_is_direct(mcap_sources.get(t))
+            )
+        )
 
         missing = [
             t for t in due
-            if mcap_refreshed_at.get(t) != _et_today and shares_refreshed_at.get(t) != _et_today
+            if (
+                mcap_refreshed_at.get(t) != _et_today
+                or not market_cap_source_is_direct(mcap_sources.get(t))
+            )
         ]
         nasdaq_updated = 0
         if missing:
@@ -3212,28 +3359,24 @@ def main():
             else:
                 nasdaq_targets = nasdaq_targets[:NASDAQ_MCAP_FALLBACK_LIMIT]
             print(
-                f"  Market cap/share bulk refresh: {updated}/{len(due)} updated; "
+                f"  Direct market-cap bulk refresh: {bulk_updated}/{len(due)} updated; "
                 f"retrying {len(nasdaq_targets)} priority ticker(s) via Nasdaq fallback..."
             )
             nasdaq_caps = fetch_nasdaq_market_caps(nasdaq_targets)
             for tk, mc in nasdaq_caps.items():
-                if mc and mc > 0:
-                    mcap_cache[tk] = int(mc)
-                    mcap_refreshed_at[tk] = _et_today
-                    inferred_shares = infer_shares_from_market_cap(tk, mc)
-                    if inferred_shares > 0:
-                        shares_cache[tk] = int(inferred_shares)
-                        shares_refreshed_at[tk] = _et_today
-                    updated += 1
+                if store_direct_market_cap(tk, mc, "nasdaq"):
                     nasdaq_updated += 1
 
         missing = [
             t for t in due
-            if mcap_refreshed_at.get(t) != _et_today and shares_refreshed_at.get(t) != _et_today
+            if (
+                mcap_refreshed_at.get(t) != _et_today
+                or not market_cap_source_is_direct(mcap_sources.get(t))
+            )
         ]
         fallback_updated = 0
         if missing:
-            print(f"  Market cap/share Nasdaq fallback: {nasdaq_updated} updated; retrying {len(missing)} via yfinance fallback...")
+            print(f"  Direct market-cap Nasdaq fallback: {nasdaq_updated} updated; retrying {len(missing)} via yfinance fallback...")
             max_workers = min(4, max(1, len(missing)))
             with ThreadPoolExecutor(max_workers=max_workers) as ex:
                 futs = {ex.submit(fetch_ticker_market_cap, tk): tk for tk in missing}
@@ -3243,23 +3386,28 @@ def main():
                         mc, shares = fut.result()
                     except Exception:
                         mc, shares = 0, 0
-                    if mc and mc > 0:
-                        mcap_cache[tk] = int(mc)
-                        mcap_refreshed_at[tk] = _et_today
-                    if shares and shares > 0:
-                        shares_cache[tk] = int(shares)
-                        shares_refreshed_at[tk] = _et_today
-                    if mcap_refreshed_at.get(tk) == _et_today or shares_refreshed_at.get(tk) == _et_today:
-                        updated += 1
+                    price = latest_close_price(tk)
+                    if store_direct_market_cap(tk, mc, "yfinance"):
                         fallback_updated += 1
+                    store_trusted_shares(tk, shares, "yfinance", mc, price)
 
+        updated = sum(
+            1 for t in due
+            if (
+                mcap_refreshed_at.get(t) == _et_today
+                and market_cap_source_is_direct(mcap_sources.get(t))
+            )
+        )
         daily_mcap_updated_count = updated
         daily_mcap_failed_tickers = [
             t for t in due
-            if mcap_refreshed_at.get(t) != _et_today and shares_refreshed_at.get(t) != _et_today
+            if (
+                mcap_refreshed_at.get(t) != _et_today
+                or not market_cap_source_is_direct(mcap_sources.get(t))
+            )
         ]
         print(
-            f"  Market cap refresh: {updated}/{len(due)} updated "
+            f"  Direct market-cap refresh: {updated}/{len(due)} updated "
             f"({len(bulk_meta)} bulk, {fallback_updated} yfinance, {nasdaq_updated} nasdaq, "
             f"{len(daily_mcap_failed_tickers)} stale; stale tickers retry next run)"
         )
@@ -3332,8 +3480,6 @@ def main():
         # $70M tier here let names such as MAN pass liquidity before a later metadata
         # lookup established that they were below the $5B small-cap cutoff.
         cached_mcap = computed_market_cap(tk, last_price)
-        if cached_mcap:
-            mcap_cache[tk] = cached_mcap
         threshold = (
             MIN_DOLLAR_VOL
             if cached_mcap and cached_mcap >= SMALL_CAP_THRESHOLD
@@ -3351,18 +3497,14 @@ def main():
         ):
             mc, industry, name, desc, shares = fetch_ticker_metadata(tk)
             cap_only_metadata_checked += 1
-            if merge_metadata_cache(tk, mc, industry, name, desc, shares):
+            if merge_metadata_cache(tk, mc, industry, name, desc, shares, last_price):
                 cap_only_metadata_updated = True
             if mc > 0:
                 refreshed_at_v[tk] = CACHE_VERSION
-                mcap_refreshed_at[tk] = _et_today
                 cached_mcap = mc
                 cap_only_policy = is_cap_only_industry(industry_cache.get(tk, ""))
             if shares > 0:
-                shares_refreshed_at[tk] = _et_today
                 cached_mcap = computed_market_cap(tk, last_price)
-                if cached_mcap:
-                    mcap_cache[tk] = cached_mcap
             # Metadata may have resolved a previously unknown market cap. Recompute
             # the liquidity tier before deciding whether this ticker survives.
             threshold = (
@@ -3541,7 +3683,9 @@ def main():
         partial = 0
         for i, tk in enumerate(tickers_to_check):
             mc, industry, name, desc, shares = fetch_ticker_metadata(tk)
-            metadata_updated = merge_metadata_cache(tk, mc, industry, name, desc, shares)
+            metadata_updated = merge_metadata_cache(
+                tk, mc, industry, name, desc, shares, latest_close_price(tk)
+            )
             if mc == 0:
                 failed += 1
                 if metadata_updated:
@@ -3550,14 +3694,12 @@ def main():
                 # previously-cached data, but still retain partial metadata
                 # (name/description/industry) so a missing market cap does not
                 # blank the screener profile.
-                if mcap_cache.get(tk, 0) > 0:
+                if market_cap_source_is_direct(mcap_sources.get(tk)):
                     refreshed_at_v[tk] = CACHE_VERSION
-            else:
+            elif market_cap_source_is_direct(mcap_sources.get(tk)):
                 refreshed_at_v[tk] = CACHE_VERSION
-                mcap_refreshed_at[tk] = _et_today
-            if shares > 0:
+            if shares > 0 and str(shares_sources.get(tk, "")) in TRUSTED_SHARE_SOURCES:
                 refreshed_at_v[tk] = CACHE_VERSION
-                shares_refreshed_at[tk] = _et_today
             time.sleep(0.2)
             if (i + 1) % 100 == 0:
                 print(f"    {i+1}/{total}  (failed so far: {failed})")
@@ -3572,7 +3714,9 @@ def main():
         mcap_data = {
             "refreshed": _et_today if not still_needs_refresh else last_refreshed,
             "caps": mcap_cache,
+            "mcap_sources": mcap_sources,
             "shares": shares_cache,
+            "shares_sources": shares_sources,
             "industries": industry_cache,
             "names": name_cache,
             "descs": desc_cache,
@@ -3594,7 +3738,9 @@ def main():
         mcap_data = {
             "refreshed": last_refreshed,
             "caps": mcap_cache,
+            "mcap_sources": mcap_sources,
             "shares": shares_cache,
+            "shares_sources": shares_sources,
             "industries": industry_cache,
             "names": name_cache,
             "descs": desc_cache,
@@ -3627,8 +3773,6 @@ def main():
         except Exception:
             price = None
         mc = computed_market_cap(tk, price)
-        if mc:
-            mcap_cache[tk] = mc
         return mc
 
     def min_mcap_for_ticker(t):
@@ -3797,8 +3941,6 @@ def main():
             except Exception:
                 latest_price = None
             market_cap = computed_market_cap(tk, latest_price)
-            if market_cap:
-                mcap_cache[tk] = market_cap
             entry = {"t": tk, "n": metadata_name(tk), "d": metadata_desc(tk), "th": industry_label.get(tk, "General"), "thm": theme_map.get(tk, "General"), "mc": market_cap or None, **d_metrics, **w_metrics}
             if tk in theme_profile_only_tickers:
                 entry["po"] = True
@@ -3809,12 +3951,17 @@ def main():
     print(f"  Processed: {processed}/{len(all_tickers)}")
     daily_mcap_failed_tickers = [
         t for t in daily_mcap_failed_tickers
-        if mcap_refreshed_at.get(t) != _et_today and shares_refreshed_at.get(t) != _et_today
+        if (
+            mcap_refreshed_at.get(t) != _et_today
+            or not market_cap_source_is_direct(mcap_sources.get(t))
+        )
     ]
     mcap_data = {
         "refreshed": _et_today if remaining_after_run == 0 else last_refreshed,
         "caps": mcap_cache,
+        "mcap_sources": mcap_sources,
         "shares": shares_cache,
+        "shares_sources": shares_sources,
         "industries": industry_cache,
         "names": name_cache,
         "descs": desc_cache,
@@ -3828,7 +3975,7 @@ def main():
     }
     with open("leaders_mcap.json", "w") as f:
         json.dump(mcap_data, f, separators=(",", ":"))
-    print("  Metadata cache saved with price × shares market caps")
+    print("  Metadata cache saved with provider-sourced market caps")
 
     recover_missing_weekly_metrics(
         results,
