@@ -297,6 +297,17 @@ td{padding:7px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-s
 /* Search bar — mirrors screener's .search-input */
 .profile-search{width:100%;padding:10px 16px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:14px;font-family:inherit;margin-bottom:16px;outline:none;box-sizing:border-box}
 .profile-search:focus{border-color:#3b82f6}
+/* Search clear control: consistent compact outlined X inside every search box. */
+.search-clear-wrap{position:relative;display:block;min-width:0}
+.search-clear-wrap>input{width:100%!important;padding-right:42px!important}
+.search-clear-btn{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:22px;height:22px;display:grid;place-items:center;padding:0;border:1.5px solid currentColor;border-radius:50%;background:var(--bg2);color:var(--t2);cursor:pointer;transition:background .15s,color .15s,border-color .15s,opacity .15s}
+.search-clear-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round}
+.search-clear-btn:hover:not(:disabled){background:var(--bg3);color:var(--t1);border-color:var(--t1)}
+.search-clear-btn:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+.search-clear-btn:disabled{opacity:.32;cursor:default}
+.filter-search-row .search-clear-wrap{width:200px}
+.profile-inner>.search-clear-wrap{margin-bottom:16px}
+.profile-inner>.search-clear-wrap>.profile-search{margin-bottom:0}
 [data-theme="light"] .profile-search{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
 .profile-search-results{margin-bottom:16px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg2);max-height:280px;overflow-y:auto;display:none}
 [data-theme="light"] .profile-search-results{box-shadow:0 1px 2px rgba(0,0,0,0.04)}
@@ -496,7 +507,9 @@ html[data-view="mobile"]{max-width:100vw;overflow-x:hidden}
       <span class="lbl-icon">W</span>
     </button>
   </div>
-  <input class="srch rs-only-tool" id="si" placeholder="Search ticker, name, holding..." oninput="onSearchInput()">
+  <div class="search-clear-wrap rs-only-tool">
+    <input class="srch" id="si" placeholder="Search ticker, name, holding..." oninput="onSearchInput()" data-clearable-search>
+  </div>
 </div>
 <div class="spy" id="spyBar" style="display:none">
   <span><b>SPY</b> <span class="m" id="spyP"></span> <span class="m" id="spyC" style="font-weight:600"></span></span>
@@ -572,6 +585,40 @@ const SF_COILED  = 128;
 // Search-input handler. Resets chart pagination to page 1 (a new search means a
 // fresh result set; staying on page 5 from before doesn't make sense), then
 // delegates to the unified render() which dispatches to list or chart view.
+function syncSearchClearButton(input){
+  const button=input&&input.parentElement&&input.parentElement.querySelector('.search-clear-btn');
+  if(button)button.disabled=!input.value;
+}
+
+function setupSearchClearButtons(root=document){
+  root.querySelectorAll('input[data-clearable-search]').forEach(input=>{
+    if(input.dataset.clearButtonReady==='1'){
+      syncSearchClearButton(input);
+      return;
+    }
+    const wrap=input.parentElement;
+    if(!wrap||!wrap.classList.contains('search-clear-wrap'))return;
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='search-clear-btn';
+    button.setAttribute('aria-label','Clear search');
+    button.setAttribute('title','Clear search');
+    button.innerHTML='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4 12 12M12 4 4 12"/></svg>';
+    button.addEventListener('mousedown',event=>event.preventDefault());
+    button.addEventListener('click',()=>{
+      if(!input.value)return;
+      input.value='';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      syncSearchClearButton(input);
+      input.focus();
+    });
+    input.addEventListener('input',()=>syncSearchClearButton(input));
+    wrap.appendChild(button);
+    input.dataset.clearButtonReady='1';
+    syncSearchClearButton(input);
+  });
+}
+
 function onSearchInput(){
   if(currentView==='chart') chartPage=1;
   render();
@@ -1640,7 +1687,7 @@ function renderProfile(){
   const prevQuery=prevSearchEl?prevSearchEl.value:'';
 
   let html='<div class="profile-inner">';
-  html+=`<input class="profile-search" id="profileSearchInput" placeholder="Search ETF, theme, or holding..." oninput="onProfileSearchInput()" autocomplete="off">`;
+  html+=`<div class="search-clear-wrap"><input class="profile-search" id="profileSearchInput" placeholder="Search ETF, theme, or holding..." oninput="onProfileSearchInput()" autocomplete="off" data-clearable-search></div>`;
   html+=`<div class="profile-search-results" id="profileSearchResults"></div>`;
 
   // Empty state: no ETF picked yet — show search bar + hint, then close inner.
@@ -1648,7 +1695,11 @@ function renderProfile(){
     html+='<div class="profile-empty">No ETF selected.<div class="profile-empty-hint">Search above, or click any ticker on the RS Ranking or Overview tab to view its profile.</div></div>';
     html+='</div>';
     root.innerHTML=html;
-    if(prevSearchEl) document.getElementById('profileSearchInput').value=prevQuery;
+    setupSearchClearButtons(root);
+    if(prevSearchEl){
+      const input=document.getElementById('profileSearchInput');
+      if(input){input.value=prevQuery;syncSearchClearButton(input);}
+    }
     return;
   }
   const etf=DATA.e.find(e=>e.t===profileTicker);
@@ -1656,7 +1707,11 @@ function renderProfile(){
     html+=`<div class="profile-empty">ETF "${esc(profileTicker)}" not found.</div>`;
     html+='</div>';
     root.innerHTML=html;
-    if(prevSearchEl) document.getElementById('profileSearchInput').value=prevQuery;
+    setupSearchClearButtons(root);
+    if(prevSearchEl){
+      const input=document.getElementById('profileSearchInput');
+      if(input){input.value=prevQuery;syncSearchClearButton(input);}
+    }
     return;
   }
 
@@ -1839,10 +1894,11 @@ function renderProfile(){
   html+='</div>'; // close .profile-inner
 
   root.innerHTML=html;
+  setupSearchClearButtons(root);
   // Restore the search input value (if user was mid-typing during a re-render).
   if(prevSearchEl){
     const newInput=document.getElementById('profileSearchInput');
-    if(newInput) newInput.value=prevQuery;
+    if(newInput){newInput.value=prevQuery;syncSearchClearButton(newInput);}
     // Also restore the dropdown contents if there was an active query
     if(prevQuery) onProfileSearchInput();
   }
@@ -2065,6 +2121,7 @@ const _ttInitialParams=(function(){
 // Initial tab setup — sets visibility (shows Overview wrap, hides RS-only toolbar
 // items, hides the SPY bar) before DATA arrives. renderOverview() will then be
 // called from onDataLoaded() once data is fetched and the boxes will populate.
+setupSearchClearButtons();
 buildHeader();switchTab(currentTab);loadData();setInterval(loadData,60000);
 
 // Back-forward cache (bfcache) restore: when the user presses Back from the

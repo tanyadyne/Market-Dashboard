@@ -60,6 +60,7 @@ body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;font-
    it never grows past a screenful. z-index above sticky header so results
    aren't clipped by the bottom border. */
 .ov-search-wrap{position:relative;flex-shrink:0}
+.ov-search-wrap .search-clear-wrap{width:160px}
 .ov-search-input{padding:5px 12px;border-radius:6px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:12px;width:160px;font-family:inherit;outline:none}
 .ov-search-input:focus{border-color:#3b82f6}
 .ov-search-dropdown{position:absolute;top:calc(100% + 4px);right:0;min-width:160px;max-height:300px;overflow-y:auto;background:var(--bg2);border:1px solid var(--bdr);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:100;display:none}
@@ -198,6 +199,18 @@ tr:hover{background:var(--bg3)}
 .pag .pg:hover{background:var(--bg3)}.pag .pg.cur{background:#1e3a5f;border-color:#3b82f6;color:#60a5fa}
 .search-panel{display:none;padding:20px;max-width:900px;margin:0 auto}
 .search-input{width:100%;padding:10px 16px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:14px;font-family:inherit;margin-bottom:16px}
+/* Search clear control: a compact outlined X parked inside the input's right edge.
+   It stays visible when empty (disabled) so every search field has the same affordance. */
+.search-clear-wrap{position:relative;display:block;min-width:0}
+.search-clear-wrap>input{width:100%!important;padding-right:42px!important}
+.search-clear-btn{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:22px;height:22px;display:grid;place-items:center;padding:0;border:1.5px solid currentColor;border-radius:50%;background:var(--bg2);color:var(--t2);cursor:pointer;transition:background .15s,color .15s,border-color .15s,opacity .15s}
+.search-clear-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round}
+.search-clear-btn:hover:not(:disabled){background:var(--bg3);color:var(--t1);border-color:var(--t1)}
+.search-clear-btn:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+.search-clear-btn:disabled{opacity:.32;cursor:default}
+.filter-search-row .search-clear-wrap{width:100%}
+.search-panel>.search-clear-wrap{margin-bottom:16px}
+.search-panel>.search-clear-wrap>.search-input{margin-bottom:0}
 /* Empty-state message shown in the Individual Profile tab when no stock has been
    chosen yet (search box is empty). Styled to match the Theme Tracker's equivalent
    empty state for cross-page consistency. */
@@ -817,7 +830,9 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
          ticker's Individual Profile tab. Prefix-match on ticker only — no
          theme/name matching. -->
     <div class="ov-search-wrap" id="ovSearchWrap" style="display:none">
-      <input class="ov-search-input" id="ovSearchInput" type="text" placeholder="Search ticker..." oninput="ovSearchInput()" onfocus="ovSearchInput()" onblur="setTimeout(ovSearchClose,150)" autocomplete="off">
+      <div class="search-clear-wrap">
+        <input class="ov-search-input" id="ovSearchInput" type="text" placeholder="Search ticker..." oninput="ovSearchInput()" onfocus="ovSearchInput()" onblur="setTimeout(ovSearchClose,150)" autocomplete="off" data-clearable-search>
+      </div>
       <div class="ov-search-dropdown" id="ovSearchDropdown"></div>
     </div>
   </div>
@@ -835,7 +850,9 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
       <button class="preset-reset" type="button" onclick="resetAllFilters()">Reset filters</button>
     </div>
   </div>
-  <input class="srch" id="si" placeholder="Search ticker, name, theme..." oninput="handleScreenerSearch()">
+  <div class="search-clear-wrap">
+    <input class="srch" id="si" placeholder="Search ticker, name, theme..." oninput="handleScreenerSearch()" data-clearable-search>
+  </div>
 </div>
 <div class="tab-strip" id="tabStrip">
   <button class="tab-btn" id="tabO" onclick="switchTab('overview')">Overview</button>
@@ -881,7 +898,9 @@ html[data-view="mobile"]{width:100vw;max-width:100vw;overflow-x:hidden}
 <div class="chart-grid" id="chartGrid" style="display:none"></div>
 <div class="pag" id="chartPagination" style="display:none"></div>
 <div class="search-panel" id="searchPanel">
-  <input class="search-input" id="searchInput" placeholder="Enter stock ticker (e.g. AAPL, TSLA, NVDA)..." oninput="searchStock()">
+  <div class="search-clear-wrap">
+    <input class="search-input" id="searchInput" placeholder="Enter stock ticker (e.g. AAPL, TSLA, NVDA)..." oninput="searchStock()" data-clearable-search>
+  </div>
   <div id="searchResults"></div>
 </div>
 <script src="screener-presets.js"></script>
@@ -1000,6 +1019,42 @@ function openProfile(ticker){
 // Profile via openProfile() (the same entry point used by row-click handlers
 // in the RS Ranking table and Overview minibox rows). Matching is strict
 // prefix on the ticker only — no theme/company-name matching.
+
+function syncSearchClearButton(input){
+  const button=input&&input.parentElement&&input.parentElement.querySelector('.search-clear-btn');
+  if(button)button.disabled=!input.value;
+}
+
+function setupSearchClearButtons(root=document){
+  root.querySelectorAll('input[data-clearable-search]').forEach(input=>{
+    if(input.dataset.clearButtonReady==='1'){
+      syncSearchClearButton(input);
+      return;
+    }
+    const wrap=input.parentElement;
+    if(!wrap||!wrap.classList.contains('search-clear-wrap'))return;
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='search-clear-btn';
+    button.setAttribute('aria-label','Clear search');
+    button.setAttribute('title','Clear search');
+    button.innerHTML='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4 12 12M12 4 4 12"/></svg>';
+    // Keep focus in the text box so Overview's blur handler cannot close the
+    // result menu before this button clears it.
+    button.addEventListener('mousedown',event=>event.preventDefault());
+    button.addEventListener('click',()=>{
+      if(!input.value)return;
+      input.value='';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      syncSearchClearButton(input);
+      input.focus();
+    });
+    input.addEventListener('input',()=>syncSearchClearButton(input));
+    wrap.appendChild(button);
+    input.dataset.clearButtonReady='1';
+    syncSearchClearButton(input);
+  });
+}
 
 function ovSearchInput(){
   const inputEl=document.getElementById('ovSearchInput');
@@ -3402,6 +3457,7 @@ loadData=async function(){
   }
 };
 
+setupSearchClearButtons();
 setInterval(()=>{if(currentTab!=='search')loadData();},60000);
 loadData();
 </script>
