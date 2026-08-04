@@ -24,7 +24,7 @@ for (const [file, expectedSearches] of [
   assert.match(source, /input\.dispatchEvent\(new Event\('input',\{bubbles:true\}\)\)/);
   assert.match(source, /\.search-clear-btn\{[^}]*width:18px;height:18px[^}]*background:#6b7280[^}]*color:#fff/);
   assert.match(source, /\[data-theme="dark"\] \.search-clear-btn\{background:#d1d5db;color:#1f2937/);
-  assert.match(source, /\.search-clear-btn:disabled\{opacity:0;pointer-events:none/);
+  assert.match(source, /\.search-clear-btn:disabled\{opacity:\.6;pointer-events:none/);
 }
 
 const screener = read('screener.html');
