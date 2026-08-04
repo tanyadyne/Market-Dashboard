@@ -37,7 +37,7 @@ class RestoreEstablishedHistoryTests(unittest.TestCase):
         self.assertEqual(repaired["source_denominator"], 4)
         self.assertEqual(repaired["denominator"], 2)
         self.assertEqual(repaired["restored"], ["AAPL", "SNDK"])
-        self.assertEqual(repaired["excluded"], ["MVIS"])
+        self.assertEqual(repaired["excluded"], [])
         self.assertEqual(current["wr_total"], [1265, 2, 1089])
         self.assertEqual(current["d"]["SNDK"]["wr"], [4, 2, 2])
         self.assertEqual(current["d"]["SNDK"]["tm"][1], ["Semiconductors"])
@@ -90,6 +90,41 @@ class RestoreEstablishedHistoryTests(unittest.TestCase):
         self.assertEqual(current["d"]["TDC"]["wr"], [2])
         self.assertEqual(current["d"]["LAST"]["wr"], [3])
         self.assertIsNone(current["d"]["SKYT"]["wr"][0])
+        self.assertEqual(repaired["excluded"], ["SKYT"])
+
+    def test_clears_a_partial_snapshot_rank_missing_from_the_seed(self):
+        current = {
+            "dates": ["2026-08-03"],
+            "wr_total": [3],
+            "d": {
+                "CAKE": {"wr": [2]},
+                "SNDK": {"wr": [3]},
+                "ORPHAN": {"wr": [652], "seen": [True]},
+            },
+        }
+        seed = {
+            "dates": ["2026-08-03"],
+            "d": {
+                "MVIS": {"wr": [1]},
+                "CAKE": {"wr": [2]},
+                "SNDK": {"wr": [3]},
+            },
+        }
+        registry = {
+            "tickers": {
+                "CAKE": {"status": "approved"},
+                "SNDK": {"status": "approved"},
+            }
+        }
+
+        repaired = restore_snapshot(current, seed, registry)
+
+        self.assertEqual(current["wr_total"], [2])
+        self.assertEqual(current["d"]["CAKE"]["wr"], [1])
+        self.assertEqual(current["d"]["SNDK"]["wr"], [2])
+        self.assertIsNone(current["d"]["ORPHAN"]["wr"][0])
+        self.assertIsNone(current["d"]["ORPHAN"]["seen"][0])
+        self.assertEqual(repaired["excluded"], ["ORPHAN"])
 
 
 if __name__ == "__main__":

@@ -137,19 +137,17 @@ def restore_snapshot(current, seed, registry, target_date=TARGET_DATE):
 
     restored_set = set(restored)
     excluded = []
-    # Remove stale values for source entries that are no longer eligible.  The
-    # output date is an exact cross-section, so excluded tickers must not retain
-    # an orphaned historical rank alongside the reindexed valid universe.
-    for ticker, source_entry in seed_scores.items():
-        if ticker in restored_set or not isinstance(source_entry, dict):
+    # Remove every remaining target-date rank outside the reconstructed
+    # cross-section. A partial snapshot can contain a ticker that is absent
+    # from the audited seed, and its rank cannot be reconciled against the
+    # complete universe. The output date must remain an exact cross-section.
+    for ticker, target_entry in current_scores.items():
+        if ticker in restored_set or not isinstance(target_entry, dict):
             continue
-        source_values = source_entry.get("wr")
-        if not isinstance(source_values, list) or seed_index >= len(source_values):
+        target_values = target_entry.get("wr")
+        if not isinstance(target_values, list) or current_index >= len(target_values):
             continue
-        if source_values[seed_index] is None:
-            continue
-        target_entry = current_scores.get(ticker)
-        if not isinstance(target_entry, dict):
+        if target_values[current_index] is None:
             continue
         for field in DATE_ALIGNED_ENTRY_FIELDS:
             set_aligned_value(target_entry, field, current_index, None, date_count)
