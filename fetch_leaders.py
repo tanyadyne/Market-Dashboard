@@ -34,6 +34,11 @@ from fetch_data import (
     percentrank_inc,
 )
 from theme_history import load_theme_snapshot_index, prepare_theme_history, set_theme_snapshot, snapshot_for_stock
+from rank_history import (
+    WEEKLY_RANK_TOTALS_FIELD,
+    aligned_ranked_totals,
+    set_latest_ranked_total,
+)
 from preset_metrics import (
     build_preset_intraday_baseline,
     compute_intraday_preset_state,
@@ -4240,6 +4245,7 @@ def main():
                                                 x.get("w_fr") if x.get("w_fr") is not None else -999,
                                                 x.get("c5") if x.get("c5") is not None else -999), reverse=True)
     w_rank_map = {r["t"]: i + 1 for i, r in enumerate(w_sorted)}
+    weekly_ranked_total = len(w_sorted)
     for r in rankable:
         r["w_rk"] = w_rank_map[r["t"]]
     for r in unrankable:
@@ -4297,6 +4303,7 @@ def main():
     score_history = prepare_theme_history(score_history)
     dates = score_history.get("dates", [])
     scores = score_history.get("d", {})
+    ranked_totals = aligned_ranked_totals(score_history, dates, scores)
     theme_snapshots = load_theme_snapshot_index()
 
     # ─── One-time cleanup: strip daily-RS fields ('s', 'r') from existing history. ──
@@ -4319,6 +4326,14 @@ def main():
         results_by_tk = {r["t"]: r for r in results}
         if is_new_day:
             dates.append(today_str)
+        # Persist the denominator that produced this session's ranks so the
+        # frontend never re-scales historical scores against a later universe.
+        ranked_totals = set_latest_ranked_total(
+            ranked_totals,
+            len(dates),
+            weekly_ranked_total,
+        )
+        if is_new_day:
             for r in results:
                 tk = r["t"]
                 if tk not in scores:
@@ -4349,6 +4364,7 @@ def main():
             if len(dates) > MAX_HISTORY_DAYS:
                 trim = len(dates) - MAX_HISTORY_DAYS
                 dates = dates[trim:]
+                ranked_totals = ranked_totals[trim:]
                 for tk in scores:
                     if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
                         scores[tk]["wr"] = scores[tk]["wr"][trim:]
@@ -4439,6 +4455,7 @@ def main():
     score_history = {
         "dates": dates,
         "d": scores,
+        WEEKLY_RANK_TOTALS_FIELD: ranked_totals,
         "theme_history_version": score_history.get("theme_history_version"),
     }
     with open("leaders_score_history.json", "w") as f:

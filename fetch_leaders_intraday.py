@@ -17,6 +17,11 @@ from datetime import datetime, timezone, timedelta
 
 import yfinance as yf
 from theme_history import load_theme_snapshot_index, prepare_theme_history, set_theme_snapshot, snapshot_for_stock
+from rank_history import (
+    WEEKLY_RANK_TOTALS_FIELD,
+    aligned_ranked_totals,
+    set_latest_ranked_total,
+)
 
 try:
     from zoneinfo import ZoneInfo
@@ -706,12 +711,18 @@ def update_score_history(entries):
     profile_only_tickers = {e.get("t") for e in entries if e.get("po") and e.get("t")}
     for tk in profile_only_tickers:
         scores.pop(tk, None)
+    ranked_totals = aligned_ranked_totals(history, dates, scores)
     today = et_now().date().isoformat()
     if not dates or dates[-1] != today:
         dates.append(today)
         is_new_day = True
     else:
         is_new_day = False
+    ranked_totals = set_latest_ranked_total(
+        ranked_totals,
+        len(dates),
+        sum(1 for entry in entries if entry.get("w_rk") is not None),
+    )
 
     by_ticker = {e.get("t"): e for e in entries if e.get("t")}
     for entry in entries:
@@ -733,6 +744,7 @@ def update_score_history(entries):
     if len(dates) > MAX_HISTORY_DAYS:
         trim = len(dates) - MAX_HISTORY_DAYS
         dates = dates[trim:]
+        ranked_totals = ranked_totals[trim:]
         for tk in scores:
             if "wr" in scores[tk] and len(scores[tk]["wr"]) > MAX_HISTORY_DAYS:
                 scores[tk]["wr"] = scores[tk]["wr"][trim:]
@@ -767,6 +779,7 @@ def update_score_history(entries):
         json.dump({
             "dates": dates,
             "d": scores,
+            WEEKLY_RANK_TOTALS_FIELD: ranked_totals,
             "theme_history_version": history.get("theme_history_version"),
         }, f, separators=(",", ":"))
     return is_new_day

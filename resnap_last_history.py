@@ -14,6 +14,11 @@ import json
 import os
 
 from theme_history import load_theme_snapshot_index, prepare_theme_history, set_theme_snapshot, snapshot_for_stock
+from rank_history import (
+    WEEKLY_RANK_TOTALS_FIELD,
+    aligned_ranked_totals,
+    set_latest_ranked_total,
+)
 
 HIST_PATH = "leaders_score_history.json"
 LEADERS_PATH = "leaders.json"
@@ -38,6 +43,7 @@ def main():
     hist = prepare_theme_history(hist)
     dates = hist.get("dates", [])
     scores = hist.get("d", {})
+    ranked_totals = aligned_ranked_totals(hist, dates, scores)
     theme_snapshots = load_theme_snapshot_index()
 
     if not dates:
@@ -65,6 +71,11 @@ def main():
         return
 
     lookup = {r["t"]: r for r in leaders_list if "t" in r}
+    ranked_totals = set_latest_ranked_total(
+        ranked_totals,
+        len(dates),
+        sum(1 for row in lookup.values() if row.get("w_rk") is not None),
+    )
     print(f"Found {len(lookup)} stocks in leaders.json")
 
     updated = 0
@@ -101,6 +112,7 @@ def main():
 
     hist["dates"] = dates
     hist["d"] = scores
+    hist[WEEKLY_RANK_TOTALS_FIELD] = ranked_totals
 
     with open(HIST_PATH, "w") as f:
         json.dump(hist, f, separators=(",", ":"))

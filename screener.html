@@ -1435,6 +1435,22 @@ function atrExtBars(val){
   return`<div class="bars ${cls}">${bars}</div>`;
 }
 function getPosition(rank,total){if(rank==null||!Number.isFinite(Number(rank)))return'—';if(rank<=100)return'Strong Leader';if(rank<=200)return'Moderate Leader';if(rank/total<=0.5)return'Mid-Range';if(rank/total<=0.75)return'Moderate Laggard';return'Deep Laggard';}
+function historicalRankedTotalAt(index,fallbackTotal){
+  // New snapshots store their exact rank denominator. Legacy snapshots use
+  // their largest recorded rank instead of being re-scaled against today.
+  const stored=Number(HISTORY&&Array.isArray(HISTORY.wr_total)?HISTORY.wr_total[index]:null);
+  let observedMax=0;
+  if(HISTORY&&HISTORY.d){
+    for(const entry of Object.values(HISTORY.d)){
+      const rank=Number(entry&&Array.isArray(entry.wr)?entry.wr[index]:null);
+      if(Number.isInteger(rank)&&rank>observedMax)observedMax=rank;
+    }
+  }
+  if(Number.isInteger(stored)&&stored>0)return Math.max(stored,observedMax);
+  if(observedMax>0)return observedMax;
+  const fallback=Number(fallbackTotal);
+  return Number.isFinite(fallback)&&fallback>0?Math.floor(fallback):1;
+}
 function rankHoldLabel(code){
   const labels={
     data:'Data check pending',
@@ -2523,7 +2539,7 @@ function updateRSHistoryTooltip(event,overlay,pinned){
   guide.classList.add('visible');
   tooltip.querySelector('.rs-history-tooltip-date').textContent=nearest.date;
   tooltip.querySelector('[data-field="score"]').textContent=Number(nearest.score).toFixed(2);
-  tooltip.querySelector('[data-field="rank"]').textContent=`#${nearest.rank} - ${nearest.position}`;
+  tooltip.querySelector('[data-field="rank"]').textContent=`#${nearest.rank} of ${nearest.total} — ${nearest.position}`;
   tooltip.dataset.pinned=pinned?'true':'false';
   tooltip.classList.add('visible');
   tooltip.setAttribute('aria-hidden','false');
@@ -2573,10 +2589,11 @@ function renderRSHistoryChart(dates,h,total,excluded){
   dates.forEach((dt,i)=>{
     const rank=wrArr[i];
     if(rank==null)return;
-    const pos=getPosition(rank,total);
-    const boundedRank=Math.max(1,Math.min(total,Number(rank)));
-    const score=Number((100*(1-(boundedRank-1)/Math.max(1,total-1))).toFixed(1));
-    points.push({dt,i,rank:Number(rank),score,pos,excluded:excluded&&excluded.has(dt)});
+    const snapshotTotal=historicalRankedTotalAt(i,total);
+    const pos=getPosition(rank,snapshotTotal);
+    const boundedRank=Math.max(1,Math.min(snapshotTotal,Number(rank)));
+    const score=Number((100*(1-(boundedRank-1)/Math.max(1,snapshotTotal-1))).toFixed(1));
+    points.push({dt,i,rank:Number(rank),total:snapshotTotal,score,pos,excluded:excluded&&excluded.has(dt)});
   });
   if(!points.length)return'';
 
@@ -2610,6 +2627,7 @@ function renderRSHistoryChart(dates,h,total,excluded){
     date:formatHistoryTooltipDate(point.dt),
     score:Number(point.score).toFixed(2),
     rank:point.rank,
+    total:point.total,
     position:point.pos
   }));
   const encodedTooltipPoints=encodeURIComponent(JSON.stringify(tooltipPoints));
@@ -2638,7 +2656,7 @@ function renderRSHistoryChart(dates,h,total,excluded){
     </div>
     <svg class="rs-history-plot" viewBox="0 0 ${w} ${hgt}" role="img" aria-label="RS score history">
       <title>RS score history</title>
-      <desc>Historical RS score reconstructed from weekly rank and colored by relative-strength position.</desc>
+      <desc>Historical RS score reconstructed from each session's weekly rank and universe size, colored by relative-strength position.</desc>
       ${grid}
       <line class="rs-history-axis" x1="${left}" y1="${top}" x2="${left}" y2="${top+plotH}"></line>
       <line class="rs-history-axis" x1="${left}" y1="${top+plotH}" x2="${w-right}" y2="${top+plotH}"></line>
@@ -3341,7 +3359,7 @@ function searchStock(){
         </tr>`;
         continue;
       }
-      const p=wr!=null?getPosition(wr,total):'—';
+      const p=wr!=null?getPosition(wr,historicalRankedTotalAt(i,total)):'—';
       const themeSnapshot=Array.isArray(h.tm)&&Array.isArray(h.tm[i])?h.tm[i]:null;
       const historicalTheme=themeSnapshot?.[0]||mappedSector||'—';
       let themeCell=esc(historicalTheme);
