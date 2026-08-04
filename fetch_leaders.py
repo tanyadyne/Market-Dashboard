@@ -57,6 +57,13 @@ from rank_quality import (
     rank_hold_code,
     technical_price_from_quote,
 )
+from established_market_cap import (
+    ESTABLISHED_MCAP_FILE,
+    ESTABLISHED_RECORD_VERSION,
+    estimate_from_established_shares,
+    load_established_market_cap_data,
+    positive_int,
+)
 
 LOOKBACK = 50      # daily: compute deltas for last 50 bars
 MA_LENGTH = 20     # daily: SMA of deltas (smoothing)
@@ -94,6 +101,10 @@ DIRECT_MCAP_SOURCES = frozenset({"yahoo_quote", "yfinance", "nasdaq"})
 TRUSTED_SHARE_SOURCES = frozenset({"yahoo_quote", "yfinance"})
 MARKET_CAP_SHARE_PRICE_MIN_RATIO = 0.5
 MARKET_CAP_SHARE_PRICE_MAX_RATIO = 2.0
+# A newly added name must first earn a provider-verified market-cap record.
+# MVIS is specifically excluded because its legacy share count predates a
+# reverse split and must never be allowed to become an approved fallback.
+ESTABLISHED_MCAP_FALLBACK_BLOCKLIST = frozenset({"MVIS"})
 
 # Extra tickers from CSV not in any ETF holding
 CSV_EXTRAS = [
@@ -1806,13 +1817,16 @@ def select_market_cap(
     price,
     today,
     raw_closes=None,
+    established_record=None,
 ):
     """Return the safe market cap for screening without poisoning the cache.
 
     Direct Yahoo/Nasdaq values are authoritative.  A cached manual calculation
     from an older schema has no provenance and is intentionally ignored.  The
-    only calculation permitted is a same-day Yahoo share count times price when
-    there is no recent split-like price gap.
+    only calculation normally permitted is a same-day Yahoo share count times
+    price when there is no recent split-like price gap.  An explicitly approved
+    established constituent may also use its retained share count during a
+    provider metadata outage; new additions have no such record.
     """
     try:
         direct_cap = int(market_cap or 0)
@@ -1837,7 +1851,74 @@ def select_market_cap(
             return 0
         if shares > 0 and np.isfinite(price) and price > 0:
             return int(shares * price)
-    return 0
+    return estimate_from_established_shares(
+        established_record,
+        price,
+        split_like_gap=has_recent_split_gap,
+    )
+
+
+def refresh_established_market_cap_registry(
+    payload,
+    results,
+    observation_counts,
+    market_caps,
+    market_cap_sources,
+    shares,
+    share_sources,
+    share_refreshed_at,
+    today,
+):
+    """Promote only mature, provider-verified constituents into the fallback set.
+
+    This is deliberately an EOD/full-pipeline action.  An intraday quote can
+    update an existing approved record's estimate, but it can never create one.
+    """
+    if not isinstance(payload, dict):
+        return 0
+    records = payload.setdefault("tickers", {})
+    if not isinstance(records, dict):
+        records = {}
+        payload["tickers"] = records
+    changed = 0
+    for row in results:
+        ticker = row.get("t")
+        if (
+            not ticker
+            or ticker in ESTABLISHED_MCAP_FALLBACK_BLOCKLIST
+            or row.get("po")
+            or row.get("rh")
+            or int(observation_counts.get(ticker, 0) or 0) < 4
+        ):
+            continue
+        cap = positive_int(market_caps.get(ticker))
+        share_count = positive_int(shares.get(ticker))
+        if (
+            not cap
+            or not share_count
+            or not market_cap_source_is_direct(market_cap_sources.get(ticker))
+            or str(share_sources.get(ticker) or "") not in TRUSTED_SHARE_SOURCES
+            or str(share_refreshed_at.get(ticker) or "") != str(today or "")
+        ):
+            continue
+        price = row.get("p")
+        if not shares_reconcile_with_market_cap(cap, share_count, price):
+            continue
+        record = {
+            "status": "approved",
+            "shares": share_count,
+            "reference_cap": cap,
+            "reference_price": float(price),
+            "approved_on": str(today),
+            "provenance": "mature_provider_verified",
+        }
+        if records.get(ticker) != record:
+            records[ticker] = record
+            changed += 1
+    if changed:
+        payload["version"] = ESTABLISHED_RECORD_VERSION
+        payload["updated"] = str(today)
+    return changed
 
 
 def repair_split_gaps(df):
@@ -3205,6 +3286,11 @@ def main():
     industry_cache = mcap_data.get("industries", {})
     name_cache = mcap_data.get("names", {})
     desc_cache = mcap_data.get("descs", {})
+    established_mcap_data = load_established_market_cap_data()
+    established_mcap_records = established_mcap_data.get("tickers", {})
+    if not isinstance(established_mcap_records, dict):
+        established_mcap_records = {}
+        established_mcap_data["tickers"] = established_mcap_records
     names_fallback = {}
     if os.path.exists("names.json"):
         try:
@@ -3291,6 +3377,9 @@ def main():
             price,
             _et_today,
             raw_closes,
+            established_mcap_records.get(tk)
+            if tk not in ESTABLISHED_MCAP_FALLBACK_BLOCKLIST
+            else None,
         )
 
     def latest_close_price(tk):
@@ -4492,6 +4581,22 @@ def main():
     # Defense in depth: every published artifact must honor permanent removals,
     # including rows that might have entered through a recovery path.
     results = [r for r in results if r.get("t") not in HARD_EXCLUDE]
+
+    approved_count = refresh_established_market_cap_registry(
+        established_mcap_data,
+        results,
+        observation_counts,
+        mcap_cache,
+        mcap_sources,
+        shares_cache,
+        shares_sources,
+        shares_refreshed_at,
+        _et_today,
+    )
+    if approved_count:
+        with open(ESTABLISHED_MCAP_FILE, "w") as f:
+            json.dump(established_mcap_data, f, separators=(",", ":"))
+        print(f"  Approved {approved_count} mature provider-verified market-cap fallback(s)")
 
     write_universe_grace_state(grace_state, _et_today)
     write_repair_queue(repair_records)

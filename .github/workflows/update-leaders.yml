@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      restore_established_universe:
+        description: "Restore approved established constituents after a market-cap metadata outage"
+        required: false
+        type: boolean
+        default: false
 
 # Don't let overlapping triggers stomp on each other. If one run is still in flight
 # when the next fires, the second waits for the first to finish rather than being
@@ -89,7 +94,7 @@ jobs:
         if: steps.market_check.outputs.skip != 'true'
         run: |
           python -m unittest tests.test_preset_metrics tests.test_vcp_coils -v
-          python -m unittest tests.test_repair_history tests.test_history_dates -v
+          python -m unittest tests.test_repair_history tests.test_history_dates tests.test_universe_market_cap tests.test_restore_established_universe -v
           node tests/test_screener_presets.js
 
       - name: Fetch Liquid Leaders data
@@ -98,8 +103,18 @@ jobs:
           if [ "${{ inputs.repair_history || false }}" = "true" ]; then
             python repair_history.py --repair-misdated-snapshot
           else
+            if [ "${{ inputs.restore_established_universe || false }}" = "true" ]; then
+              # Fetch the small recent history window containing the audited
+              # seed, not the full repository history or market-data workflow.
+              git fetch --no-tags --depth=100 origin main
+              python restore_established_universe.py
+            fi
             if [ "${{ inputs.force || false }}" = "true" ]; then
               export FORCE_INTRADAY=1
+            fi
+            if [ "${{ inputs.restore_established_universe || false }}" = "true" ] && ! ( [ -f leaders_intraday_baselines.json ] && python -c "import json; b=json.load(open('leaders_intraday_baselines.json')).get('d',{}); e=json.load(open('leaders.json')).get('e',[]); assert b and e and all('pf' in v and 'vcp_coil_1' in v and 'vcp_coil_2' in v for v in e)" ); then
+              echo "ERROR: restoration requires existing intraday baselines; refusing to start a full rebuild"
+              exit 2
             fi
           if [ -f leaders_intraday_baselines.json ] && python -c "import json; b=json.load(open('leaders_intraday_baselines.json')).get('d',{}); e=json.load(open('leaders.json')).get('e',[]); assert b and e and all('pf' in v and 'vcp_coil_1' in v and 'vcp_coil_2' in v for v in e)"; then
             python fetch_leaders_intraday.py
@@ -118,7 +133,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          for f in leaders.json leaders_score_history.json leaders_mcap.json leaders_index_universe.json leaders_intraday_baselines.json leaders_universe_grace.json leaders_missing_tickers.json screener_tickers.json; do
+          for f in leaders.json leaders_score_history.json leaders_mcap.json leaders_established_mcap.json leaders_index_universe.json leaders_intraday_baselines.json leaders_universe_grace.json leaders_missing_tickers.json screener_tickers.json; do
             [ -f "$f" ] && git add "$f"
           done
           git diff --staged --quiet || git commit -m "Update leaders.json"

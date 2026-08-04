@@ -51,6 +51,7 @@ class UniverseMarketCapTests(unittest.TestCase):
             price=3.85,
             today="2026-08-04",
             raw_closes=[0.26, 3.85],
+            established_record={"status": "approved", "shares": 344_645_965},
         )
         self.assertEqual(selected, direct_cap)
 
@@ -66,6 +67,38 @@ class UniverseMarketCapTests(unittest.TestCase):
                 price=3.85,
                 today="2026-08-04",
                 raw_closes=[0.26, 3.85],
+            ),
+            0,
+        )
+
+    def test_approved_established_record_can_estimate_from_current_price(self):
+        selected = select_market_cap(
+            market_cap=190_744_055_335,
+            market_cap_source="",
+            market_cap_refreshed_at="2026-08-03",
+            shares=0,
+            shares_source="",
+            shares_refreshed_at="",
+            price=1_397.65,
+            today="2026-08-04",
+            raw_closes=[1_288.03, 1_397.65],
+            established_record={"status": "approved", "shares": 148_089_758},
+        )
+        self.assertEqual(selected, int(148_089_758 * 1_397.65))
+
+    def test_established_record_cannot_bypass_a_split_guard(self):
+        self.assertEqual(
+            select_market_cap(
+                market_cap=0,
+                market_cap_source="",
+                market_cap_refreshed_at="",
+                shares=0,
+                shares_source="",
+                shares_refreshed_at="",
+                price=3.85,
+                today="2026-08-04",
+                raw_closes=[0.26, 3.85],
+                established_record={"status": "approved", "shares": 344_645_965},
             ),
             0,
         )

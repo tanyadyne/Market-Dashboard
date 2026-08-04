@@ -45,6 +45,7 @@ from fetch_data import percentrank_inc
 from preset_metrics import compute_intraday_preset_state
 from rank_quality import live_price_quality_flags, technical_price_from_quote
 from fetch_leaders import (
+    ESTABLISHED_MCAP_FALLBACK_BLOCKLIST,
     HARD_EXCLUDE,
     INTRADAY_BASELINES_FILE,
     LOOKBACK_W,
@@ -55,7 +56,9 @@ from fetch_leaders import (
     off_high_penalty_multiplier,
     previous_off_high_multiplier,
     ma_atr_distances,
+    select_market_cap,
 )
+from established_market_cap import load_established_market_cap_data
 
 LEADERS_FILE = "leaders.json"
 HISTORY_FILE = "leaders_score_history.json"
@@ -615,7 +618,44 @@ def intraday_rank_hold(entry, base):
     return None
 
 
-def rerank(entries, baselines, quotes, spy_quote):
+def refresh_intraday_market_cap(entry, previous_price, market_cap_data, established_records):
+    """Refresh a published cap from a direct cache or approved shares x quote.
+
+    The registry is read-only here: a live rerank can use a previously approved
+    record but never promotes a newly discovered ticker into the fallback set.
+    """
+    ticker = entry.get("t")
+    if not ticker or not isinstance(market_cap_data, dict):
+        return
+    caps = market_cap_data.get("caps") or {}
+    cap_sources = market_cap_data.get("mcap_sources") or {}
+    cap_dates = market_cap_data.get("mcap_refreshed_at") or {}
+    shares = market_cap_data.get("shares") or {}
+    share_sources = market_cap_data.get("shares_sources") or {}
+    share_dates = market_cap_data.get("shares_refreshed_at") or {}
+    raw_closes = [previous_price, entry.get("p")]
+    established_record = (
+        established_records.get(ticker)
+        if ticker not in ESTABLISHED_MCAP_FALLBACK_BLOCKLIST
+        else None
+    )
+    selected = select_market_cap(
+        caps.get(ticker, 0),
+        cap_sources.get(ticker, ""),
+        cap_dates.get(ticker, ""),
+        shares.get(ticker, 0),
+        share_sources.get(ticker, ""),
+        share_dates.get(ticker, ""),
+        entry.get("p"),
+        et_now().date().isoformat(),
+        raw_closes,
+        established_record,
+    )
+    if selected:
+        entry["mc"] = selected
+
+
+def rerank(entries, baselines, quotes, spy_quote, market_cap_data=None, established_records=None):
     week_id, _ = current_week_id()
     spy_live = spy_quote["last"]
     updated = 0
@@ -626,7 +666,14 @@ def rerank(entries, baselines, quotes, spy_quote):
         base = baselines.get(tk, {})
         quote = valid_quote(tk, quotes.get(tk), entry.get("p"))
         if quote:
+            previous_price = entry.get("p")
             update_change_fields(entry, base, quote)
+            refresh_intraday_market_cap(
+                entry,
+                previous_price,
+                market_cap_data or {},
+                established_records or {},
+            )
             updated += 1
         else:
             stale.append(tk)
@@ -805,6 +852,15 @@ def main():
         data = json.load(f)
     with open(INTRADAY_BASELINES_FILE) as f:
         baseline_payload = json.load(f)
+    market_cap_data = {}
+    if os.path.exists("leaders_mcap.json"):
+        try:
+            with open("leaders_mcap.json") as f:
+                market_cap_data = json.load(f)
+        except Exception:
+            market_cap_data = {}
+    established_mcap_data = load_established_market_cap_data()
+    established_records = established_mcap_data.get("tickers") or {}
 
     entries = data.get("e", [])
     baselines = baseline_payload.get("d", {})
@@ -833,7 +889,14 @@ def main():
         print(f"Missing sample: {missing_stocks[:40]}")
         sys.exit(1)
 
-    updated, stale = rerank(entries, baselines, quotes, spy_quote)
+    updated, stale = rerank(
+        entries,
+        baselines,
+        quotes,
+        spy_quote,
+        market_cap_data,
+        established_records,
+    )
     valid_coverage = updated / len(tickers) if tickers else 0
     if valid_coverage < MIN_QUOTE_COVERAGE:
         print(f"ERROR: valid quote coverage below {MIN_QUOTE_COVERAGE:.0%}; refusing to publish")
