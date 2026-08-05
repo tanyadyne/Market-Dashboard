@@ -59,10 +59,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          for f in leaders.json leaders_score_history.json leaders_mcap.json leaders_index_universe.json leaders_intraday_baselines.json leaders_universe_grace.json leaders_missing_tickers.json screener_tickers.json; do
+          for f in leaders.json leaders_score_history.json leaders_mcap.json leaders_established_mcap.json leaders_index_universe.json leaders_intraday_baselines.json leaders_universe_grace.json leaders_missing_tickers.json screener_tickers.json; do
             [ -f "$f" ] && git add "$f"
           done
           [ -d press_releases ] && git add press_releases
+          if ! git diff --quiet; then
+            echo "::error::Tracked generated files remain unstaged:"
+            git diff --name-only
+            exit 1
+          fi
           git diff --staged --quiet || git commit -m "Update leaders.json"
           git pull --rebase
           git push
