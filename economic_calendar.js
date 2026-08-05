@@ -1,6 +1,6 @@
 window.ECONOMIC_CALENDAR_DATA = {
-  "generated_at_utc": "2026-08-04 00:10 UTC",
-  "generated_at_et": "03/08/2026, 20:10 EDT",
+  "generated_at_utc": "2026-08-05 00:03 UTC",
+  "generated_at_et": "04/08/2026, 20:03 EDT",
   "timezone": "America/New_York",
   "default_week_index": 1,
   "weeks": [
@@ -31,20 +31,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         }
       ],
       "events": [
-        {
-          "key": "consumer_confidence",
-          "event": "Consumer confidence",
-          "source_event": "Consumer Confidence",
-          "date": "2026-07-28",
-          "day": "Tuesday, July 28, 2026",
-          "time": "10:00 AM",
-          "period": "JUL",
-          "actual": "90.8",
-          "consensus": "-",
-          "previous": "91.2",
-          "forecast": "-",
-          "revised": "92.2"
-        },
         {
           "key": "fomc_rate",
           "event": "FOMC interest rate decision",
@@ -398,6 +384,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-28",
           "day": "Tuesday, July 28, 2026",
+          "ticker": "EXK",
+          "company": "Endeavour Silver Corp.",
+          "group": "Silver",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-28",
+          "day": "Tuesday, July 28, 2026",
           "ticker": "EXLS",
           "company": "ExlService Holdings, Inc.",
           "group": "Information Technology Services",
@@ -526,6 +520,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-28",
           "day": "Tuesday, July 28, 2026",
+          "ticker": "ROG",
+          "company": "Rogers Corporation",
+          "group": "Electronic Components",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-28",
+          "day": "Tuesday, July 28, 2026",
           "ticker": "SBCF",
           "company": "Seacoast Banking Corporation of Florida",
           "group": "Banks - Regional",
@@ -609,6 +611,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "VRNS",
           "company": "Varonis Systems, Inc.",
           "group": "Software - Infrastructure",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-28",
+          "day": "Tuesday, July 28, 2026",
+          "ticker": "WERN",
+          "company": "Werner Enterprises, Inc.",
+          "group": "Trucking",
           "time": "AMC"
         },
         {
@@ -790,6 +800,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-28",
           "day": "Tuesday, July 28, 2026",
+          "ticker": "HYMC",
+          "company": "Hycroft Mining Holding Corporation",
+          "group": "Gold",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-28",
+          "day": "Tuesday, July 28, 2026",
           "ticker": "INCY",
           "company": "Incyte Corporation",
           "group": "Biotechnology",
@@ -830,6 +848,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-28",
           "day": "Tuesday, July 28, 2026",
+          "ticker": "JBLU",
+          "company": "JetBlue Airways Corporation",
+          "group": "Airlines",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-28",
+          "day": "Tuesday, July 28, 2026",
           "ticker": "KNSA",
           "company": "Kiniksa Pharmaceuticals International, plc",
           "group": "Drug Manufacturers - Specialty & Generic",
@@ -857,6 +883,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "PCAR",
           "company": "PACCAR Inc",
           "group": "Farm & Heavy Construction Machinery",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-28",
+          "day": "Tuesday, July 28, 2026",
+          "ticker": "PJT",
+          "company": "PJT Partners Inc.",
+          "group": "Capital Markets",
           "time": "BMO"
         },
         {
@@ -974,6 +1008,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
+          "ticker": "ALKT",
+          "company": "Alkami Technology, Inc.",
+          "group": "Software - Application",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
           "ticker": "AR",
           "company": "Antero Resources Corporation",
           "group": "Oil & Gas E&P",
@@ -1057,6 +1099,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "CNK",
           "company": "Cinemark Holdings, Inc.",
           "group": "Entertainment",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
+          "ticker": "CNXN",
+          "company": "PC Connection, Inc.",
+          "group": "Electronics & Computer Distribution",
           "time": "AMC"
         },
         {
@@ -1342,6 +1392,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
+          "ticker": "PLPC",
+          "company": "Preformed Line Products Company",
+          "group": "Electrical Equipment & Parts",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
           "ticker": "PLXS",
           "company": "Plexus Corp.",
           "group": "Electronic Components",
@@ -1558,6 +1616,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-29",
           "day": "Wednesday, July 29, 2026",
+          "ticker": "BLKB",
+          "company": "Blackbaud, Inc.",
+          "group": "Software - Application",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
           "ticker": "BSX",
           "company": "Boston Scientific Corporation",
           "group": "Medical Devices",
@@ -1577,6 +1643,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "CBRE",
           "company": "CBRE Group, Inc.",
           "group": "Real Estate Services",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-29",
+          "day": "Wednesday, July 29, 2026",
+          "ticker": "CBZ",
+          "company": "CBIZ, Inc.",
+          "group": "Specialty Business Services",
           "time": "BMO"
         },
         {
@@ -2006,6 +2080,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
+          "ticker": "COHU",
+          "company": "Cohu, Inc.",
+          "group": "Semiconductor Equipment & Materials",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-30",
+          "day": "Thursday, July 30, 2026",
           "ticker": "COIN",
           "company": "Coinbase Global, Inc.",
           "group": "Financial Data & Stock Exchanges",
@@ -2254,6 +2336,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
+          "ticker": "MTX",
+          "company": "Minerals Technologies Inc.",
+          "group": "Specialty Chemicals",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-30",
+          "day": "Thursday, July 30, 2026",
           "ticker": "MTZ",
           "company": "MasTec, Inc.",
           "group": "Engineering & Construction",
@@ -2281,6 +2371,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "OLED",
           "company": "Universal Display Corporation",
           "group": "Electronic Components",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-30",
+          "day": "Thursday, July 30, 2026",
+          "ticker": "OLN",
+          "company": "Olin Corporation",
+          "group": "Chemicals",
           "time": "AMC"
         },
         {
@@ -2398,6 +2496,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
+          "ticker": "WU",
+          "company": "The Western Union Company",
+          "group": "Credit Services",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-07-30",
+          "day": "Thursday, July 30, 2026",
           "ticker": "WY",
           "company": "Weyerhaeuser Company",
           "group": "REIT - Specialty",
@@ -2478,14 +2584,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
-          "ticker": "AVY",
-          "company": "Avery Dennison Corporation",
-          "group": "Packaging & Containers",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-07-30",
-          "day": "Thursday, July 30, 2026",
           "ticker": "BAX",
           "company": "Baxter International Inc.",
           "group": "Medical Instruments & Supplies",
@@ -2497,6 +2595,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "BDC",
           "company": "Belden Inc.",
           "group": "Communication Equipment",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-30",
+          "day": "Thursday, July 30, 2026",
+          "ticker": "BFLY",
+          "company": "Butterfly Network, Inc.",
+          "group": "Medical Devices",
           "time": "BMO"
         },
         {
@@ -2974,6 +3080,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-07-30",
           "day": "Thursday, July 30, 2026",
+          "ticker": "UNIT",
+          "company": "Uniti Group Inc.",
+          "group": "REIT - Specialty",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-07-30",
+          "day": "Thursday, July 30, 2026",
           "ticker": "VLO",
           "company": "Valero Energy Corporation",
           "group": "Oil & Gas Refining & Marketing",
@@ -3229,7 +3343,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         }
       ],
       "event_keys": [
-        "consumer_confidence",
         "fomc_rate",
         "fed_press",
         "gdp",
@@ -3298,9 +3411,97 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-03",
           "day": "Monday, August 3, 2026",
+          "ticker": "ADEA",
+          "company": "Adeia Inc.",
+          "group": "Software - Application",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "AEIS",
+          "company": "Advanced Energy Industries, Inc.",
+          "group": "Electrical Equipment & Parts",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "ALSN",
+          "company": "Allison Transmission Holdings, Inc.",
+          "group": "Auto Parts",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "ARE",
+          "company": "Alexandria Real Estate Equities, Inc.",
+          "group": "REIT - Office",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "BWXT",
+          "company": "BWX Technologies, Inc.",
+          "group": "Aerospace & Defense",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
           "ticker": "CBT",
           "company": "Cabot Corporation",
           "group": "Specialty Chemicals",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "CLX",
+          "company": "The Clorox Company",
+          "group": "Household & Personal Products",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "DAC",
+          "company": "Danaos Corporation",
+          "group": "Marine Shipping",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "EA",
+          "company": "Electronic Arts Inc.",
+          "group": "Electronic Gaming & Multimedia",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "FANG",
+          "company": "Diamondback Energy, Inc.",
+          "group": "Oil & Gas E&P",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "GPOR",
+          "company": "Gulfport Energy Corporation",
+          "group": "Oil & Gas E&P",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "ICHR",
+          "company": "Ichor Holdings, Ltd.",
+          "group": "Semiconductor Equipment & Materials",
           "time": "AMC"
         },
         {
@@ -3314,9 +3515,81 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-03",
           "day": "Monday, August 3, 2026",
+          "ticker": "JBTM",
+          "company": "JBT Marel Corporation",
+          "group": "Specialty Industrial Machinery",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "JXN",
+          "company": "Jackson Financial Inc.",
+          "group": "Insurance - Life",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "MATX",
+          "company": "Matson, Inc.",
+          "group": "Marine Shipping",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "OKE",
+          "company": "ONEOK, Inc.",
+          "group": "Oil & Gas Midstream",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
           "ticker": "ON",
           "company": "ON Semiconductor Corporation",
           "group": "Semiconductors",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "PLTR",
+          "company": "Palantir Technologies Inc.",
+          "group": "Software - Infrastructure",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "POWL",
+          "company": "Powell Industries, Inc.",
+          "group": "Electrical Equipment & Parts",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "SBAC",
+          "company": "SBA Communications Corporation",
+          "group": "REIT - Specialty",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "SBRA",
+          "company": "Sabra Health Care REIT, Inc.",
+          "group": "REIT - Healthcare Facilities",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "SNAP",
+          "company": "Snap Inc.",
+          "group": "Internet Content & Information",
           "time": "AMC"
         },
         {
@@ -3330,6 +3603,22 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-03",
           "day": "Monday, August 3, 2026",
+          "ticker": "TDW",
+          "company": "Tidewater Inc.",
+          "group": "Oil & Gas Equipment & Services",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "TKO",
+          "company": "TKO Group Holdings, Inc.",
+          "group": "Entertainment",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
           "ticker": "UCTT",
           "company": "Ultra Clean Holdings, Inc.",
           "group": "Semiconductor Equipment & Materials",
@@ -3338,9 +3627,57 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-03",
           "day": "Monday, August 3, 2026",
+          "ticker": "UFPT",
+          "company": "UFP Technologies, Inc.",
+          "group": "Medical Devices",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "VNO",
+          "company": "Vornado Realty Trust",
+          "group": "REIT - Office",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "VNOM",
+          "company": "Viper Energy, Inc.",
+          "group": "Oil & Gas Midstream",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "VRTX",
+          "company": "Vertex Pharmaceuticals Incorporated",
+          "group": "Biotechnology",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
           "ticker": "VVX",
           "company": "V2X, Inc.",
           "group": "Aerospace & Defense",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "WGS",
+          "company": "GeneDx Holdings Corp.",
+          "group": "Diagnostics & Research",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "WMB",
+          "company": "The Williams Companies, Inc.",
+          "group": "Oil & Gas Midstream",
           "time": "AMC"
         },
         {
@@ -3424,51 +3761,19 @@ window.ECONOMIC_CALENDAR_DATA = {
           "time": "BMO"
         },
         {
+          "date": "2026-08-03",
+          "day": "Monday, August 3, 2026",
+          "ticker": "FMS",
+          "company": "Fresenius Medical Care AG",
+          "group": "Medical Care Facilities",
+          "time": "TNS"
+        },
+        {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
           "ticker": "AIZ",
           "company": "Assurant, Inc.",
           "group": "Insurance - Property & Casualty",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "ALAB",
-          "company": "Astera Labs, Inc.",
-          "group": "Semiconductors",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "ALGT",
-          "company": "Allegiant Travel Company",
-          "group": "Airlines",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "AMD",
-          "company": "Advanced Micro Devices, Inc.",
-          "group": "Semiconductors",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "AMGN",
-          "company": "Amgen Inc.",
-          "group": "Drug Manufacturers - General",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "ANET",
-          "company": "Arista Networks, Inc.",
-          "group": "Computer Hardware",
           "time": "AMC"
         },
         {
@@ -3482,25 +3787,9 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "ARWR",
-          "company": "Arrowhead Pharmaceuticals, Inc.",
-          "group": "Biotechnology",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
           "ticker": "BKNG",
           "company": "Booking Holdings Inc.",
           "group": "Travel Services",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "CACC",
-          "company": "Credit Acceptance Corporation",
-          "group": "Credit Services",
           "time": "AMC"
         },
         {
@@ -3538,25 +3827,9 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "CPNG",
-          "company": "Coupang, Inc.",
-          "group": "Internet Retail",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
           "ticker": "CRBG",
           "company": "Corebridge Financial, Inc.",
           "group": "Asset Management",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "DOC",
-          "company": "Healthpeak Properties, Inc.",
-          "group": "REIT - Healthcare Facilities",
           "time": "AMC"
         },
         {
@@ -3573,14 +3846,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "DVN",
           "company": "Devon Energy Corporation",
           "group": "Oil & Gas E&P",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "ECG",
-          "company": "Everus Construction Group, Inc.",
-          "group": "Engineering & Construction",
           "time": "AMC"
         },
         {
@@ -3618,22 +3883,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "FRSH",
-          "company": "Freshworks Inc.",
-          "group": "Software - Application",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "GILD",
-          "company": "Gilead Sciences, Inc.",
-          "group": "Drug Manufacturers - General",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
           "ticker": "GXO",
           "company": "GXO Logistics, Inc.",
           "group": "Integrated Freight & Logistics",
@@ -3666,25 +3915,9 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "J",
-          "company": "Jacobs Solutions Inc.",
-          "group": "Engineering & Construction",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
           "ticker": "KAI",
           "company": "Kadant Inc.",
           "group": "Specialty Industrial Machinery",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "KTOS",
-          "company": "Kratos Defense & Security Solutions, Inc.",
-          "group": "Aerospace & Defense",
           "time": "AMC"
         },
         {
@@ -3698,30 +3931,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "LSCC",
-          "company": "Lattice Semiconductor Corporation",
-          "group": "Semiconductors",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "LUMN",
-          "company": "Lumen Technologies, Inc.",
-          "group": "Telecom Services",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "MAC",
-          "company": "The Macerich Company",
-          "group": "REIT - Retail",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
           "ticker": "MCY",
           "company": "Mercury General Corporation",
           "group": "Insurance - Property & Casualty",
@@ -3730,17 +3939,9 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "MOS",
-          "company": "The Mosaic Company",
-          "group": "Agricultural Inputs",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "MTCH",
-          "company": "Match Group, Inc.",
-          "group": "Internet Content & Information",
+          "ticker": "NXE",
+          "company": "NexGen Energy Ltd.",
+          "group": "Uranium",
           "time": "AMC"
         },
         {
@@ -3754,33 +3955,9 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "PCTY",
-          "company": "Paylocity Holding Corporation",
-          "group": "Software - Application",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "PINS",
-          "company": "Pinterest, Inc.",
-          "group": "Internet Content & Information",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
           "ticker": "PLMR",
           "company": "Palomar Holdings, Inc.",
           "group": "Insurance - Property & Casualty",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "PLUS",
-          "company": "ePlus inc.",
-          "group": "Software - Application",
           "time": "AMC"
         },
         {
@@ -3794,22 +3971,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "PRU",
-          "company": "Prudential Financial, Inc.",
-          "group": "Insurance - Life",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "PSKY",
-          "company": "Paramount Skydance Corporation",
-          "group": "Entertainment",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
           "ticker": "QLYS",
           "company": "Qualys, Inc.",
           "group": "Software - Infrastructure",
@@ -3818,73 +3979,9 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "RARE",
-          "company": "Ultragenyx Pharmaceutical Inc.",
-          "group": "Biotechnology",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "RBA",
-          "company": "RB Global, Inc.",
-          "group": "Specialty Business Services",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "RRR",
-          "company": "Red Rock Resorts, Inc.",
-          "group": "Resorts & Casinos",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "SKWD",
-          "company": "Skyward Specialty Insurance Group, Inc.",
-          "group": "Insurance - Property & Casualty",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "SKY",
-          "company": "Champion Homes, Inc.",
-          "group": "Residential Construction",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
           "ticker": "SLAB",
           "company": "Silicon Laboratories Inc.",
           "group": "Semiconductors",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "SPCX",
-          "company": "Space Exploration Technologies Corp.",
-          "group": "Aerospace & Defense",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "SSRM",
-          "company": "SSR Mining Inc.",
-          "group": "Gold",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "SYRE",
-          "company": "Spyre Therapeutics, Inc.",
-          "group": "Biotechnology",
           "time": "AMC"
         },
         {
@@ -3906,9 +4003,9 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "TVTX",
-          "company": "Travere Therapeutics, Inc.",
-          "group": "Biotechnology",
+          "ticker": "UPST",
+          "company": "Upstart Holdings, Inc.",
+          "group": "Credit Services",
           "time": "AMC"
         },
         {
@@ -3922,14 +4019,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "VSAT",
-          "company": "Viasat, Inc.",
-          "group": "Communication Equipment",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
           "ticker": "WK",
           "company": "Workiva Inc.",
           "group": "Software - Application",
@@ -3938,474 +4027,10 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-04",
           "day": "Tuesday, August 4, 2026",
-          "ticker": "WTRG",
-          "company": "Essential Utilities, Inc.",
-          "group": "Utilities - Regulated Water",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "WYNN",
-          "company": "Wynn Resorts, Limited",
-          "group": "Resorts & Casinos",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "ZETA",
-          "company": "Zeta Global Holdings Corp.",
-          "group": "Software - Infrastructure",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "ADM",
-          "company": "Archer-Daniels-Midland Company",
-          "group": "Farm Products",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "AME",
-          "company": "AMETEK, Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "APO",
-          "company": "Apollo Global Management, Inc.",
-          "group": "Asset Management",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "APTV",
-          "company": "Aptiv PLC",
-          "group": "Auto Parts",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "BALL",
-          "company": "Ball Corporation",
-          "group": "Packaging & Containers",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "BEAM",
-          "company": "Beam Therapeutics Inc.",
-          "group": "Biotechnology",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "BNTX",
-          "company": "BioNTech SE",
-          "group": "Biotechnology",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "BP",
-          "company": "BP p.l.c.",
-          "group": "Oil & Gas Integrated",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "BR",
-          "company": "Broadridge Financial Solutions, Inc.",
-          "group": "Information Technology Services",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "BRKR",
-          "company": "Bruker Corporation",
-          "group": "Medical Devices",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "CAT",
-          "company": "Caterpillar Inc.",
-          "group": "Farm & Heavy Construction Machinery",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "CIFR",
-          "company": "Cipher Digital Inc.",
-          "group": "Information Technology Services",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "CMI",
-          "company": "Cummins Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "COGT",
-          "company": "Cogent Biosciences, Inc.",
-          "group": "Biotechnology",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "DOCN",
-          "company": "DigitalOcean Holdings, Inc.",
-          "group": "Software - Infrastructure",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "DUK",
-          "company": "Duke Energy Corporation",
-          "group": "Utilities - Regulated Electric",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "ENTG",
-          "company": "Entegris, Inc.",
-          "group": "Semiconductor Equipment & Materials",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "ET",
-          "company": "Energy Transfer LP",
-          "group": "Oil & Gas Midstream",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "EXPD",
-          "company": "Expeditors International of Washington, Inc.",
-          "group": "Integrated Freight & Logistics",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "FIS",
-          "company": "Fidelity National Information Services, Inc.",
-          "group": "Information Technology Services",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "GWW",
-          "company": "W.W. Grainger, Inc.",
-          "group": "Industrial Distribution",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "HUT",
-          "company": "Hut 8 Corp.",
-          "group": "Capital Markets",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "IBRX",
-          "company": "ImmunityBio, Inc.",
-          "group": "Biotechnology",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "IDXX",
-          "company": "IDEXX Laboratories, Inc.",
-          "group": "Diagnostics & Research",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "INGR",
-          "company": "Ingredion Incorporated",
-          "group": "Packaged Foods",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "IPGP",
-          "company": "IPG Photonics Corporation",
-          "group": "Semiconductor Equipment & Materials",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "IT",
-          "company": "Gartner, Inc.",
-          "group": "Information Technology Services",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "KIM",
-          "company": "Kimco Realty Corporation",
-          "group": "REIT - Retail",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "KMB",
-          "company": "Kimberly-Clark Corporation",
-          "group": "Household & Personal Products",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "LDOS",
-          "company": "Leidos Holdings, Inc.",
-          "group": "Information Technology Services",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "MCD",
-          "company": "McDonald's Corporation",
-          "group": "Restaurants",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "MPC",
-          "company": "Marathon Petroleum Corporation",
-          "group": "Oil & Gas Refining & Marketing",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "MPLX",
-          "company": "MPLX LP",
-          "group": "Oil & Gas Midstream",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "MRK",
-          "company": "Merck & Co., Inc.",
-          "group": "Drug Manufacturers - General",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "NPO",
-          "company": "Enpro Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "NRG",
-          "company": "NRG Energy, Inc.",
-          "group": "Utilities - Independent Power Producers",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "PEG",
-          "company": "Public Service Enterprise Group Incorporated",
-          "group": "Utilities - Regulated Electric",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "PFE",
-          "company": "Pfizer Inc.",
-          "group": "Drug Manufacturers - General",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "PNW",
-          "company": "Pinnacle West Capital Corporation",
-          "group": "Utilities - Regulated Electric",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "Q",
-          "company": "Qnity Electronics, Inc.",
-          "group": "Semiconductor Equipment & Materials",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "ROK",
-          "company": "Rockwell Automation, Inc.",
-          "group": "Specialty Industrial Machinery",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "RVTY",
-          "company": "Revvity, Inc.",
-          "group": "Diagnostics & Research",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "RYTM",
-          "company": "Rhythm Pharmaceuticals, Inc.",
-          "group": "Biotechnology",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "SPOT",
-          "company": "Spotify Technology S.A.",
-          "group": "Internet Content & Information",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "SUN",
-          "company": "Sunoco LP",
-          "group": "Oil & Gas Refining & Marketing",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "SYY",
-          "company": "Sysco Corporation",
-          "group": "Food Distribution",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "TDG",
-          "company": "TransDigm Group Incorporated",
-          "group": "Aerospace & Defense",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "TKR",
-          "company": "The Timken Company",
-          "group": "Tools & Accessories",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "TPG",
-          "company": "TPG Inc.",
-          "group": "Asset Management",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "TREX",
-          "company": "Trex Company, Inc.",
-          "group": "Building Products & Equipment",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "TSEM",
-          "company": "Tower Semiconductor Ltd.",
-          "group": "Semiconductors",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "USAC",
-          "company": "USA Compression Partners, LP",
+          "ticker": "WTTR",
+          "company": "Select Water Solutions, Inc.",
           "group": "Oil & Gas Equipment & Services",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "W",
-          "company": "Wayfair Inc.",
-          "group": "Internet Retail",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "WAT",
-          "company": "Waters Corporation",
-          "group": "Diagnostics & Research",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "WLK",
-          "company": "Westlake Corporation",
-          "group": "Specialty Chemicals",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-04",
-          "day": "Tuesday, August 4, 2026",
-          "ticker": "ZBRA",
-          "company": "Zebra Technologies Corporation",
-          "group": "Communication Equipment",
-          "time": "BMO"
+          "time": "AMC"
         },
         {
           "date": "2026-08-05",
@@ -4453,6 +4078,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "ARQT",
           "company": "Arcutis Biotherapeutics, Inc.",
           "group": "Biotechnology",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-05",
+          "day": "Wednesday, August 5, 2026",
+          "ticker": "ATEN",
+          "company": "A10 Networks, Inc.",
+          "group": "Software - Infrastructure",
           "time": "AMC"
         },
         {
@@ -4706,6 +4339,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-05",
           "day": "Wednesday, August 5, 2026",
+          "ticker": "EVCM",
+          "company": "EverCommerce Inc.",
+          "group": "Software - Application",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-05",
+          "day": "Wednesday, August 5, 2026",
           "ticker": "EXEL",
           "company": "Exelixis, Inc.",
           "group": "Biotechnology",
@@ -4717,6 +4358,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "EXPE",
           "company": "Expedia Group, Inc.",
           "group": "Travel Services",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-05",
+          "day": "Wednesday, August 5, 2026",
+          "ticker": "FLNC",
+          "company": "Fluence Energy, Inc.",
+          "group": "Utilities - Renewable",
           "time": "AMC"
         },
         {
@@ -4805,6 +4454,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "KVYO",
           "company": "Klaviyo, Inc.",
           "group": "Software - Application",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-05",
+          "day": "Wednesday, August 5, 2026",
+          "ticker": "LB",
+          "company": "LandBridge Company LLC",
+          "group": "Oil & Gas Equipment & Services",
           "time": "AMC"
         },
         {
@@ -4938,14 +4595,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-05",
           "day": "Wednesday, August 5, 2026",
-          "ticker": "NXE",
-          "company": "NexGen Energy Ltd.",
-          "group": "Uranium",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-05",
-          "day": "Wednesday, August 5, 2026",
           "ticker": "O",
           "company": "Realty Income Corporation",
           "group": "REIT - Retail",
@@ -5013,6 +4662,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "QGEN",
           "company": "Qiagen N.V.",
           "group": "Diagnostics & Research",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-05",
+          "day": "Wednesday, August 5, 2026",
+          "ticker": "RDW",
+          "company": "Redwire Corporation",
+          "group": "Aerospace & Defense",
           "time": "AMC"
         },
         {
@@ -5602,14 +5259,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-05",
           "day": "Wednesday, August 5, 2026",
-          "ticker": "RIOT",
-          "company": "Riot Platforms, Inc.",
-          "group": "Capital Markets",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-05",
-          "day": "Wednesday, August 5, 2026",
           "ticker": "RPRX",
           "company": "Royalty Pharma plc",
           "group": "Biotechnology",
@@ -5653,14 +5302,6 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "SN",
           "company": "SharkNinja, Inc.",
           "group": "Furnishings, Fixtures & Appliances",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-05",
-          "day": "Wednesday, August 5, 2026",
-          "ticker": "TRMB",
-          "company": "Trimble Inc.",
-          "group": "Scientific & Technical Instruments",
           "time": "BMO"
         },
         {
@@ -5882,14 +5523,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-06",
           "day": "Thursday, August 6, 2026",
-          "ticker": "DNTH",
-          "company": "Dianthus Therapeutics, Inc.",
-          "group": "Biotechnology",
-          "time": "AMC"
-        },
-        {
-          "date": "2026-08-06",
-          "day": "Thursday, August 6, 2026",
           "ticker": "ED",
           "company": "Consolidated Edison, Inc.",
           "group": "Utilities - Regulated Electric",
@@ -5981,6 +5614,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "ICUI",
           "company": "ICU Medical, Inc.",
           "group": "Medical Instruments & Supplies",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-06",
+          "day": "Thursday, August 6, 2026",
+          "ticker": "INOD",
+          "company": "Innodata Inc.",
+          "group": "Information Technology Services",
           "time": "AMC"
         },
         {
@@ -6101,6 +5742,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "OUST",
           "company": "Ouster, Inc.",
           "group": "Electronic Components",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-06",
+          "day": "Thursday, August 6, 2026",
+          "ticker": "PDFS",
+          "company": "PDF Solutions, Inc.",
+          "group": "Software - Application",
           "time": "AMC"
         },
         {
@@ -6314,6 +5963,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-06",
           "day": "Thursday, August 6, 2026",
+          "ticker": "APPN",
+          "company": "Appian Corporation",
+          "group": "Software - Infrastructure",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-08-06",
+          "day": "Thursday, August 6, 2026",
           "ticker": "ATI",
           "company": "ATI Inc.",
           "group": "Metal Fabrication",
@@ -6458,6 +6115,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-06",
           "day": "Thursday, August 6, 2026",
+          "ticker": "GENI",
+          "company": "Genius Sports Limited",
+          "group": "Internet Content & Information",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-08-06",
+          "day": "Thursday, August 6, 2026",
           "ticker": "HWM",
           "company": "Howmet Aerospace Inc.",
           "group": "Aerospace & Defense",
@@ -6581,6 +6246,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "NTCT",
           "company": "NetScout Systems, Inc.",
           "group": "Software - Infrastructure",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-08-06",
+          "day": "Thursday, August 6, 2026",
+          "ticker": "NUVB",
+          "company": "Nuvation Bio Inc.",
+          "group": "Biotechnology",
           "time": "BMO"
         },
         {
@@ -6790,6 +6463,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "company": "Zoetis Inc.",
           "group": "Drug Manufacturers - Specialty & Generic",
           "time": "BMO"
+        },
+        {
+          "date": "2026-08-07",
+          "day": "Friday, August 7, 2026",
+          "ticker": "RIOT",
+          "company": "Riot Platforms, Inc.",
+          "group": "Capital Markets",
+          "time": "AMC"
         },
         {
           "date": "2026-08-07",
@@ -7013,6 +6694,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-10",
           "day": "Monday, August 10, 2026",
+          "ticker": "BHVN",
+          "company": "Biohaven Ltd.",
+          "group": "Biotechnology",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-10",
+          "day": "Monday, August 10, 2026",
           "ticker": "HIMS",
           "company": "Hims & Hers Health, Inc.",
           "group": "Drug Manufacturers - Specialty & Generic",
@@ -7053,6 +6742,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-10",
           "day": "Monday, August 10, 2026",
+          "ticker": "QUBT",
+          "company": "Quantum Computing Inc.",
+          "group": "Computer Hardware",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-10",
+          "day": "Monday, August 10, 2026",
           "ticker": "RKLB",
           "company": "Rocket Lab Corporation",
           "group": "Aerospace & Defense",
@@ -7064,6 +6761,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "SPG",
           "company": "Simon Property Group, Inc.",
           "group": "REIT - Retail",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-10",
+          "day": "Monday, August 10, 2026",
+          "ticker": "SVM",
+          "company": "Silvercorp Metals Inc.",
+          "group": "Silver",
           "time": "AMC"
         },
         {
@@ -7125,14 +6830,6 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-10",
           "day": "Monday, August 10, 2026",
-          "ticker": "IDYA",
-          "company": "IDEAYA Biosciences, Inc.",
-          "group": "Biotechnology",
-          "time": "BMO"
-        },
-        {
-          "date": "2026-08-10",
-          "day": "Monday, August 10, 2026",
           "ticker": "INSW",
           "company": "International Seaways, Inc.",
           "group": "Oil & Gas Midstream",
@@ -7153,6 +6850,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "company": "JBS N.V.",
           "group": "Packaged Foods",
           "time": "TNS"
+        },
+        {
+          "date": "2026-08-11",
+          "day": "Tuesday, August 11, 2026",
+          "ticker": "ATEX",
+          "company": "Anterix Inc.",
+          "group": "Telecom Services",
+          "time": "AMC"
         },
         {
           "date": "2026-08-11",
@@ -7221,6 +6926,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-11",
           "day": "Tuesday, August 11, 2026",
+          "ticker": "SLS",
+          "company": "SELLAS Life Sciences Group, Inc.",
+          "group": "Biotechnology",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-11",
+          "day": "Tuesday, August 11, 2026",
           "ticker": "SMCI",
           "company": "Super Micro Computer, Inc.",
           "group": "Computer Hardware",
@@ -7240,6 +6953,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "CAH",
           "company": "Cardinal Health, Inc.",
           "group": "Medical Distribution",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-08-11",
+          "day": "Tuesday, August 11, 2026",
+          "ticker": "ESLT",
+          "company": "Elbit Systems Ltd.",
+          "group": "Aerospace & Defense",
           "time": "BMO"
         },
         {
@@ -7349,6 +7070,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-12",
           "day": "Wednesday, August 12, 2026",
+          "ticker": "INFQ",
+          "company": "Infleqtion, Inc.",
+          "group": "Software - Infrastructure",
+          "time": "AMC"
+        },
+        {
+          "date": "2026-08-12",
+          "day": "Wednesday, August 12, 2026",
           "ticker": "NAVN",
           "company": "Navan, Inc.",
           "group": "Software - Application",
@@ -7440,6 +7169,14 @@ window.ECONOMIC_CALENDAR_DATA = {
           "ticker": "TCEHY",
           "company": "Tencent Holdings Limited",
           "group": "Internet Content & Information",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-08-12",
+          "day": "Wednesday, August 12, 2026",
+          "ticker": "TRMB",
+          "company": "Trimble Inc.",
+          "group": "Scientific & Technical Instruments",
           "time": "BMO"
         },
         {
@@ -7549,6 +7286,14 @@ window.ECONOMIC_CALENDAR_DATA = {
         {
           "date": "2026-08-13",
           "day": "Thursday, August 13, 2026",
+          "ticker": "LUNR",
+          "company": "Intuitive Machines, Inc.",
+          "group": "Aerospace & Defense",
+          "time": "BMO"
+        },
+        {
+          "date": "2026-08-13",
+          "day": "Thursday, August 13, 2026",
           "ticker": "MANE",
           "company": "Veradermics, Incorporated",
           "group": "Biotechnology",
@@ -7645,9 +7390,97 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-03",
       "day": "Monday, August 3, 2026",
+      "ticker": "ADEA",
+      "company": "Adeia Inc.",
+      "group": "Software - Application",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "AEIS",
+      "company": "Advanced Energy Industries, Inc.",
+      "group": "Electrical Equipment & Parts",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "ALSN",
+      "company": "Allison Transmission Holdings, Inc.",
+      "group": "Auto Parts",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "ARE",
+      "company": "Alexandria Real Estate Equities, Inc.",
+      "group": "REIT - Office",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "BWXT",
+      "company": "BWX Technologies, Inc.",
+      "group": "Aerospace & Defense",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
       "ticker": "CBT",
       "company": "Cabot Corporation",
       "group": "Specialty Chemicals",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "CLX",
+      "company": "The Clorox Company",
+      "group": "Household & Personal Products",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "DAC",
+      "company": "Danaos Corporation",
+      "group": "Marine Shipping",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "EA",
+      "company": "Electronic Arts Inc.",
+      "group": "Electronic Gaming & Multimedia",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "FANG",
+      "company": "Diamondback Energy, Inc.",
+      "group": "Oil & Gas E&P",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "GPOR",
+      "company": "Gulfport Energy Corporation",
+      "group": "Oil & Gas E&P",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "ICHR",
+      "company": "Ichor Holdings, Ltd.",
+      "group": "Semiconductor Equipment & Materials",
       "time": "AMC"
     },
     {
@@ -7661,9 +7494,81 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-03",
       "day": "Monday, August 3, 2026",
+      "ticker": "JBTM",
+      "company": "JBT Marel Corporation",
+      "group": "Specialty Industrial Machinery",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "JXN",
+      "company": "Jackson Financial Inc.",
+      "group": "Insurance - Life",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "MATX",
+      "company": "Matson, Inc.",
+      "group": "Marine Shipping",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "OKE",
+      "company": "ONEOK, Inc.",
+      "group": "Oil & Gas Midstream",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
       "ticker": "ON",
       "company": "ON Semiconductor Corporation",
       "group": "Semiconductors",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "PLTR",
+      "company": "Palantir Technologies Inc.",
+      "group": "Software - Infrastructure",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "POWL",
+      "company": "Powell Industries, Inc.",
+      "group": "Electrical Equipment & Parts",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "SBAC",
+      "company": "SBA Communications Corporation",
+      "group": "REIT - Specialty",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "SBRA",
+      "company": "Sabra Health Care REIT, Inc.",
+      "group": "REIT - Healthcare Facilities",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "SNAP",
+      "company": "Snap Inc.",
+      "group": "Internet Content & Information",
       "time": "AMC"
     },
     {
@@ -7677,6 +7582,22 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-03",
       "day": "Monday, August 3, 2026",
+      "ticker": "TDW",
+      "company": "Tidewater Inc.",
+      "group": "Oil & Gas Equipment & Services",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "TKO",
+      "company": "TKO Group Holdings, Inc.",
+      "group": "Entertainment",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
       "ticker": "UCTT",
       "company": "Ultra Clean Holdings, Inc.",
       "group": "Semiconductor Equipment & Materials",
@@ -7685,9 +7606,57 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-03",
       "day": "Monday, August 3, 2026",
+      "ticker": "UFPT",
+      "company": "UFP Technologies, Inc.",
+      "group": "Medical Devices",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "VNO",
+      "company": "Vornado Realty Trust",
+      "group": "REIT - Office",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "VNOM",
+      "company": "Viper Energy, Inc.",
+      "group": "Oil & Gas Midstream",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "VRTX",
+      "company": "Vertex Pharmaceuticals Incorporated",
+      "group": "Biotechnology",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
       "ticker": "VVX",
       "company": "V2X, Inc.",
       "group": "Aerospace & Defense",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "WGS",
+      "company": "GeneDx Holdings Corp.",
+      "group": "Diagnostics & Research",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "WMB",
+      "company": "The Williams Companies, Inc.",
+      "group": "Oil & Gas Midstream",
       "time": "AMC"
     },
     {
@@ -7771,51 +7740,19 @@ window.ECONOMIC_CALENDAR_DATA = {
       "time": "BMO"
     },
     {
+      "date": "2026-08-03",
+      "day": "Monday, August 3, 2026",
+      "ticker": "FMS",
+      "company": "Fresenius Medical Care AG",
+      "group": "Medical Care Facilities",
+      "time": "TNS"
+    },
+    {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
       "ticker": "AIZ",
       "company": "Assurant, Inc.",
       "group": "Insurance - Property & Casualty",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "ALAB",
-      "company": "Astera Labs, Inc.",
-      "group": "Semiconductors",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "ALGT",
-      "company": "Allegiant Travel Company",
-      "group": "Airlines",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "AMD",
-      "company": "Advanced Micro Devices, Inc.",
-      "group": "Semiconductors",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "AMGN",
-      "company": "Amgen Inc.",
-      "group": "Drug Manufacturers - General",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "ANET",
-      "company": "Arista Networks, Inc.",
-      "group": "Computer Hardware",
       "time": "AMC"
     },
     {
@@ -7829,25 +7766,9 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "ARWR",
-      "company": "Arrowhead Pharmaceuticals, Inc.",
-      "group": "Biotechnology",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
       "ticker": "BKNG",
       "company": "Booking Holdings Inc.",
       "group": "Travel Services",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "CACC",
-      "company": "Credit Acceptance Corporation",
-      "group": "Credit Services",
       "time": "AMC"
     },
     {
@@ -7885,25 +7806,9 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "CPNG",
-      "company": "Coupang, Inc.",
-      "group": "Internet Retail",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
       "ticker": "CRBG",
       "company": "Corebridge Financial, Inc.",
       "group": "Asset Management",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "DOC",
-      "company": "Healthpeak Properties, Inc.",
-      "group": "REIT - Healthcare Facilities",
       "time": "AMC"
     },
     {
@@ -7920,14 +7825,6 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "DVN",
       "company": "Devon Energy Corporation",
       "group": "Oil & Gas E&P",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "ECG",
-      "company": "Everus Construction Group, Inc.",
-      "group": "Engineering & Construction",
       "time": "AMC"
     },
     {
@@ -7965,22 +7862,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "FRSH",
-      "company": "Freshworks Inc.",
-      "group": "Software - Application",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "GILD",
-      "company": "Gilead Sciences, Inc.",
-      "group": "Drug Manufacturers - General",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
       "ticker": "GXO",
       "company": "GXO Logistics, Inc.",
       "group": "Integrated Freight & Logistics",
@@ -8013,25 +7894,9 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "J",
-      "company": "Jacobs Solutions Inc.",
-      "group": "Engineering & Construction",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
       "ticker": "KAI",
       "company": "Kadant Inc.",
       "group": "Specialty Industrial Machinery",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "KTOS",
-      "company": "Kratos Defense & Security Solutions, Inc.",
-      "group": "Aerospace & Defense",
       "time": "AMC"
     },
     {
@@ -8045,30 +7910,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "LSCC",
-      "company": "Lattice Semiconductor Corporation",
-      "group": "Semiconductors",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "LUMN",
-      "company": "Lumen Technologies, Inc.",
-      "group": "Telecom Services",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "MAC",
-      "company": "The Macerich Company",
-      "group": "REIT - Retail",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
       "ticker": "MCY",
       "company": "Mercury General Corporation",
       "group": "Insurance - Property & Casualty",
@@ -8077,17 +7918,9 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "MOS",
-      "company": "The Mosaic Company",
-      "group": "Agricultural Inputs",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "MTCH",
-      "company": "Match Group, Inc.",
-      "group": "Internet Content & Information",
+      "ticker": "NXE",
+      "company": "NexGen Energy Ltd.",
+      "group": "Uranium",
       "time": "AMC"
     },
     {
@@ -8101,33 +7934,9 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "PCTY",
-      "company": "Paylocity Holding Corporation",
-      "group": "Software - Application",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "PINS",
-      "company": "Pinterest, Inc.",
-      "group": "Internet Content & Information",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
       "ticker": "PLMR",
       "company": "Palomar Holdings, Inc.",
       "group": "Insurance - Property & Casualty",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "PLUS",
-      "company": "ePlus inc.",
-      "group": "Software - Application",
       "time": "AMC"
     },
     {
@@ -8141,22 +7950,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "PRU",
-      "company": "Prudential Financial, Inc.",
-      "group": "Insurance - Life",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "PSKY",
-      "company": "Paramount Skydance Corporation",
-      "group": "Entertainment",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
       "ticker": "QLYS",
       "company": "Qualys, Inc.",
       "group": "Software - Infrastructure",
@@ -8165,73 +7958,9 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "RARE",
-      "company": "Ultragenyx Pharmaceutical Inc.",
-      "group": "Biotechnology",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "RBA",
-      "company": "RB Global, Inc.",
-      "group": "Specialty Business Services",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "RRR",
-      "company": "Red Rock Resorts, Inc.",
-      "group": "Resorts & Casinos",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "SKWD",
-      "company": "Skyward Specialty Insurance Group, Inc.",
-      "group": "Insurance - Property & Casualty",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "SKY",
-      "company": "Champion Homes, Inc.",
-      "group": "Residential Construction",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
       "ticker": "SLAB",
       "company": "Silicon Laboratories Inc.",
       "group": "Semiconductors",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "SPCX",
-      "company": "Space Exploration Technologies Corp.",
-      "group": "Aerospace & Defense",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "SSRM",
-      "company": "SSR Mining Inc.",
-      "group": "Gold",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "SYRE",
-      "company": "Spyre Therapeutics, Inc.",
-      "group": "Biotechnology",
       "time": "AMC"
     },
     {
@@ -8253,9 +7982,9 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "TVTX",
-      "company": "Travere Therapeutics, Inc.",
-      "group": "Biotechnology",
+      "ticker": "UPST",
+      "company": "Upstart Holdings, Inc.",
+      "group": "Credit Services",
       "time": "AMC"
     },
     {
@@ -8269,14 +7998,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "VSAT",
-      "company": "Viasat, Inc.",
-      "group": "Communication Equipment",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
       "ticker": "WK",
       "company": "Workiva Inc.",
       "group": "Software - Application",
@@ -8285,474 +8006,10 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-04",
       "day": "Tuesday, August 4, 2026",
-      "ticker": "WTRG",
-      "company": "Essential Utilities, Inc.",
-      "group": "Utilities - Regulated Water",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "WYNN",
-      "company": "Wynn Resorts, Limited",
-      "group": "Resorts & Casinos",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "ZETA",
-      "company": "Zeta Global Holdings Corp.",
-      "group": "Software - Infrastructure",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "ADM",
-      "company": "Archer-Daniels-Midland Company",
-      "group": "Farm Products",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "AME",
-      "company": "AMETEK, Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "APO",
-      "company": "Apollo Global Management, Inc.",
-      "group": "Asset Management",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "APTV",
-      "company": "Aptiv PLC",
-      "group": "Auto Parts",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "BALL",
-      "company": "Ball Corporation",
-      "group": "Packaging & Containers",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "BEAM",
-      "company": "Beam Therapeutics Inc.",
-      "group": "Biotechnology",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "BNTX",
-      "company": "BioNTech SE",
-      "group": "Biotechnology",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "BP",
-      "company": "BP p.l.c.",
-      "group": "Oil & Gas Integrated",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "BR",
-      "company": "Broadridge Financial Solutions, Inc.",
-      "group": "Information Technology Services",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "BRKR",
-      "company": "Bruker Corporation",
-      "group": "Medical Devices",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "CAT",
-      "company": "Caterpillar Inc.",
-      "group": "Farm & Heavy Construction Machinery",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "CIFR",
-      "company": "Cipher Digital Inc.",
-      "group": "Information Technology Services",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "CMI",
-      "company": "Cummins Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "COGT",
-      "company": "Cogent Biosciences, Inc.",
-      "group": "Biotechnology",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "DOCN",
-      "company": "DigitalOcean Holdings, Inc.",
-      "group": "Software - Infrastructure",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "DUK",
-      "company": "Duke Energy Corporation",
-      "group": "Utilities - Regulated Electric",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "ENTG",
-      "company": "Entegris, Inc.",
-      "group": "Semiconductor Equipment & Materials",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "ET",
-      "company": "Energy Transfer LP",
-      "group": "Oil & Gas Midstream",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "EXPD",
-      "company": "Expeditors International of Washington, Inc.",
-      "group": "Integrated Freight & Logistics",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "FIS",
-      "company": "Fidelity National Information Services, Inc.",
-      "group": "Information Technology Services",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "GWW",
-      "company": "W.W. Grainger, Inc.",
-      "group": "Industrial Distribution",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "HUT",
-      "company": "Hut 8 Corp.",
-      "group": "Capital Markets",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "IBRX",
-      "company": "ImmunityBio, Inc.",
-      "group": "Biotechnology",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "IDXX",
-      "company": "IDEXX Laboratories, Inc.",
-      "group": "Diagnostics & Research",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "INGR",
-      "company": "Ingredion Incorporated",
-      "group": "Packaged Foods",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "IPGP",
-      "company": "IPG Photonics Corporation",
-      "group": "Semiconductor Equipment & Materials",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "IT",
-      "company": "Gartner, Inc.",
-      "group": "Information Technology Services",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "KIM",
-      "company": "Kimco Realty Corporation",
-      "group": "REIT - Retail",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "KMB",
-      "company": "Kimberly-Clark Corporation",
-      "group": "Household & Personal Products",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "LDOS",
-      "company": "Leidos Holdings, Inc.",
-      "group": "Information Technology Services",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "MCD",
-      "company": "McDonald's Corporation",
-      "group": "Restaurants",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "MPC",
-      "company": "Marathon Petroleum Corporation",
-      "group": "Oil & Gas Refining & Marketing",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "MPLX",
-      "company": "MPLX LP",
-      "group": "Oil & Gas Midstream",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "MRK",
-      "company": "Merck & Co., Inc.",
-      "group": "Drug Manufacturers - General",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "NPO",
-      "company": "Enpro Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "NRG",
-      "company": "NRG Energy, Inc.",
-      "group": "Utilities - Independent Power Producers",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "PEG",
-      "company": "Public Service Enterprise Group Incorporated",
-      "group": "Utilities - Regulated Electric",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "PFE",
-      "company": "Pfizer Inc.",
-      "group": "Drug Manufacturers - General",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "PNW",
-      "company": "Pinnacle West Capital Corporation",
-      "group": "Utilities - Regulated Electric",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "Q",
-      "company": "Qnity Electronics, Inc.",
-      "group": "Semiconductor Equipment & Materials",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "ROK",
-      "company": "Rockwell Automation, Inc.",
-      "group": "Specialty Industrial Machinery",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "RVTY",
-      "company": "Revvity, Inc.",
-      "group": "Diagnostics & Research",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "RYTM",
-      "company": "Rhythm Pharmaceuticals, Inc.",
-      "group": "Biotechnology",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "SPOT",
-      "company": "Spotify Technology S.A.",
-      "group": "Internet Content & Information",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "SUN",
-      "company": "Sunoco LP",
-      "group": "Oil & Gas Refining & Marketing",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "SYY",
-      "company": "Sysco Corporation",
-      "group": "Food Distribution",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "TDG",
-      "company": "TransDigm Group Incorporated",
-      "group": "Aerospace & Defense",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "TKR",
-      "company": "The Timken Company",
-      "group": "Tools & Accessories",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "TPG",
-      "company": "TPG Inc.",
-      "group": "Asset Management",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "TREX",
-      "company": "Trex Company, Inc.",
-      "group": "Building Products & Equipment",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "TSEM",
-      "company": "Tower Semiconductor Ltd.",
-      "group": "Semiconductors",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "USAC",
-      "company": "USA Compression Partners, LP",
+      "ticker": "WTTR",
+      "company": "Select Water Solutions, Inc.",
       "group": "Oil & Gas Equipment & Services",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "W",
-      "company": "Wayfair Inc.",
-      "group": "Internet Retail",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "WAT",
-      "company": "Waters Corporation",
-      "group": "Diagnostics & Research",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "WLK",
-      "company": "Westlake Corporation",
-      "group": "Specialty Chemicals",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-04",
-      "day": "Tuesday, August 4, 2026",
-      "ticker": "ZBRA",
-      "company": "Zebra Technologies Corporation",
-      "group": "Communication Equipment",
-      "time": "BMO"
+      "time": "AMC"
     },
     {
       "date": "2026-08-05",
@@ -8800,6 +8057,14 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "ARQT",
       "company": "Arcutis Biotherapeutics, Inc.",
       "group": "Biotechnology",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-05",
+      "day": "Wednesday, August 5, 2026",
+      "ticker": "ATEN",
+      "company": "A10 Networks, Inc.",
+      "group": "Software - Infrastructure",
       "time": "AMC"
     },
     {
@@ -9053,6 +8318,14 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-05",
       "day": "Wednesday, August 5, 2026",
+      "ticker": "EVCM",
+      "company": "EverCommerce Inc.",
+      "group": "Software - Application",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-05",
+      "day": "Wednesday, August 5, 2026",
       "ticker": "EXEL",
       "company": "Exelixis, Inc.",
       "group": "Biotechnology",
@@ -9064,6 +8337,14 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "EXPE",
       "company": "Expedia Group, Inc.",
       "group": "Travel Services",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-05",
+      "day": "Wednesday, August 5, 2026",
+      "ticker": "FLNC",
+      "company": "Fluence Energy, Inc.",
+      "group": "Utilities - Renewable",
       "time": "AMC"
     },
     {
@@ -9152,6 +8433,14 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "KVYO",
       "company": "Klaviyo, Inc.",
       "group": "Software - Application",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-05",
+      "day": "Wednesday, August 5, 2026",
+      "ticker": "LB",
+      "company": "LandBridge Company LLC",
+      "group": "Oil & Gas Equipment & Services",
       "time": "AMC"
     },
     {
@@ -9285,14 +8574,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-05",
       "day": "Wednesday, August 5, 2026",
-      "ticker": "NXE",
-      "company": "NexGen Energy Ltd.",
-      "group": "Uranium",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-05",
-      "day": "Wednesday, August 5, 2026",
       "ticker": "O",
       "company": "Realty Income Corporation",
       "group": "REIT - Retail",
@@ -9360,6 +8641,14 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "QGEN",
       "company": "Qiagen N.V.",
       "group": "Diagnostics & Research",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-05",
+      "day": "Wednesday, August 5, 2026",
+      "ticker": "RDW",
+      "company": "Redwire Corporation",
+      "group": "Aerospace & Defense",
       "time": "AMC"
     },
     {
@@ -9949,14 +9238,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-05",
       "day": "Wednesday, August 5, 2026",
-      "ticker": "RIOT",
-      "company": "Riot Platforms, Inc.",
-      "group": "Capital Markets",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-05",
-      "day": "Wednesday, August 5, 2026",
       "ticker": "RPRX",
       "company": "Royalty Pharma plc",
       "group": "Biotechnology",
@@ -10000,14 +9281,6 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "SN",
       "company": "SharkNinja, Inc.",
       "group": "Furnishings, Fixtures & Appliances",
-      "time": "BMO"
-    },
-    {
-      "date": "2026-08-05",
-      "day": "Wednesday, August 5, 2026",
-      "ticker": "TRMB",
-      "company": "Trimble Inc.",
-      "group": "Scientific & Technical Instruments",
       "time": "BMO"
     },
     {
@@ -10229,14 +9502,6 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-06",
       "day": "Thursday, August 6, 2026",
-      "ticker": "DNTH",
-      "company": "Dianthus Therapeutics, Inc.",
-      "group": "Biotechnology",
-      "time": "AMC"
-    },
-    {
-      "date": "2026-08-06",
-      "day": "Thursday, August 6, 2026",
       "ticker": "ED",
       "company": "Consolidated Edison, Inc.",
       "group": "Utilities - Regulated Electric",
@@ -10328,6 +9593,14 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "ICUI",
       "company": "ICU Medical, Inc.",
       "group": "Medical Instruments & Supplies",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-06",
+      "day": "Thursday, August 6, 2026",
+      "ticker": "INOD",
+      "company": "Innodata Inc.",
+      "group": "Information Technology Services",
       "time": "AMC"
     },
     {
@@ -10448,6 +9721,14 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "OUST",
       "company": "Ouster, Inc.",
       "group": "Electronic Components",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-06",
+      "day": "Thursday, August 6, 2026",
+      "ticker": "PDFS",
+      "company": "PDF Solutions, Inc.",
+      "group": "Software - Application",
       "time": "AMC"
     },
     {
@@ -10661,6 +9942,14 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-06",
       "day": "Thursday, August 6, 2026",
+      "ticker": "APPN",
+      "company": "Appian Corporation",
+      "group": "Software - Infrastructure",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-08-06",
+      "day": "Thursday, August 6, 2026",
       "ticker": "ATI",
       "company": "ATI Inc.",
       "group": "Metal Fabrication",
@@ -10805,6 +10094,14 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-06",
       "day": "Thursday, August 6, 2026",
+      "ticker": "GENI",
+      "company": "Genius Sports Limited",
+      "group": "Internet Content & Information",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-08-06",
+      "day": "Thursday, August 6, 2026",
       "ticker": "HWM",
       "company": "Howmet Aerospace Inc.",
       "group": "Aerospace & Defense",
@@ -10928,6 +10225,14 @@ window.ECONOMIC_CALENDAR_DATA = {
       "ticker": "NTCT",
       "company": "NetScout Systems, Inc.",
       "group": "Software - Infrastructure",
+      "time": "BMO"
+    },
+    {
+      "date": "2026-08-06",
+      "day": "Thursday, August 6, 2026",
+      "ticker": "NUVB",
+      "company": "Nuvation Bio Inc.",
+      "group": "Biotechnology",
       "time": "BMO"
     },
     {
@@ -11141,6 +10446,14 @@ window.ECONOMIC_CALENDAR_DATA = {
     {
       "date": "2026-08-07",
       "day": "Friday, August 7, 2026",
+      "ticker": "RIOT",
+      "company": "Riot Platforms, Inc.",
+      "group": "Capital Markets",
+      "time": "AMC"
+    },
+    {
+      "date": "2026-08-07",
+      "day": "Friday, August 7, 2026",
       "ticker": "ACMR",
       "company": "ACM Research, Inc.",
       "group": "Semiconductor Equipment & Materials",
@@ -11232,16 +10545,21 @@ window.ECONOMIC_CALENDAR_DATA = {
     "unemployment"
   ],
   "earnings_guard": {
-    "suppressed_count": 8,
+    "suppressed_count": 10,
     "suppressed": [
       {
         "ticker": "AES",
-        "date": "2026-08-03",
+        "date": "2026-08-04",
         "reason": "rolling_unreported_date"
       },
       {
         "ticker": "BRK-B",
         "date": "2026-08-08",
+        "reason": "rolling_unreported_date"
+      },
+      {
+        "ticker": "COGT",
+        "date": "2026-08-05",
         "reason": "rolling_unreported_date"
       },
       {
@@ -11251,17 +10569,22 @@ window.ECONOMIC_CALENDAR_DATA = {
       },
       {
         "ticker": "DJT",
-        "date": "2026-08-03",
-        "reason": "rolling_unreported_date"
-      },
-      {
-        "ticker": "EA",
         "date": "2026-08-04",
         "reason": "rolling_unreported_date"
       },
       {
+        "ticker": "EVTC",
+        "date": "2026-08-04",
+        "reason": "rolling_unreported_date"
+      },
+      {
+        "ticker": "FIVN",
+        "date": "2026-08-06",
+        "reason": "rolling_unreported_date"
+      },
+      {
         "ticker": "SEB",
-        "date": "2026-08-03",
+        "date": "2026-08-04",
         "reason": "rolling_unreported_date"
       },
       {
